@@ -1,0 +1,493 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 防止 SSR 样式闪烁 - 在 Vue 挂载前隐藏，挂载后淡入 */
+[v-cloak] {
+  opacity: 0 !important;
+  transition: opacity 0.15s ease-out;
+}
+
+/* 通用登录表单样式 */
+.login-form .form-field {
+  position: relative;
+  margin-bottom: 6px;
+  padding-bottom: 18px;
+}
+
+/* 输入框底部线条 - 从 icon 位置开始 */
+.login-form .input-line {
+  position: relative;
+  border-bottom: none !important;
+}
+
+.login-form .input-line::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  right: 16px;
+  height: 1px;
+  background-color: #d1d5db;
+  transition: background-color 0.2s;
+}
+
+.login-form .input-line.has-error::after {
+  background-color: #ef4444;
+}
+
+.login-form .field-error {
+  position: absolute;
+  bottom: 0;
+  left: 16px;
+  color: #f56c6c;
+  font-size: 12px;
+  line-height: 1.2;
+  animation: field-error-in 0.25s ease-out;
+}
+
+@keyframes field-error-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 区号选择器样式 - 全局定义避免SSR闪烁 */
+.country-code-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  padding: 4px 10px;
+  user-select: none;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  background: #fff;
+  transition: border-color 0.2s;
+}
+
+.country-code-selector:hover {
+  border-color: #ccc;
+}
+
+.country-code-display {
+  font-size: 14px;
+  color: #808080;
+  white-space: nowrap;
+}
+
+.dropdown-arrow {
+  font-size: 8px;
+  color: #999;
+  margin-left: 4px;
+  transition: transform 0.25s ease, color 0.2s;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.country-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 8px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 1000;
+  min-width: 140px;
+  transform-origin: top center;
+  overflow: hidden;
+}
+
+.country-option {
+  padding: 10px 16px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.country-option:first-child {
+  border-radius: 4px 4px 0 0;
+}
+
+.country-option:last-child {
+  border-radius: 0 0 4px 4px;
+}
+
+.country-option:hover {
+  background-color: #fff7f0;
+  color: #e8a063;
+}
+
+.country-option.active {
+  background-color: #FFA54D;
+  color: white;
+}
+
+.country-option.active:hover {
+  background-color: #ff9933;
+}
+
+/* 下拉框动画 */
+.dropdown-enter-active {
+  animation: dropdown-in 0.25s ease-out;
+}
+
+.dropdown-leave-active {
+  animation: dropdown-out 0.2s ease-in;
+}
+
+@keyframes dropdown-in {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.8) translateY(-4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+}
+
+@keyframes dropdown-out {
+  0% {
+    opacity: 1;
+    transform: scaleY(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scaleY(0.8) translateY(-4px);
+  }
+}
+
+/* 选项进入动画 */
+.country-dropdown .country-option {
+  animation: option-fade-in 0.2s ease-out both;
+}
+
+@keyframes option-fade-in {
+  0% {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 发送验证码按钮 */
+.send-code-btn {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 16px;
+  font-size: 13px;
+  color: #CCCCCC;
+  background: transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+}
+
+.send-code-btn:hover:not(:disabled) {
+  /* border-color: #e8a063;
+  color: #e8a063; */
+}
+
+.send-code-btn:disabled {
+  border: 1px solid #ccc;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.send-code-btn.is-counting {
+  color: #999;
+}
+
+/* 体验账号表单样式 */
+.trial-account-form {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+.trial-account-form .form-item {
+  position: relative;
+  margin-bottom: 6px;
+  padding-bottom: 18px;
+}
+
+.trial-account-form .form-input-wrap {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #e8e8e8;
+  padding: 6px 0;
+  transition: border-color 0.2s;
+}
+
+.trial-account-form .form-input-wrap.has-error {
+  border-color: #f56c6c;
+}
+
+.trial-account-form .form-icon {
+  width: 22px;
+  height: 22px;
+  margin-right: 8px;
+}
+
+.trial-account-form .form-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 14px;
+  color: #808080;
+  background: transparent;
+}
+
+.trial-account-form .form-input::placeholder {
+  color: #ccc;
+}
+
+.trial-account-form .error-msg {
+  position: absolute;
+  bottom: 0;
+  left: 30px;
+  color: #f56c6c;
+  font-size: 11px;
+  line-height: 1.2;
+  animation: field-error-in 0.25s ease-out;
+}
+
+/* 下拉选择框 */
+.trial-account-form .form-select-wrap {
+  display: flex;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.trial-account-form .select-label {
+  font-size: 14px;
+  color: #999;
+  width: 80px;
+  flex-shrink: 0;
+}
+
+.trial-account-form .select-box {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.trial-account-form .select-box:hover {
+  border-color: #ccc;
+}
+
+.trial-account-form .select-value {
+  font-size: 14px;
+  color: #333;
+}
+
+.trial-account-form .select-value.placeholder {
+  color: #ccc;
+}
+
+.trial-account-form .select-arrow {
+  font-size: 8px;
+  color: #999;
+  transition: transform 0.25s ease;
+}
+
+.trial-account-form .select-arrow.open {
+  transform: rotate(180deg);
+}
+
+.trial-account-form .select-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #e8e8e8;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.trial-account-form .select-option {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #666;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.trial-account-form .select-option:hover {
+  background-color: #fff7f0;
+  color: #e8a063;
+}
+
+.trial-account-form .select-option.active {
+  background-color: #fff7f0;
+  color: #e8a063;
+}
+
+/* 多选下拉框滚动 */
+.trial-account-form .select-dropdown-scroll {
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+/* 隐藏外层滚动条但保持滚动功能 */
+.trial-account-form .select-dropdown-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.trial-account-form .select-dropdown-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.trial-account-form .select-dropdown-scroll::-webkit-scrollbar-thumb {
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.trial-account-form .select-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+  background: #ccc;
+}
+
+/* 多选复选框样式 */
+.trial-account-form .checkbox {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  margin-right: 8px;
+  position: relative;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.trial-account-form .checkbox.checked {
+  background-color: #FFA54D;
+  border-color: #FFA54D;
+}
+
+.trial-account-form .checkbox.checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.trial-account-form .select-option {
+  display: flex;
+  align-items: center;
+}
+
+/* 提交按钮 */
+.trial-account-form .submit-btn {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
+  background: linear-gradient(135deg, #FFA54D 0%, #FF9933 100%);
+  border: none;
+  border-radius: 25px;
+  font-size: 14px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(255, 165, 77, 0.3);
+}
+
+.trial-account-form .submit-btn:hover {
+  background: linear-gradient(135deg, #FF9933 0%, #FF8800 100%);
+  box-shadow: 0 6px 16px rgba(255, 165, 77, 0.4);
+  transform: translateY(-2px);
+}
+
+.trial-account-form .submit-btn:active {
+  transform: translateY(0);
+}
+
+/* Element Plus Select 自定义样式 */
+.trial-account-form .el-select-custom {
+  flex: 1;
+}
+
+.trial-account-form .el-select-custom .el-input__wrapper {
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px #e8e8e8 inset;
+}
+
+.trial-account-form .el-select-custom .el-input__wrapper:hover {
+  box-shadow: 0 0 0 1px #ccc inset;
+}
+
+.trial-account-form .el-select-custom .el-input__wrapper.is-focus {
+  box-shadow: 0 0 0 1px #FFA54D inset;
+}
+
+.trial-account-form .el-select-custom .el-input__inner {
+  font-size: 14px;
+  color: #333;
+}
+
+.trial-account-form .el-select-custom .el-input__inner::placeholder {
+  color: #ccc;
+}
+
+/* Element Plus 多选标签样式 */
+.el-select__tags .el-tag {
+  background-color: #fff7f0;
+  border-color: #FFA54D;
+  color: #FFA54D;
+}
+
+.el-select__tags .el-tag .el-tag__close {
+  color: #FFA54D;
+}
+
+.el-select__tags .el-tag .el-tag__close:hover {
+  background-color: #FFA54D;
+  color: white;
+}
+
+/* Element Plus 下拉选项样式 */
+.el-select-dropdown__item.selected {
+  color: #FFA54D;
+  font-weight: normal;
+}
+
+.el-select-dropdown__item:hover {
+  background-color: #fff7f0;
+}
+
+/* Element Plus Select 错误状态 */
+.trial-account-form .el-select-custom.is-error .el-input__wrapper {
+  box-shadow: 0 0 0 1px #f56c6c inset;
+}
+
