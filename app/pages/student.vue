@@ -21,9 +21,9 @@
             <div class="text-gray-500 text-xs mb-2">未完成任务</div>
             <div class="bg-[#F1F1F1] text-[#808080] rounded px-3 py-2 text-sm text-center cursor-pointer">
               第一单元 第十课
-            </div>
-          </div>
-          
+        </div>
+      </div>
+
           <!-- 未完成评测 -->
           <div>
             <div class="text-gray-500 text-xs mb-2">未完成评测</div>
@@ -43,12 +43,12 @@
             <div class="flex items-center justify-between mb-4">
               <span class="text-gray-600 text-sm font-medium">玛塔工具中心</span>
               <img src="~/assets/images/diandian.png" alt="more" class="w-4 h-4 cursor-pointer" />
-            </div>
+        </div>
             <div class="flex gap-4 justify-around mt-[60px]">
               <div v-for="i in 3" :key="'tool'+i" class="w-[87px] h-[87px] rounded-lg overflow-hidden cursor-pointer hover:scale-105 transition-transform">
                 <img src="~/assets/images/four.png" alt="工具" class="w-full h-full object-cover" />
-              </div>
-            </div>
+        </div>
+      </div>
           </div>
 
           <!-- AI实践中心 -->
@@ -83,7 +83,7 @@
             <div class="text-gray-600 text-sm mb-4">学情中心</div>
             <div class="center-icon flex items-center justify-center">
               <img src="~/assets/images/xueqing.png" alt="学情中心" class="w-full h-full object-contain" />
-            </div>
+      </div>
           </div>
           <div class="center-card border-2 border-dashed border-[#B8D4E8] rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-white/50 transition-colors">
             <div class="text-gray-600 text-sm mb-4">拓展中心</div>

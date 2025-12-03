@@ -10,7 +10,8 @@ export default defineNuxtConfig({
   // 运行时配置 - API地址等
   runtimeConfig: {
     public: {
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://localhost:8080',
+      // 开发环境用空字符串（走代理），生产环境用实际地址
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '',
     }
   },
   
@@ -34,10 +35,31 @@ export default defineNuxtConfig({
     viewer: true,
   },
   
-  // Element Plus 按需引入
+  // Element Plus 按需引入 + 环境变量
   vite: {
     optimizeDeps: {
       include: ['element-plus']
+    },
+    // 定义环境变量（RSA密钥等）
+    define: {
+      'import.meta.env.VITE_APP_RSA_PUBLIC_KEY': JSON.stringify(process.env.VITE_APP_RSA_PUBLIC_KEY || ''),
+      'import.meta.env.VITE_APP_RSA_PRIVATE_KEY': JSON.stringify(process.env.VITE_APP_RSA_PRIVATE_KEY || ''),
+    },
+    // Vite 开发服务器配置 - 代理
+    server: {
+      proxy: {
+        '/auth': {
+          target: 'http://192.168.0.34:8080',
+          changeOrigin: true,
+          secure: false,
+          configure: (proxy) => {
+            proxy.on('proxyRes', (proxyRes) => {
+              // 暴露自定义响应头给浏览器
+              proxyRes.headers['access-control-expose-headers'] = 'encrypt-key'
+            })
+          }
+        }
+      }
     }
   }
 })

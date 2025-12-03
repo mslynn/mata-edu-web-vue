@@ -28,8 +28,8 @@
                 class="absolute right-0 top-12 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
               >
                 <div class="px-4 py-2 border-b border-gray-100">
-                  <p class="text-sm font-medium text-gray-800 truncate">{{ userInfo?.name || '用户' }}</p>
-                  <p class="text-xs text-gray-400 truncate">{{ userInfo?.roleName || '' }}</p>
+                  <p class="text-sm font-medium text-gray-800 truncate">{{ user?.nick_name || '用户' }}</p>
+                  <p class="text-xs text-gray-400 truncate">{{ user?.role_name || '' }}</p>
                 </div>
                 <button 
                   @click="handleLogout"
@@ -59,7 +59,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-const { logout, userInfo } = useAuth()
+const { logout, user } = useAuth()
 const { allowNavigation } = usePreventBack()
 
 const showDropdown = ref(false)

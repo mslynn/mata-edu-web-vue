@@ -136,6 +136,8 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 
+const { getSmsCode } = useAuth()
+
 const emit = defineEmits<{
   'submit': [data: typeof formData]
   'back': []
@@ -174,7 +176,7 @@ const validatePhone = (phone: string): boolean => {
   return false
 }
 
-const handleSendCode = () => {
+const handleSendCode = async () => {
   if (countdown.value > 0) return
   
   const phone = formData.phone.trim()
@@ -195,14 +197,24 @@ const handleSendCode = () => {
   
   errors.phone = ''
   
-  // 开始60s倒计时
-  countdown.value = 60
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
+  try {
+    // 调用发送验证码接口
+    console.log('📤 重置密码-发送验证码:', phone)
+    await getSmsCode(phone)
+    console.log('✅ 验证码发送成功')
+    
+    // 开始60s倒计时
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error: any) {
+    console.error('❌ 验证码发送失败:', error)
+    errors.phone = error?.data?.msg || error?.message || '验证码发送失败'
+  }
 }
 
 const handleSubmit = () => {
@@ -233,12 +245,13 @@ const handleSubmit = () => {
     hasError = true
   }
   
-  // 校验新密码
+  // 校验新密码（8-16位，必须包含数字+大小写字母）
+  const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,16}$/
   if (!formData.password.trim()) {
     errors.password = '请输入新密码'
     hasError = true
-  } else if (formData.password.length < 6) {
-    errors.password = '密码长度不能少于6位'
+  } else if (!passwordRegex.test(formData.password)) {
+    errors.password = '密码需由8-16位数字+大小写字母组成'
     hasError = true
   }
   

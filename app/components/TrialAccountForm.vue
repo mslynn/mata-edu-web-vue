@@ -20,30 +20,30 @@
 
     <!-- 手机号 -->
     <div class="form-item">
-      <div :class="['form-input-wrap', errors.phone && 'has-error']">
+      <div :class="['form-input-wrap', errors.phonenumber && 'has-error']">
         <img src="~/assets/images/tel.png" alt="手机" class="form-icon" />
         <CountryCodeSelector v-model="countryCode" class="mr-3" />
         <input 
-          v-model="formData.phone"
+          v-model="formData.phonenumber"
           type="tel" 
           placeholder="请输入手机号"
           class="form-input"
-          @input="clearError('phone')"
+          @input="clearError('phonenumber')"
         />
       </div>
-      <p v-if="errors.phone" class="error-msg">{{ errors.phone }}</p>
+      <p v-if="errors.phonenumber" class="error-msg">{{ errors.phonenumber }}</p>
     </div>
 
     <!-- 验证码 -->
     <div class="form-item">
-      <div :class="['form-input-wrap', errors.code && 'has-error']">
+      <div :class="['form-input-wrap', errors.smsCode && 'has-error']">
         <img src="~/assets/images/code.png" alt="验证码" class="form-icon" />
         <input 
-          v-model="formData.code"
+          v-model="formData.smsCode"
           type="text" 
           placeholder="请输入验证码"
           class="form-input"
-          @input="clearError('code')"
+          @input="clearError('smsCode')"
         />
         <button 
           class="send-code-btn"
@@ -54,22 +54,22 @@
           {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
         </button>
       </div>
-      <p v-if="errors.code" class="error-msg">{{ errors.code }}</p>
+      <p v-if="errors.smsCode" class="error-msg">{{ errors.smsCode }}</p>
     </div>
 
     <!-- 企业/学校名称 -->
     <div class="form-item">
-      <div :class="['form-input-wrap', errors.company && 'has-error']">
+      <div :class="['form-input-wrap', errors.organizationName && 'has-error']">
         <img src="~/assets/images/apply.png" alt="企业" class="form-icon" />
         <input 
-          v-model="formData.company"
+          v-model="formData.organizationName"
           type="text" 
           placeholder="企业/学校名称"
           class="form-input"
-          @input="clearError('company')"
+          @input="clearError('organizationName')"
         />
       </div>
-      <p v-if="errors.company" class="error-msg">{{ errors.company }}</p>
+      <p v-if="errors.organizationName" class="error-msg">{{ errors.organizationName }}</p>
     </div>
 
     <!-- 体验目的（多选） -->
@@ -122,19 +122,16 @@
       <p v-if="errors.products" class="error-msg">{{ errors.products }}</p>
     </div>
 
-    <!-- 登录按钮 -->
-    <button class="submit-btn" @click="handleSubmit">
-      登录
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 
+const { getSmsCode } = useAuth()
+
 const emit = defineEmits<{
   'submit': [data: typeof formData]
-  'send-code': [phone: string, countryCode: string]
 }>()
 
 const countryCode = ref('86')
@@ -142,18 +139,18 @@ const countdown = ref(0)
 
 const formData = reactive({
   name: '',
-  phone: '',
-  code: '',
-  company: '',
+  phonenumber: '',
+  smsCode: '',
+  organizationName: '',
   purposes: [] as string[],   // 多选，初始化为空
   products: [] as string[]    // 多选，初始化为空
 })
 
 const errors = reactive({
   name: '',
-  phone: '',
-  code: '',
-  company: '',
+  phonenumber: '',
+  smsCode: '',
+  organizationName: '',
   purposes: '',
   products: ''
 })
@@ -169,44 +166,54 @@ const clearError = (field: keyof typeof errors) => {
 }
 
 // 校验手机号格式
-const validatePhone = (phone: string): boolean => {
+const validatePhone = (phonenumber: string): boolean => {
   if (countryCode.value === '86') {
-    return /^1[3-9]\d{9}$/.test(phone)
+    return /^1[3-9]\d{9}$/.test(phonenumber)
   } else if (countryCode.value === '852') {
-    return /^[569]\d{7}$/.test(phone)
+    return /^[569]\d{7}$/.test(phonenumber)
   }
   return false
 }
 
-const handleSendCode = () => {
+const handleSendCode = async () => {
   if (countdown.value > 0) return
   
-  const phone = formData.phone.trim()
+  const phonenumber = formData.phonenumber.trim()
   
-  if (!phone) {
-    errors.phone = '请输入手机号'
+  if (!phonenumber) {
+    errors.phonenumber = '请输入手机号'
     return
   }
   
-  if (!validatePhone(phone)) {
+  if (!validatePhone(phonenumber)) {
     if (countryCode.value === '86') {
-      errors.phone = '请输入正确的11位手机号'
+      errors.phonenumber = '请输入正确的11位手机号'
     } else if (countryCode.value === '852') {
-      errors.phone = '请输入正确的8位香港手机号'
+      errors.phonenumber = '请输入正确的8位香港手机号'
     }
     return
   }
   
-  errors.phone = ''
-  emit('send-code', phone, countryCode.value)
+  errors.phonenumber = ''
   
-  countdown.value = 60
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
+  try {
+    // 调用获取验证码接口
+    console.log('📤 申请体验账号-发送验证码:', phonenumber)
+    await getSmsCode(phonenumber)
+    console.log('✅ 验证码发送成功')
+    
+    // 开始倒计时
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error: any) {
+    console.error('❌ 验证码发送失败:', error)
+    errors.phonenumber = error?.data?.msg || error?.message || '验证码发送失败'
+  }
 }
 
 
@@ -218,25 +225,25 @@ const handleSubmit = () => {
     hasError = true
   }
   
-  if (!formData.phone.trim()) {
-    errors.phone = '请输入手机号'
+  if (!formData.phonenumber.trim()) {
+    errors.phonenumber = '请输入手机号'
     hasError = true
-  } else if (!validatePhone(formData.phone.trim())) {
+  } else if (!validatePhone(formData.phonenumber.trim())) {
     if (countryCode.value === '86') {
-      errors.phone = '请输入正确的11位手机号'
+      errors.phonenumber = '请输入正确的11位手机号'
     } else {
-      errors.phone = '请输入正确的8位香港手机号'
+      errors.phonenumber = '请输入正确的8位香港手机号'
     }
     hasError = true
   }
   
-  if (!formData.code.trim()) {
-    errors.code = '请输入验证码'
+  if (!formData.smsCode.trim()) {
+    errors.smsCode = '请输入验证码'
     hasError = true
   }
   
-  if (!formData.company.trim()) {
-    errors.company = '请输入企业/学校名称'
+  if (!formData.organizationName.trim()) {
+    errors.organizationName = '请输入企业/学校名称'
     hasError = true
   }
   
@@ -254,6 +261,11 @@ const handleSubmit = () => {
   
   emit('submit', { ...formData })
 }
+
+// 暴露方法给父组件调用
+defineExpose({
+  handleSubmit
+})
 </script>
 
 <!-- 样式已移至 assets/css/main.css 避免SSR闪烁 -->

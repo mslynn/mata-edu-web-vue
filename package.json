@@ -11,12 +11,17 @@
   },
   "dependencies": {
     "@css-render/vue3-ssr": "^0.15.14",
+    "axios": "^1.13.2",
+    "crypto-js": "^4.2.0",
     "element-plus": "^2.11.8",
+    "jsencrypt": "^3.3.2",
     "nuxt": "^4.2.1",
     "vue": "^3.5.25",
     "vue-router": "^4.6.3"
   },
   "devDependencies": {
-    "@nuxtjs/tailwindcss": "^6.14.0"
+    "@nuxtjs/tailwindcss": "^6.14.0",
+    "@types/crypto-js": "^4.2.2",
+    "@types/node": "^24.10.1"
   }
 }

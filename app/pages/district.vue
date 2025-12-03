@@ -13,7 +13,7 @@
               alt="数据中心" 
               class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
-          </div>
+      </div>
           <div class="card-title">数据中心</div>
         </div>
     

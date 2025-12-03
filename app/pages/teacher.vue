@@ -151,24 +151,49 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 definePageMeta({
   layout: 'default'
 })
 
-const activeMenu = ref('ai')
+const { getTeacherMenu } = useTeacher()
+const { showLoading, hideLoading } = useLoading()
 
-const menuItems = [
-  { name: 'home', label: '首页' },
-  { name: 'class', label: '班级管理' },
-  { name: 'course', label: '课程中心' },
-  { name: 'tools', label: '玛塔工具中心' },
-  { name: 'ai', label: 'AI实践中心' },
-  { name: 'study', label: '学情中心' },
-  { name: 'growth', label: '教师成长中心' },
-  { name: 'competition', label: '赛事中心' },
-]
+const activeMenu = ref('ai')
+const menuItems = ref<any[]>([])
+
+// 获取菜单数据
+const fetchMenu = async () => {
+  showLoading()
+  try {
+    const data = await getTeacherMenu()
+    console.log('📥 菜单数据:', data)
+    menuItems.value = data || []
+  } catch (error) {
+    console.error('获取菜单失败:', error)
+    // 使用默认菜单
+    menuItems.value = [
+      { name: 'home', label: '首页' },
+      { name: 'class', label: '班级管理' },
+      { name: 'course', label: '课程中心' },
+      { name: 'tools', label: '玛塔工具中心' },
+      { name: 'ai', label: 'AI实践中心' },
+      { name: 'study', label: '学情中心' },
+      { name: 'growth', label: '教师成长中心' },
+      { name: 'competition', label: '赛事中心' },
+    ]
+  } finally {
+    // 延迟一点关闭，让动画更丝滑
+    setTimeout(() => {
+      hideLoading()
+    }, 300)
+  }
+}
+
+onMounted(() => {
+  fetchMenu()
+})
 </script>
 
 <style scoped>

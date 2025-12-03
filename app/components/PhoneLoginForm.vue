@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Country } from './CountryCodeSelector.vue'
+const { getSmsCode } = useAuth();
 
 interface Props {
   modelValue: {
@@ -124,7 +125,7 @@ const validatePhone = (phone: string): boolean => {
   return false
 }
 
-const handleSendCode = () => {
+const handleSendCode = async () => {
   if (countdown.value > 0) return
   
   const phone = props.modelValue.phone.trim()
@@ -153,17 +154,28 @@ const handleSendCode = () => {
   // 清除手机号错误状态
   emit('update:errors', { ...props.errors, phone: false })
   
-  // 发送验证码
-  emit('send-code')
-  
-  // 开始60s倒计时
-  countdown.value = 60
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
+  try {
+    // 调用发送验证码接口 - 参数为 phonenumber
+    console.log('📤 发送验证码:', { phonenumber: phone })
+    await getSmsCode(phone)
+    console.log('✅ 验证码发送成功')
+    
+    // 发送验证码事件
+    emit('send-code')
+    
+    // 开始60s倒计时
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error: any) {
+    console.error('❌ 验证码发送失败:', error)
+    phoneErrorMsg.value = error?.data?.msg || error?.message || '验证码发送失败'
+    emit('update:errors', { ...props.errors, phone: true })
+  }
 }
 
 const handleTogglePasswordLogin = () => {
