@@ -11,7 +11,7 @@ export const useTeacher = () => {
       const response = await http.get('/system/menu/getRouters')
       return response.data
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '获取老师左侧菜单信息失败')
+     // ElMessage.error(error?.data?.msg || error?.message || '获取老师左侧菜单信息失败')
       throw error
     }
   }
@@ -24,7 +24,7 @@ export const useTeacher = () => {
       }
       return response.data
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '获取教师信息失败')
+      //ElMessage.error(error?.data?.msg || error?.message || '获取教师信息失败')
       throw error
     }
   }
@@ -38,7 +38,7 @@ export const useTeacher = () => {
       }
       return response.data
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '获取班级列表失败')
+     // ElMessage.error(error?.data?.msg || error?.message || '获取班级列表失败')
       throw error
     }
   }
@@ -52,7 +52,7 @@ export const useTeacher = () => {
       }
       return response.data
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '获取学生列表失败')
+    //  ElMessage.error(error?.data?.msg || error?.message || '获取学生列表失败')
       throw error
     }
   }
@@ -66,7 +66,7 @@ export const useTeacher = () => {
       }
       return response.data
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '获取课程列表失败')
+      //ElMessage.error(error?.data?.msg || error?.message || '获取课程列表失败')
       throw error
     }
   }

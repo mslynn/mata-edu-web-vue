@@ -6,8 +6,9 @@ import { ElMessage } from 'element-plus'
 import { generateAesKey, encryptWithAes, encryptBase64 } from '~/utils/crypto'
 import { encrypt } from '~/utils/jsencrypt'
 
-// 基础配置
-const BASE_URL = 'http://192.168.0.34:8080'
+// 基础配置 - 从环境变量读取
+const config = useRuntimeConfig()
+const BASE_URL = config.public.apiBaseUrl 
 
 // 加密请求头名称
 const ENCRYPT_HEADER = 'encrypt-key'
@@ -66,6 +67,9 @@ export const useHttp = () => {
     // 检查是否需要加密
     const needEncrypt = headers['isEncrypt'] === 'true'
     
+    // 检查是否需要显示成功提示（默认：GET 不显示，其他方法显示）
+    const showSuccessMsg = headers['showSuccessMsg'] !== 'false'
+    
     // 处理请求体和加密
     let processedBody = body
     
@@ -88,8 +92,13 @@ export const useHttp = () => {
       })
     }
     
-    // 移除 isEncrypt header（这是给前端用的，不需要发送给后端）
+    // 移除前端控制用的 headers（不需要发送给后端）
     delete headers['isEncrypt']
+    delete headers['showSuccessMsg']
+    
+    // 保存是否显示成功提示的标志（用于响应拦截）
+    const shouldShowSuccess = showSuccessMsg && method !== 'GET'
+    
     try {
       const response = await $fetch<T>(url, {
         baseURL: BASE_URL,
@@ -109,8 +118,9 @@ export const useHttp = () => {
           console.log('📥 响应:', response._data)
           const { code, msg } = response._data || {}
           if (code === 200) {
-            // 成功时如果有 msg 才提示
-            if (msg) {
+            // GET 请求（查询类）默认不显示成功提示，避免列表查询时出现大量提示
+            // POST/PUT/DELETE 等操作类请求，如果 shouldShowSuccess 为 true 且有 msg 才显示成功提示
+            if (msg && shouldShowSuccess) {
               ElMessage.success(msg)
             }
           } else if (code) {

@@ -10,8 +10,8 @@ export default defineNuxtConfig({
   // 运行时配置 - API地址等
   runtimeConfig: {
     public: {
-      // 开发环境用空字符串（走代理），生产环境用实际地址
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || '',
+      // API 基础地址，从环境变量读取，默认值用于开发环境
+      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://192.168.0.32:8080',
     }
   },
   
@@ -49,7 +49,7 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/auth': {
-          target: 'http://192.168.0.34:8080',
+          target: 'http://192.168.0.32:8080',
           changeOrigin: true,
           secure: false,
           configure: (proxy) => {

@@ -80,8 +80,8 @@
           />
           <!-- 手机号登录表单 -->
           <PhoneLoginForm
-            v-else-if="loginType === 'phone'"
-            key="phone"
+            v-else-if="loginType === 'phonenumber'"
+            key="phonenumber"
             v-model:model-value="phoneForm"
             v-model:errors="phoneErrors"
             @send-smsCode="sendCode"
@@ -306,9 +306,9 @@ const handleLogin = async () => {
     } catch (error: any) {
       console.error("❌ 登录失败:", error);
       isNavigating.value = false;
-      ElMessage.error(error?.data?.msg || error?.message || "登录失败，请重试");
+      // ElMessage.error(error?.data?.msg || error?.message || "登录失败，请重试");
     }
-  } else if (loginType.value === "phone") {
+  } else if (loginType.value === "phonenumber") {
     // 手机号登录
     phoneErrors.value.phone = false;
     phoneErrors.value.code = false;
@@ -358,10 +358,11 @@ const handleLogin = async () => {
     }
     try {
       isNavigating.value = true;
-      await login({
-        classCode: classCodeForm.value.classCode,
-        classPassword: classCodeForm.value.classPassword,
-      });
+      await login(
+        classCodeForm.value.classCode,
+        classCodeForm.value.classPassword,
+        'password'
+      );
       allowNavigation(); // 允许跳转
       //   window.location.replace(getRedirectPath())
     } catch (error) {

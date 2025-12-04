@@ -134,7 +134,7 @@ export const useAuth = () => {
         window.location.href = '/'
       }
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '登出失败')
+      // ElMessage.error(error?.data?.msg || error?.message || '登出失败')
     }
   }
   //获取手机验证码
@@ -143,7 +143,7 @@ export const useAuth = () => {
       const response = await http.get(`/resource/sms/code?phonenumber=${phonenumber}`)
       return response
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '获取验证码失败')
+      // ElMessage.error(error?.data?.msg || error?.message || '获取验证码失败')
       throw error
     }
   }
@@ -160,7 +160,7 @@ export const useAuth = () => {
       })
       return response
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '申请体验账号失败')
+     // ElMessage.error(error?.data?.msg || error?.message || '申请体验账号失败')
       throw error
     }
   }
@@ -177,7 +177,7 @@ export const useAuth = () => {
       })
       return response
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '重置密码失败')
+    //  ElMessage.error(error?.data?.msg || error?.message || '重置密码失败')
       throw error
     }
   }
@@ -188,7 +188,7 @@ export const useAuth = () => {
       user.value = response
       return response
     } catch (error: any) {
-      ElMessage.error(error?.data?.msg || error?.message || '获取用户信息失败')
+   //   ElMessage.error(error?.data?.msg || error?.message || '获取用户信息失败')
       throw error
     }
   }

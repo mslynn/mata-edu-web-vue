@@ -10,11 +10,11 @@
             :key="item.name"
             :class="[
               'menu-item block px-4 py-2.5 rounded-full text-[14px] cursor-pointer',
-              activeMenu === item.name 
+              activeMenu === item.activeMenu 
                 ? 'active bg-[#FFA54D] text-white shadow-[0_2px_8px_rgba(255,165,77,0.4)]' 
                 : 'text-[#666666] hover:bg-white/50'
             ]"
-            @click="activeMenu = item.name"
+            @click="activeMenu = item.activeMenu"
           >
             {{ item.label }}
           </a>
@@ -160,7 +160,7 @@ definePageMeta({
 const { getTeacherMenu } = useTeacher()
 const { showLoading, hideLoading } = useLoading()
 
-const activeMenu = ref('ai')
+const activeMenu = ref('')
 const menuItems = ref<any[]>([])
 
 // 获取菜单数据
@@ -169,20 +169,50 @@ const fetchMenu = async () => {
   try {
     const data = await getTeacherMenu()
     console.log('📥 菜单数据:', data)
-    menuItems.value = data || []
+    
+    // 提取 title、activeMenu 和 component
+    if (Array.isArray(data)) {
+      const extractedMenus = data.map((item: any) => {
+        const child = item.children?.[0]
+        if (child) {
+          return {
+            name: child.path || child.name,
+            label: child.meta?.title || '',
+            component: child.component || '',
+            activeMenu: child.path || ''
+          }
+        }
+        return null
+      }).filter(Boolean)
+      
+      // 在开头添加默认首页
+      menuItems.value = [
+        { name: 'home', label: '首页', component: '', activeMenu: 'home' },
+        ...extractedMenus
+      ]
+      
+      // 设置首页为默认激活
+      activeMenu.value = 'home'
+    } else {
+      menuItems.value = [
+        { name: 'home', label: '首页', component: '', activeMenu: 'home' }
+      ]
+      activeMenu.value = 'home'
+    }
   } catch (error) {
     console.error('获取菜单失败:', error)
     // 使用默认菜单
     menuItems.value = [
-      { name: 'home', label: '首页' },
-      { name: 'class', label: '班级管理' },
-      { name: 'course', label: '课程中心' },
-      { name: 'tools', label: '玛塔工具中心' },
-      { name: 'ai', label: 'AI实践中心' },
-      { name: 'study', label: '学情中心' },
-      { name: 'growth', label: '教师成长中心' },
-      { name: 'competition', label: '赛事中心' },
+      { name: 'home', label: '首页', component: '', activeMenu: 'home' },
+      { name: 'class', label: '班级管理', component: '', activeMenu: 'class' },
+      { name: 'course', label: '课程中心', component: '', activeMenu: 'course' },
+      { name: 'tools', label: '玛塔工具中心', component: '', activeMenu: 'tools' },
+      { name: 'ai', label: 'AI实践中心', component: '', activeMenu: 'ai' },
+      { name: 'study', label: '学情中心', component: '', activeMenu: 'study' },
+      { name: 'growth', label: '教师成长中心', component: '', activeMenu: 'growth' },
+      { name: 'competition', label: '赛事中心', component: '', activeMenu: 'competition' },
     ]
+    activeMenu.value = 'home'
   } finally {
     // 延迟一点关闭，让动画更丝滑
     setTimeout(() => {
