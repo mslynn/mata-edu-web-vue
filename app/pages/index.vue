@@ -1,0 +1,446 @@
+<template>
+  <!-- 如果已登录，显示首页 -->
+  <div v-if="isAuthenticated" class="p-8">
+    <!-- <h1 class="text-2xl font-bold mb-4">欢迎回来！</h1>
+    <p class="text-gray-600 mb-6">这是智慧教育平台的首页</p>
+    <button 
+      @click="handleLogout"
+      class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+    >
+      退出登录
+    </button> -->
+  </div>
+  <!-- 如果未登录，显示登录表单 -->
+  <div
+    v-else
+    class="flex bg-white rounded-lg border border-dashed border-gray-300 overflow-hidden h-[600px] w-full max-w-[1000px]"
+  >
+    <!-- 左侧插图 -->
+    <div class="p-[33px]">
+      <img src="~/assets/images/bg.png" alt="背景插图" class="object-contain" />
+    </div>
+    <!-- 右侧登录表单 -->
+    <div class="flex-1 pt-[104px] px-10 flex flex-col relative">
+      <!-- 返回按钮（班级码登录、体验账号、忘记密码） -->
+      <button
+        v-if="
+          loginType === 'classcode' ||
+          loginType === 'trial' ||
+          loginType === 'forgotPassword'
+        "
+        @click="loginType = 'campus'"
+        class="absolute top-10 left-0 w-10 h-10 flex items-center justify-center text-gray-400 hover:text-gray-600 transition-colors z-10"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M19 12H5" />
+          <path d="M12 19l-7-7 7-7" />
+        </svg>
+      </button>
+      <!-- 登录方式切换 -->
+      <LoginTabs
+        v-if="
+          loginType !== 'classcode' &&
+          loginType !== 'trial' &&
+          loginType !== 'forgotPassword'
+        "
+        v-model="loginType"
+      />
+      <!-- 班级码登录标题（固定高度，与 LoginTabs 高度一致） -->
+      <div
+        v-if="loginType === 'classcode'"
+        class="h-[72px] flex items-center justify-center mb-8"
+      >
+        <p class="text-gray-500 text-sm">请输入班级码和密码</p>
+      </div>
+      <!-- 体验账号无需标题，直接显示表单 -->
+      <!-- <div v-if="loginType === 'trial'" class="h-[20px]"></div> -->
+      <!-- 表单内容 -->
+      <div
+        v-if="loginType !== 'trial' && loginType !== 'forgotPassword'"
+        class="relative h-[190px] flex flex-col"
+      >
+        <Transition name="slide-fade" mode="out-in">
+          <!-- 校园账号登录表单 -->
+          <CampusLoginForm
+            v-if="loginType === 'campus'"
+            key="campus"
+            v-model:model-value="campusForm"
+            v-model:errors="campusErrors"
+            @forgot-password="loginType = 'forgotPassword'"
+          />
+          <!-- 手机号登录表单 -->
+          <PhoneLoginForm
+            v-else-if="loginType === 'phonenumber'"
+            key="phonenumber"
+            v-model:model-value="phoneForm"
+            v-model:errors="phoneErrors"
+            @send-smsCode="sendCode"
+            @toggle-password-login="togglePasswordLogin"
+          />
+          <!-- 班级码登录表单 -->
+          <ClassCodeLoginForm
+            v-else-if="loginType === 'classcode'"
+            key="classcode"
+            v-model:model-value="classCodeForm"
+            v-model:errors="classCodeErrors"
+            @back="loginType = 'campus'"
+          />
+        </Transition>
+      </div>
+      <!-- 体验账号申请表单 -->
+      <div v-else-if="loginType === 'trial'">
+        <TrialAccountForm
+          ref="trialFormRef"
+          @submit="handleTrialSubmit"
+        />
+      </div>
+      <!-- 登录/提交按钮（除了忘记密码外都显示） -->
+      <client-only v-if="loginType !== 'forgotPassword'">
+        <button
+          class="w-full py-3 mt-4 bg-[#FFA54D] border border-solid border-gray-300 rounded-[40px] text-white text-base font-medium cursor-pointer transition-colors"
+          @click="handleLogin"
+        >
+          {{ isTrialMode ? '提交' : '登录' }}
+        </button>
+      </client-only>
+      <!-- 协议勾选（除了忘记密码和体验账号外都显示） -->
+      <AgreementCheckbox
+        v-if="loginType !== 'forgotPassword' && loginType !== 'trial'"
+        v-model="agreed"
+        @show-agreement="showAgreementModal = true"
+        @show-privacy="showPrivacyModal = true"
+      />
+      <!-- 忘记密码表单 -->
+      <div
+        v-else-if="loginType === 'forgotPassword'"
+        class="flex-1 overflow-auto"
+      >
+        <ForgotPasswordForm
+          @submit="handleForgotPasswordSubmit"
+          @back="loginType = 'campus'"
+        />
+      </div>
+      <!-- 测试账号提示（仅手机号登录时显示） -->
+      <!-- <div
+        v-if="loginType === 'phonenumber'"
+        class="mb-4 p-3 bg-blue-50 rounded text-xs text-blue-600"
+      >
+        <div class="font-medium mb-1">📱 测试账号（验证码统一为: 123456）</div>
+        <div>• 手机尾号 <strong>1</strong> → 市区管理员</div>
+        <div>• 手机尾号 <strong>2</strong> → 学校管理员</div>
+        <div>• 手机尾号 <strong>3</strong> → 老师</div>
+        <div>• 手机尾号 <strong>4</strong> → 学生</div>
+      </div> -->
+      <!-- 底部其他登录方式 -->
+      <OtherLoginOptions
+        v-if="
+          loginType !== 'classcode' &&
+          loginType !== 'trial' &&
+          loginType !== 'forgotPassword'
+        "
+        @classcode-login="loginType = 'classcode'"
+        @apply-account="handleApplyAccount"
+      />
+    </div>
+
+    <!-- 协议未勾选提示弹窗 -->
+    <Modal
+      v-model="showAgreementRequiredModal"
+      title="提示"
+      @confirm="handleAgreementConfirm"
+      @cancel="showAgreementRequiredModal = false"
+    >
+      <div class="text-center">
+        <p>我已阅读同意用户协议，隐私协议。</p>
+      </div>
+    </Modal>
+  </div>
+</template>
+<script setup lang="ts">
+import { ref, watch, nextTick, computed } from "vue";
+import { ElMessage } from "element-plus";
+const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword } = useAuth();
+// 登录页也阻止返回
+const { allowNavigation } = usePreventBack();
+// 是否正在跳转（防止布局闪烁）
+const isNavigating = ref(false);
+// 根据登录状态动态切换布局（跳转时不切换）
+// 只在客户端执行，避免 hydration 错误
+if (import.meta.client) {
+  watch(
+    isAuthenticated,
+    (authenticated) => {
+      if (!isNavigating.value) {
+        setPageLayout(authenticated ? "default" : "auth");
+      }
+    },
+    { immediate: true }
+  );
+}
+// 默认使用 auth 布局
+definePageMeta({
+  layout: "auth",
+});
+const loginType = ref<
+  "campus" | "phonenumber" | "classcode" | "trial" | "forgotPassword"
+>("campus");
+const isTrialMode = computed(() => loginType.value === "trial");
+const trialFormRef = ref<{ handleSubmit: () => void } | null>(null);
+const agreed = ref(false);
+const countdown = ref(0);
+const showAgreementRequiredModal = ref(false);
+const showAgreementModal = ref(false);
+const showPrivacyModal = ref(false);
+// 校园账号表单数据
+const campusForm = ref({
+  username: "",
+  password: "",
+});
+const campusErrors = ref({
+  username: false,
+  password: false,
+});
+// 手机号表单数据
+const phoneForm = ref({
+  phone: "",
+  code: "",
+});
+const phoneErrors = ref({
+  phone: false,
+  code: false,
+});
+// 班级码表单数据
+const classCodeForm = ref({
+  classCode: "",
+  classPassword: "",
+});
+const classCodeErrors = ref({
+  classCode: false,
+  classPassword: false,
+});
+// 重置表单函数
+const resetForm = () => {
+  campusForm.value = { username: "", password: "" };
+  campusErrors.value = { username: false, password: false };
+  phoneForm.value = { phone: "", code: "" };
+  phoneErrors.value = { phone: false, code: false };
+  classCodeForm.value = { classCode: "", classPassword: "" };
+  classCodeErrors.value = { classCode: false, classPassword: false };
+};
+// 监听登录方式切换，重置表单和消息
+watch(loginType, () => {
+  resetForm();
+});
+const sendCode = async () => {
+  // 验证码发送已在 PhoneLoginForm 组件内部处理
+  console.log('📤 发送验证码事件触发');
+};
+const togglePasswordLogin = () => {
+  loginType.value = "campus";
+};
+const handleApplyAccount = () => {
+  console.log('🎯 点击申请体验账号，切换到 trial');
+  loginType.value = "trial";
+  console.log('loginType 已切换为:', loginType.value);
+};
+const handleLogin = async () => {
+  console.log("🚀 handleLogin called!", {
+    agreed: agreed.value,
+    loginType: loginType.value,
+    campusForm: campusForm.value,
+  });
+  // 体验账号申请（不需要勾选协议）
+  if (loginType.value === "trial") {
+    trialFormRef.value?.handleSubmit();
+    return;
+  }
+
+  // 其他登录方式需要勾选协议
+  if (!agreed.value) {
+    showAgreementRequiredModal.value = true;
+    return;
+  }
+  console.log("loginType", loginType.value);
+
+  if (loginType.value === "campus") {
+    // 校园账号登录
+    campusErrors.value.username = false;
+    campusErrors.value.password = false;
+
+    if (!campusForm.value.username || !campusForm.value.password) {
+      if (!campusForm.value.username) campusErrors.value.username = true;
+      if (!campusForm.value.password) campusErrors.value.password = true;
+      return;
+    }
+    try {
+      isNavigating.value = true;
+      const result = await login(
+        campusForm.value.username,
+        campusForm.value.password,
+        'password'
+      );
+      console.log("✅ 登录结果:", result);
+
+      // 登录成功，跳转到对应页面
+      if (result?.redirectPath) {
+        allowNavigation();
+        // 使用硬刷新跳转，确保布局正确
+        // 开发环境延迟一下方便看控制台，生产环境直接跳转
+        setPageLayout("default"); // 先切换布局
+        await nextTick(); // 等待 DOM 更新
+        await navigateTo(result.redirectPath, { replace: true });
+      } else {
+        console.error("❌ 未获取到跳转路径");
+        isNavigating.value = false;
+      }
+    } catch (error: any) {
+      console.error("❌ 登录失败:", error);
+      isNavigating.value = false;
+      // ElMessage.error(error?.data?.msg || error?.message || "登录失败，请重试");
+    }
+  } else if (loginType.value === "phonenumber") {
+    // 手机号登录
+    phoneErrors.value.phone = false;
+    phoneErrors.value.code = false;
+
+    if (!phoneForm.value.phone || !phoneForm.value.code) {
+      if (!phoneForm.value.phone) phoneErrors.value.phone = true;
+      if (!phoneForm.value.code) phoneErrors.value.code = true;
+      return;
+    }
+    try {
+      // 设置跳转标志，防止布局闪烁
+      isNavigating.value = true;
+      const result = await login(
+        phoneForm.value.phone,
+        phoneForm.value.code,
+        'sms'
+      );
+      
+      console.log('✅ 手机号登录结果:', result);
+      
+      if (result?.redirectPath) {
+        // 登录成功，跳转到对应页面
+        allowNavigation();
+        setPageLayout("default");
+        await nextTick();
+        await navigateTo(result.redirectPath, { replace: true });
+      } else {
+        isNavigating.value = false;
+       // ElMessage.error(result?.msg || "登录失败，请重试");
+      }
+    } catch (error: any) {
+      console.error("❌ 手机号登录失败:", error);
+      isNavigating.value = false;
+     // ElMessage.error(error?.data?.msg || error?.message || "登录失败，请重试");
+    }
+  } else if (loginType.value === "classcode") {
+    // 班级码登录
+    classCodeErrors.value.classCode = false;
+    classCodeErrors.value.classPassword = false;
+
+    if (!classCodeForm.value.classCode || !classCodeForm.value.classPassword) {
+      if (!classCodeForm.value.classCode)
+        classCodeErrors.value.classCode = true;
+      if (!classCodeForm.value.classPassword)
+        classCodeErrors.value.classPassword = true;
+      return;
+    }
+    try {
+      isNavigating.value = true;
+      await login(
+        classCodeForm.value.classCode,
+        classCodeForm.value.classPassword,
+        'password'
+      );
+      allowNavigation(); // 允许跳转
+      //   window.location.replace(getRedirectPath())
+    } catch (error) {
+      isNavigating.value = false;
+      alert("登录失败，请重试");
+    }
+  }
+};
+const handleLogout = () => {
+  logout();
+};
+// 体验账号提交
+const handleTrialSubmit = async (data: any) => {
+  console.log("体验账号申请数据:", data);
+  try {
+    await applyTrialAccount(
+      data.name,
+      data.phonenumber,
+      data.smsCode,
+      data.organizationName,
+      data.purposes.join(','),   // purpose: 多选转为逗号分隔字符串
+      data.products.join(',')    // product: 多选转为逗号分隔字符串
+    );
+    console.log('✅ 申请提交成功');
+
+    loginType.value = "campus";
+  } catch (error: any) {
+    console.error('❌ 申请提交失败:', error);
+   // ElMessage.error(error?.data?.msg || error?.message || "申请提交失败，请重试");
+  }
+};
+// 忘记密码提交
+const handleForgotPasswordSubmit = async (data: any) => {
+  console.log("重置密码数据:", data);
+  try {
+    let res =  await resetPassword(data.phone, data.code, data.password);
+    console.log('✅ 密码重置结果', res);
+    if (res.code === 200) {
+      loginType.value = "campus";
+    } else {
+    //  ElMessage.error(res.msg || "密码重置失败，请重试");
+    }
+ 
+ 
+  } catch (error: any) {
+    console.error('❌ 密码重置失败:', error);
+  //  ElMessage.error(error?.data?.msg || error?.message || "密码重置失败，请重试");
+  }
+};
+const handleAgreementConfirm = () => {
+  agreed.value = true;
+  showAgreementRequiredModal.value = false;
+  // 确认协议后直接触发登录
+  handleLogin();
+};
+// 是否允许离开页面（只有退出登录时才允许）
+// const allowLeave = ref(false)
+// // 使用路由守卫阻止返回
+// onBeforeRouteLeave(() => {
+//   if (!allowLeave.value) {
+//     return false // 阻止离开
+//   }
+// })
+</script>
+<style scoped>
+/* Tab 切换动画 */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.2s ease-in;
+}
+.slide-fade-enter-from {
+  transform: translateX(10px);
+  opacity: 0;
+}
+.slide-fade-leave-to {
+  transform: translateX(-10px);
+  opacity: 0;
+}
+</style>
