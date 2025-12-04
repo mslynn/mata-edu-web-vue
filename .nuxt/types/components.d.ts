@@ -14,6 +14,16 @@ type HydrationStrategies = {
 type LazyComponent<T> = DefineComponent<HydrationStrategies, {}, {}, {}, {}, {}, {}, { hydrated: () => void }> & T
 
 interface _GlobalComponents {
+  'AgreementCheckbox': typeof import("../../app/components/AgreementCheckbox.vue")['default']
+  'CampusLoginForm': typeof import("../../app/components/CampusLoginForm.vue")['default']
+  'ClassCodeLoginForm': typeof import("../../app/components/ClassCodeLoginForm.vue")['default']
+  'CountryCodeSelector': typeof import("../../app/components/CountryCodeSelector.vue")['default']
+  'ForgotPasswordForm': typeof import("../../app/components/ForgotPasswordForm.vue")['default']
+  'LoginTabs': typeof import("../../app/components/LoginTabs.vue")['default']
+  'Modal': typeof import("../../app/components/Modal.vue")['default']
+  'OtherLoginOptions': typeof import("../../app/components/OtherLoginOptions.vue")['default']
+  'PhoneLoginForm': typeof import("../../app/components/PhoneLoginForm.vue")['default']
+  'TrialAccountForm': typeof import("../../app/components/TrialAccountForm.vue")['default']
   'NuxtWelcome': typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
   'NuxtLayout': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
   'NuxtErrorBoundary': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -26,7 +36,7 @@ interface _GlobalComponents {
   'NuxtRouteAnnouncer': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']
   'NuxtImg': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']
   'NuxtPicture': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']
-  'NuxtPage': typeof import("../../node_modules/nuxt/dist/pages/runtime/page-placeholder")['default']
+  'NuxtPage': typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']
   'NoScript': typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']
   'Link': typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']
   'Base': typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Base']
@@ -37,6 +47,16 @@ interface _GlobalComponents {
   'Html': typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Html']
   'Body': typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Body']
   'NuxtIsland': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-island")['default']
+  'LazyAgreementCheckbox': LazyComponent<typeof import("../../app/components/AgreementCheckbox.vue")['default']>
+  'LazyCampusLoginForm': LazyComponent<typeof import("../../app/components/CampusLoginForm.vue")['default']>
+  'LazyClassCodeLoginForm': LazyComponent<typeof import("../../app/components/ClassCodeLoginForm.vue")['default']>
+  'LazyCountryCodeSelector': LazyComponent<typeof import("../../app/components/CountryCodeSelector.vue")['default']>
+  'LazyForgotPasswordForm': LazyComponent<typeof import("../../app/components/ForgotPasswordForm.vue")['default']>
+  'LazyLoginTabs': LazyComponent<typeof import("../../app/components/LoginTabs.vue")['default']>
+  'LazyModal': LazyComponent<typeof import("../../app/components/Modal.vue")['default']>
+  'LazyOtherLoginOptions': LazyComponent<typeof import("../../app/components/OtherLoginOptions.vue")['default']>
+  'LazyPhoneLoginForm': LazyComponent<typeof import("../../app/components/PhoneLoginForm.vue")['default']>
+  'LazyTrialAccountForm': LazyComponent<typeof import("../../app/components/TrialAccountForm.vue")['default']>
   'LazyNuxtWelcome': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
   'LazyNuxtLayout': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
   'LazyNuxtErrorBoundary': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>
@@ -49,7 +69,7 @@ interface _GlobalComponents {
   'LazyNuxtRouteAnnouncer': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-route-announcer")['default']>
   'LazyNuxtImg': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtImg']>
   'LazyNuxtPicture': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-stubs")['NuxtPicture']>
-  'LazyNuxtPage': LazyComponent<typeof import("../../node_modules/nuxt/dist/pages/runtime/page-placeholder")['default']>
+  'LazyNuxtPage': LazyComponent<typeof import("../../node_modules/nuxt/dist/pages/runtime/page")['default']>
   'LazyNoScript': LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['NoScript']>
   'LazyLink': LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Link']>
   'LazyBase': LazyComponent<typeof import("../../node_modules/nuxt/dist/head/runtime/components")['Base']>
