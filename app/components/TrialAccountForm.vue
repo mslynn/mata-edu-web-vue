@@ -203,13 +203,13 @@ const handleSendCode = async () => {
     console.log('✅ 验证码发送成功')
     
     // 开始倒计时
-    countdown.value = 60
-    const timer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        clearInterval(timer)
-      }
-    }, 1000)
+  countdown.value = 60
+  const timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
   } catch (error: any) {
     console.error('❌ 验证码发送失败:', error)
     errors.phonenumber = error?.data?.msg || error?.message || '验证码发送失败'

@@ -1,23 +1,23 @@
 <template>
   <div class="min-h-screen flex flex-col font-sans">
     <!-- 默认顶部导航栏 -->
-    <header class="header-wrapper">
+    <header class="header-wrapper  bg-[#FF9900] h-[70px]">
       <div class="header-content">
         <div class="flex items-center">
-          <img src="~/assets/images/logo.png" alt="Logo" class="w-[250px] h-[40px] object-contain" />
+          <img src="~/assets/images/logo.png" alt="Logo" class="w-[220px] h-[37px] object-contain" />
         </div>
         <nav class="flex-1 flex justify-center gap-8">
           <!-- 导航菜单占位 -->
         </nav>
         <div class="flex items-center gap-4">
-          <img src="~/assets/images/infor.png" alt="infor" class="w-10 h-10 rounded-lg border border-gray-300 bg-white object-cover hover:border-[#e8a063] transition-all cursor-pointer" />
+          <img src="~/assets/images/infor.png" alt="infor" class="w-10 h-10 rounded-lg  object-cover  transition-all cursor-pointer" />
           
           <!-- 用户头像下拉菜单 -->
           <div class="relative" ref="dropdownRef">
             <img 
               src="~/assets/images/avatar.png" 
               alt="Avatar" 
-              class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 hover:ring-[#FFA54D] transition-all"
+              class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2  transition-all"
               @click="toggleDropdown"
             />
             
@@ -50,7 +50,7 @@
     </header>
 
     <!-- 页面内容插槽 - 样式由各页面自己控制 -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="flex-1 flex flex-col overflow-hidden bg-[#FAFAFA]">
       <slot />
     </div>
   </div>
@@ -94,7 +94,7 @@ onUnmounted(() => {
 <style scoped>
 /* 头部容器 - 全宽背景 */
 .header-wrapper {
-  background: white;
+ 
   /* box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1); */
   position: sticky;
   top: 0;
