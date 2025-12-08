@@ -24,6 +24,16 @@ interface _GlobalComponents {
   'OtherLoginOptions': typeof import("../../app/components/OtherLoginOptions.vue")['default']
   'PhoneLoginForm': typeof import("../../app/components/PhoneLoginForm.vue")['default']
   'TrialAccountForm': typeof import("../../app/components/TrialAccountForm.vue")['default']
+  'MButton': typeof import("../../app/components/ui/MButton.vue")['default']
+  'MInput': typeof import("../../app/components/ui/MInput.vue")['default']
+  'MMessage': typeof import("../../app/components/ui/MMessage")['default']
+  'MModal': typeof import("../../app/components/ui/MModal.vue")['default']
+  'MPagination': typeof import("../../app/components/ui/MPagination.vue")['default']
+  'MSelect': typeof import("../../app/components/ui/MSelect.vue")['default']
+  'MTable': typeof import("../../app/components/ui/MTable.vue")['default']
+  'MTabs': typeof import("../../app/components/ui/MTabs.vue")['default']
+  'MTree': typeof import("../../app/components/ui/MTree.vue")['default']
+  'Ui': typeof import("../../app/components/ui/index")['default']
   'NuxtWelcome': typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']
   'NuxtLayout': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']
   'NuxtErrorBoundary': typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']
@@ -57,6 +67,16 @@ interface _GlobalComponents {
   'LazyOtherLoginOptions': LazyComponent<typeof import("../../app/components/OtherLoginOptions.vue")['default']>
   'LazyPhoneLoginForm': LazyComponent<typeof import("../../app/components/PhoneLoginForm.vue")['default']>
   'LazyTrialAccountForm': LazyComponent<typeof import("../../app/components/TrialAccountForm.vue")['default']>
+  'LazyMButton': LazyComponent<typeof import("../../app/components/ui/MButton.vue")['default']>
+  'LazyMInput': LazyComponent<typeof import("../../app/components/ui/MInput.vue")['default']>
+  'LazyMMessage': LazyComponent<typeof import("../../app/components/ui/MMessage")['default']>
+  'LazyMModal': LazyComponent<typeof import("../../app/components/ui/MModal.vue")['default']>
+  'LazyMPagination': LazyComponent<typeof import("../../app/components/ui/MPagination.vue")['default']>
+  'LazyMSelect': LazyComponent<typeof import("../../app/components/ui/MSelect.vue")['default']>
+  'LazyMTable': LazyComponent<typeof import("../../app/components/ui/MTable.vue")['default']>
+  'LazyMTabs': LazyComponent<typeof import("../../app/components/ui/MTabs.vue")['default']>
+  'LazyMTree': LazyComponent<typeof import("../../app/components/ui/MTree.vue")['default']>
+  'LazyUi': LazyComponent<typeof import("../../app/components/ui/index")['default']>
   'LazyNuxtWelcome': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/welcome.vue")['default']>
   'LazyNuxtLayout': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-layout")['default']>
   'LazyNuxtErrorBoundary': LazyComponent<typeof import("../../node_modules/nuxt/dist/app/components/nuxt-error-boundary.vue")['default']>

@@ -35,6 +35,7 @@ export { useHttp } from '../app/composables/useHttp';
 export { useLoading } from '../app/composables/useLoading';
 export { usePreventBack } from '../app/composables/usePreventBack';
 export { useTeacher } from '../app/composables/useTeacher';
+export { useTeacherNav } from '../app/composables/useTeacherNav';
 export { generateAesKey, encryptBase64, decryptBase64, encryptWithAes, decryptWithAes } from '../app/utils/crypto';
 export { encrypt, decrypt } from '../app/utils/jsencrypt';
 export { useNuxtDevTools } from '../node_modules/@nuxt/devtools/dist/runtime/use-nuxt-devtools';

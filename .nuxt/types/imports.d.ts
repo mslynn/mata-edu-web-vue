@@ -175,6 +175,7 @@ declare global {
   const useSlots: typeof import('vue').useSlots
   const useState: typeof import('../../node_modules/nuxt/dist/app/composables/state').useState
   const useTeacher: typeof import('../../app/composables/useTeacher').useTeacher
+  const useTeacherNav: typeof import('../../app/composables/useTeacherNav').useTeacherNav
   const useTemplateRef: typeof import('vue').useTemplateRef
   const useTransitionState: typeof import('vue').useTransitionState
   const watch: typeof import('vue').watch
@@ -372,6 +373,7 @@ declare module 'vue' {
     readonly useSlots: UnwrapRef<typeof import('vue')['useSlots']>
     readonly useState: UnwrapRef<typeof import('../../node_modules/nuxt/dist/app/composables/state')['useState']>
     readonly useTeacher: UnwrapRef<typeof import('../../app/composables/useTeacher')['useTeacher']>
+    readonly useTeacherNav: UnwrapRef<typeof import('../../app/composables/useTeacherNav')['useTeacherNav']>
     readonly useTemplateRef: UnwrapRef<typeof import('vue')['useTemplateRef']>
     readonly useTransitionState: UnwrapRef<typeof import('vue')['useTransitionState']>
     readonly watch: UnwrapRef<typeof import('vue')['watch']>
