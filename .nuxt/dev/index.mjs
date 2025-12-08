@@ -648,7 +648,7 @@ const _inlineRuntimeConfig = {
     }
   },
   "public": {
-    "apiBaseUrl": "http://192.168.0.32:8080"
+    "apiBaseUrl": "http://192.168.0.67:8001"
   }
 };
 const envOptions = {
