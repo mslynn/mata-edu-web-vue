@@ -14,7 +14,7 @@
                 ? 'active bg-[#FFA54D] text-white shadow-[0_2px_8px_rgba(255,165,77,0.4)]' 
                 : 'text-[#666666] hover:bg-white/50'
             ]"
-            @click="activeMenu = item.activeMenu"
+            @click="handleMenuClick(item)"
           >
             {{ item.label }}
           </a>
@@ -23,76 +23,80 @@
 
       <!-- 主内容区 -->
       <main class="main-area p-4 lg:p-6 overflow-visible">
-        <!-- 顶部三个授课卡片 -->
-        <div class="top-cards flex gap-[20px] xl:gap-[45px] mb-12 xl:mb-36 justify-center flex-wrap xl:flex-nowrap">
-          <!-- 授课卡片1 -->
-          <div class="flex flex-col items-center cursor-pointer group border-2">
-            <div class="w-[180px] h-[200px] xl:w-[262px] xl:h-[296px] rounded-[20px] flex items-center justify-center transition-colors">
-              <img src="~/assets/images/one.png" alt="授课" class="w-[140px] h-[140px] xl:w-[210px] xl:h-[210px] object-contain" />
+        <!-- 首页内容 -->
+        <div v-if="activeMenu === 'home'">
+          <!-- 顶部三个授课卡片 -->
+          <div class="top-cards flex gap-[20px] xl:gap-[45px] mb-12 xl:mb-36 justify-center flex-wrap xl:flex-nowrap">
+            <!-- 授课卡片1 -->
+            <div class="flex flex-col items-center cursor-pointer group border-2">
+              <div class="w-[180px] h-[200px] xl:w-[262px] xl:h-[296px] rounded-[20px] flex items-center justify-center transition-colors">
+                <img src="~/assets/images/one.png" alt="授课" class="w-[140px] h-[140px] xl:w-[210px] xl:h-[210px] object-contain" />
+              </div>
+              <span class="mt-3 text-gray-600 text-sm pb-6">授课</span>
             </div>
-            <span class="mt-3 text-gray-600 text-sm pb-6">授课</span>
+
+            <!-- 授课卡片2 -->
+            <div class="flex flex-col items-center cursor-pointer group border-2">
+              <div class="w-[180px] h-[200px] xl:w-[262px] xl:h-[296px] rounded-[20px] flex items-center justify-center transition-colors">
+                <img src="~/assets/images/two.png" alt="授课" class="w-[140px] h-[140px] xl:w-[210px] xl:h-[210px] object-contain" />
+              </div>
+              <span class="mt-3 text-gray-600 text-sm pb-6">授课</span>
+            </div>
+
+            <!-- 授课卡片3 -->
+            <div class="flex flex-col items-center cursor-pointer group border-2">
+              <div class="w-[180px] h-[200px] xl:w-[262px] xl:h-[296px] rounded-[20px] flex items-center justify-center transition-colors">
+                <img src="~/assets/images/three.png" alt="授课" class="w-[140px] h-[140px] xl:w-[210px] xl:h-[210px] object-contain" />
+              </div>
+              <span class="mt-3 text-gray-600 text-sm pb-6">授课</span>
+            </div>
           </div>
 
-          <!-- 授课卡片2 -->
-          <div class="flex flex-col items-center cursor-pointer group border-2">
-            <div class="w-[180px] h-[200px] xl:w-[262px] xl:h-[296px] rounded-[20px] flex items-center justify-center transition-colors">
-              <img src="~/assets/images/two.png" alt="授课" class="w-[140px] h-[140px] xl:w-[210px] xl:h-[210px] object-contain" />
-            </div>
-            <span class="mt-3 text-gray-600 text-sm pb-6">授课</span>
-          </div>
-
-          <!-- 授课卡片3 -->
-          <div class="flex flex-col items-center cursor-pointer group border-2">
-            <div class="w-[180px] h-[200px] xl:w-[262px] xl:h-[296px] rounded-[20px] flex items-center justify-center transition-colors">
-              <img src="~/assets/images/three.png" alt="授课" class="w-[140px] h-[140px] xl:w-[210px] xl:h-[210px] object-contain" />
-            </div>
-            <span class="mt-3 text-gray-600 text-sm pb-6">授课</span>
-          </div>
-        </div>
-
-        <!-- 下方内容区 -->
-        <div class="flex gap-4">
-          <!-- 授课记录区域 -->
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 md:gap-4 mb-4 flex-wrap">
-              <span class="text-gray-600 text-xs md:text-sm">授课记录</span>
-              <select class="px-2 md:px-3 py-1 md:py-1.5 bg-white border border-gray-200 rounded text-xs md:text-sm text-gray-600 outline-none">
-                <option>八年级一班</option>
-                <option>八年级二班</option>
-                <option>七年级一班</option>
-              </select>
-              <span class="text-gray-600 text-xs md:text-sm ml-4 md:ml-8">班级码登录</span>
-            </div>
-            
-            <div class="flex gap-3 md:gap-4">
-              <!-- 左侧大卡片 -->
-              <div class="w-[160px] md:w-[140px] flex-shrink-0 mr-[90px]">
-                <div class="w-full h-[210px] md:h-[180px] bg-[#F5A67D]  mb-2 md:mb-3"></div>
-                <select class="w-full px-1 md:px-2 py-1 md:py-1.5 bg-white border border-gray-200 rounded text-xs text-gray-600 outline-none">
-                  <option>nous ai set</option>
-                  <option>课程包 A</option>
-                  <option>课程包 B</option>
+          <!-- 下方内容区 -->
+          <div class="flex gap-4">
+            <!-- 授课记录区域 -->
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 md:gap-4 mb-4 flex-wrap">
+                <span class="text-gray-600 text-xs md:text-sm">授课记录</span>
+                <select class="px-2 md:px-3 py-1 md:py-1.5 bg-white border border-gray-200 rounded text-xs md:text-sm text-gray-600 outline-none">
+                  <option>八年级一班</option>
+                  <option>八年级二班</option>
+                  <option>七年级一班</option>
                 </select>
+                <span class="text-gray-600 text-xs md:text-sm ml-4 md:ml-8">班级码登录</span>
               </div>
               
-              <!-- 右侧班级码登录区域 - 4个卡片 -->
-              <div class="flex-1 min-w-0">
-                <div class="flex gap-11">
-                  <div 
-                    v-for="i in 4" 
-                    :key="i"
-                    class="flex flex-col items-center"
-                  >
-                    <div class="w-[120px] h-[150px] aspect-[4/3] bg-[#A8B8C8] border-2 border-dashed border-[#8A9DB0] mb-8"></div>
-                    <button class="text-xs text-gray-500 hover:text-[#FFA54D] transition-colors">
-                      开始上课
-                    </button>
+              <div class="flex gap-3 md:gap-4">
+                <!-- 左侧大卡片 -->
+                <div class="w-[160px] md:w-[140px] flex-shrink-0 mr-[90px]">
+                  <div class="w-full h-[210px] md:h-[180px] bg-[#F5A67D]  mb-2 md:mb-3"></div>
+                  <select class="w-full px-1 md:px-2 py-1 md:py-1.5 bg-white border border-gray-200 rounded text-xs text-gray-600 outline-none">
+                    <option>nous ai set</option>
+                    <option>课程包 A</option>
+                    <option>课程包 B</option>
+                  </select>
+                </div>
+                
+                <!-- 右侧班级码登录区域 - 4个卡片 -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex gap-11">
+                    <div 
+                      v-for="i in 4" 
+                      :key="i"
+                      class="flex flex-col items-center"
+                    >
+                      <div class="w-[120px] h-[150px] aspect-[4/3] bg-[#A8B8C8] border-2 border-dashed border-[#8A9DB0] mb-8"></div>
+                      <button class="text-xs text-gray-500 hover:text-[#FFA54D] transition-colors">
+                        开始上课
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
       </main>
 
       <!-- 右侧边栏 -->
@@ -151,17 +155,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 definePageMeta({
-  layout: 'default'
+  layout: 'teacher'
 })
 
+const route = useRoute()
 const { getTeacherMenu } = useTeacher()
 const { showLoading, hideLoading } = useLoading()
 
 const activeMenu = ref('')
 const menuItems = ref<any[]>([])
+
+// 将 component 路径转换为路由路径
+const componentToRoute = (componentPath: string) => {
+  if (!componentPath) return ''
+  // 在 Nuxt 3 中，index.vue 文件对应的路由不需要 /index 后缀
+  // 例如: system/class/index -> /system/class
+  // 例如: system/user -> /system/user
+  let routePath = componentPath
+  // 移除末尾的 /index
+  if (routePath.endsWith('/index')) {
+    routePath = routePath.replace(/\/index$/, '')
+  }
+  return `/${routePath}`
+}
 
 // 获取菜单数据
 const fetchMenu = async () => {
@@ -204,7 +224,7 @@ const fetchMenu = async () => {
     // 使用默认菜单
     menuItems.value = [
       { name: 'home', label: '首页', component: '', activeMenu: 'home' },
-      { name: 'class', label: '班级管理', component: '', activeMenu: 'class' },
+      { name: 'class', label: '班级管理', component: 'system/class/index', activeMenu: 'class' },
       { name: 'course', label: '课程中心', component: '', activeMenu: 'course' },
       { name: 'tools', label: '玛塔工具中心', component: '', activeMenu: 'tools' },
       { name: 'ai', label: 'AI实践中心', component: '', activeMenu: 'ai' },
@@ -221,8 +241,57 @@ const fetchMenu = async () => {
   }
 }
 
+// 菜单点击处理
+const handleMenuClick = (menu: any) => {
+  if (menu.activeMenu === 'home') {
+    // 首页，跳转到 teacher 页面
+    navigateTo('/teacher')
+    activeMenu.value = 'home'
+  } else if (menu.component) {
+    // 有 component 路径，跳转到对应页面
+    const routePath = componentToRoute(menu.component)
+    console.log('🔗 跳转路由:', routePath, 'component:', menu.component)
+    navigateTo(routePath)
+    activeMenu.value = menu.activeMenu
+  } else {
+    // 没有 component，只更新激活状态
+    activeMenu.value = menu.activeMenu
+  }
+}
+
+// 根据当前路由设置激活菜单
+const setActiveMenuFromRoute = () => {
+  const currentPath = route.path
+  console.log('📍 当前路由:', currentPath)
+  if (currentPath === '/teacher') {
+    activeMenu.value = 'home'
+  } else {
+    // 查找匹配的菜单项
+    const matchedMenu = menuItems.value.find(item => {
+      if (item.component) {
+        const routePath = componentToRoute(item.component)
+        console.log('🔍 匹配菜单:', item.label, 'routePath:', routePath, 'currentPath:', currentPath)
+        return currentPath === routePath || currentPath.startsWith(routePath)
+      }
+      return false
+    })
+    if (matchedMenu) {
+      activeMenu.value = matchedMenu.activeMenu
+    }
+  }
+}
+
+// 监听路由变化，更新激活菜单
+watch(() => route.path, () => {
+  if (menuItems.value.length > 0) {
+    setActiveMenuFromRoute()
+  }
+})
+
 onMounted(() => {
-  fetchMenu()
+  fetchMenu().then(() => {
+    setActiveMenuFromRoute()
+  })
 })
 </script>
 
