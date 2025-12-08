@@ -15,16 +15,19 @@ export default defineNuxtConfig({
     }
   },
   
-  // 解决 SSR 样式闪烁问题
-  experimental: {
-    inlineSSRStyles: true,
-  },
-  
   // 禁用 SSR，使用纯客户端渲染避免水合问题
   ssr: false,
   
   modules: [
     '@nuxtjs/tailwindcss'
+  ],
+  
+  // 组件配置 - ui 目录下的组件不使用路径前缀
+  components: [
+    {
+      path: '~/components',
+      pathPrefix: false, // 不使用路径前缀
+    }
   ],
   css: [
     '~/assets/css/main.css',
@@ -49,7 +52,7 @@ export default defineNuxtConfig({
     server: {
       proxy: {
         '/auth': {
-          target: 'http://192.168.0.32:8080',
+          target: 'http://192.168.0.67:8001',
           changeOrigin: true,
           secure: false,
           configure: (proxy) => {
