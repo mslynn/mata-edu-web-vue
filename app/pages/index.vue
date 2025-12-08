@@ -22,7 +22,7 @@
     <!-- 右侧登录表单 -->
     <div class="flex-1 pt-[104px] px-10 flex flex-col relative">
       <!-- 返回按钮（班级码登录、体验账号、忘记密码） -->
-      <button
+      <button 
         v-if="
           loginType === 'classcode' ||
           loginType === 'trial' ||
@@ -47,7 +47,7 @@
         </svg>
       </button>
       <!-- 登录方式切换 -->
-      <LoginTabs
+      <LoginTabs 
         v-if="
           loginType !== 'classcode' &&
           loginType !== 'trial' &&
@@ -99,7 +99,7 @@
       </div>
       <!-- 体验账号申请表单 -->
       <div v-else-if="loginType === 'trial'">
-        <TrialAccountForm
+        <TrialAccountForm 
           ref="trialFormRef"
           @submit="handleTrialSubmit"
         />
@@ -125,7 +125,7 @@
         v-else-if="loginType === 'forgotPassword'"
         class="flex-1 overflow-auto"
       >
-        <ForgotPasswordForm
+        <ForgotPasswordForm 
           @submit="handleForgotPasswordSubmit"
           @back="loginType = 'campus'"
         />
@@ -142,7 +142,7 @@
         <div>• 手机尾号 <strong>4</strong> → 学生</div>
       </div> -->
       <!-- 底部其他登录方式 -->
-      <OtherLoginOptions
+      <OtherLoginOptions 
         v-if="
           loginType !== 'classcode' &&
           loginType !== 'trial' &&
@@ -154,7 +154,7 @@
     </div>
 
     <!-- 协议未勾选提示弹窗 -->
-    <Modal
+    <Modal 
       v-model="showAgreementRequiredModal"
       title="提示"
       @confirm="handleAgreementConfirm"
@@ -271,12 +271,12 @@ const handleLogin = async () => {
     return;
   }
   console.log("loginType", loginType.value);
-
+  
   if (loginType.value === "campus") {
     // 校园账号登录
     campusErrors.value.username = false;
     campusErrors.value.password = false;
-
+    
     if (!campusForm.value.username || !campusForm.value.password) {
       if (!campusForm.value.username) campusErrors.value.username = true;
       if (!campusForm.value.password) campusErrors.value.password = true;
@@ -312,7 +312,7 @@ const handleLogin = async () => {
     // 手机号登录
     phoneErrors.value.phone = false;
     phoneErrors.value.code = false;
-
+    
     if (!phoneForm.value.phone || !phoneForm.value.code) {
       if (!phoneForm.value.phone) phoneErrors.value.phone = true;
       if (!phoneForm.value.code) phoneErrors.value.code = true;
@@ -348,7 +348,7 @@ const handleLogin = async () => {
     // 班级码登录
     classCodeErrors.value.classCode = false;
     classCodeErrors.value.classPassword = false;
-
+    
     if (!classCodeForm.value.classCode || !classCodeForm.value.classPassword) {
       if (!classCodeForm.value.classCode)
         classCodeErrors.value.classCode = true;
