@@ -47,53 +47,44 @@
         </MButton>
         <div class="bg-[#FFFFFF] shadow-sm flex-1 flex flex-col min-h-0">
           <!-- 有数据时显示树 -->
-          <template v-if="treeData.length">
-            <div class="flex-1 overflow-y-auto p-2">
-              <MTree
-                :data="treeData"
-                :selected-key="selectedClass?.id"
-                :expanded-keys="expandedKeys"
-                label-key="name"
-                :children-key="'children'"
-                @select="handleTreeSelect"
-                @expand="handleTreeExpand"
-                @create-class="handleCreateNewClass"
-              >
-                <template #actions="{ node }">
-                  <template v-if="node.children"></template>
-                  <template v-else>
-                    <div class="flex items-center gap-2">
-                      <img
-                        src="~/assets/images/edit.png"
-                        alt="编辑"
-                        class="w-6 h-6 cursor-pointer"
-                        @click.stop="handleEditClass(node)"
-                      />
-                      <img
-                        src="~/assets/images/del.png"
-                        alt="删除"
-                        class="w-6 h-6 cursor-pointer"
-                        @click.stop="handleDeleteClass(node)"
-                      />
-                    </div>
-                  </template>
+          <div v-if="treeData.length" class="flex-1 overflow-y-auto p-2">
+            <MTree
+              :data="treeData"
+              :selected-key="selectedClass?.id"
+              :expanded-keys="expandedKeys"
+              label-key="name"
+              :children-key="'children'"
+              @select="handleTreeSelect"
+              @expand="handleTreeExpand"
+              @create-class="handleCreateNewClass"
+            >
+              <template #actions="{ node }">
+                <template v-if="node.children"></template>
+                <template v-else>
+                  <div class="flex items-center gap-2">
+                    <img
+                      src="~/assets/images/edit.png"
+                      alt="编辑"
+                      class="w-6 h-6 cursor-pointer"
+                      @click.stop="handleEditClass(node)"
+                    />
+                    <img
+                      src="~/assets/images/del.png"
+                      alt="删除"
+                      class="w-6 h-6 cursor-pointer"
+                      @click.stop="handleDeleteClass(node)"
+                    />
+                  </div>
                 </template>
-              </MTree>
-            </div>
-            <!-- 创建班级按钮固定在底部 -->
-            <div class="flex-shrink-0 p-3 border-t border-gray-100 flex justify-center">
-              <button 
-                class="w-[142px] h-[50px] flex items-center justify-center gap-2 bg-[#FF9900] text-white rounded-[20px] text-[16px]"
-                @click="handleCreateNewClass(null)"
-              >
-                <span class="text-xl">+</span>
-                <span>创建班级</span>
-              </button>
-            </div>
-          </template>
+              </template>
+            </MTree>
+          </div>
           <!-- 无数据时显示空状态 -->
           <div v-else class="flex-1 flex flex-col items-center justify-center p-4">
-            <p class="text-gray-400 text-sm mb-6">暂无班级记录</p>
+            <p class="text-gray-400 text-sm">暂无班级记录</p>
+          </div>
+          <!-- 创建班级按钮始终固定在底部 -->
+          <div class="flex-shrink-0 p-3 border-t border-gray-100 flex justify-center">
             <button 
               class="w-[142px] h-[50px] flex items-center justify-center gap-2 bg-[#FF9900] text-white rounded-[20px] text-[16px]"
               @click="handleCreateNewClass(null)"
@@ -325,7 +316,7 @@
         </button>
         
         <!-- 标题居中 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">创建班级</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditClass ? '编辑班级' : '创建班级' }}</h3>
         
         <!-- 表单 -->
         <div class="space-y-4 px-2">
@@ -410,19 +401,19 @@ const expandedKeys = ref<(string | number)[]>([1])
 
 // 年级班级数据（树形结构）
 const treeData = ref([
-  // { 
-  //   id: 1, 
-  //   name: '三年级', 
-  //   children: [
-  //     { id: 11, name: '一班' },
-  //     { id: 12, name: '二班' },
-  //   ]
-  // },
-  // { id: 2, name: '四年级', children: [] },
-  // { id: 3, name: '五年级', children: [] },
-  // { id: 4, name: '六年级', children: [] },
-  // { id: 5, name: '七年级', children: [] },
-  // { id: 6, name: '八年级', children: [] },
+  { 
+    id: 1, 
+    name: '三年级', 
+    children: [
+      { id: 11, name: '1班' },
+      { id: 12, name: '2班' },
+    ]
+  },
+  { id: 2, name: '四年级', children: [] },
+  { id: 3, name: '五年级', children: [] },
+  { id: 4, name: '六年级', children: [] },
+  { id: 5, name: '七年级', children: [] },
+  { id: 6, name: '八年级', children: [] },
 ])
 
 // 班级选项（用于下拉选择）
@@ -476,8 +467,10 @@ const createForm = reactive({
   classId: null as number | null
 })
 
-// 创建班级弹窗
+// 创建/编辑班级弹窗
 const showCreateClassModal = ref(false)
+const isEditClass = ref(false) // 是否编辑模式
+const editingClassId = ref<number | null>(null) // 编辑中的班级ID
 const createClassForm = reactive({
   gradeId: null as number | null,
   className: '',
@@ -548,7 +541,15 @@ const handleTreeExpand = (key: string | number, expanded: boolean) => {
 
 // 编辑班级
 const handleEditClass = (node: any) => {
-  MMessage.info(`编辑班级：${node.name}`)
+  isEditClass.value = true
+  editingClassId.value = node.id
+  // 找到该班级所属的年级ID（父节点）
+  const parentGrade = treeData.value.find((grade: any) => 
+    grade.children?.some((cls: any) => cls.id === node.id)
+  )
+  createClassForm.gradeId = parentGrade?.id || null
+  createClassForm.className = node.name
+  showCreateClassModal.value = true
 }
 
 // 删除班级
@@ -558,6 +559,11 @@ const handleDeleteClass = (node: any) => {
 
 // 创建班级
 const handleCreateNewClass = (gradeNode: any) => {
+  isEditClass.value = false
+  editingClassId.value = null
+  createClassForm.gradeId = null
+  createClassForm.className = ''
+  createClassForm.teacherName = ''
   // 如果有传入年级节点，预设年级
   if (gradeNode) {
     createClassForm.gradeId = gradeNode.id
@@ -565,7 +571,7 @@ const handleCreateNewClass = (gradeNode: any) => {
   showCreateClassModal.value = true
 }
 
-// 确认创建班级
+// 确认创建/编辑班级
 const handleConfirmCreateClass = () => {
   if (!createClassForm.gradeId) {
     MMessage.error('请选择年级')
@@ -575,12 +581,18 @@ const handleConfirmCreateClass = () => {
     MMessage.error('请输入班级名称')
     return
   }
-  MMessage.success('创建班级成功')
+  if (isEditClass.value) {
+    MMessage.success('编辑班级成功')
+  } else {
+    MMessage.success('创建班级成功')
+  }
   showCreateClassModal.value = false
   // 重置表单
+  isEditClass.value = false
+  editingClassId.value = null
   createClassForm.gradeId = null
   createClassForm.className = ''
-  createClassForm.teacherId = null
+  createClassForm.teacherName = ''
 }
 
 // 搜索
