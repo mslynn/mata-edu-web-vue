@@ -72,18 +72,7 @@
                 <slot name="empty" v-bind="slotProps" />
               </template>
             </MTree>
-            <!-- 无子节点时显示空状态 -->
-            <div v-else class="py-3 text-center" :style="{ paddingLeft: `${(level + 1) * 16 + 8}px` }">
-              <slot name="empty" :node="node">
-                <span class="text-gray-400 text-sm">暂无班级记录</span>
-                <button 
-                  class="ml-2 text-[#FF9900] text-sm hover:underline"
-                  @click.stop="handleCreateClass(node)"
-                >
-                  创建班级
-                </button>
-              </slot>
-            </div>
+            <!-- 无子节点时不显示任何内容 -->
           </div>
         </Transition>
       </div>

@@ -117,6 +117,19 @@ export const useHttp = () => {
         onResponse({ response }) {
           console.log('📥 响应:', response._data)
           const { code, msg } = response._data || {}
+          
+          // Token 失效处理
+          if (code === 401) {
+            removeToken()
+            ElMessage.error('登录已过期，2秒后跳转到登录页')
+            setTimeout(() => {
+              if (process.client) {
+                window.location.href = '/'
+              }
+            }, 2000)
+            return
+          }
+          
           if (code === 200) {
             // GET 请求（查询类）默认不显示成功提示，避免列表查询时出现大量提示
             // POST/PUT/DELETE 等操作类请求，如果 shouldShowSuccess 为 true 且有 msg 才显示成功提示
