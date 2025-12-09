@@ -6,7 +6,7 @@ export default defineNuxtConfig({
     host: '127.0.0.1',
     port: 3001,
   },
-  
+
   // 运行时配置 - API地址等
   runtimeConfig: {
     public: {
@@ -14,14 +14,14 @@ export default defineNuxtConfig({
       apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://192.168.0.32:8080',
     }
   },
-  
+
   // 禁用 SSR，使用纯客户端渲染避免水合问题
   ssr: false,
-  
+
   modules: [
     '@nuxtjs/tailwindcss'
   ],
-  
+
   // 组件配置 - ui 目录下的组件不使用路径前缀
   components: [
     {
@@ -37,7 +37,16 @@ export default defineNuxtConfig({
     exposeConfig: true,
     viewer: true,
   },
-  
+
+  // 修改构建产物输出目录为 dist (默认是隐藏的 .output)
+  nitro: {
+    output: {
+      dir: 'dist',
+      serverDir: 'dist/server',
+      publicDir: 'dist/public'
+    }
+  },
+
   // Element Plus 按需引入 + 环境变量
   vite: {
     optimizeDeps: {
