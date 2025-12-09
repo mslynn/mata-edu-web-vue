@@ -14,3 +14,9 @@
     </main>
   </div>
 </template>
+
+<script setup>
+  const config = useRuntimeConfig()
+  console.log(config.public.apiBaseUrl) // http://localhost:3001/api or api.yourdomain.com
+  </script>
+  
