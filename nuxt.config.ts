@@ -1,4 +1,17 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+
+import { defineNuxtConfig } from "nuxt/config"
+import process from "process"
+
+
+// 根据环境直接设置 API 地址
+const apiBaseUrl = process.env.NODE_ENV === 'production' 
+  ? 'https://test-gateway.matatastudio.com'
+  : 'http://192.168.0.67:8001'
+
+console.log('NODE_ENV:', process.env.NODE_ENV)
+console.log('apiBaseUrl:', apiBaseUrl)
+
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
@@ -11,7 +24,7 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       // API 基础地址，从环境变量读取，默认值用于开发环境
-      apiBaseUrl: process.env.NUXT_PUBLIC_API_BASE_URL || 'http://192.168.0.32:8080',
+      apiBaseUrl: apiBaseUrl || 'http://192.168.0.32:8080',
     }
   },
   
@@ -33,10 +46,7 @@ export default defineNuxtConfig({
     '~/assets/css/main.css',
     'element-plus/dist/index.css'
   ],
-  tailwindcss: {
-    exposeConfig: true,
-    viewer: true,
-  },
+
   
   // Element Plus 按需引入 + 环境变量
   vite: {
