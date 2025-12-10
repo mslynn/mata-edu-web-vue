@@ -13,7 +13,7 @@
   <!-- 如果未登录，显示登录表单 -->
   <div
     v-else
-    class="flex bg-white rounded-lg border border-dashed border-gray-300 overflow-hidden h-[600px] w-full max-w-[1000px]"
+    class="flex bg-white rounded-lg border border-dashed border-gray-300 overflow-hidden h-auto max-h-[600px] w-full max-w-[1000px]"
   >
     <!-- 左侧插图 -->
     <div class="p-[33px]">
@@ -169,7 +169,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from "vue";
 import { ElMessage } from "element-plus";
-const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword } = useAuth();
+const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole } = useAuth();
 // 登录页也阻止返回
 const { allowNavigation } = usePreventBack();
 // 是否正在跳转（防止布局闪烁）
@@ -182,6 +182,14 @@ if (import.meta.client) {
     (authenticated) => {
       if (!isNavigating.value) {
         setPageLayout(authenticated ? "default" : "auth");
+      }
+      // 如果已登录，自动跳转到对应页面
+      if (authenticated && user.value) {
+        const redirectPath = getRedirectPathByRole(user.value.role_key)
+        if (redirectPath && redirectPath !== '/') {
+          allowNavigation()
+          navigateTo(redirectPath, { replace: true })
+        }
       }
     },
     { immediate: true }

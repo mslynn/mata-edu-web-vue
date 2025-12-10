@@ -97,18 +97,18 @@
       </section>
 
       <!-- 右侧主内容 -->
-      <section class="main-panel flex-1 min-w-0 p-4">
-        <!-- Tab 切换 -->
+      <section class="main-panel flex-1 min-w-0 p-4 flex flex-col">
+        <!-- Tab 切换 - 固定 -->
         <MTabs
           v-model="activeTab"
           :tabs="tabList"
-          class="mb-4"
+          class="mb-4 flex-shrink-0"
         />
 
         <!-- 搜索 + 操作按钮 + 表格 -->
-        <div class="bg-[#FFFFFF] rounded-lg p-4">
-          <!-- 搜索 + 统一密码 + 操作按钮 -->
-          <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
+          <!-- 搜索 + 统一密码 + 操作按钮 - 固定 -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
             <!-- 左侧：搜索框 + 提示 -->
             <div class="flex items-center gap-3">
               <MInput
@@ -129,21 +129,27 @@
             <!-- 右侧：按钮组 -->
             <div class="flex items-center gap-2 xl:gap-3">
               <button 
-                class="w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap bg-[#FF9900] text-white"
+                :class="[
+                  'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
+                  activeAction === 'batch' ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FF9900] text-white'
+                ]"
+                :disabled="activeAction === 'batch'"
                 @click="handleCreateAction()"
               >+ 创建学生</button>
               <button 
                 :class="[
                   'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  activeAction === 'quickLogin' ? 'bg-[#FF9900] text-white' : 'bg-[#FFF1DD] text-[#4D4D4D]'
+                  activeAction === 'batch' ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : (activeAction === 'quickLogin' ? 'bg-[#FF9900] text-white' : 'bg-[#FFF1DD] text-[#4D4D4D]')
                 ]"
+                :disabled="activeAction === 'batch'"
                 @click="handleQuickLogin"
               >启用快捷登录</button>
               <button 
                 :class="[
                   'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  activeAction === 'export' ? 'bg-[#FF9900] text-white' : 'bg-[#FFF1DD] text-[#4D4D4D]'
+                  activeAction === 'batch' ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : (activeAction === 'export' ? 'bg-[#FF9900] text-white' : 'bg-[#FFF1DD] text-[#4D4D4D]')
                 ]"
+                :disabled="activeAction === 'batch'"
                 @click="handleExport"
               >导出学生信息</button>
               <button 
@@ -152,12 +158,12 @@
                   activeAction === 'batch' ? 'bg-[#FF9900] text-white' : 'bg-[#FFF1DD] text-[#4D4D4D]'
                 ]"
                 @click="handleBatchAction"
-              >批量操作</button>
+              >{{ activeAction === 'batch' ? '取消批量操作' : '批量操作' }}</button>
             </div>
           </div>
 
-          <!-- 表格 -->
-          <div class="overflow-x-auto">
+          <!-- 表格 - 可滚动区域 -->
+          <div class="flex-1 overflow-auto min-h-0">
             <MTable
               :columns="tableColumns"
               :data="studentList"
@@ -198,6 +204,10 @@
                 class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
                 @click="handleBatchResetPassword"
               >批量重置密码</button>
+              <button 
+                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                @click="handleBatchTransfer"
+              >批量移班</button>
               <button 
                 class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
                 @click="handleBatchDelete"
@@ -349,6 +359,277 @@
         </div>
       </div>
     </MModal>
+
+    <!-- 删除班级确认弹窗 -->
+    <MModal
+      v-model="showDeleteClassModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="h-[249px] p-6 relative flex flex-col">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showDeleteClassModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        
+        <!-- 内容居中 -->
+        <div class="flex-1 flex items-center justify-center">
+          <p class="text-[16px] text-[#4D4D4D]">确认要删除此班级吗？</p>
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showDeleteClassModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmDeleteClass"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 重置密码确认弹窗 -->
+    <MModal
+      v-model="showResetPasswordModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="h-[249px] p-6 relative flex flex-col">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showResetPasswordModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        
+        <!-- 内容居中 -->
+        <div class="flex-1 flex items-center justify-center">
+          <p class="text-[16px] text-[#4D4D4D]">确认重置{{ resettingStudent?.name }}的密码吗？</p>
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showResetPasswordModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmResetPassword"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 移班弹窗 -->
+    <MModal
+      v-model="showTransferModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="p-6 relative">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showTransferModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">移班</h3>
+        
+        <!-- 表单 -->
+        <div class="space-y-4 px-2">
+          <MSelect
+            v-model="transferForm.gradeId"
+            :options="gradeOptions"
+            placeholder="选择年级"
+            @update:model-value="transferForm.classId = null"
+          />
+          <MSelect
+            v-model="transferForm.classId"
+            :options="transferClassOptions"
+            placeholder="选择班级"
+            :disabled="!transferForm.gradeId"
+          />
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4 mt-8">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showTransferModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmTransfer"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 删除学生确认弹窗 -->
+    <MModal
+      v-model="showDeleteStudentModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="h-[249px] p-6 relative flex flex-col">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showDeleteStudentModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        
+        <!-- 内容居中 -->
+        <div class="flex-1 flex items-center justify-center">
+          <p class="text-[16px] text-[#4D4D4D]">确认要删除{{ deletingStudent?.name }}吗？</p>
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showDeleteStudentModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmDeleteStudent"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 批量重置密码确认弹窗 -->
+    <MModal
+      v-model="showBatchResetPasswordModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="h-[249px] p-6 relative flex flex-col">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showBatchResetPasswordModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        
+        <!-- 内容居中 -->
+        <div class="flex-1 flex items-center justify-center">
+          <p class="text-[16px] text-[#4D4D4D] text-center px-4">确定将{{ selectedStudentNames }}学生的密码重置吗？</p>
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showBatchResetPasswordModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmBatchResetPassword"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 批量移班弹窗 -->
+    <MModal
+      v-model="showBatchTransferModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="p-6 relative">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showBatchTransferModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">批量移班</h3>
+        
+        <!-- 提示文字 -->
+        <p class="text-sm text-gray-500 text-center mb-4">已选中{{ selectedStudentIds.length }}位学生，请选择所要移至的班级，完成批量移班</p>
+        
+        <!-- 表单 -->
+        <div class="space-y-4 px-2">
+          <MSelect
+            v-model="batchTransferForm.gradeId"
+            :options="gradeOptions"
+            placeholder="选择年级"
+            @update:model-value="batchTransferForm.classId = null"
+          />
+          <MSelect
+            v-model="batchTransferForm.classId"
+            :options="batchTransferClassOptions"
+            placeholder="选择班级"
+            :disabled="!batchTransferForm.gradeId"
+          />
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4 mt-8">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showBatchTransferModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmBatchTransfer"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
   </div>
 </template>
 
@@ -477,6 +758,36 @@ const createClassForm = reactive({
   teacherName: '' // 老师名称，禁用输入
 })
 
+// 删除班级确认弹窗
+const showDeleteClassModal = ref(false)
+const deletingClass = ref<any>(null)
+
+// 重置密码确认弹窗
+const showResetPasswordModal = ref(false)
+const resettingStudent = ref<any>(null)
+
+// 移班弹窗
+const showTransferModal = ref(false)
+const transferringStudent = ref<any>(null)
+const transferForm = reactive({
+  gradeId: null as number | null,
+  classId: null as number | null
+})
+
+// 删除学生确认弹窗
+const showDeleteStudentModal = ref(false)
+const deletingStudent = ref<any>(null)
+
+// 批量重置密码确认弹窗
+const showBatchResetPasswordModal = ref(false)
+
+// 批量移班弹窗
+const showBatchTransferModal = ref(false)
+const batchTransferForm = reactive({
+  gradeId: null as number | null,
+  classId: null as number | null
+})
+
 // 年级选项
 const gradeOptions = [
   { label: '一年级', value: 1 },
@@ -554,7 +865,26 @@ const handleEditClass = (node: any) => {
 
 // 删除班级
 const handleDeleteClass = (node: any) => {
-  MMessage.warning(`确认删除班级：${node.name}？`)
+  deletingClass.value = node
+  showDeleteClassModal.value = true
+}
+
+// 确认删除班级
+const handleConfirmDeleteClass = () => {
+  if (deletingClass.value) {
+    // TODO: 实际应该从接口获取班级内学生数量
+    const hasStudents = studentList.value.length > 0 // 模拟判断
+    if (hasStudents) {
+      MMessage.warning('请先移除班级内学生')
+      showDeleteClassModal.value = false
+      deletingClass.value = null
+      return
+    }
+    MMessage.success(`已删除班级：${deletingClass.value.name}`)
+    // TODO: 调用删除接口
+  }
+  showDeleteClassModal.value = false
+  deletingClass.value = null
 }
 
 // 创建班级
@@ -667,6 +997,10 @@ const handleClearSelection = () => {
 
 // 批量删除
 const handleBatchDelete = () => {
+  if (selectedStudentIds.value.length === 0) {
+    MMessage.warning('暂未选择任何学生，请在列表左侧进行勾选')
+    return
+  }
   const count = selectedStudentIds.value.length
   MMessage.warning(`确认删除选中的 ${count} 名学生？`)
   // TODO: 调用删除接口
@@ -674,31 +1008,124 @@ const handleBatchDelete = () => {
 
 // 批量移班
 const handleBatchTransfer = () => {
-  const count = selectedStudentIds.value.length
-  MMessage.info(`批量移班：${count} 名学生`)
-  // TODO: 打开移班弹窗
+  if (selectedStudentIds.value.length === 0) {
+    MMessage.warning('暂未选择任何学生，请在列表左侧进行勾选')
+    return
+  }
+  batchTransferForm.gradeId = null
+  batchTransferForm.classId = null
+  showBatchTransferModal.value = true
 }
+
+// 确认批量移班
+const handleConfirmBatchTransfer = () => {
+  if (!batchTransferForm.gradeId) {
+    MMessage.error('请选择年级')
+    return
+  }
+  if (!batchTransferForm.classId) {
+    MMessage.error('请选择班级')
+    return
+  }
+  MMessage.success(`已将 ${selectedStudentIds.value.length} 名学生移至新班级`)
+  // TODO: 调用移班接口
+  showBatchTransferModal.value = false
+}
+
+// 根据年级获取批量移班的班级选项
+const batchTransferClassOptions = computed(() => {
+  if (!batchTransferForm.gradeId) return []
+  const grade = treeData.value.find((g: any) => g.id === batchTransferForm.gradeId)
+  return grade?.children?.map((cls: any) => ({ label: cls.name, value: cls.id })) || []
+})
 
 // 批量重置密码
 const handleBatchResetPassword = () => {
-  const count = selectedStudentIds.value.length
-  MMessage.success(`已重置 ${count} 名学生的密码`)
+  if (selectedStudentIds.value.length === 0) {
+    MMessage.warning('暂未选择任何学生，请在列表左侧进行勾选')
+    return
+  }
+  showBatchResetPasswordModal.value = true
+}
+
+// 获取选中学生的名字列表
+const selectedStudentNames = computed(() => {
+  return studentList.value
+    .filter(s => selectedStudentIds.value.includes(s.id))
+    .map(s => s.name)
+    .join(',')
+})
+
+// 确认批量重置密码
+const handleConfirmBatchResetPassword = () => {
+  MMessage.success(`已重置 ${selectedStudentIds.value.length} 名学生的密码`)
   // TODO: 调用重置密码接口
+  showBatchResetPasswordModal.value = false
 }
 
 // 重置密码
 const handleResetPassword = (row: any) => {
-  MMessage.success(`已重置 ${row.name} 的密码`)
+  resettingStudent.value = row
+  showResetPasswordModal.value = true
+}
+
+// 确认重置密码
+const handleConfirmResetPassword = () => {
+  if (resettingStudent.value) {
+    MMessage.success(`已重置 ${resettingStudent.value.name} 的密码`)
+    // TODO: 调用重置密码接口
+  }
+  showResetPasswordModal.value = false
+  resettingStudent.value = null
 }
 
 // 移班
 const handleTransfer = (row: any) => {
-  MMessage.info(`移班：${row.name}`)
+  transferringStudent.value = row
+  transferForm.gradeId = null
+  transferForm.classId = null
+  showTransferModal.value = true
 }
+
+// 确认移班
+const handleConfirmTransfer = () => {
+  if (!transferForm.gradeId) {
+    MMessage.error('请选择年级')
+    return
+  }
+  if (!transferForm.classId) {
+    MMessage.error('请选择班级')
+    return
+  }
+  if (transferringStudent.value) {
+    MMessage.success(`已将 ${transferringStudent.value.name} 移至新班级`)
+    // TODO: 调用移班接口
+  }
+  showTransferModal.value = false
+  transferringStudent.value = null
+}
+
+// 根据年级获取班级选项
+const transferClassOptions = computed(() => {
+  if (!transferForm.gradeId) return []
+  const grade = treeData.value.find((g: any) => g.id === transferForm.gradeId)
+  return grade?.children?.map((cls: any) => ({ label: cls.name, value: cls.id })) || []
+})
 
 // 删除学生
 const handleDeleteStudent = (row: any) => {
-  MMessage.warning(`确认删除学生：${row.name}？`)
+  deletingStudent.value = row
+  showDeleteStudentModal.value = true
+}
+
+// 确认删除学生
+const handleConfirmDeleteStudent = () => {
+  if (deletingStudent.value) {
+    MMessage.success(`已删除学生：${deletingStudent.value.name}`)
+    // TODO: 调用删除接口
+  }
+  showDeleteStudentModal.value = false
+  deletingStudent.value = null
 }
 
 // 分页变化
@@ -785,10 +1212,9 @@ const handleCreateStudent = () => {
   background: #f5f5f5;
 }
 
-/* 主内容区滚动 */
+/* 主内容区 - 不滚动，让内部表格滚动 */
 .main-panel {
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
 }
 
 /* 年级树面板 - 占满高度，不显示滚动条 */

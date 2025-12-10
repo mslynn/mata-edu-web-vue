@@ -1,15 +1,14 @@
 <template>
-  <div class="min-h-screen bg-[#FAFAFA] font-sans">
+  <div class="h-screen flex flex-col bg-[#FAFAFA] font-sans overflow-hidden">
     <!-- 登录页专用顶部导航栏 -->
-    <header class="flex justify-between items-center pl-6 md:pl-[115px]  bg-[#FF9900] h-[70px]">
+    <header class="flex justify-between items-center pl-6 md:pl-[115px] bg-[#FF9900] h-[70px] flex-shrink-0">
       <div class="flex items-baseline gap-1">
         <img src="~/assets/images/logo.png" alt="Logo" class="w-[220px] h-[37px] object-contain" />
       </div>
- 
     </header>
 
-    <!-- 页面内容插槽 -->
-    <main class="flex justify-center items-center min-h-[400px] md:min-h-[600px] w-full max-w-[1000px] mx-auto px-4 mt-20 md:mt-[178px]">
+    <!-- 页面内容插槽 - 垂直居中 -->
+    <main class="flex-1 flex justify-center items-center w-full max-w-[1000px] mx-auto px-4 py-8">
       <slot />
     </main>
   </div>
