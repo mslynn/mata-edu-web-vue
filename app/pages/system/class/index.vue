@@ -206,6 +206,10 @@
               >批量重置密码</button>
               <button 
                 class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                @click="handleBatchTransfer"
+              >批量移班</button>
+              <button 
+                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
                 @click="handleBatchDelete"
               >批量删除</button>
               <button 
@@ -530,6 +534,102 @@
         </div>
       </div>
     </MModal>
+
+    <!-- 批量重置密码确认弹窗 -->
+    <MModal
+      v-model="showBatchResetPasswordModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="h-[249px] p-6 relative flex flex-col">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showBatchResetPasswordModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        
+        <!-- 内容居中 -->
+        <div class="flex-1 flex items-center justify-center">
+          <p class="text-[16px] text-[#4D4D4D] text-center px-4">确定将{{ selectedStudentNames }}学生的密码重置吗？</p>
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showBatchResetPasswordModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmBatchResetPassword"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 批量移班弹窗 -->
+    <MModal
+      v-model="showBatchTransferModal"
+      custom-width="381px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="p-6 relative">
+        <!-- 关闭按钮 -->
+        <button 
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showBatchTransferModal = false"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">批量移班</h3>
+        
+        <!-- 提示文字 -->
+        <p class="text-sm text-gray-500 text-center mb-4">已选中{{ selectedStudentIds.length }}位学生，请选择所要移至的班级，完成批量移班</p>
+        
+        <!-- 表单 -->
+        <div class="space-y-4 px-2">
+          <MSelect
+            v-model="batchTransferForm.gradeId"
+            :options="gradeOptions"
+            placeholder="选择年级"
+            @update:model-value="batchTransferForm.classId = null"
+          />
+          <MSelect
+            v-model="batchTransferForm.classId"
+            :options="batchTransferClassOptions"
+            placeholder="选择班级"
+            :disabled="!batchTransferForm.gradeId"
+          />
+        </div>
+        
+        <!-- 按钮 -->
+        <div class="flex items-center justify-center gap-4 mt-8">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showBatchTransferModal = false"
+          >取消</button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="handleConfirmBatchTransfer"
+          >确定</button>
+        </div>
+      </div>
+    </MModal>
   </div>
 </template>
 
@@ -677,6 +777,16 @@ const transferForm = reactive({
 // 删除学生确认弹窗
 const showDeleteStudentModal = ref(false)
 const deletingStudent = ref<any>(null)
+
+// 批量重置密码确认弹窗
+const showBatchResetPasswordModal = ref(false)
+
+// 批量移班弹窗
+const showBatchTransferModal = ref(false)
+const batchTransferForm = reactive({
+  gradeId: null as number | null,
+  classId: null as number | null
+})
 
 // 年级选项
 const gradeOptions = [
@@ -887,6 +997,10 @@ const handleClearSelection = () => {
 
 // 批量删除
 const handleBatchDelete = () => {
+  if (selectedStudentIds.value.length === 0) {
+    MMessage.warning('暂未选择任何学生，请在列表左侧进行勾选')
+    return
+  }
   const count = selectedStudentIds.value.length
   MMessage.warning(`确认删除选中的 ${count} 名学生？`)
   // TODO: 调用删除接口
@@ -894,16 +1008,59 @@ const handleBatchDelete = () => {
 
 // 批量移班
 const handleBatchTransfer = () => {
-  const count = selectedStudentIds.value.length
-  MMessage.info(`批量移班：${count} 名学生`)
-  // TODO: 打开移班弹窗
+  if (selectedStudentIds.value.length === 0) {
+    MMessage.warning('暂未选择任何学生，请在列表左侧进行勾选')
+    return
+  }
+  batchTransferForm.gradeId = null
+  batchTransferForm.classId = null
+  showBatchTransferModal.value = true
 }
+
+// 确认批量移班
+const handleConfirmBatchTransfer = () => {
+  if (!batchTransferForm.gradeId) {
+    MMessage.error('请选择年级')
+    return
+  }
+  if (!batchTransferForm.classId) {
+    MMessage.error('请选择班级')
+    return
+  }
+  MMessage.success(`已将 ${selectedStudentIds.value.length} 名学生移至新班级`)
+  // TODO: 调用移班接口
+  showBatchTransferModal.value = false
+}
+
+// 根据年级获取批量移班的班级选项
+const batchTransferClassOptions = computed(() => {
+  if (!batchTransferForm.gradeId) return []
+  const grade = treeData.value.find((g: any) => g.id === batchTransferForm.gradeId)
+  return grade?.children?.map((cls: any) => ({ label: cls.name, value: cls.id })) || []
+})
 
 // 批量重置密码
 const handleBatchResetPassword = () => {
-  const count = selectedStudentIds.value.length
-  MMessage.success(`已重置 ${count} 名学生的密码`)
+  if (selectedStudentIds.value.length === 0) {
+    MMessage.warning('暂未选择任何学生，请在列表左侧进行勾选')
+    return
+  }
+  showBatchResetPasswordModal.value = true
+}
+
+// 获取选中学生的名字列表
+const selectedStudentNames = computed(() => {
+  return studentList.value
+    .filter(s => selectedStudentIds.value.includes(s.id))
+    .map(s => s.name)
+    .join(',')
+})
+
+// 确认批量重置密码
+const handleConfirmBatchResetPassword = () => {
+  MMessage.success(`已重置 ${selectedStudentIds.value.length} 名学生的密码`)
   // TODO: 调用重置密码接口
+  showBatchResetPasswordModal.value = false
 }
 
 // 重置密码
