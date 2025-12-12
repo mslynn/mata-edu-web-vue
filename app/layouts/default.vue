@@ -58,6 +58,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useAuth } from '~/composables/api/useAuth'
 
 const { logout, user } = useAuth()
 const { allowNavigation } = usePreventBack()

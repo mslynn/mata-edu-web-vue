@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { Country } from './CountryCodeSelector.vue'
+import { useAuth } from '~/composables/api/useAuth'
 const { getSmsCode } = useAuth();
 
 interface Props {

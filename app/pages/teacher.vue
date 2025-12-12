@@ -157,6 +157,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useTeacher } from '~/composables/api/useTeacher'
 
 definePageMeta({
   layout: 'teacher'

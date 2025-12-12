@@ -6,7 +6,7 @@
         <div 
           :class="[
             'flex items-center justify-between py-2 px-2 cursor-pointer rounded transition-colors',
-            selectedKey === node[nodeKey] ? 'bg-[#4CB9CF]/10 text-[#4CB9CF]' : 'hover:bg-[#FFF3DD]'
+            selectedKey === node[nodeKey] ? 'bg-[#FFF3DD]' : 'hover:bg-[#FFF3DD]'
           ]"
           :style="{ paddingLeft: `${level * 16 + 8}px` }"
           @click="handleNodeClick(node)"
@@ -35,7 +35,7 @@
             </slot>
             
             <!-- 标签 -->
-            <span class="truncate text-[18px] text-[#4D4D4D]">{{ node[labelKey] }}</span>
+            <span class="truncate text-[16px] text-[#4D4D4D]">{{ node[labelKey] }}</span>
           </div>
           
           <!-- 操作按钮 -->

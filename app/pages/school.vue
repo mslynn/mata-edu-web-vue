@@ -71,6 +71,8 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from '~/composables/api/useAuth'
+
 definePageMeta({
   layout: 'default'
 })

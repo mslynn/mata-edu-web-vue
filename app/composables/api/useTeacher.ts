@@ -1,0 +1,395 @@
+/**
+ * 教师相关 API
+ */
+import { useHttp } from './useHttp'
+
+export const useTeacher = () => {
+  const http = useHttp()
+
+  //获取老师的左侧菜单信息
+  const getTeacherMenu = async () => {
+    try {
+      const response = await http.get('/system/menu/getRouters')
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 获取教师信息
+  const getTeacherInfo = async () => {
+    try {
+      const response = await http.get('/teacher/info')
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取教师信息失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  // 获取年级字典
+  const getGradeDict = async () => {
+    try {
+      const response = await http.get('/system/dict/data/type/edu_grade_type')
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取年级字典失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  // 获取班级列表
+  const getClassList = async () => {
+    try {
+      const response = await http.get('/system/class/grade')
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取班级列表失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 根据年级获取班级列表
+  const getClassByGrade = async (grade: string) => {
+    try {
+      const response = await http.get(`/system/class/grade/${grade}`)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取班级列表失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 获取学生列表
+  const getStudentList = async (params: { classId: string; studentName?: string; studentNumber?: string }) => {
+    try {
+      const response = await http.get('/system/student/list', params)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取学生列表失败')
+      }
+      return response.rows || response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 获取课程列表
+  const getCourseList = async () => {
+    try {
+      const response = await http.get('/teacher/course/list')
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取课程列表失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 创建班级
+  const createClass = async (data: { className: string; grade: number; gradeName: string }) => {
+    try {
+      const response = await http.post('/system/class', data)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '创建班级失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 更新班级
+  const updateClass = async (data: { id: string; className: string; grade: number; gradeName: string }) => {
+    try {
+      const response = await http.put('/system/class', data)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '编辑班级失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 删除班级
+  const deleteClass = async (id: string) => {
+    try {
+      const response = await http.del(`/system/class/${id}`)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //添加学生
+  const addStudent = async (data: { classId: string; studentName: string; }) => {
+    try {
+      const response = await http.post('/system/student', data)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  // 重置密码
+  const resetPassword = async (ids: string[]) => {
+    try {
+      const response = await http.post('/system/student/reset', { ids })
+      if (response.code !== 200) {
+        throw new Error(response.msg || '重置密码失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //移班
+  const transferClass = async (data: { ids: string[]; classId: string,teacherId: string }) => {
+    try {
+      const response = await http.post('/system/student/move', data)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 删除学生
+  const removeStudent = async (ids: string[]) => {
+    try {
+      const response = await http.del(`/system/student/${ids.join(',')}`)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '删除学生失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 创建快捷登录
+  const createQuickLogin = async ( classId: string,) => {
+    try {
+      const response = await http.get(`/system/class/code/enable/${classId}`)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //查询班级码信息
+  const getQuickLoginInfo = async () =>{
+    try {
+      const response = await http.get('/system/class/getClassLoginPassword')
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //停用快捷登录
+  const stopQuickLogin = async (classId: string,) =>{
+    try {
+      const response = await http.get(`/system/class/code/stop/${classId}`)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  
+
+  //导出学生信息（文件流下载）
+  const exportStudentInfo = async () => {
+    try {
+      const config = useRuntimeConfig()
+      const token = http.getToken()
+      
+      const response = await fetch(`${config.public.apiBaseUrl}/system/student/export`, {
+        method: 'POST',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('导出失败')
+      }
+      
+      // 获取文件名
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = '学生管理列表.xlsx'
+      if (contentDisposition) {
+        // 优先匹配 filename*=utf-8''xxx 格式（URL编码的中文）
+        let match = contentDisposition.match(/filename\*=utf-8''([^;\s]+)/i)
+        if (match) {
+          filename = decodeURIComponent(match[1])
+        } else {
+          // 尝试匹配 filename=xxx 格式
+          match = contentDisposition.match(/filename=([^;\s]+)/i)
+          if (match) {
+            // 去掉可能的引号，然后解码
+            filename = decodeURIComponent(match[1].replace(/['"]/g, ''))
+          }
+        }
+        // 截取 _ 后面的部分作为文件名
+        const underscoreIndex = filename.indexOf('_')
+        if (underscoreIndex !== -1) {
+          filename = filename.substring(underscoreIndex + 1)
+        }
+      }
+      
+      // 下载文件
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      
+      return true
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  //下载导入模板（文件流下载）
+  const downloadTemplate = async () => {
+    try {
+      const config = useRuntimeConfig()
+      const token = http.getToken()
+      
+      const response = await fetch(`${config.public.apiBaseUrl}/system/student/template`, {
+        method: 'POST',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : '',
+          'Content-Type': 'application/json'
+        }
+      })
+      
+      if (!response.ok) {
+        throw new Error('下载失败')
+      }
+      
+      // 获取文件名
+      const contentDisposition = response.headers.get('content-disposition')
+      let filename = '学生导入模板.xlsx'
+      if (contentDisposition) {
+        // 优先匹配 filename*=utf-8''xxx 格式
+        let match = contentDisposition.match(/filename\*=utf-8''([^;\s]+)/i)
+        if (match) {
+          filename = decodeURIComponent(match[1])
+        } else {
+          // 尝试匹配 filename=xxx 格式
+          match = contentDisposition.match(/filename=([^;\s]+)/i)
+          if (match) {
+            filename = decodeURIComponent(match[1].replace(/['"]/g, ''))
+          }
+        }
+        // 截取 _ 后面的部分作为文件名
+        const underscoreIndex = filename.indexOf('_')
+        if (underscoreIndex !== -1) {
+          filename = filename.substring(underscoreIndex + 1)
+        }
+      }
+      
+      // 下载文件
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+      
+      return true
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //导入学生信息（文件上传）
+  const importStudent = async (file: File, classId: string) => {
+    try {
+      const config = useRuntimeConfig()
+      const token = http.getToken()
+      
+      const formData = new FormData()
+      formData.append('file', file)
+      formData.append('classId', classId)
+      
+      const response = await fetch(`${config.public.apiBaseUrl}/system/student/importData`, {
+        method: 'POST',
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: formData
+      })
+      
+      const result = await response.json()
+      if (result.code !== 200) {
+        throw new Error(result.msg || '导入失败')
+      }
+      return result.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 获取学生统一密码
+  const getStudentPassword = async () => {
+    try {
+      const response = await http.get('/system/student/getSchoolPwd')
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取学生统一密码失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 班级码登录
+  const classCodeLogin = async (data: { classCode: string; classPassword: string }) => {
+    try {
+      const response = await http.post('/system/class/code/login', data)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '登录失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  return {
+    getTeacherMenu,
+    getTeacherInfo,
+    getGradeDict,
+    getClassList,
+    getClassByGrade,
+    getStudentList,
+    getCourseList,
+    createClass,
+    updateClass,
+    deleteClass,
+    addStudent,
+    resetPassword,
+    transferClass,
+    removeStudent,
+    createQuickLogin,
+    getQuickLoginInfo,
+    stopQuickLogin,
+    exportStudentInfo,
+    downloadTemplate,
+    importStudent,
+    getStudentPassword,
+    classCodeLogin
+  }
+}

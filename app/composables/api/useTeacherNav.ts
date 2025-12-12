@@ -1,24 +1,25 @@
 import { computed, onMounted } from 'vue'
+import { useTeacher } from './useTeacher'
 
 // 本地默认图标（打包后为绝对可访问路径）
-const homeIcon = new URL('../assets/images/home.png', import.meta.url).href
-const classIcon = new URL('../assets/images/class.png', import.meta.url).href
-const courseIcon = new URL('../assets/images/course.png', import.meta.url).href
-const toolsIcon = new URL('../assets/images/tool.png', import.meta.url).href
-const aiIcon = new URL('../assets/images/ai.png', import.meta.url).href
-const teacherIcon = new URL('../assets/images/teacher.png', import.meta.url).href
-const studyIcon = new URL('../assets/images/study.png', import.meta.url).href
-const eventIcon = new URL('../assets/images/event.png', import.meta.url).href
+const homeIcon = new URL('../../assets/images/home.png', import.meta.url).href
+const classIcon = new URL('../../assets/images/class.png', import.meta.url).href
+const courseIcon = new URL('../../assets/images/course.png', import.meta.url).href
+const toolsIcon = new URL('../../assets/images/tool.png', import.meta.url).href
+const aiIcon = new URL('../../assets/images/ai.png', import.meta.url).href
+const teacherIcon = new URL('../../assets/images/teacher.png', import.meta.url).href
+const studyIcon = new URL('../../assets/images/study.png', import.meta.url).href
+const eventIcon = new URL('../../assets/images/event.png', import.meta.url).href
 
 // 本地选中态图标（全部放在 assets/images 下，确保存在；若缺失将回退到普通态）
-const selectedHomeIcon = new URL('../assets/images/selected-home.png', import.meta.url).href
-const selectedClassIcon = new URL('../assets/images/selected-class.png', import.meta.url).href
-const selectedCourseIcon = new URL('../assets/images/selected-course.png', import.meta.url).href
-const selectedToolIcon = new URL('../assets/images/selected-tool.png', import.meta.url).href
-const selectedAiIcon = new URL('../assets/images/selected-ai.png', import.meta.url).href
-const selectedStudyIcon = new URL('../assets/images/selected-study.png', import.meta.url).href
-const selectedTeacherIcon = new URL('../assets/images/selected-teacher.png', import.meta.url).href
-const selectedEventIcon = new URL('../assets/images/selected-event.png', import.meta.url).href
+const selectedHomeIcon = new URL('../../assets/images/selected-home.png', import.meta.url).href
+const selectedClassIcon = new URL('../../assets/images/selected-class.png', import.meta.url).href
+const selectedCourseIcon = new URL('../../assets/images/selected-course.png', import.meta.url).href
+const selectedToolIcon = new URL('../../assets/images/selected-tool.png', import.meta.url).href
+const selectedAiIcon = new URL('../../assets/images/selected-ai.png', import.meta.url).href
+const selectedStudyIcon = new URL('../../assets/images/selected-study.png', import.meta.url).href
+const selectedTeacherIcon = new URL('../../assets/images/selected-teacher.png', import.meta.url).href
+const selectedEventIcon = new URL('../../assets/images/selected-event.png', import.meta.url).href
 
 // 本地选中态图标（无单独选中图时回退到普通态）
 const localSelectedIcons: Record<string, string> = {
@@ -202,4 +203,3 @@ export const useTeacherNav = () => {
     ensureMenuLoaded,
   }
 }
-

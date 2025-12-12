@@ -135,6 +135,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { useAuth } from '~/composables/api/useAuth'
 
 const { getSmsCode } = useAuth()
 

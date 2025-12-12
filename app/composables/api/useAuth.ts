@@ -2,7 +2,7 @@
  * 登录认证
  * 使用 useHttp 封装
  */
-import { ElMessage } from 'element-plus'
+import { useHttp } from './useHttp'
 
 // 登录请求参数
 interface LoginParams {
@@ -86,11 +86,6 @@ export const useAuth = () => {
       
       console.log('📥 登录响应:', response)
       
-      // 判断是否成功
-      // if (response.code !== 200) {
-      //   throw new Error(response.msg || '登录失败')
-      // }
-      
       console.log('登录信息:', response)
       
       // 保存 accessToken
@@ -113,7 +108,6 @@ export const useAuth = () => {
       
       return { ...response, redirectPath }
     } catch (error: any) {
-     // ElMessage.error(error?.data?.msg || error?.message || '登录失败')
       throw error
     }
   }
@@ -134,19 +128,20 @@ export const useAuth = () => {
         window.location.href = '/'
       }
     } catch (error: any) {
-      // ElMessage.error(error?.data?.msg || error?.message || '登出失败')
+      // 静默处理
     }
   }
+
   //获取手机验证码
   const getSmsCode = async (phonenumber: string) => {
     try {
       const response = await http.get(`/resource/sms/code?phonenumber=${phonenumber}`)
       return response
     } catch (error: any) {
-      // ElMessage.error(error?.data?.msg || error?.message || '获取验证码失败')
       throw error
     }
   }
+
   //申请体验账号
   const applyTrialAccount = async (name: string, phonenumber: string, smsCode: string, organizationName: string, purpose: string, product: string) => {
     try {
@@ -160,7 +155,6 @@ export const useAuth = () => {
       })
       return response
     } catch (error: any) {
-     // ElMessage.error(error?.data?.msg || error?.message || '申请体验账号失败')
       throw error
     }
   }
@@ -177,21 +171,23 @@ export const useAuth = () => {
       })
       return response
     } catch (error: any) {
-    //  ElMessage.error(error?.data?.msg || error?.message || '重置密码失败')
       throw error
     }
   }
-  // 获取当前用户信息
-  const getUserInfo = async () => {
+  //b班级码登录
+  const classCodeLogin = async (classCode: string, classCodePwd: string) => {
     try {
-      const response = await http.get('/auth/user')
-      user.value = response
+      const response = await http.post('/auth/classCodeLogin', {
+        classCode,
+        classCodePwd
+      })
       return response
     } catch (error: any) {
-   //   ElMessage.error(error?.data?.msg || error?.message || '获取用户信息失败')
       throw error
     }
   }
+
+
 
   return {
     token,
@@ -199,11 +195,10 @@ export const useAuth = () => {
     isLoggedIn,
     login,
     logout,
-    getUserInfo,
+    classCodeLogin,
     getRedirectPathByRole,
     getSmsCode,
     applyTrialAccount,
     resetPassword
   }
 }
-

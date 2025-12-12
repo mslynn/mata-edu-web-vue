@@ -169,7 +169,8 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from "vue";
 import { ElMessage } from "element-plus";
-const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole } = useAuth();
+import { useAuth } from '~/composables/api/useAuth'
+const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole, classCodeLogin } = useAuth();
 // 登录页也阻止返回
 const { allowNavigation } = usePreventBack();
 // 是否正在跳转（防止布局闪烁）
@@ -366,16 +367,16 @@ const handleLogin = async () => {
     }
     try {
       isNavigating.value = true;
-      await login(
+      const result = await classCodeLogin(
         classCodeForm.value.classCode,
-        classCodeForm.value.classPassword,
-        'password'
+        classCodeForm.value.classPassword
       );
-      allowNavigation(); // 允许跳转
-      //   window.location.replace(getRedirectPath())
-    } catch (error) {
+      console.log('✅ 班级码登录结果:', result);
       isNavigating.value = false;
-      alert("登录失败，请重试");
+      // TODO: 登录成功后的处理
+    } catch (error: any) {
+      console.error("❌ 班级码登录失败:", error);
+      isNavigating.value = false;
     }
   }
 };

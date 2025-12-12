@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.63:8001'
+  : 'http://192.168.0.42:8001'
 
 console.log('NODE_ENV:', process.env.NODE_ENV)
 console.log('apiBaseUrl:', apiBaseUrl)
@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     public: {
     //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
-     apiBaseUrl:apiBaseUrl || 'http://192.168.0.32:8080',
+     apiBaseUrl:apiBaseUrl || 'http://192.168.0.42:8001',
     }
   },
 
@@ -63,10 +63,9 @@ export default defineNuxtConfig({
       include: ['element-plus']
     },
     // 定义环境变量（RSA密钥等）
-    // define: {
-    //   'import.meta.env.VITE_APP_RSA_PUBLIC_KEY': JSON.stringify(process.env.VITE_APP_RSA_PUBLIC_KEY || ''),
-    //   'import.meta.env.VITE_APP_RSA_PRIVATE_KEY': JSON.stringify(process.env.VITE_APP_RSA_PRIVATE_KEY || ''),
-    // },
+    define: {
+      'import.meta.env.VITE_APP_RSA_PUBLIC_KEY': JSON.stringify(process.env.VITE_APP_RSA_PUBLIC_KEY || 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKoR8mX0rGKLqzcWmOzbfj64K8ZIgOdHnzkXSOVOZbFu/TJhZ7rFAN+eaGkl3C4buccQd/EjEsj9ir7ijT7h96MCAwEAAQ=='),
+    },
     // Vite 开发服务器配置 - 代理
     // server: {
     //   proxy: {
