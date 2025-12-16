@@ -76,13 +76,39 @@ interface TeacherMenuItem {
   iconSelected?: string
 }
 
+const STORAGE_KEY = 'teacher-nav-menus'
+
+// 从 localStorage 读取缓存
+const getStoredMenus = (): TeacherMenuItem[] => {
+  if (typeof window === 'undefined') return []
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      return JSON.parse(stored)
+    }
+  } catch (e) {
+    // ignore
+  }
+  return []
+}
+
+// 保存到 localStorage
+const setStoredMenus = (menus: TeacherMenuItem[]) => {
+  if (typeof window === 'undefined') return
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(menus))
+  } catch (e) {
+    // ignore
+  }
+}
+
 /**
- * 教师侧边菜单：登录后只请求一次，缓存到全局 state
+ * 教师侧边菜单：登录后只请求一次，缓存到全局 state + localStorage
  */
 export const useTeacherNav = () => {
   const { getTeacherMenu } = useTeacher()
 
-  const menuState = useState<TeacherMenuItem[]>('teacher-nav', () => [])
+  const menuState = useState<TeacherMenuItem[]>('teacher-nav', () => getStoredMenus())
   const loadingState = useState<boolean>('teacher-nav-loading', () => false)
 
   const menuItems = computed(() => menuState.value)
@@ -136,13 +162,27 @@ export const useTeacherNav = () => {
     return fallback || ''
   }
 
+  // 将 component 路径转换为路由路径
+  const componentToRoute = (componentPath: string) => {
+    if (!componentPath) return ''
+    let routePath = componentPath
+    // 移除末尾的 /index
+    if (routePath.endsWith('/index')) {
+      routePath = routePath.replace(/\/index$/, '')
+    }
+    return routePath.startsWith('/') ? routePath : `/${routePath}`
+  }
+
   const mapMenus = (data: any[]): TeacherMenuItem[] => {
     if (!Array.isArray(data)) return []
     const mapped = data
       .map((item: any) => {
         const child = item.children?.[0]
         if (!child) return null
-        const path = child.path?.startsWith('/') ? child.path : `/${child.path || ''}`
+        // 优先使用 component 生成路由路径，否则用 path
+        const path = child.component 
+          ? componentToRoute(child.component)
+          : (child.path?.startsWith('/') ? child.path : `/${child.path || ''}`)
         const rawIcon = child.meta?.icon || child.meta?.iconUrl || child.icon
         const rawIconSelected = child.meta?.iconSelected || child.meta?.activeIcon
         const icon = normalizeIcon(rawIcon, path, child.path || child.name, child.meta?.title || child.name)
@@ -171,21 +211,33 @@ export const useTeacherNav = () => {
     ]
   }
 
-  const loadMenus = async () => {
-    // 已有数据则不再请求
-    if (menuState.value.length) return
+  const loadMenus = async (forceRefresh = false) => {
+    // 已有数据且不强制刷新则不再请求
+    if (menuState.value.length && !forceRefresh) return
     loadingState.value = true
     try {
       const data = await getTeacherMenu()
-      menuState.value = mapMenus(data)
+      const menus = mapMenus(data)
+      menuState.value = menus
+      setStoredMenus(menus) // 持久化到 localStorage
     } catch (error) {
       // 回退默认菜单
-      menuState.value = [
+      const defaultMenus = [
         { label: '首页', path: '/teacher', component: '', activeMenu: 'home', icon: homeIcon, iconSelected: localSelectedIcons['/teacher'] },
         { label: '班级管理', path: '/system/class', component: '', activeMenu: 'class', icon: classIcon, iconSelected: localSelectedIcons['/system/class'] },
       ]
+      menuState.value = defaultMenus
+      setStoredMenus(defaultMenus)
     } finally {
       loadingState.value = false
+    }
+  }
+
+  // 清除缓存（登出时调用）
+  const clearMenus = () => {
+    menuState.value = []
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY)
     }
   }
 
@@ -201,5 +253,6 @@ export const useTeacherNav = () => {
     loading,
     loadMenus,
     ensureMenuLoaded,
+    clearMenus, // 登出时清除缓存
   }
 }

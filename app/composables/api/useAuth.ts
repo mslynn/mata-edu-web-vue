@@ -124,6 +124,7 @@ export const useAuth = () => {
       user.value = null
       if (process.client) {
         localStorage.removeItem('user_info')
+        localStorage.removeItem('teacher-nav-menus') // 清除侧边栏菜单缓存
         // 跳转到登录页 - 使用 window.location.href 硬刷新
         window.location.href = '/'
       }

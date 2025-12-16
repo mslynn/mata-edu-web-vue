@@ -130,6 +130,18 @@ export const useHttp = () => {
             return
           }
           
+          // 无权限处理
+          if (code === 403) {
+            removeToken()
+            ElMessage.error('无访问权限，2秒后跳转到登录页')
+            setTimeout(() => {
+              if (process.client) {
+                window.location.href = '/'
+              }
+            }, 2000)
+            return
+          }
+          
           if (code === 200) {
             // GET 请求（查询类）默认不显示成功提示，避免列表查询时出现大量提示
             // POST/PUT/DELETE 等操作类请求，如果 shouldShowSuccess 为 true 且有 msg 才显示成功提示
@@ -143,16 +155,33 @@ export const useHttp = () => {
         },
         // 错误处理
         onResponseError({ response }) {
-          const errorMsg = response._data?.msg  || '请求失败'
-          ElMessage.error(errorMsg)
+          const errorMsg = response._data?.msg || '请求失败'
           
-          // 401 未授权，清除 token
+          // 401 未授权，登录过期
           if (response.status === 401) {
             removeToken()
-            ElMessage.error('登录已过期，请重新登录')
-            // 可以在这里跳转到登录页
-            // navigateTo('/login')
+            ElMessage.error('登录已过期，2秒后跳转到登录页')
+            setTimeout(() => {
+              if (process.client) {
+                window.location.href = '/'
+              }
+            }, 2000)
+            return
           }
+          
+          // 403 禁止访问，无权限
+          if (response.status === 403) {
+            removeToken()
+            ElMessage.error('无访问权限，2秒后跳转到登录页')
+            setTimeout(() => {
+              if (process.client) {
+                window.location.href = '/'
+              }
+            }, 2000)
+            return
+          }
+          
+          ElMessage.error(errorMsg)
         }
       })
 

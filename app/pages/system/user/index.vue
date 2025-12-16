@@ -1,35 +1,7 @@
 <template>
   <div class="user-page flex bg-[#FAFAFA]">
-    <!-- 左侧教师导航（固定） -->
-    <aside class="teacher-nav hidden lg:flex w-[160px] xl:w-[180px] 3xl:w-[220px] 2xl:w-[295px] flex-col flex-shrink-0">
-      <nav class="flex-1 overflow-auto py-2">
-        <button
-          v-for="item in menuItems"
-          :key="item.path"
-          type="button"
-          :disabled="isActiveItem(item)"
-          :class="[
-            'w-full text-left flex items-center h-[50px] gap-3 px-4 py-3 transition-colors',
-            isActiveItem(item)
-              ? 'bg-[#FF9900] text-white font-normal cursor-default rounded-lg'
-              : 'text-gray-700 hover:bg-gray-50 cursor-pointer text-sm',
-          ]"
-          :style="isActiveItem(item) ? { fontSize: '20px' } : {}"
-          @click="!isActiveItem(item) && go(item.path)"
-        >
-          <div class="w-9 h-9 flex items-center justify-center">
-            <img
-              v-if="item.icon || item.iconSelected"
-              :src="isActiveItem(item) ? item.iconSelected || item.icon : item.icon"
-              alt=""
-              class="w-9 h-9 object-contain"
-            />
-            <span v-else>•</span>
-          </div>
-          <span>{{ item.label }}</span>
-        </button>
-      </nav>
-    </aside>
+    <!-- 公用左侧导航 -->
+    <AppSidebar class="hidden lg:flex" />
 
     <!-- 中间内容：左侧面板 + 主内容 -->
     <div class="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
@@ -1237,7 +1209,6 @@
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { MMessage } from "~/components/ui";
-import { useTeacherNav } from "@/composables/api/useTeacherNav";
 import { useTeacher } from "@/composables/api/useTeacher";
 import { useAuth } from "@/composables/api/useAuth";
 import { useSchoolUser, type Teacher } from '~/composables/api/useSchoolUser'
@@ -1246,9 +1217,7 @@ definePageMeta({
   layout: "default",
 });
 
-// 左侧教师导航（登录后请求一次并缓存）
 const route = useRoute();
-const { menuItems, loadMenus } = useTeacherNav();
 const { user } = useAuth();
 const schoolUserApi = useSchoolUser()
 
@@ -1281,20 +1250,6 @@ const {
   updateGroup,
   getGroupMemberList,
 } = useTeacher();
-
-// 规范化路径，去掉末尾的 /index 方便匹配
-const normalizePath = (p: string) => p.replace(/\/index$/, "");
-const isActivePath = (path: string) => {
-  const current = normalizePath(route.path);
-  const target = normalizePath(path);
-  return current === target || current.startsWith(target + "/");
-};
-const isActiveItem = (item: any) => {
-  if (!item) return false;
-  if (item.activeMenu && route.path.includes(item.activeMenu)) return true;
-  return isActivePath(item.path || "");
-};
-const go = (path: string) => navigateTo(normalizePath(path));
 
 // ==================== 左侧面板 Tab 导航 ====================
 const activeNav = ref('teacher')
@@ -2380,7 +2335,6 @@ watch(activeTab, (newTab) => {
 
 // 初始化
 onMounted(() => {
-  loadMenus();
   fetchTeacherList();
 //   fetchTeacherPassword();
   fetchSchoolInfo();
