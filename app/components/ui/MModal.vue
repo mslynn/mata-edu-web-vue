@@ -4,7 +4,6 @@
       <div 
         v-if="modelValue" 
         class="fixed inset-0 z-[1000] flex items-center justify-center p-4"
-        @keydown.esc="handleClose"
       >
         <!-- 遮罩 -->
         <div 
@@ -64,7 +63,54 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted, onUnmounted } from 'vue'
+import { computed, watch, onMounted, onUnmounted, getCurrentInstance } from 'vue'
+
+// 全局弹窗管理器
+interface ModalInstance {
+  id: number
+  close: () => void
+  canClose: boolean
+}
+
+const getModalManager = () => {
+  if (!(window as any).__modalManager__) {
+    const manager = {
+      stack: [] as ModalInstance[],
+      initialized: false,
+      init() {
+        if (this.initialized) return
+        this.initialized = true
+        document.addEventListener('keydown', (e: KeyboardEvent) => {
+          if (e.key === 'Escape' && this.stack.length > 0) {
+            // 只关闭最上层的弹窗
+            const topModal = this.stack[this.stack.length - 1]
+            if (topModal && topModal.canClose) {
+              e.preventDefault()
+              topModal.close()
+            }
+          }
+        })
+      },
+      add(instance: ModalInstance) {
+        this.stack.push(instance)
+      },
+      remove(id: number) {
+        const index = this.stack.findIndex(m => m.id === id)
+        if (index > -1) {
+          this.stack.splice(index, 1)
+        }
+      }
+    }
+    ;(window as any).__modalManager__ = manager
+  }
+  return (window as any).__modalManager__
+}
+
+const modalManager = getModalManager()
+modalManager.init()
+
+const instance = getCurrentInstance()
+const modalId = instance?.uid || Date.now()
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -131,27 +177,29 @@ const handleConfirm = () => {
 watch(() => props.modelValue, (val) => {
   if (val) {
     emit('open')
+    // 添加到弹窗栈
+    modalManager.add({
+      id: modalId,
+      close: handleClose,
+      canClose: props.closeOnPressEscape
+    })
     // 禁止背景滚动
     document.body.style.overflow = 'hidden'
   } else {
-    document.body.style.overflow = ''
+    // 从弹窗栈移除
+    modalManager.remove(modalId)
+    // 如果没有其他弹窗，恢复滚动
+    if (modalManager.stack.length === 0) {
+      document.body.style.overflow = ''
+    }
   }
-})
-
-// ESC 关闭
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && props.closeOnPressEscape && props.modelValue) {
-    handleClose()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-  document.body.style.overflow = ''
+  modalManager.remove(modalId)
+  if (modalManager.stack.length === 0) {
+    document.body.style.overflow = ''
+  }
 })
 </script>
 

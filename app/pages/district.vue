@@ -32,7 +32,7 @@
               class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </div>
-          <div class="card-title">学校管理</div>
+          <div class="card-title">{{ manageTitle }}</div>
         </div>
 
       </div>
@@ -56,7 +56,12 @@ definePageMeta({
 })
 
 const router = useRouter()
-const { logout } = useAuth()
+const { logout, user } = useAuth()
+
+// 根据角色显示不同的标题
+const manageTitle = computed(() => {
+  return user.value?.role_key === 'district_admin' ? '学校管理' : '区管理'
+})
 const { allowNavigation } = usePreventBack()
 
 const handleLogout = () => {
@@ -65,13 +70,19 @@ const handleLogout = () => {
 }
 
 const goToDataCenter = () => {
+  allowNavigation()
   // TODO: 跳转到数据中心页面
   console.log('跳转到数据中心')
 }
 
 const goToSchoolManage = () => {
-  // TODO: 跳转到学校管理页面
-  console.log('跳转到学校管理')
+  allowNavigation()
+  // city_admin 跳转到市管理页面，其它角色跳转学校管理
+  if (user.value?.role_key === 'city_admin') {
+    router.push('/city')
+  } else {
+    router.push('/school')
+  }
 }
 </script>
 

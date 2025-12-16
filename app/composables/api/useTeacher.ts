@@ -67,9 +67,14 @@ export const useTeacher = () => {
   }
 
   // 获取学生列表
-  const getStudentList = async (params: { classId: string; studentName?: string; studentNumber?: string }) => {
+  const getStudentList = async (data: { classId: string; numberName?: string }) => {
     try {
-      const response = await http.get('/system/student/list', params)
+      // 构建查询参数，numberName 需要转换为 params[numberName] 格式
+      const queryParams: Record<string, any> = { classId: data.classId }
+      if (data.numberName) {
+        queryParams['params[numberName]'] = data.numberName
+      }
+      const response = await http.get('/system/student/list', queryParams)
       if (response.code !== 200) {
         throw new Error(response.msg || '获取学生列表失败')
       }
@@ -368,6 +373,81 @@ export const useTeacher = () => {
     }
   }
 
+  //小组管理列表
+  const getGroupList = async (data?: { classId?: string; teamLeader?: string }) => {
+    try {
+      const queryParams: Record<string, any> = {}
+      if (data?.classId) {
+        queryParams.classId = data.classId
+      }
+      if (data?.teamLeader) {
+        queryParams['params[teamLeader]'] = data.teamLeader
+      }
+      const response = await http.get('/system/team/list', queryParams)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //新增小组
+  const addGroup = async (data: {
+    classId: string
+    teamName: string
+    remarks?: string
+    studentList?: { studentNumber: string; studentName: string; isLeader: 0 | 1; delFlag?: 0 | 1 }[]
+  }) => {
+    try {
+      const response = await http.post('/system/team', data)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //查询添加学员列表
+  const getAddStudentList = async (classId: string) => {
+    try {
+      const response = await http.get(`/system/team/student/list/${classId}`)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+  //删除小组
+  const deleteGroup = async (ids: string[]) => {
+    try {
+      const response = await http.del(`/system/team/${ids.join(',')}`)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  //编辑小组
+  const updateGroup = async (data: {
+    id: string
+    classId: string
+    teamName: string
+    remarks?: string
+    studentList?: { studentNumber: string; studentName: string; isLeader: 0 | 1; delFlag: 0 | 1 }[]
+  }) => {
+    try {
+      const response = await http.put('/system/team', data)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  //查询小组成员信息
+  const getGroupMemberList = async (id: string) => {
+    try {
+      const response = await http.get(`/system/team/${id}`)
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
+
   return {
     getTeacherMenu,
     getTeacherInfo,
@@ -390,6 +470,13 @@ export const useTeacher = () => {
     downloadTemplate,
     importStudent,
     getStudentPassword,
-    classCodeLogin
+    classCodeLogin,
+    getGroupList,
+    addGroup,
+    getAddStudentList,
+    deleteGroup,
+    getGroupMemberList,
+    updateGroup,
+      
   }
 }

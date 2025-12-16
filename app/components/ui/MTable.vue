@@ -20,7 +20,7 @@
               />
             </th>
             <!-- 序号列 -->
-            <th v-if="showIndex" class="w-16 px-4 py-3 text-left text-sm font-medium text-gray-600">
+            <th v-if="showIndex" class="w-16 px-4 py-3 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               序号
             </th>
             <!-- 数据列 -->
@@ -59,7 +59,7 @@
               />
             </td>
             <!-- 序号列 -->
-            <td v-if="showIndex" class="px-4 py-3 text-sm text-gray-600">
+            <td v-if="showIndex" class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
               {{ index + 1 }}
             </td>
             <!-- 数据列 -->

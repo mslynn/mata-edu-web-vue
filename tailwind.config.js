@@ -16,6 +16,10 @@ export default {
         'orange': '#FFA54D',
         'blue': '#3366FF',
       },
+      screens: {
+        // 自定义断点适配 1200-1500px 屏幕
+        '3xl': '1400px',
+      },
     },
   },
   safelist: [

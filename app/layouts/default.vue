@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col font-sans">
+  <div class="h-screen flex flex-col font-sans overflow-hidden">
     <!-- 默认顶部导航栏 -->
     <header class="header-wrapper  bg-[#FF9900] h-[70px]">
       <div class="header-content">

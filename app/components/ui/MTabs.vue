@@ -5,7 +5,7 @@
       :key="tab.value"
       :disabled="tab.disabled"
       :class="[
-        'w-[100px] sm:w-[120px] lg:w-[142px] h-[40px] lg:h-[50px] text-[14px] lg:text-[16px] font-medium transition-all rounded-[20px]',
+        'w-[100px] sm:w-[120px] lg:w-[142px] h-[40px] lg:h-[50px] text-[14px] lg:text-[16px] font-medium transition-all rounded-[10px]',
         // 选中状态
         modelValue === tab.value 
           ? 'bg-[#FF9900] text-white' 

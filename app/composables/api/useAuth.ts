@@ -49,7 +49,7 @@ export const useAuth = () => {
       case 'teacher':
         return '/system/class'
        case 'school_admin':
-        return '/teacher'
+        return '/system/user'
       case 'student':
         return '/student'
    
