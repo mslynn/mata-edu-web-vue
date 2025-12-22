@@ -232,7 +232,7 @@ const emit = defineEmits<{
   cancel: []
 }>()
 
-const { uploadOSS, downloadOSS, getCursorDetail } = cursorAdmin()
+const { uploadOSS, getCursorDetail } = cursorAdmin()
 
 // 加载状态
 const detailLoading = ref(false)
@@ -248,7 +248,6 @@ const formData = ref({
   description: '',
   permission: 'private',
   coverUrl: '',
-  ossId: '',
   chapters: [{ id: chapterId++, name: '', delFlag: 1 }] as { id: number; name: string; chapterId?: number; delFlag: number }[],
 })
 
@@ -278,13 +277,10 @@ const handleFileChange = async (e: Event) => {
 
   try {
     uploading.value = true
-    // 上传文件获取 ossId
+    // 上传文件获取 url
     const uploadRes = await uploadOSS(file)
-    // 通过 ossId 下载获取 blob URL 用于显示
-    const blobUrl = await downloadOSS(uploadRes.ossId)
-    formData.value.coverUrl = blobUrl
-    // 保存 ossId 用于提交
-    formData.value.ossId = uploadRes.ossId
+    // 直接使用返回的 url
+    formData.value.coverUrl = uploadRes.url
   } catch (error: any) {
     console.error('上传失败:', error)
     alert(error.message || '上传失败，请重试')
@@ -305,7 +301,6 @@ const resetForm = () => {
     description: '',
     permission: 'private',
     coverUrl: '',
-    ossId: '',
     chapters: [{ id: chapterId++, name: '', delFlag: 1 }] as { id: number; name: string; chapterId?: number; delFlag: number }[],
   }
   errors.value = {}
@@ -325,22 +320,11 @@ const loadCourseDetail = async (courseId: string | number) => {
   try {
     const data = await getCursorDetail(String(courseId))
     if (data) {
-      // 处理封面图片
-      let coverUrl = ''
-      if (data.courseCoverOssId) {
-        try {
-          coverUrl = await downloadOSS(data.courseCoverOssId)
-        } catch (e) {
-          console.error('下载封面失败:', e)
-        }
-      }
-      
       formData.value = {
         name: data.courseName || '',
         description: data.courseDesc || '',
         permission: data.coursePermission === 1 ? 'public' : 'private',
-        coverUrl: coverUrl,
-        ossId: data.courseCoverOssId || '',
+        coverUrl: data.courseCoverUrl || '',
         chapters: data.chapterList?.length
           ? data.chapterList.map((c: any) => ({ 
               id: chapterId++, 

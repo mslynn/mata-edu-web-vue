@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.63:8001'
+  : 'http://192.168.0.30:8001'
 
 console.log('NODE_ENV:', process.env.NODE_ENV)
 console.log('apiBaseUrl:', apiBaseUrl)
@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     public: {
     //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
-     apiBaseUrl:apiBaseUrl || 'http://192.168.0.63:8001',
+     apiBaseUrl:apiBaseUrl || 'http://192.168.0.30:8001',
     }
   },
 

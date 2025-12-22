@@ -99,9 +99,9 @@ const getCursorTreeMenu = async () => {
     }
   }
   //删除课程
-  const deleteCursor = async (courseId: string) => {
+  const deleteCursor = async (courseIds: string) => {
     try {
-      const response = await http.del(`/system/course/${courseId}`)
+      const response = await http.del(`/system/course/${courseIds}`)
       if (response.code !== 200) {
         throw new Error(response.msg || '删除课程失败')
       }

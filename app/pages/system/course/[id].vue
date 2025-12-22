@@ -17,7 +17,7 @@
         <div ref="courseRowRef" class="course-row">
           <div class="cover-box">
           
-            <img src="../../assets/images/course.png" alt="封面" class="cover-img" />
+            <img :src="courseInfo.courseCoverUrl" alt="封面" class="cover-img" />
           </div>
           <div class="info-box">
             <div class="title-line">
@@ -25,7 +25,7 @@
               <button class="edit-btn" @click="showEvaluationModal = true">课程测评</button>
             </div>
             <div ref="extraInfoRef" class="extra-info">
-              <span class="units">课程单元：{{ courseInfo.units }}单元</span>
+              <!-- <span class="units">课程单元：{{ courseInfo.units }}单元</span> -->
               <p class="desc">{{ courseInfo.description }}</p>
             </div>
           </div>
@@ -46,7 +46,11 @@
         <div class="sidebar-title">章节详情</div>
         <div class="chapter-list">
           <div v-for="(chapter, index) in chapters" :key="chapter.id" class="chapter-item" :class="{ active: activeChapter === chapter.id }" @click="activeChapter = chapter.id">
-            {{ chapter.name }}
+            <span class="chapter-name">{{ chapter.name }}</span>
+            <div class="chapter-actions">
+              <button class="action-btn prepare-btn" @click.stop="handlePrepare(chapter)">继续备课</button>
+              <button class="action-btn start-btn" @click.stop="handleStartClass(chapter)">开始上课</button>
+            </div>
           </div>
         </div>
       </div>
@@ -56,19 +60,68 @@
         </div>
         <div class="tab-content">
           <div v-if="activeTab === 'resource'" class="resource-panel">
-            <div class="section-header" @click="expandedSections.courseware = !expandedSections.courseware">
-              <svg class="arrow-icon" :class="{ expanded: expandedSections.courseware }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
-              <span>教案({{ resources.courseware.length }})</span>
+            <!-- 课件 -->
+            <div class="resource-section">
+              <div class="section-header" @click="expandedSections.courseware = !expandedSections.courseware">
+                <svg class="arrow-icon" :class="{ expanded: expandedSections.courseware }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                <span>课件({{ resources.courseware.length }})</span>
+              </div>
+              <div v-if="expandedSections.courseware" class="section-content">
+                <div class="resource-grid">
+                  <div v-for="item in resources.courseware" :key="item.id" class="resource-item" @click="openDocument(item)">
+                    <div class="resource-icon" :class="getFileIconClass(item.type)">
+                      <span>{{ getFileIconText(item.type) }}</span>
+                    </div>
+                    <span class="resource-name">{{ item.name }}</span>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div v-if="expandedSections.courseware" class="section-content">
-              <div v-for="item in resources.courseware" :key="item.id" class="resource-item">
-                <div class="resource-icon">W</div>
-                <span class="resource-name">{{ item.name }}</span>
+            
+            <!-- 教师程序 -->
+            <div class="resource-section">
+              <div class="section-header" @click="expandedSections.program = !expandedSections.program">
+                <svg class="arrow-icon" :class="{ expanded: expandedSections.program }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                <span>教师程序({{ resources.program.length }})</span>
+              </div>
+              <div v-if="expandedSections.program" class="section-content">
+                <div class="resource-grid">
+                  <div v-for="item in resources.program" :key="item.id" class="resource-item" @click="openDocument(item)">
+                    <div class="resource-icon" :class="getFileIconClass(item.type)">
+                      <span>{{ getFileIconText(item.type) }}</span>
+                    </div>
+                    <span class="resource-name">{{ item.name }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 学生手册 -->
+            <div class="resource-section">
+              <div class="section-header" @click="expandedSections.handbook = !expandedSections.handbook">
+                <svg class="arrow-icon" :class="{ expanded: expandedSections.handbook }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+                <span>学生手册({{ resources.handbook.length }})</span>
+              </div>
+              <div v-if="expandedSections.handbook" class="section-content">
+                <div class="resource-grid">
+                  <div v-for="item in resources.handbook" :key="item.id" class="resource-item" @click="openDocument(item)">
+                    <div class="resource-icon" :class="getFileIconClass(item.type)">
+                      <span>{{ getFileIconText(item.type) }}</span>
+                    </div>
+                    <span class="resource-name">{{ item.name }}</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
+          <div v-else-if="activeTab === 'design'" class="empty-state">暂无内容</div>
+          <div v-else-if="activeTab === 'task'" class="empty-state">暂无内容</div>
           <div v-else class="empty-state">暂无内容</div>
         </div>
       </div>
@@ -109,13 +162,13 @@ onMounted(async () => {
     if (data) {
       courseInfo.value.name = data.courseName || courseInfo.value.name
       courseInfo.value.description = data.courseDesc || courseInfo.value.description
-      courseInfo.value.units = data.chapterCount || data.chapterList?.length || courseInfo.value.units
+      courseInfo.value.courseCoverUrl = data.courseCoverUrl || ''
       
       // 更新章节列表
       if (data.chapterList && Array.isArray(data.chapterList)) {
-        chapters.value = data.chapterList.map((c: any, index: number) => ({
-          id: c.chapterId || index + 1,
-          name: c.chapterName || `章节${index + 1}`
+        chapters.value = data.chapterList.map((c: any, idx: number) => ({
+          id: c.chapterId || idx + 1,
+          name: c.chapterName || `章节${idx + 1}`
         }))
       }
     }
@@ -182,24 +235,58 @@ watch(isCollapsed, (collapsed) => {
 
 const courseInfo = ref({
   id: route.params.id,
-  name: 'AI上全能助手',
-  units: 15,
-  description: '在小学科学课程标准的指导下从真实问题出发，涵科学/技术/工程/艺术/数学等多学科知识和技能为一体，并以国内最先进的人形机器人"悟空"为媒体，结合图形化编程和开源硬件引领人形机器人的教程。'
+  name: '',
+  description: '',
+  courseCoverUrl: ''
 })
-const chapters = ref([
-  { id: 1, name: '"悟空"来了' }, { id: 2, name: '"工程师"来了' }, { id: 3, name: '人脸解锁' },
-  { id: 4, name: '"悟空"听我的' }, { id: 5, name: '生日快乐' }, { id: 6, name: '垃圾分类' },
-  { id: 7, name: '活动课：小小侦探' }, { id: 8, name: '语音风扇' }, { id: 9, name: '智能家门' }, { id: 10, name: '智能感应灯' },
-  { id: 11, name: '智能感应灯' },
-  { id: 12, name: '智能感应灯' },
-  { id: 13, name: '智能感应灯' },
-  { id: 14, name: '智能感应灯' },
-])
+const chapters = ref<{ id: number; name: string }[]>([])
 const activeChapter = ref(1)
-const tabs = [{ label: '教学资源', value: 'resource' }, { label: '学习任务', value: 'task' }, { label: '个人资源', value: 'personal' }]
+const tabs = [
+  { label: '教学资源', value: 'resource' },
+  { label: '学习任务', value: 'task' },
+  { label: '个人资源', value: 'personal' }
+]
 const activeTab = ref('resource')
-const resources = reactive({ courseware: [{ id: 1, name: '主题01-"悟空"来了（教师用书）V1.5.docx' }] })
-const expandedSections = reactive({ courseware: true })
+
+// 资源数据
+const resources = reactive({
+  courseware: [
+    { id: 1, name: '主题01-"悟空"来了（课件）V1.5.pptx', type: 'ppt', url: '' }
+  ],
+  program: [
+    { id: 2, name: '1-1参考程序.ucd', type: 'ucd', url: '' },
+    { id: 3, name: '1-2参考程序.ucd', type: 'ucd', url: '' }
+  ],
+  handbook: [
+    { id: 4, name: '主题01-"悟空"来了（学生手册）V1.5.docx', type: 'word', url: 'http://192.168.0.30:9000/mata/2025/12/22/8e3ceba623c64d32bcced390d35e9832.docx' },
+    { id: 5, name: '测试PDF文档.pdf', type: 'pdf', url: 'http://192.168.0.30:9000/mata/2025/12/22/e98407271692446da69888b8068c0bfc.pdf' }
+  ]
+})
+const expandedSections = reactive({ courseware: true, program: true, handbook: true })
+
+// 根据文件类型获取图标样式
+const getFileIconClass = (type: string) => {
+  const iconMap: Record<string, string> = {
+    ppt: 'icon-ppt',
+    word: 'icon-word',
+    excel: 'icon-excel',
+    pdf: 'icon-pdf',
+    ucd: 'icon-ucd'
+  }
+  return iconMap[type] || 'icon-default'
+}
+
+// 根据文件类型获取图标文字
+const getFileIconText = (type: string) => {
+  const textMap: Record<string, string> = {
+    ppt: 'P',
+    word: 'W',
+    excel: 'X',
+    pdf: 'PDF',
+    ucd: 'ucd'
+  }
+  return textMap[type] || '?'
+}
 
 // 设置可见班级弹窗
 const showClassModal = ref(false)
@@ -211,6 +298,21 @@ const handleClassConfirm = (selectedIds: number[]) => {
 const showEvaluationModal = ref(false)
 const handleDistribute = (item: { id: number; name: string }) => {
   console.log('下发测评:', item)
+}
+
+// 章节操作
+const handlePrepare = (chapter: { id: number; name: string }) => {
+  navigateTo(`/system/course/prepare/${route.params.id}?chapterId=${chapter.id}`)
+}
+
+const handleStartClass = (chapter: { id: number; name: string }) => {
+  console.log('开始上课:', chapter)
+}
+
+// 打开资源 - 跳转到备课页面
+const openDocument = (item: { id: number; name: string; type: string; url?: string }) => {
+  // 跳转到备课页面，带上资源信息
+  navigateTo(`/system/course/prepare/${route.params.id}?resourceId=${item.id}&resourceUrl=${encodeURIComponent(item.url || '')}&resourceName=${encodeURIComponent(item.name)}&resourceType=${item.type}`)
 }
 </script>
 
@@ -285,12 +387,50 @@ const handleDistribute = (item: { id: number; name: string }) => {
   will-change: transform;
 }
 
-.chapter-sidebar { width: 220px; border-right: 1px solid #eee; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; }
+.chapter-sidebar { width: 380px; border-right: 1px solid #eee; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; }
 .sidebar-title { padding: 16px 20px; font-size: 14px; color: #333; font-weight: 500; border-bottom: 1px solid #eee; flex-shrink: 0; }
 .chapter-list { padding: 8px 0; max-height: 500px; overflow-y: auto; }
-.chapter-item { padding: 12px 20px; font-size: 13px; color: #666; cursor: pointer; border-left: 3px solid transparent; transition: all 0.2s; }
-.chapter-item:hover { background: #FFF7E6; color: #FF9900; }
-.chapter-item.active { background: #FFF7E6; color: #FF9900; border-left-color: #FF9900; }
+.chapter-item { 
+  display: flex; 
+  align-items: center; 
+  justify-content: space-between;
+  padding: 12px 20px; 
+  font-size: 13px; 
+  color: #666; 
+  cursor: pointer; 
+  border-left: 3px solid transparent; 
+  transition: all 0.2s; 
+}
+.chapter-item:hover { background: #E6F4FF; color: #1890FF; }
+.chapter-item.active { background: #E6F4FF; color: #1890FF; border-left-color: #1890FF; }
+.chapter-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chapter-actions { 
+  display: flex; 
+  gap: 8px; 
+  opacity: 0; 
+  transition: opacity 0.2s; 
+}
+.chapter-item:hover .chapter-actions { opacity: 1; }
+.action-btn { 
+  padding: 4px 12px; 
+  font-size: 12px; 
+  border-radius: 4px; 
+  cursor: pointer; 
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.prepare-btn { 
+  background: white; 
+  border: 1px solid #1890FF; 
+  color: #1890FF; 
+}
+.prepare-btn:hover { background: #E6F4FF; }
+.start-btn { 
+  background: #1890FF; 
+  border: 1px solid #1890FF; 
+  color: white; 
+}
+.start-btn:hover { background: #40A9FF; border-color: #40A9FF; }
 
 .content-area { flex: 1; padding: 20px; }
 .tab-header { display: flex; gap: 8px; margin-bottom: 20px; }
@@ -299,13 +439,43 @@ const handleDistribute = (item: { id: number; name: string }) => {
 .tab-btn.active { background: #FF9900; border-color: #FF9900; color: white; }
 
 .tab-content { min-height: 300px; }
+.resource-section { margin-bottom: 16px; }
 .section-header { display: flex; align-items: center; gap: 8px; padding: 10px 0; font-size: 14px; color: #333; cursor: pointer; }
-.section-header:hover { color: #FF9900; }
+.section-header:hover { color: #1890FF; }
 .arrow-icon { width: 16px; height: 16px; transition: transform 0.2s; }
-.arrow-icon.expanded { transform: rotate(90deg); }
+.arrow-icon.expanded { transform: rotate(180deg); }
 .section-content { padding-left: 24px; }
-.resource-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: #f9f9f9; border-radius: 6px; margin-bottom: 8px; }
-.resource-icon { width: 36px; height: 36px; border-radius: 6px; background: #2b5797; color: white; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; }
-.resource-name { font-size: 13px; color: #333; }
+.resource-grid { display: flex; flex-wrap: wrap; gap: 12px; }
+.resource-item { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 12px 16px; 
+  background: #f9f9f9; 
+  border-radius: 8px; 
+  min-width: 200px;
+  max-width: 280px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.resource-item:hover { background: #E6F4FF; }
+.resource-icon { 
+  width: 40px; 
+  height: 40px; 
+  border-radius: 6px; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  font-size: 12px; 
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.icon-ppt { background: #D04423; color: white; }
+.icon-word { background: #2B5797; color: white; }
+.icon-excel { background: #1D6F42; color: white; }
+.icon-pdf { background: #E53935; color: white; }
+.icon-ucd { background: #FFF3E0; color: #FF9800; border: 1px solid #FFE0B2; font-size: 10px; }
+.icon-default { background: #9E9E9E; color: white; }
+.resource-name { font-size: 13px; color: #333; line-height: 1.4; word-break: break-all; }
 .empty-state { display: flex; align-items: center; justify-content: center; height: 200px; color: #999; }
 </style>

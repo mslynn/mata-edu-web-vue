@@ -185,14 +185,19 @@
                                 :class="[statusConfig[course.status]?.bg, statusConfig[course.status]?.color]">
                                 {{ statusConfig[course.status]?.label }}
                             </span>
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <span class="text-gray-400 text-sm">课程封面</span>
-                            </div>
-                            <!-- 对角线装饰 -->
-                            <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-                                <line x1="0" y1="0" x2="100%" y2="100%" stroke="#ccc" stroke-width="1" />
-                                <line x1="100%" y1="0" x2="0" y2="100%" stroke="#ccc" stroke-width="1" />
-                            </svg>
+                            <!-- 封面图片 -->
+                            <img v-if="course.cover" :src="course.cover" alt="课程封面" class="absolute inset-0 w-full h-full object-cover" />
+                            <!-- 无封面时显示占位 -->
+                            <template v-else>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span class="text-gray-400 text-sm">课程封面</span>
+                                </div>
+                                <!-- 对角线装饰 -->
+                                <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                                    <line x1="0" y1="0" x2="100%" y2="100%" stroke="#ccc" stroke-width="1" />
+                                    <line x1="100%" y1="0" x2="0" y2="100%" stroke="#ccc" stroke-width="1" />
+                                </svg>
+                            </template>
                         </div>
                         <!-- 课程名称 -->
                         <div class="text-sm font-medium text-gray-800 mb-1">{{ course.name }}</div>
@@ -218,7 +223,7 @@ definePageMeta({
     layout: 'default'
 })
 
-const { getCursorTreeMenu, getCursorList, createCursor, editCursor } = cursorAdmin()
+const { getCursorTreeMenu, getCursorList, createCursor, editCursor, deleteCursor } = cursorAdmin()
 
 // 获取当前用户ID
 const currentUserId = ref<string>('')
@@ -417,7 +422,7 @@ const handleCreateCourse = async (data: any) => {
             await editCursor({
                 courseId: editCourseData.value.id,
                 courseName: data.name,
-                courseCoverUrl: data.ossId || editCourseData.value.coverOssId || '',
+                courseCoverUrl: data.coverUrl || editCourseData.value.coverUrl || '',
                 courseDesc: data.description || '',
                 coursePermission: data.permission === 'public' ? 1 : 0,
                 chapterList: data.chapters.map((c: any) => ({
@@ -430,7 +435,7 @@ const handleCreateCourse = async (data: any) => {
             // 创建模式
             await createCursor({
                 courseName: data.name,
-                courseCoverUrl: data.ossId || '',
+                courseCoverUrl: data.coverUrl || '',
                 courseDesc: data.description || '',
                 coursePermission: data.permission === 'public' ? 1 : 0,
                 chapterList: data.chapters.map((c: any) => ({
@@ -473,13 +478,16 @@ const handleDeleteCourse = (course: any) => {
     showDeleteModal.value = true
 }
 
-const confirmDeleteCourse = () => {
+const confirmDeleteCourse = async () => {
     if (courseToDelete.value) {
-        console.log('删除课程:', courseToDelete.value)
-        // TODO: 调用删除课程接口
-        courseToDelete.value = null
-        // 刷新课程列表
-        loadCourseList()
+        try {
+            await deleteCursor(String(courseToDelete.value.id))
+            courseToDelete.value = null
+            // 刷新课程列表
+            loadCourseList()
+        } catch (error) {
+            console.error('删除课程失败:', error)
+        }
     }
 }
 
@@ -657,10 +665,19 @@ watch([activeCategory, activeSubCategory, activeThirdCategory, courseStatus, sea
 .course-cover {
     width: 100%;
     aspect-ratio: 3 / 4;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card {
+    transition: transform 0.3s ease;
+}
+
+.course-card:hover {
+    transform: scale(1.05);
 }
 
 .course-card:hover .course-cover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* 下拉框动画 */
