@@ -165,12 +165,19 @@
       </div>
     </Modal>
   </div>
+  
+  <!-- 班级码登录学生选择弹窗 -->
+  <ClassCodeStudentModal
+    v-model:visible="showStudentModal"
+    :student-list="studentList"
+    @select="handleSelectStudent"
+  />
 </template>
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { useAuth } from '~/composables/api/useAuth'
-const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole, classCodeLogin } = useAuth();
+const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole, classCodeLogin, getClassCodeLoginList } = useAuth();
 // 登录页也阻止返回
 const { allowNavigation } = usePreventBack();
 // 是否正在跳转（防止布局闪烁）
@@ -210,6 +217,10 @@ const countdown = ref(0);
 const showAgreementRequiredModal = ref(false);
 const showAgreementModal = ref(false);
 const showPrivacyModal = ref(false);
+// 班级码登录相关
+const showStudentModal = ref(false);
+const studentList = ref<any[]>([]);
+const classCodeLoginData = ref<any>(null);
 // 校园账号表单数据
 const campusForm = ref({
   username: "",
@@ -303,11 +314,8 @@ const handleLogin = async () => {
       // 登录成功，跳转到对应页面
       if (result?.redirectPath) {
         allowNavigation();
-        // 使用硬刷新跳转，确保布局正确
-        // 开发环境延迟一下方便看控制台，生产环境直接跳转
-        setPageLayout("default"); // 先切换布局
-        await nextTick(); // 等待 DOM 更新
-        await navigateTo(result.redirectPath, { replace: true });
+        // 使用硬刷新跳转，确保布局和状态正确加载
+        window.location.href = result.redirectPath;
       } else {
         console.error("❌ 未获取到跳转路径");
         isNavigating.value = false;
@@ -341,9 +349,8 @@ const handleLogin = async () => {
       if (result?.redirectPath) {
         // 登录成功，跳转到对应页面
         allowNavigation();
-        setPageLayout("default");
-        await nextTick();
-        await navigateTo(result.redirectPath, { replace: true });
+        // 使用硬刷新跳转，确保布局和状态正确加载
+        window.location.href = result.redirectPath;
       } else {
         isNavigating.value = false;
        // ElMessage.error(result?.msg || "登录失败，请重试");
@@ -372,8 +379,19 @@ const handleLogin = async () => {
         classCodeForm.value.classPassword
       );
       console.log('✅ 班级码登录结果:', result);
+      
+      // 保存登录数据，获取学生列表 (data 直接是 classId 字符串)
+      if (result?.data) {
+        classCodeLoginData.value = result.data;
+        const listResult = await getClassCodeLoginList(result.data);
+        console.log('✅ 学生列表:', listResult);
+        
+        if (listResult?.data) {
+          studentList.value = listResult.data;
+          showStudentModal.value = true;
+        }
+      }
       isNavigating.value = false;
-      // TODO: 登录成功后的处理
     } catch (error: any) {
       console.error("❌ 班级码登录失败:", error);
       isNavigating.value = false;
@@ -426,6 +444,33 @@ const handleAgreementConfirm = () => {
   showAgreementRequiredModal.value = false;
   // 确认协议后直接触发登录
   handleLogin();
+};
+
+// 选择学生完成登录
+const handleSelectStudent = async (student: any) => {
+  console.log('✅ 选择学生:', student);
+  try {
+    isNavigating.value = true;
+    const result = await login(
+      classCodeForm.value.classCode,
+      classCodeForm.value.classPassword,
+      'classcode',
+      student.studentNumber
+    );
+    console.log('✅ 班级码学生登录结果:', result);
+    
+    showStudentModal.value = false;
+    
+    if (result?.redirectPath) {
+      allowNavigation();
+      window.location.href = result.redirectPath;
+    } else {
+      isNavigating.value = false;
+    }
+  } catch (error: any) {
+    console.error('❌ 班级码学生登录失败:', error);
+    isNavigating.value = false;
+  }
 };
 // 是否允许离开页面（只有退出登录时才允许）
 // const allowLeave = ref(false)

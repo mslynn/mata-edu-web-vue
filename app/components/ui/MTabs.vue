@@ -9,7 +9,7 @@
         // 选中状态
         modelValue === tab.value 
           ? 'bg-[#FF9900] text-white' 
-          : 'bg-[#4D4D4D] text-white hover:opacity-90',
+          : 'bg-[#FAFAFA] text-[#4D4D4D] hover:opacity-90 border border-[#E5E5E5]',
         // 禁用状态
         tab.disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
         // 撑满宽度

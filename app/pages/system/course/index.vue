@@ -1,8 +1,5 @@
 <template>
-    <div class="course-page flex justify-center bg-[#FAFAFA] px-[60px]">
-        <!-- 公用左侧导航 -->
-        <AppSidebar class="hidden lg:flex" />
-
+    <div class="course-page flex-1 flex flex-col">
         <!-- 创建/编辑课程弹窗 -->
         <CreateCourseModal v-model="showCreateModal" :edit-data="editCourseData" @confirm="handleCreateCourse" />
 
@@ -40,7 +37,7 @@
                 <button class="px-4 py-2 bg-[#FF9900] text-white rounded-lg flex items-center gap-1 text-sm"
                     @click="openCreateModal">
                     <span class="text-lg">+</span>
-                    <span>创建课程</span>
+                    <span>{{ $t('course.createCourse') }}</span>
                 </button>
             </div>
 
@@ -61,13 +58,13 @@
                 <div class="flex items-center gap-3">
                     <!-- 开通状态筛选（自定义和共享课程不显示） -->
                     <div v-if="activeCategory !== '自定义课程' && activeCategory !== '共享课程'" class="flex items-center gap-2">
-                        <span class="text-sm text-gray-500">开通状态：</span>
+                        <span class="text-sm text-gray-500">{{ $t('common.openStatus') }}：</span>
                         <!-- 自定义下拉框 -->
                         <div class="relative">
                             <button type="button"
                                 class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#FF9900] transition-colors min-w-[90px]"
                                 @click="showStatusDropdown = !showStatusDropdown">
-                                <span>{{statusOptions.find(o => o.value === courseStatus)?.label || '全部'}}</span>
+                                <span>{{statusOptions.find(o => o.value === courseStatus)?.label || $t('common.all')}}</span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform"
                                     :class="{ 'rotate-180': showStatusDropdown }" fill="none" stroke="currentColor"
                                     viewBox="0 0 24 24">
@@ -78,7 +75,7 @@
                             <!-- 下拉选项 -->
                             <Transition name="dropdown">
                                 <div v-if="showStatusDropdown"
-                                    class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-10">
+                                    class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-[5]">
                                     <div v-for="option in statusOptions" :key="option.value"
                                         class="px-3 py-2 text-sm cursor-pointer transition-colors" :class="[
                                             courseStatus === option.value
@@ -92,7 +89,7 @@
                         </div>
                     </div>
                     <div class="relative">
-                        <input v-model="searchKeyword" type="text" placeholder="输入关键词搜索课程"
+                        <input v-model="searchKeyword" type="text" :placeholder="$t('common.searchPlaceholder')"
                             class="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-[200px] outline-none focus:border-[#FF9900]" />
                         <svg class="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +132,7 @@
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
-                                    <div class="tooltip-content">编辑<span class="tooltip-arrow"></span></div>
+                                    <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
                                 </div>
                                 <!-- 学校可见的课程不显示删除按钮（coursePermission: 0=仅自己可见，1=全校老师可见） -->
                                 <div v-if="course.coursePermission !== 1" class="tooltip-wrapper group relative">
@@ -148,7 +145,7 @@
                                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                         </svg>
                                     </button>
-                                    <div class="tooltip-content">删除<span class="tooltip-arrow"></span></div>
+                                    <div class="tooltip-content">{{ $t('common.delete') }}<span class="tooltip-arrow"></span></div>
                                 </div>
                             </div>
                             <!-- 共享课程：编辑或添加按钮（二选一） -->
@@ -164,7 +161,7 @@
                                                 d="M12 4v16m8-8H4" />
                                         </svg>
                                     </button>
-                                    <div class="tooltip-content">添加<span class="tooltip-arrow"></span></div>
+                                    <div class="tooltip-content">{{ $t('common.add') }}<span class="tooltip-arrow"></span></div>
                                 </div>
                                 <!-- 自己的共享课程只显示编辑按钮 -->
                                 <div v-else class="tooltip-wrapper group relative">
@@ -177,7 +174,7 @@
                                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                         </svg>
                                     </button>
-                                    <div class="tooltip-content">编辑<span class="tooltip-arrow"></span></div>
+                                    <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
                                 </div>
                             </div>
                             <!-- 其他课程：显示状态标签 -->
@@ -190,7 +187,7 @@
                             <!-- 无封面时显示占位 -->
                             <template v-else>
                                 <div class="absolute inset-0 flex items-center justify-center">
-                                    <span class="text-gray-400 text-sm">课程封面</span>
+                                    <span class="text-gray-400 text-sm">{{ $t('common.courseCover') }}</span>
                                 </div>
                                 <!-- 对角线装饰 -->
                                 <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
@@ -202,13 +199,13 @@
                         <!-- 课程名称 -->
                         <div class="text-sm font-medium text-gray-800 mb-1">{{ course.name }}</div>
                         <!-- 课时数 -->
-                        <div class="text-xs text-gray-400">{{ course.hours }}课时</div>
+                        <div class="text-xs text-gray-400">{{ course.hours }}{{ $t('common.hours') }}</div>
                     </NuxtLink>
                 </div>
 
                 <!-- 空状态 -->
                 <div v-if="!courseList.length" class="flex flex-col items-center justify-center h-full text-gray-400">
-                    <p>暂无课程</p>
+                    <p>{{ $t('course.noChapter') }}</p>
                 </div>
             </div>
         </div>
@@ -216,14 +213,16 @@
 </template>
 
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { cursorAdmin } from '~/composables/api/curosr'
 
 definePageMeta({
-    layout: 'default'
+    layout: 'sidebar'
 })
 
-const { getCursorTreeMenu, getCursorList, createCursor, editCursor, deleteCursor } = cursorAdmin()
+const { getCursorTreeMenu, getCursorList, createCursor, editCursor, deleteCursor, copyCursor } = cursorAdmin()
 
 // 获取当前用户ID
 const currentUserId = ref<string>('')
@@ -353,9 +352,9 @@ const loadMenuData = async () => {
                 }
                 // 加载课程列表
                 await loadCourseList()
-                // 标记初始化完成
-                initialized.value = true
             }
+            // 标记初始化完成
+            initialized.value = true
         }
     } catch (error) {
         console.error('获取课程菜单失败:', error)
@@ -492,22 +491,28 @@ const confirmDeleteCourse = async () => {
 }
 
 // 添加共享课程到我的自定义课程
-const handleAddToMyCourse = (course: any) => {
-    console.log('添加到我的课程:', course)
-    // TODO: 调用添加到我的课程接口
-    // 刷新课程列表
-    loadCourseList()
+const handleAddToMyCourse = async (course: any) => {
+    console.log(course)
+    try {
+        await copyCursor(course.id)
+        // 刷新课程列表
+        loadCourseList()
+        ElMessage.success(t('common.addSuccess'))
+    } catch (error) {
+        console.error('添加到我的课程失败:', error)
+    }
 }
 
 // 开通状态下拉框
 const showStatusDropdown = ref(false)
-const statusOptions = [
-    { label: '全部', value: '' },
-    { label: '已开通', value: 'opened' },
-    { label: '未开通', value: 'not_opened' },
-    { label: '已过期', value: 'expired' },
-    { label: '体验课', value: 'trial' },
-]
+const { t } = useI18n()
+const statusOptions = computed(() => [
+    { label: t('common.all'), value: '' },
+    { label: t('common.opened'), value: 'opened' },
+    { label: t('common.notOpened'), value: 'not_opened' },
+    { label: t('common.expired'), value: 'expired' },
+    { label: t('common.trial'), value: 'trial' },
+])
 
 const selectStatus = (value: string) => {
     courseStatus.value = value
@@ -524,7 +529,9 @@ const closeDropdown = (e: MouseEvent) => {
 
 onMounted(() => {
     initUserInfo()
-    loadMenuData()
+    if (process.client) {
+        loadMenuData()
+    }
     document.addEventListener('click', closeDropdown)
 })
 
@@ -533,12 +540,12 @@ onUnmounted(() => {
 })
 
 // 课程状态配置
-const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-    opened: { label: '已开通', color: 'text-green-600', bg: 'bg-green-50' },
-    not_opened: { label: '未开通', color: 'text-gray-500', bg: 'bg-gray-100' },
-    expired: { label: '已过期', color: 'text-red-500', bg: 'bg-red-50' },
-    trial: { label: '体验课', color: 'text-blue-500', bg: 'bg-blue-50' },
-}
+const statusConfig = computed(() => ({
+    opened: { label: t('common.opened'), color: 'text-green-600', bg: 'bg-green-50' },
+    not_opened: { label: t('common.notOpened'), color: 'text-gray-500', bg: 'bg-gray-100' },
+    expired: { label: t('common.expired'), color: 'text-red-500', bg: 'bg-red-50' },
+    trial: { label: t('common.trial'), color: 'text-blue-500', bg: 'bg-blue-50' },
+} as Record<string, { label: string; color: string; bg: string }>))
 
 // 课程类型定义
 interface Course {

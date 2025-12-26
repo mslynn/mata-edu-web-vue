@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4 md:p-8">
+  <div class="flex-1 flex items-center justify-center p-4 md:p-8">
     <div class="flex flex-col md:flex-row gap-8 md:gap-20">
       <!-- 数据中心卡片 -->
       <div 
@@ -14,7 +14,7 @@
               class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
       </div>
-          <div class="card-title">数据中心</div>
+          <div class="card-title">{{ $t('city.datacenter')}}</div>
         </div>
     
       </div>
@@ -37,18 +37,11 @@
 
       </div>
     </div>
-
-    <!-- 退出登录按钮 -->
-    <button 
-      @click="handleLogout"
-      class="fixed top-6 right-6 px-4 py-2 bg-white text-gray-600 rounded-lg hover:bg-gray-100 transition-colors shadow-sm border border-gray-200"
-    >
-      退出登录
-    </button>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useAuth } from '~/composables/api/useAuth'
 
 definePageMeta({
@@ -56,27 +49,20 @@ definePageMeta({
 })
 
 const router = useRouter()
-const { logout, user } = useAuth()
+const { t } = useI18n()
+const { user } = useAuth()
 
 // 根据角色显示不同的标题
 const manageTitle = computed(() => {
-  return user.value?.role_key === 'district_admin' ? '学校管理' : '区管理'
+  return user.value?.role_key === 'district_admin' ? t('school.schoolManage') : t('city.districtManage')
 })
-const { allowNavigation } = usePreventBack()
-
-const handleLogout = () => {
-  allowNavigation()
-  logout()
-}
 
 const goToDataCenter = () => {
-  allowNavigation()
   // TODO: 跳转到数据中心页面
   console.log('跳转到数据中心')
 }
 
 const goToSchoolManage = () => {
-  allowNavigation()
   // city_admin 跳转到市管理页面，其它角色跳转学校管理
   if (user.value?.role_key === 'city_admin') {
     router.push('/city')

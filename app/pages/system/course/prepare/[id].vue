@@ -3,11 +3,11 @@
     <!-- 顶部导航 -->
     <div class="prepare-header">
       <div class="header-left">
-        <NuxtLink :to="`/system/course/${route.params.id}`" class="back-link">
+        <a href="javascript:;" class="back-link" @click="goBack">
           <svg class="back-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
-        </NuxtLink>
+        </a>
         <!-- 自定义下拉框 -->
         <div class="chapter-dropdown" :class="{ open: dropdownOpen }">
           <button class="dropdown-trigger" @click.stop="dropdownOpen = !dropdownOpen">
@@ -18,13 +18,8 @@
           </button>
           <Transition name="dropdown">
             <div class="dropdown-menu" v-if="dropdownOpen">
-              <div 
-                v-for="chapter in chapterList" 
-                :key="chapter.id" 
-                class="dropdown-item"
-                :class="{ active: chapter.id === currentChapterId }"
-                @click="selectChapter(chapter)"
-              >
+              <div v-for="chapter in chapterList" :key="chapter.id" class="dropdown-item"
+                :class="{ active: chapter.id === currentChapterId }" @click="selectChapter(chapter)">
                 {{ chapter.name }}
               </div>
             </div>
@@ -43,13 +38,16 @@
       <div class="left-sidebar" :class="{ collapsed: panelCollapsed }">
         <!-- 左侧 Tab 栏 -->
         <div class="tab-sidebar">
-          <button v-for="tab in tabs" :key="tab.value" class="tab-item" :class="{ active: activeTab === tab.value }" @click="activeTab = tab.value">
+          <button v-for="tab in tabs" :key="tab.value" class="tab-item" :class="{ active: activeTab === tab.value }"
+            @click="activeTab = tab.value">
             <div class="tab-icon-wrapper">
-              <svg v-if="tab.value === 'resource'" class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg v-if="tab.value === 'resource'" class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
                 <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
               </svg>
-              <svg v-else-if="tab.value === 'task'" class="tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg v-else-if="tab.value === 'task'" class="tab-svg" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2">
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                 <polyline points="14 2 14 8 20 8"></polyline>
                 <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -68,118 +66,77 @@
         <div class="resource-panel">
           <!-- 教学资源 Tab 内容 -->
           <div v-if="activeTab === 'resource'" class="resource-list">
-            <!-- 课件分组 -->
-            <div class="resource-section">
-              <div class="section-header" @click="expandedSections.courseware = !expandedSections.courseware">
-                <svg class="section-arrow" :class="{ expanded: expandedSections.courseware }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-                <span>课件 ({{ resources.courseware.length }})</span>
-              </div>
-              <div v-if="expandedSections.courseware" class="section-content">
-                <div v-for="item in resources.courseware" :key="item.id" class="resource-item" :class="{ active: selectedResource?.id === item.id }" @click="selectResource(item)">
-                  <div class="item-icon" :class="getIconClass(item.type)">{{ getIconText(item.type) }}</div>
-                  <div class="item-info">
-                    <span class="item-name">{{ item.name }}</span>
+            <!-- 教学资源 - 动态渲染分组 -->
+            <template v-if="teachingResources.length > 0">
+              <div v-for="group in teachingResources" :key="group.resourceName" class="resource-section">
+                <div class="section-header" @click="toggleSection(group.resourceName)">
+                  <svg class="section-arrow" :class="{ expanded: expandedSections[group.resourceName] }"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                  <span>{{ group.resourceName }} ({{ group.resourceList?.length || 0 }})</span>
+                </div>
+                <div v-if="expandedSections[group.resourceName]" class="section-content">
+                  <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item-wrapper">
+                    <div class="resource-item" :class="{ active: selectedResource?.resourceId === item.resourceId }"
+                      @click="selectResource(item)">
+                      <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">{{
+                        getIconText(getFileType(item.fileName)) }}</div>
+                      <div class="item-info">
+                        <span class="item-name">{{ item.fileName }}</span>
+                      </div>
+                      <button class="item-download" @click.stop="downloadResource(item)" title="下载">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="item-actions">
+                      <template v-if="item.modifyNum === 0">
+                        <span class="action-link" @click.stop="startModify(item)">我要修改</span>
+                      </template>
+                      <template v-else>
+                        <span class="action-link" @click.stop="continueModify(item)">继续修改</span>
+                        <span class="action-link" @click.stop="addCopy(item)">新增副本</span>
+                      </template>
+                    </div>
                   </div>
-                  <button class="item-download" @click.stop="downloadResource(item)" title="下载">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                  </button>
                 </div>
               </div>
-            </div>
-
-            <!-- 学生手册分组 -->
-            <div class="resource-section">
-              <div class="section-header" @click="expandedSections.handbook = !expandedSections.handbook">
-                <svg class="section-arrow" :class="{ expanded: expandedSections.handbook }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
-                <span>学生手册 ({{ resources.handbook.length }})</span>
-              </div>
-              <div v-if="expandedSections.handbook" class="section-content">
-                <div v-for="item in resources.handbook" :key="item.id" class="resource-item" :class="{ active: selectedResource?.id === item.id }" @click="selectResource(item)">
-                  <div class="item-icon" :class="getIconClass(item.type)">{{ getIconText(item.type) }}</div>
-                  <div class="item-info">
-                    <span class="item-name">{{ item.name }}</span>
-                  </div>
-                  <button class="item-download" @click.stop="downloadResource(item)" title="下载">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                      <polyline points="7 10 12 15 17 10"></polyline>
-                      <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
-                  </button>
-                </div>
-              </div>
+            </template>
+            <div v-else class="empty-content">
+              <svg class="empty-svg" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="80" fill="#f5f5f5" />
+                <rect x="60" y="60" width="80" height="100" rx="8" fill="white" stroke="#e0e0e0" stroke-width="2" />
+                <line x1="75" y1="85" x2="125" y2="85" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+                <line x1="75" y1="105" x2="115" y2="105" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+                <line x1="75" y1="125" x2="105" y2="125" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+              </svg>
+              <p class="empty-text">暂无数据</p>
             </div>
           </div>
 
           <!-- 学习任务 Tab 内容 -->
-          <div v-else-if="activeTab === 'task'" class="empty-content">
-            <svg class="empty-svg" viewBox="0 0 200 200" fill="none">
-              <circle cx="100" cy="100" r="80" fill="#f5f5f5"/>
-              <rect x="60" y="60" width="80" height="100" rx="8" fill="white" stroke="#e0e0e0" stroke-width="2"/>
-              <line x1="75" y1="85" x2="125" y2="85" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round"/>
-              <line x1="75" y1="105" x2="115" y2="105" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round"/>
-              <line x1="75" y1="125" x2="105" y2="125" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round"/>
-            </svg>
-            <p class="empty-text">暂无数据</p>
-          </div>
-
-          <!-- 个人资源 Tab 内容 -->
-          <div v-else-if="activeTab === 'personal'" class="personal-resource-panel">
-            <!-- 顶部按钮 -->
-            <div class="personal-header">
-              <button class="btn-primary" @click="showLinkModal = true">关联平台资源</button>
-              <button class="btn-primary" @click="showUploadModal = true">上传个人资源</button>
-            </div>
-            
-            <div class="resource-list">
-              <!-- AI生成类资源 -->
-              <div class="resource-section">
-                <div class="section-header" @click="expandedSections.aiGenerated = !expandedSections.aiGenerated">
-                  <svg class="section-arrow" :class="{ expanded: expandedSections.aiGenerated }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div v-else-if="activeTab === 'task'" class="resource-list">
+            <template v-if="taskResources.length > 0">
+              <div v-for="group in taskResources" :key="group.resourceName" class="resource-section">
+                <div class="section-header" @click="toggleSection(group.resourceName)">
+                  <svg class="section-arrow" :class="{ expanded: expandedSections[group.resourceName] }"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="6 9 12 15 18 9"></polyline>
                   </svg>
-                  <span>AI生成类资源 ({{ personalResources.aiGenerated.length }})</span>
+                  <span>{{ group.resourceName }} ({{ group.resourceList?.length || 0 }})</span>
                 </div>
-                <div v-if="expandedSections.aiGenerated" class="section-content">
-                  <div v-for="item in personalResources.aiGenerated" :key="item.id" class="resource-item" :class="{ active: selectedResource?.id === item.id }" @click="selectResource(item)">
-                    <div class="item-icon" :class="getIconClass(item.type)">{{ getIconText(item.type) }}</div>
+                <div v-if="expandedSections[group.resourceName]" class="section-content">
+                  <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item"
+                    :class="{ active: selectedResource?.resourceId === item.resourceId }" @click="selectResource(item)">
+                    <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">{{
+                      getIconText(getFileType(item.fileName)) }}</div>
                     <div class="item-info">
-                      <span class="item-name">{{ item.name }}</span>
+                      <span class="item-name">{{ item.fileName }}</span>
                     </div>
-                    <button class="item-delete" @click.stop="deletePersonalResource(item)" title="删除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 课程资源 -->
-              <div class="resource-section">
-                <div class="section-header" @click="expandedSections.courseResource = !expandedSections.courseResource">
-                  <svg class="section-arrow" :class="{ expanded: expandedSections.courseResource }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  <span>课程资源 ({{ personalResources.courseResource.length }})</span>
-                </div>
-                <div v-if="expandedSections.courseResource" class="section-content">
-                  <p v-if="personalResources.courseResource.length === 0" class="section-tip">上传的资源文件，上传后其他资源将以课堂为课程资源，请谨慎支持资源~</p>
-                  <div v-for="item in personalResources.courseResource" :key="item.id" class="resource-item" :class="{ active: selectedResource?.id === item.id }" @click="selectResource(item)">
-                    <div class="item-icon" :class="getIconClass(item.type)">{{ getIconText(item.type) }}</div>
-                    <div class="item-info">
-                      <span class="item-name">{{ item.name }}</span>
-                    </div>
-                    <span v-if="item.canDelete" class="item-action-text" @click.stop="deletePersonalResource(item)">删除</span>
                     <button class="item-download" @click.stop="downloadResource(item)" title="下载">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -190,85 +147,84 @@
                   </div>
                 </div>
               </div>
+            </template>
+            <div v-else class="empty-content">
+              <svg class="empty-svg" viewBox="0 0 200 200" fill="none">
+                <circle cx="100" cy="100" r="80" fill="#f5f5f5" />
+                <rect x="60" y="60" width="80" height="100" rx="8" fill="white" stroke="#e0e0e0" stroke-width="2" />
+                <line x1="75" y1="85" x2="125" y2="85" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+                <line x1="75" y1="105" x2="115" y2="105" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+                <line x1="75" y1="125" x2="105" y2="125" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+              </svg>
+              <p class="empty-text">暂无数据</p>
+            </div>
+          </div>
 
-              <!-- 个人程序 -->
-              <div class="resource-section">
-                <div class="section-header" @click="expandedSections.personalProgram = !expandedSections.personalProgram">
-                  <svg class="section-arrow" :class="{ expanded: expandedSections.personalProgram }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  <span>个人程序 ({{ personalResources.personalProgram.length }})</span>
-                </div>
-                <div v-if="expandedSections.personalProgram" class="section-content">
-                  <div v-for="item in personalResources.personalProgram" :key="item.id" class="resource-item" :class="{ active: selectedResource?.id === item.id }" @click="selectResource(item)">
-                    <div class="item-icon" :class="getIconClass(item.type)">{{ getIconText(item.type) }}</div>
-                    <div class="item-info">
-                      <span class="item-name">{{ item.name }}</span>
+          <!-- 个人资源 Tab 内容 -->
+          <div v-else-if="activeTab === 'personal'" class="personal-resource-panel">
+            <!-- 顶部按钮 -->
+            <div class="personal-header">
+              <button class="btn-primary" @click="showLinkModal = true">关联平台资源</button>
+              <button class="btn-primary" @click="showUploadModal = true">上传个人资源</button>
+            </div>
+
+            <div class="resource-list">
+              <!-- 个人资源 - 动态渲染分组 -->
+              <template v-if="personalResourceGroups.length > 0">
+                <div v-for="group in personalResourceGroups" :key="group.resourceName" class="resource-section">
+                  <div class="section-header" @click="toggleSection(group.resourceName)">
+                    <svg class="section-arrow" :class="{ expanded: expandedSections[group.resourceName] }"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                    <span>{{ group.resourceName }} ({{ group.resourceList?.length || 0 }})</span>
+                  </div>
+                  <div v-if="expandedSections[group.resourceName]" class="section-content">
+                    <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item"
+                      :class="{ active: selectedResource?.resourceId === item.resourceId }"
+                      @click="selectResource(item)">
+                      <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">{{
+                        getIconText(getFileType(item.fileName)) }}</div>
+                      <div class="item-info">
+                        <span class="item-name">{{ item.fileName }}</span>
+                      </div>
+                      <button class="item-download" @click.stop="downloadResource(item)" title="下载">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                      </button>
+                      <button v-if="selectedResource?.resourceId === item.resourceId" class="item-delete"
+                        @click.stop="deletePersonalResource(item)" title="删除">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                          </path>
+                        </svg>
+                      </button>
                     </div>
-                    <button class="item-delete" @click.stop="deletePersonalResource(item)" title="删除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg>
-                    </button>
                   </div>
                 </div>
-              </div>
-
-              <!-- AI实训资源 -->
-              <div class="resource-section">
-                <div class="section-header" @click="expandedSections.aiTraining = !expandedSections.aiTraining">
-                  <svg class="section-arrow" :class="{ expanded: expandedSections.aiTraining }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  <span>AI实训资源 ({{ personalResources.aiTraining.length }})</span>
-                </div>
-                <div v-if="expandedSections.aiTraining" class="section-content">
-                  <div v-for="item in personalResources.aiTraining" :key="item.id" class="resource-item" :class="{ active: selectedResource?.id === item.id }" @click="selectResource(item)">
-                    <div class="item-icon" :class="getIconClass(item.type)">{{ getIconText(item.type) }}</div>
-                    <div class="item-info">
-                      <span class="item-name">{{ item.name }}</span>
-                    </div>
-                    <button class="item-delete" @click.stop="deletePersonalResource(item)" title="删除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <!-- 自定义练习题 -->
-              <div class="resource-section">
-                <div class="section-header" @click="expandedSections.customExercise = !expandedSections.customExercise">
-                  <svg class="section-arrow" :class="{ expanded: expandedSections.customExercise }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                  <span>自定义练习题 ({{ personalResources.customExercise.length }})</span>
-                </div>
-                <div v-if="expandedSections.customExercise" class="section-content">
-                  <div v-for="item in personalResources.customExercise" :key="item.id" class="resource-item" :class="{ active: selectedResource?.id === item.id }" @click="selectResource(item)">
-                    <div class="item-icon" :class="getIconClass(item.type)">{{ getIconText(item.type) }}</div>
-                    <div class="item-info">
-                      <span class="item-name">{{ item.name }}</span>
-                    </div>
-                    <button class="item-delete" @click.stop="deletePersonalResource(item)" title="删除">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="3 6 5 6 21 6"></polyline>
-                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+              </template>
+              <div v-else class="empty-content">
+                <svg class="empty-svg" viewBox="0 0 200 200" fill="none">
+                  <circle cx="100" cy="100" r="80" fill="#f5f5f5" />
+                  <rect x="60" y="60" width="80" height="100" rx="8" fill="white" stroke="#e0e0e0" stroke-width="2" />
+                  <line x1="75" y1="85" x2="125" y2="85" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+                  <line x1="75" y1="105" x2="115" y2="105" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+                  <line x1="75" y1="125" x2="105" y2="125" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
+                </svg>
+                <p class="empty-text">暂无数据</p>
               </div>
             </div>
           </div>
         </div>
-        
+
         <!-- 折叠按钮 -->
         <button class="collapse-btn" @click="panelCollapsed = !panelCollapsed">
-          <svg class="collapse-icon" :class="{ rotated: panelCollapsed }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg class="collapse-icon" :class="{ rotated: panelCollapsed }" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"></polyline>
           </svg>
         </button>
@@ -276,60 +232,107 @@
 
       <!-- 右侧预览区域 -->
       <div class="preview-area">
-        <!-- 学习任务 Tab 的空状态 -->
-        <div v-if="activeTab === 'task'" class="preview-empty-large">
-          <svg class="empty-svg-large" viewBox="0 0 200 200" fill="none">
-            <circle cx="100" cy="100" r="80" fill="#f0f0f0"/>
-            <rect x="55" y="50" width="90" height="110" rx="8" fill="white" stroke="#ddd" stroke-width="2"/>
-            <circle cx="80" cy="80" r="8" fill="#e8e8e8"/>
-            <line x1="95" y1="80" x2="130" y2="80" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="80" cy="105" r="8" fill="#e8e8e8"/>
-            <line x1="95" y1="105" x2="125" y2="105" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round"/>
-            <circle cx="80" cy="130" r="8" fill="#e8e8e8"/>
-            <line x1="95" y1="130" x2="120" y2="130" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round"/>
-          </svg>
-          <p class="empty-text-large">暂无数据</p>
+        <!-- 无选中资源时的空状态 -->
+        <div v-if="previewLoading" class="preview-loading">
+          <div class="spinner"></div><span>加载中...</span>
         </div>
-        <div v-else-if="previewLoading" class="preview-loading"><div class="spinner"></div><span>加载中...</span></div>
-        <div v-else-if="!selectedResource" class="preview-empty"><p>请从左侧选择资源进行预览</p></div>
+        <div v-else-if="!selectedResource" class="preview-empty">
+          <svg class="empty-svg-large" viewBox="0 0 200 200" fill="none">
+            <circle cx="100" cy="100" r="80" fill="#f0f0f0" />
+            <rect x="55" y="50" width="90" height="110" rx="8" fill="white" stroke="#ddd" stroke-width="2" />
+            <circle cx="80" cy="80" r="8" fill="#e8e8e8" />
+            <line x1="95" y1="80" x2="130" y2="80" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round" />
+            <circle cx="80" cy="105" r="8" fill="#e8e8e8" />
+            <line x1="95" y1="105" x2="125" y2="105" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round" />
+            <circle cx="80" cy="130" r="8" fill="#e8e8e8" />
+            <line x1="95" y1="130" x2="120" y2="130" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round" />
+          </svg>
+          <p class="empty-text-large">请从左侧选择资源进行预览</p>
+        </div>
         <div v-else class="preview-content">
-          <div v-if="selectedResource.type === 'word'" class="doc-preview">
-            <div v-if="wordError" class="word-error">
-              <p>⚠️ {{ wordError }}</p>
-              <p class="error-hint">仅支持 .docx 格式，不支持旧版 .doc 格式</p>
-            </div>
-            <div v-else ref="docxContainerRef" class="docx-container"></div>
+          <div v-if="getFileType(selectedResource.fileName) === 'word'" class="ppt-preview-wrapper">
+            <iframe :src="pptPreviewUrl" class="ppt-iframe" frameborder="0" allowfullscreen></iframe>
           </div>
-          <div v-else-if="selectedResource.type === 'pdf'" class="pdf-preview-wrapper" @wheel="handleWheel">
+          <div v-else-if="getFileType(selectedResource.fileName) === 'pdf'" class="pdf-preview-wrapper"
+            @wheel="handleWheel">
             <div class="pdf-page-container" :style="{ visibility: pdfReady ? 'visible' : 'hidden' }">
               <canvas ref="pdfCanvasRef" class="pdf-canvas"></canvas>
-              <canvas ref="annotationCanvasRef" class="annotation-canvas" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing" @mouseleave="stopDrawing"></canvas>
+              <canvas ref="annotationCanvasRef" class="annotation-canvas" @mousedown="startDrawing" @mousemove="draw"
+                @mouseup="stopDrawing" @mouseleave="stopDrawing"></canvas>
               <div v-if="currentTool === 'laser'" class="laser-pointer" :style="laserStyle"></div>
             </div>
           </div>
-          <div v-else class="preview-unsupported"><p>暂不支持预览该类型文件</p></div>
+          <div v-else-if="getFileType(selectedResource.fileName) === 'ppt'" class="ppt-preview-wrapper">
+            <iframe :src="pptPreviewUrl" class="ppt-iframe" frameborder="0" allowfullscreen></iframe>
+          </div>
+          <div v-else-if="getFileType(selectedResource.fileName) === 'image'" class="image-preview-wrapper">
+            <img :src="selectedResource.resourceUrl" :alt="selectedResource.fileName" class="preview-image" />
+          </div>
+          <div v-else-if="getFileType(selectedResource.fileName) === 'ucd'" class="ucd-preview-wrapper">
+            <div class="ucd-preview-card">
+              <div class="ucd-icon">
+                <span>ucd</span>
+              </div>
+              <p class="ucd-filename">{{ selectedResource.fileName }}</p>
+              <div class="ucd-actions">
+                <button class="ucd-btn ucd-btn-edit" @click="editUcdFile(selectedResource)">编辑</button>
+                <button class="ucd-btn ucd-btn-download" @click="downloadResource(selectedResource)">下载</button>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="getFileType(selectedResource.fileName) === 'mc'" class="ucd-preview-wrapper">
+            <div class="ucd-preview-card">
+              <div class="ucd-icon mc-icon">
+                <span>mc</span>
+              </div>
+              <p class="ucd-filename">{{ selectedResource.fileName }}</p>
+              <div class="ucd-actions">
+                <button class="ucd-btn ucd-btn-edit" @click="editMcFile(selectedResource)">编辑</button>
+                <button class="ucd-btn ucd-btn-download" @click="downloadResource(selectedResource)">下载</button>
+              </div>
+            </div>
+          </div>
+          <div v-else-if="getFileType(selectedResource.fileName) === 'video'" class="video-preview-wrapper">
+            <video 
+              :src="selectedResource.resourceUrl" 
+              controls 
+              class="preview-video"
+              preload="metadata"
+            >
+              您的浏览器不支持视频播放
+            </video>
+          </div>
+          <div v-else class="preview-unsupported">
+            <p>暂不支持预览该类型文件</p>
+          </div>
         </div>
       </div>
     </div>
 
     <!-- 底部工具栏 - 仅在 PDF 预览时显示 -->
-    <div class="toolbar" v-if="activeTab === 'resource' && selectedResource?.type === 'pdf'">
+    <div class="toolbar" v-if="selectedResource && getFileType(selectedResource.fileName) === 'pdf' && pdfReady">
       <div class="toolbar-left">
         <button class="tool-btn" @click="prevPage" :disabled="pdfCurrentPage <= 1">‹</button>
         <span class="page-info">{{ pdfCurrentPage }} / {{ pdfTotalPages || 1 }}</span>
         <button class="tool-btn" @click="nextPage" :disabled="pdfCurrentPage >= pdfTotalPages">›</button>
         <span class="divider"></span>
         <span class="tool-label">跳转第</span>
-        <input type="number" v-model.number="jumpPage" class="page-input" min="1" :max="pdfTotalPages" @keyup.enter="goToPage" />
+        <input type="number" v-model.number="jumpPage" class="page-input" min="1" :max="pdfTotalPages"
+          @keyup.enter="goToPage" />
         <span class="tool-label">页</span>
         <button class="tool-btn small" @click="goToPage">跳转</button>
       </div>
       <div class="toolbar-center">
-        <button class="tool-btn icon" :class="{ active: currentTool === 'pencil' }" @click="setTool('pencil')" title="铅笔">✏️</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'brush' }" @click="setTool('brush')" title="画笔">🖌️</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'highlighter' }" @click="setTool('highlighter')" title="荧光笔">🖍️</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'eraser' }" @click="setTool('eraser')" title="橡皮擦">🧹</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'laser' }" @click="setTool('laser')" title="激光笔">🔴</button>
+        <button class="tool-btn icon" :class="{ active: currentTool === 'pencil' }" @click="setTool('pencil')"
+          title="铅笔">✏️</button>
+        <button class="tool-btn icon" :class="{ active: currentTool === 'brush' }" @click="setTool('brush')"
+          title="画笔">🖌️</button>
+        <button class="tool-btn icon" :class="{ active: currentTool === 'highlighter' }" @click="setTool('highlighter')"
+          title="荧光笔">🖍️</button>
+        <button class="tool-btn icon" :class="{ active: currentTool === 'eraser' }" @click="setTool('eraser')"
+          title="橡皮擦">🧹</button>
+        <button class="tool-btn icon" :class="{ active: currentTool === 'laser' }" @click="setTool('laser')"
+          title="激光笔">🔴</button>
         <span class="divider"></span>
         <input type="color" v-model="penColor" class="color-picker" title="画笔颜色" />
         <select v-model="penWidth" class="width-select" title="线宽">
@@ -348,25 +351,28 @@
     </div>
 
     <!-- 上传个人资源弹窗 -->
-    <UploadPersonalResourceModal v-model:visible="showUploadModal" />
-    
+    <UploadPersonalResourceModal v-model:visible="showUploadModal" :chapter-id="String(currentChapterId)"
+      @uploaded="handleResourceUploaded" />
+
     <!-- 关联平台资源弹窗 -->
     <LinkPlatformResourceModal v-model:visible="showLinkModal" />
-    
+
     <!-- 设置学生可见资源弹窗 -->
     <SetStudentVisibleModal v-model:visible="showStudentVisibleModal" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick, computed, onUnmounted } from 'vue'
+import { ref, reactive, onMounted, nextTick, computed, onUnmounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
 import { cursorAdmin } from '~/composables/api/curosr'
+import '~/assets/css/prepare.css'
 
 definePageMeta({ layout: 'blank' })
 
 const route = useRoute()
 const router = useRouter()
-const { getCursorDetail } = cursorAdmin()
+const { getCursorDetail, getChapterResourceList, deleteChapterResource, downloadOSS, copyChapterResource } = cursorAdmin()
 
 // 弹窗状态
 const showUploadModal = ref(false)
@@ -380,15 +386,123 @@ const closeDropdown = (e: MouseEvent) => {
     dropdownOpen.value = false
   }
 }
-onMounted(() => document.addEventListener('click', closeDropdown))
+
+// 初始化加载
+onMounted(async () => {
+  document.addEventListener('click', closeDropdown)
+
+  // 加载课程详情获取章节列表
+  try {
+    const data = await getCursorDetail(String(route.params.id))
+    if (data) {
+      courseInfo.value.name = data.courseName || ''
+      if (data.chapterList && Array.isArray(data.chapterList)) {
+        chapterList.value = data.chapterList.map((c: any, idx: number) => ({
+          id: String(c.chapterId || idx + 1),
+          name: c.chapterName || `章节${idx + 1}`
+        }))
+
+        // 从 URL 获取 chapterId 或默认选中第一个
+        const urlChapterId = route.query.chapterId ? String(route.query.chapterId) : null
+        if (urlChapterId && chapterList.value.some(c => c.id === urlChapterId)) {
+          currentChapterId.value = urlChapterId
+        } else if (chapterList.value.length > 0 && chapterList.value[0]) {
+          currentChapterId.value = chapterList.value[0].id
+        }
+
+        // 从 URL 获取 tab 参数，设置对应的 tab
+        const urlTab = route.query.tab as string
+        if (urlTab && ['resource', 'task', 'personal'].includes(urlTab)) {
+          activeTab.value = urlTab
+        }
+
+        // 根据 tab 加载对应类型的资源
+        if (currentChapterId.value) {
+          const resourceType = activeTab.value === 'resource' ? 1 : activeTab.value === 'task' ? 2 : 3
+          await loadChapterResources(currentChapterId.value, resourceType)
+          
+          // 检查 URL 是否有 resourceId 参数，自动选中并预览该资源
+          const urlResourceId = route.query.resourceId ? String(route.query.resourceId) : null
+          
+          if (urlResourceId) {
+            let targetResource: ResourceItem | null = null
+            
+            // 根据当前 tab 在对应资源列表中查找
+            if (activeTab.value === 'resource') {
+              for (const group of teachingResources.value) {
+                const found = group.resourceList?.find(r => String(r.resourceId) === urlResourceId)
+                if (found) {
+                  targetResource = found
+                  break
+                }
+              }
+            } else if (activeTab.value === 'task') {
+              for (const group of taskResources.value) {
+                const found = group.resourceList?.find(r => String(r.resourceId) === urlResourceId)
+                if (found) {
+                  targetResource = found
+                  break
+                }
+              }
+            } else if (activeTab.value === 'personal') {
+              for (const group of personalResourceGroups.value) {
+                const found = group.resourceList?.find(r => String(r.resourceId) === urlResourceId)
+                if (found) {
+                  targetResource = found
+                  break
+                }
+              }
+            }
+            
+            // 找到资源后自动选中预览
+            if (targetResource) {
+              await selectResource(targetResource)
+            }
+          }
+        }
+      }
+    }
+  } catch (error) {
+    console.error('加载课程详情失败:', error)
+  }
+  // 初始化完成，允许 watch 正常工作
+  isInitialLoad.value = false
+})
 onUnmounted(() => document.removeEventListener('click', closeDropdown))
 
+// 返回上一页
+const goBack = () => {
+  router.back()
+}
+
 const courseInfo = ref({ name: '', id: '' })
-const chapterList = ref<{ id: number; name: string }[]>([])
-const currentChapterId = ref<number>(0)
+const chapterList = ref<{ id: string; name: string }[]>([])
+const currentChapterId = ref<string>('')
 const dropdownOpen = ref(false)
 const activeTab = ref('resource')
 const panelCollapsed = ref(false)
+// 标记是否是初始化加载（用于跳过 watch 中的自动选中逻辑）
+const isInitialLoad = ref(true)
+
+// 监听 tab 切换
+watch(activeTab, async () => {
+  // 初始化加载时跳过，由 onMounted 处理自动选中
+  if (isInitialLoad.value) return
+  
+  if (currentChapterId.value) {
+    await loadChapterResources(currentChapterId.value)
+    // 切换到个人资源 tab 时自动选中第一个
+    if (activeTab.value === 'personal') {
+      const firstGroup = personalResourceGroups.value[0]
+      const firstResource = firstGroup?.resourceList?.[0]
+      if (firstResource) {
+        selectResource(firstResource)
+      } else {
+        selectedResource.value = null
+      }
+    }
+  }
+})
 
 // 计算当前章节名称
 const currentChapterName = computed(() => {
@@ -396,59 +510,121 @@ const currentChapterName = computed(() => {
   return chapter?.name || '选择章节'
 })
 
-const selectChapter = (chapter: { id: number; name: string }) => {
+const selectChapter = (chapter: { id: string; name: string }) => {
   currentChapterId.value = chapter.id
   dropdownOpen.value = false
-  // 切换章节时可以加载对应章节的资源
-  console.log('切换到章节:', chapter.name)
+  // 切换章节时加载对应章节的资源
+  loadChapterResources(chapter.id)
 }
 const tabs = [
-  { label: '教学资源', value: 'resource' },
-  { label: '学习任务', value: 'task' },
-  { label: '个人资源\n(可修改)', value: 'personal' }
+  { label: '教学资源', value: 'resource', resourceType: 1 },
+  { label: '学习任务', value: 'task', resourceType: 2 },
+  { label: '个人资源\n(可修改)', value: 'personal', resourceType: 3 }
 ]
 
-interface Resource { id: number; name: string; type: string; url: string; visible?: boolean; canDelete?: boolean }
-const resources = reactive({
-  courseware: [
-    { id: 1, name: '主题11-活动课：未来之家（学生主题）V1.5.docx', type: 'word', url: 'http://192.168.0.30:9000/mata/2025/12/22/8e3ceba623c64d32bcced390d35e9832.docx', visible: false }
-  ] as Resource[],
-  handbook: [
-    { id: 2, name: '主题11-活动课：未来之家（学生主题）V1.5.docx', type: 'word', url: 'http://192.168.0.30:9000/mata/2025/12/22/8e3ceba623c64d32bcced390d35e9832.docx', visible: true },
-    { id: 3, name: '测试PDF文档.pdf', type: 'pdf', url: 'http://192.168.0.30:9000/mata/2025/12/22/e98407271692446da69888b8068c0bfc.pdf', visible: true }
-  ] as Resource[]
-})
+// 资源项接口定义
+interface ResourceItem {
+  resourceId: number
+  chapterId: string
+  resourceType: number
+  resourceCategory: number
+  resourceName: string
+  ossId: string
+  fileName: string
+  modifyNum: number
+  resourceUrl?: string
+}
+interface ResourceGroup {
+  resourceCategory: number | null
+  resourceName: string
+  resourceList: ResourceItem[]
+}
 
+// 教学资源数据
+const teachingResources = ref<ResourceGroup[]>([])
+// 学习任务数据
+const taskResources = ref<ResourceGroup[]>([])
 // 个人资源数据
-const personalResources = reactive({
-  aiGenerated: [] as Resource[],
-  courseResource: [
-    { id: 101, name: 'SD单元测试报告 - 脚本.doc', type: 'word', url: '', canDelete: true },
-    { id: 102, name: '主题01-"悟空"来了（教师用书）V1.5.docx', type: 'word', url: 'http://192.168.0.30:9000/mata/2025/12/22/8e3ceba623c64d32bcced390d35e9832.docx' }
-  ] as Resource[],
-  personalProgram: [
-    { id: 201, name: '今天学习的几个快捷键', type: 'ucd', url: '' }
-  ] as Resource[],
-  aiTraining: [
-    { id: 301, name: 'AI实训资源1', type: 'pdf', url: '' },
-    { id: 302, name: 'AI实训资源2', type: 'pdf', url: '' },
-  
-  ] as Resource[],
-  customExercise: [
-    { id: 401, name: '自定义练习题1', type: 'pdf', url: '' }
-  ] as Resource[]
-})
+const personalResourceGroups = ref<ResourceGroup[]>([])
 
-const expandedSections = reactive({ 
-  courseware: true, 
-  handbook: true,
-  aiGenerated: true,
-  courseResource: true,
-  personalProgram: true,
-  aiTraining: true,
-  customExercise: true
-})
-const selectedResource = ref<Resource | null>(null)
+// 展开状态
+const expandedSections = reactive<Record<string, boolean>>({})
+
+// 根据文件名获取文件类型
+const getFileType = (fileName: string) => {
+  const ext = fileName?.split('.').pop()?.toLowerCase() || ''
+  const typeMap: Record<string, string> = {
+    doc: 'word',
+    docx: 'word',
+    ppt: 'ppt',
+    pptx: 'ppt',
+    xls: 'excel',
+    xlsx: 'excel',
+    pdf: 'pdf',
+    ucd: 'ucd',
+    mc: 'mc',
+    // 图片类型
+    jpg: 'image',
+    jpeg: 'image',
+    png: 'image',
+    gif: 'image',
+    bmp: 'image',
+    webp: 'image',
+    svg: 'image',
+    // 视频类型
+    mp4: 'video',
+    mov: 'video',
+    webm: 'video'
+  }
+  return typeMap[ext] || 'default'
+}
+
+// 获取当前 tab 对应的 resourceType
+const getCurrentResourceType = () => {
+  const currentTab = tabs.find(t => t.value === activeTab.value)
+  return currentTab?.resourceType || 1
+}
+
+// 加载章节资源
+const loadChapterResources = async (chapterId: string, resourceType?: number) => {
+  try {
+    const type = resourceType ?? getCurrentResourceType()
+    const data = await getChapterResourceList(chapterId, type)
+    if (data) {
+      if (type === 1) {
+        teachingResources.value = data || []
+        teachingResources.value.forEach(group => {
+          if (expandedSections[group.resourceName] === undefined) {
+            expandedSections[group.resourceName] = true
+          }
+        })
+      } else if (type === 2) {
+        taskResources.value = data || []
+        taskResources.value.forEach(group => {
+          if (expandedSections[group.resourceName] === undefined) {
+            expandedSections[group.resourceName] = true
+          }
+        })
+      } else if (type === 3) {
+        personalResourceGroups.value = data || []
+        personalResourceGroups.value.forEach(group => {
+          if (expandedSections[group.resourceName] === undefined) {
+            expandedSections[group.resourceName] = true
+          }
+        })
+      }
+    }
+  } catch (error) {
+    console.error('加载章节资源失败:', error)
+  }
+}
+
+// 切换分组展开状态
+const toggleSection = (name: string) => {
+  expandedSections[name] = !expandedSections[name]
+}
+
+const selectedResource = ref<ResourceItem | null>(null)
 const previewLoading = ref(false)
 const previewScale = ref(1)
 const wordError = ref('')
@@ -472,41 +648,163 @@ const pageAnnotations = ref<Map<number, ImageData>>(new Map())
 
 const getIconClass = (type: string) => ({ word: 'icon-word', ppt: 'icon-ppt', pdf: 'icon-pdf', ucd: 'icon-ucd' }[type] || 'icon-default')
 const getIconText = (type: string) => ({ word: 'W', ppt: 'P', pdf: 'PDF', ucd: 'ucd' }[type] || '?')
-const downloadResource = (item: Resource) => {
-  const link = document.createElement('a')
-  link.href = item.url
-  link.download = item.name
-  link.target = '_blank'
-  link.click()
+
+// 我要修改（modifyNum === 0 时）
+const startModify = async (item: ResourceItem) => {
+  try {
+    await copyChapterResource(String(item.resourceId))
+    ElMessage.success('已成功在"个人资源"中创建副本')
+    // 刷新教学资源列表
+    if (currentChapterId.value) {
+      await loadChapterResources(currentChapterId.value, 1)
+    }
+  } catch (error) {
+    console.error('我要修改失败:', error)
+  }
 }
-const deletePersonalResource = (item: Resource) => {
-  // 删除个人资源
-  const categories = ['aiGenerated', 'courseResource', 'personalProgram', 'aiTraining', 'customExercise'] as const
-  for (const category of categories) {
-    const index = personalResources[category].findIndex(r => r.id === item.id)
-    if (index > -1) {
-      personalResources[category].splice(index, 1)
-      if (selectedResource.value?.id === item.id) {
+
+// 继续修改（modifyNum >= 1 时）
+const continueModify = async (item: ResourceItem) => {
+  try {
+    await copyChapterResource(String(item.resourceId))
+    ElMessage.success('已成功在"个人资源"中创建副本')
+    // 切换到个人资源 tab
+    activeTab.value = 'personal'
+    // 刷新个人资源列表
+    if (currentChapterId.value) {
+      await loadChapterResources(currentChapterId.value, 3)
+      // 默认选中第一个资源
+      const firstGroup = personalResourceGroups.value[0]
+      const firstResource = firstGroup?.resourceList?.[0]
+      if (firstResource) {
+        selectResource(firstResource)
+      }
+    }
+  } catch (error) {
+    console.error('继续修改失败:', error)
+  }
+}
+
+// 新增副本（modifyNum >= 1 时）
+const addCopy = async (item: ResourceItem) => {
+  try {
+    await copyChapterResource(String(item.resourceId))
+    ElMessage.success('已成功在"个人资源"中创建副本')
+    // 刷新教学资源列表
+    if (currentChapterId.value) {
+      await loadChapterResources(currentChapterId.value, 1)
+    }
+  } catch (error) {
+    console.error('新增副本失败:', error)
+  }
+}
+
+const downloadResource = async (item: ResourceItem) => {
+  if (item.ossId) {
+    try {
+      const blobUrl = await downloadOSS(item.ossId)
+      const link = document.createElement('a')
+      link.href = blobUrl
+      link.download = item.fileName
+      link.click()
+      // 释放 blob URL
+      URL.revokeObjectURL(blobUrl)
+    } catch (error) {
+      console.error('下载失败:', error)
+    }
+  }
+}
+const deletePersonalResource = async (item: ResourceItem) => {
+  try {
+    await deleteChapterResource(String(item.resourceId))
+    // 重新加载个人资源列表
+    if (currentChapterId.value) {
+      await loadChapterResources(currentChapterId.value, 3)
+      // 删除后自动选中第一个资源
+      const firstGroup = personalResourceGroups.value[0]
+      const firstResource = firstGroup?.resourceList?.[0]
+      if (firstResource) {
+        selectResource(firstResource)
+      } else {
         selectedResource.value = null
       }
-      break
     }
+  } catch (error) {
+    console.error('删除资源失败:', error)
+  }
+}
+
+// 上传资源完成后刷新列表
+const handleResourceUploaded = () => {
+  if (currentChapterId.value) {
+    loadChapterResources(currentChapterId.value, 3) // 刷新个人资源
   }
 }
 const handleFinish = () => router.push(`/system/course/${route.params.id}`)
 
-const selectResource = async (item: Resource) => {
-  if (selectedResource.value?.id === item.id) return
+// 编辑 UCD 文件
+const editUcdFile = (item: ResourceItem) => {
+  // TODO: 实现 UCD 编辑功能
+  ElMessage.info('UCD 编辑功能开发中')
+}
+
+// 编辑 MC 文件
+const editMcFile = (item: ResourceItem) => {
+  // TODO: 实现 MC 编辑功能
+  ElMessage.info('MC 编辑功能开发中')
+}
+
+// 获取运行时配置
+const config = useRuntimeConfig()
+
+// Base64 编码函数
+const base64Encode = (str: string): string => {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))))
+}
+
+// PPT 预览 URL
+const pptPreviewUrl = ref('')
+
+// 生成 PPT 预览地址
+const getPptPreviewUrl = (url: string): string => {
+  const previewBaseUrl = (config.public.previewBaseUrl as string)?.trim() || 'http://192.168.0.145:8012'
+  return `${previewBaseUrl}/onlinePreview?url=${encodeURIComponent(base64Encode(url))}`
+}
+
+const selectResource = async (item: ResourceItem) => {
+  console.log(item)
+  if (selectedResource.value?.resourceId === item.resourceId) return
   pdfReady.value = false
+  pptPreviewUrl.value = ''
   selectedResource.value = item
   previewLoading.value = true
+  const fileType = getFileType(item.fileName)
+  console.log(fileType, '类型')
   try {
-    if (item.type === 'word' && item.url) {
-      await nextTick()
-      await loadWord(item.url)
+    if (fileType === 'word' && item.resourceUrl) {
+      // word 文件在右侧 iframe 预览
+      pptPreviewUrl.value = getPptPreviewUrl(item.resourceUrl)
       previewLoading.value = false
-    } else if (item.type === 'pdf' && item.url) {
-      await loadPdf(item.url)
+    } else if (fileType === 'pdf' && item.resourceUrl) {
+      await loadPdf(item.resourceUrl)
+    } else if (fileType === 'ppt' && item.resourceUrl) {
+      // PPT 文件在右侧 iframe 预览
+      pptPreviewUrl.value = getPptPreviewUrl(item.resourceUrl)
+      previewLoading.value = false
+    } else if (fileType === 'image' && item.resourceUrl) {
+      // 图片直接展示
+      previewLoading.value = false
+    } else if (fileType === 'ucd') {
+      // UCD 文件显示预览卡片
+      previewLoading.value = false
+    } else if (fileType === 'mc') {
+      // MC 文件显示预览卡片
+      previewLoading.value = false
+    } else if (fileType === 'video') {
+      // 视频文件直接播放
+      previewLoading.value = false
+    } else if (fileType === 'default' && item.resourceUrl) {
+      await loadWord(item.resourceUrl)
     } else {
       previewLoading.value = false
     }
@@ -563,7 +861,7 @@ const loadPdf = async (url: string) => {
   pdfCurrentPage.value = 1
   jumpPage.value = 1
   pageAnnotations.value.clear()
-  
+
   // 先关闭 loading 让 canvas 渲染出来
   previewLoading.value = false
   await nextTick()
@@ -575,14 +873,37 @@ const loadPdf = async (url: string) => {
 const renderCurrentPage = async () => {
   if (!pdfDoc || !pdfCanvasRef.value || !annotationCanvasRef.value) return
   const page = await pdfDoc.getPage(pdfCurrentPage.value)
-  const viewport = page.getViewport({ scale: 1.5 * previewScale.value })
+
+  // 获取预览区域的可用尺寸
+  const previewArea = pdfCanvasRef.value.closest('.preview-area')
+  const containerWidth = previewArea ? previewArea.clientWidth - 40 : 800 // 减去 padding
+  const containerHeight = previewArea ? previewArea.clientHeight - 40 : 600
+
+  // 计算适合容器的基础缩放比例，让 PDF 完整显示在容器内
+  const defaultViewport = page.getViewport({ scale: 1 })
+  const scaleX = containerWidth / defaultViewport.width
+  const scaleY = containerHeight / defaultViewport.height
+  const fitScale = Math.min(scaleX, scaleY)
+
+  // 应用用户缩放
+  const displayScale = fitScale * previewScale.value
+  // 使用 2 倍渲染提高清晰度，但 canvas 尺寸保持适应容器
+  const renderScale = displayScale * 2
+  const viewport = page.getViewport({ scale: renderScale })
+
   const canvas = pdfCanvasRef.value
   canvas.width = viewport.width
   canvas.height = viewport.height
+  // 通过 CSS 缩放到实际显示尺寸，保持清晰度
+  canvas.style.width = `${viewport.width / 2}px`
+  canvas.style.height = `${viewport.height / 2}px`
   await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise
+  
   const annoCanvas = annotationCanvasRef.value
   annoCanvas.width = viewport.width
   annoCanvas.height = viewport.height
+  annoCanvas.style.width = `${viewport.width / 2}px`
+  annoCanvas.style.height = `${viewport.height / 2}px`
   const savedAnnotation = pageAnnotations.value.get(pdfCurrentPage.value)
   if (savedAnnotation) annoCanvas.getContext('2d')?.putImageData(savedAnnotation, 0, 0)
 }
@@ -603,22 +924,25 @@ const startDrawing = (e: MouseEvent) => {
   if (!currentTool.value || currentTool.value === 'laser') return
   isDrawing.value = true
   const rect = annotationCanvasRef.value!.getBoundingClientRect()
-  lastX = e.clientX - rect.left
-  lastY = e.clientY - rect.top
+  // 乘以 2 修正高清渲染的坐标偏移
+  lastX = (e.clientX - rect.left) * 2
+  lastY = (e.clientY - rect.top) * 2
 }
 
 const draw = (e: MouseEvent) => {
   if (!annotationCanvasRef.value) return
   const rect = annotationCanvasRef.value.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
-  if (currentTool.value === 'laser') { laserStyle.value = { left: `${x - 8}px`, top: `${y - 8}px`, display: 'block' }; return }
+  // 乘以 2 修正高清渲染的坐标偏移
+  const x = (e.clientX - rect.left) * 2
+  const y = (e.clientY - rect.top) * 2
+  if (currentTool.value === 'laser') { laserStyle.value = { left: `${x / 2 - 8}px`, top: `${y / 2 - 8}px`, display: 'block' }; return }
   if (!isDrawing.value || !currentTool.value) return
   const ctx = annotationCanvasRef.value.getContext('2d')!
   ctx.lineCap = 'round'
   ctx.lineJoin = 'round'
-  if (currentTool.value === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = penWidth.value * 3 }
-  else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = penColor.value; ctx.lineWidth = currentTool.value === 'pencil' ? 2 : currentTool.value === 'highlighter' ? penWidth.value * 2 : penWidth.value; ctx.globalAlpha = currentTool.value === 'highlighter' ? 0.3 : 1 }
+  // 线宽也要乘以 2
+  if (currentTool.value === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = penWidth.value * 3 * 2 }
+  else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = penColor.value; ctx.lineWidth = (currentTool.value === 'pencil' ? 2 : currentTool.value === 'highlighter' ? penWidth.value * 2 : penWidth.value) * 2; ctx.globalAlpha = currentTool.value === 'highlighter' ? 0.3 : 1 }
   ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke()
   lastX = x; lastY = y
 }
@@ -643,245 +967,4 @@ const handleWheel = (e: WheelEvent) => {
   if (e.deltaY > 0) nextPage()
   else if (e.deltaY < 0) prevPage()
 }
-
-onMounted(async () => {
-  try {
-    const data = await getCursorDetail(String(route.params.id))
-    if (data) {
-      courseInfo.value.name = data.courseName || ''
-      // 加载章节列表
-      if (data.chapterList?.length) {
-        chapterList.value = data.chapterList.map((c: any) => ({
-          id: c.chapterId,
-          name: c.chapterName
-        }))
-        // 默认选中第一个章节，或者从 URL 参数获取
-        const chapterIdFromUrl = route.query.chapterId ? Number(route.query.chapterId) : null
-        currentChapterId.value = chapterIdFromUrl || chapterList.value[0]?.id || 0
-      }
-    }
-    const resourceUrl = route.query.resourceUrl as string
-    const resourceName = route.query.resourceName as string
-    const resourceType = route.query.resourceType as string
-    if (resourceUrl && resourceName && resourceType) await selectResource({ id: Date.now(), name: decodeURIComponent(resourceName), type: resourceType, url: decodeURIComponent(resourceUrl) })
-  } catch (error) { console.error('加载失败:', error) }
-})
 </script>
-
-<style scoped>
-.prepare-page { height: 100vh; display: flex; flex-direction: column; background: #f0f0f0; }
-.prepare-header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 50px; background: #2cb0ff; color: white; flex-shrink: 0; }
-.header-left { display: flex; align-items: center; gap: 8px; }
-.back-link { display: flex; align-items: center; color: white; text-decoration: none; }
-.back-link:hover { opacity: 0.8; }
-.back-icon { width: 22px; height: 22px; }
-
-/* 自定义下拉框 */
-.chapter-dropdown { position: relative; }
-.dropdown-trigger {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: transparent;
-  border: none;
-  color: white;
-  padding: 8px 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.dropdown-trigger:hover { opacity: 0.9; }
-.dropdown-text { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.dropdown-arrow { width: 18px; height: 18px; transition: transform 0.3s ease; stroke: white; }
-.chapter-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
-.dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: 0;
-  min-width: 240px;
-  max-height: 320px;
-  overflow-y: auto;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-  z-index: 1000;
-  padding: 8px 0;
-}
-.dropdown-item {
-  padding: 12px 18px;
-  font-size: 14px;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-.dropdown-item:hover { background: #f5f7fa; }
-.dropdown-item.active { background: #e6f7ff; color: #2cb0ff; font-weight: 500; }
-
-/* 下拉框过渡动画 */
-.dropdown-enter-active, .dropdown-leave-active {
-  transition: all 0.25s ease;
-  transform-origin: top;
-}
-.dropdown-enter-from, .dropdown-leave-to {
-  opacity: 0;
-  transform: scaleY(0.9) translateY(-8px);
-}
-.dropdown-enter-to, .dropdown-leave-from {
-  opacity: 1;
-  transform: scaleY(1) translateY(0);
-}
-
-.status-tag { font-size: 14px; letter-spacing: 1px; }
-.header-right { display: flex; gap: 12px; }
-.btn-outline {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  background: transparent;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.5);
-  transition: all 0.2s;
-}
-.btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.8); }
-.btn-white {
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  background: white;
-  color: #2cb0ff;
-  border: none;
-  font-weight: 500;
-  transition: all 0.2s;
-}
-.btn-white:hover { background: #f0f0f0; }
-.prepare-body { flex: 1; display: flex; overflow: hidden; }
-
-/* 左侧整体容器 */
-.left-sidebar { display: flex; position: relative; flex-shrink: 0; }
-.left-sidebar.collapsed { width: 0; }
-.left-sidebar.collapsed .tab-sidebar,
-.left-sidebar.collapsed .resource-panel { width: 0; overflow: hidden; opacity: 0; padding: 0; border: none; }
-
-.tab-sidebar { width: 90px; background: white; display: flex; flex-direction: column; flex-shrink: 0; border-right: 1px solid #e8e8e8; padding: 12px 8px; gap: 8px; }
-.tab-item { display: flex; flex-direction: column; align-items: center; padding: 14px 6px; background: none; border: none; color: #666; cursor: pointer; border-radius: 8px; transition: all 0.2s; }
-.tab-item:hover { background: #f0f7ff; color: #2cb0ff; }
-.tab-item.active { background: #2cb0ff; color: white; }
-.tab-icon-wrapper { width: 28px; height: 28px; margin-bottom: 6px; }
-.tab-svg { width: 100%; height: 100%; }
-.tab-label { font-size: 12px; white-space: pre-line; text-align: center; line-height: 1.4; }
-.resource-panel { width: 300px; background: white; display: flex; flex-direction: column; flex-shrink: 0; border-right: 1px solid #e8e8e8; }
-.empty-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; padding: 40px 20px; }
-.empty-svg { width: 120px; height: 120px; margin-bottom: 16px; }
-.empty-text { font-size: 14px; color: #999; margin: 0; }
-.preview-empty-large { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; width: 100%; }
-.empty-svg-large { width: 180px; height: 180px; margin-bottom: 20px; }
-.empty-text-large { font-size: 16px; color: #999; margin: 0; }
-.resource-list { flex: 1; overflow-y: auto; padding: 12px 0; }
-.resource-section { margin-bottom: 8px; }
-.section-header { display: flex; align-items: center; gap: 4px; padding: 10px 16px; font-size: 14px; color: #2cb0ff; cursor: pointer; font-weight: 500; }
-.section-header:hover { background: #f5f7fa; }
-.section-arrow { width: 16px; height: 16px; transition: transform 0.2s; flex-shrink: 0; transform: rotate(-90deg); }
-.section-arrow.expanded { transform: rotate(0deg); }
-.section-content { padding: 0 12px; }
-.resource-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; margin: 6px 0; border-radius: 8px; cursor: pointer; background: #f8f9fa; border: 1px solid #eee; border-left: 3px solid transparent; transition: all 0.2s; }
-.resource-item:hover { background: #f0f7ff; border-color: #d0e8ff; }
-.resource-item.active { background: #e6f4ff; border-color: #91caff; border-left-color: #2cb0ff; }
-.item-icon { width: 36px; height: 36px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 600; flex-shrink: 0; }
-.icon-word { background: #2B5797; color: white; }
-.icon-ppt { background: #D04423; color: white; }
-.icon-pdf { background: #E53935; color: white; }
-.icon-ucd { background: #FFF3E0; color: #FF9800; border: 1px solid #FFE0B2; }
-.item-info { flex: 1; min-width: 0; }
-.item-name { font-size: 13px; color: #333; display: block; line-height: 1.5; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.item-download { width: 28px; height: 28px; background: none; border: none; cursor: pointer; padding: 4px; color: #2cb0ff; flex-shrink: 0; border-radius: 4px; transition: all 0.2s; }
-.item-download:hover { background: #e6f4ff; }
-.item-download svg { width: 100%; height: 100%; }
-.item-delete { width: 28px; height: 28px; background: none; border: none; cursor: pointer; padding: 4px; color: #999; flex-shrink: 0; border-radius: 4px; transition: all 0.2s; }
-.item-delete:hover { background: #fff1f0; color: #ff4d4f; }
-.item-delete svg { width: 100%; height: 100%; }
-.item-action-text { font-size: 12px; color: #ff4d4f; cursor: pointer; flex-shrink: 0; }
-.item-action-text:hover { text-decoration: underline; }
-
-/* 个人资源面板 */
-.personal-resource-panel { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-.personal-header { display: flex; gap: 10px; padding: 12px; border-bottom: 1px solid #eee; flex-shrink: 0; }
-.btn-primary { padding: 8px 16px; background: #2cb0ff; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; transition: all 0.2s; }
-.btn-primary:hover { background: #1a9fe8; }
-.section-tip { font-size: 12px; color: #999; padding: 8px 12px; margin: 0; line-height: 1.5; }
-.collapse-btn { position: absolute; right: -14px; top: 50%; transform: translateY(-50%); width: 28px; height: 56px; background: white; border: 1px solid #e8e8e8; border-left: none; border-radius: 0 6px 6px 0; cursor: pointer; z-index: 10; display: flex; align-items: center; justify-content: center; box-shadow: 2px 0 4px rgba(0,0,0,0.05); }
-.left-sidebar.collapsed .collapse-btn { right: -28px; }
-.collapse-btn:hover { background: #f5f5f5; }
-.collapse-icon { width: 16px; height: 16px; color: #999; transition: transform 0.3s; }
-.collapse-icon.rotated { transform: rotate(180deg); }
-.preview-area { flex: 1; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: 20px; background: #e8e8e8; }
-.preview-loading, .preview-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #999; }
-.spinner { width: 32px; height: 32px; border: 3px solid #ddd; border-top-color: #1890FF; border-radius: 50%; animation: spin 0.8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
-.preview-content { display: flex; justify-content: center; }
-.doc-preview { width: 100%; height: 100%; overflow: auto; display: flex; justify-content: center; }
-.docx-container { 
-  display: flex; 
-  flex-direction: column; 
-  align-items: center; 
-  padding: 30px 20px;
-  min-height: 100%;
-}
-/* Word 文档整体样式 */
-.docx-container :deep(.docx-wrapper) { 
-  background: white;
-  max-width: 900px;
-  margin: 0 auto;
-}
-/* 每一页的样式 - 像 PDF 一样有阴影和间距 */
-.docx-container :deep(.docx-wrapper > section) {
-  background: white !important;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.15) !important;
-  margin-bottom: 30px !important;
-  padding: 60px 80px !important;
-  min-height: 1000px;
-  border-radius: 2px;
-}
-/* 最后一页不需要底部间距 */
-.docx-container :deep(.docx-wrapper > section:last-child) {
-  margin-bottom: 0 !important;
-}
-/* 文字样式优化 */
-.docx-container :deep(p) {
-  line-height: 1.8 !important;
-  margin: 0.5em 0 !important;
-}
-.docx-container :deep(table) {
-  border-collapse: collapse !important;
-  width: 100% !important;
-}
-.docx-container :deep(td), .docx-container :deep(th) {
-  border: 1px solid #ddd !important;
-  padding: 8px 12px !important;
-}
-.pdf-preview-wrapper { display: flex; justify-content: center; align-items: center; min-height: 400px; }
-.pdf-page-container { position: relative; box-shadow: 0 2px 12px rgba(0,0,0,0.15); }
-.pdf-canvas { display: block; background: white; }
-.annotation-canvas { position: absolute; top: 0; left: 0; cursor: crosshair; }
-.laser-pointer { position: absolute; width: 16px; height: 16px; background: red; border-radius: 50%; pointer-events: none; box-shadow: 0 0 10px 4px rgba(255,0,0,0.6); z-index: 100; }
-.preview-unsupported { text-align: center; color: #999; }
-.word-error { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 300px; color: #ff4d4f; }
-.word-error p { margin: 8px 0; font-size: 16px; }
-.word-error .error-hint { color: #999; font-size: 13px; }
-.toolbar { display: flex; justify-content: space-between; align-items: center; padding: 8px 16px; background: #fff; border-top: 1px solid #e0e0e0; flex-shrink: 0; }
-.toolbar-left, .toolbar-center, .toolbar-right { display: flex; align-items: center; gap: 8px; }
-.tool-btn { padding: 6px 12px; background: #f5f5f5; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
-.tool-btn:hover:not(:disabled) { background: #e8e8e8; }
-.tool-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.tool-btn.active { background: #1890FF; color: white; border-color: #1890FF; }
-.tool-btn.icon { padding: 6px 10px; font-size: 16px; }
-.tool-btn.small { padding: 4px 8px; font-size: 12px; }
-.page-info { font-size: 14px; color: #666; min-width: 60px; text-align: center; }
-.page-input { width: 50px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; text-align: center; font-size: 13px; }
-.tool-label { font-size: 13px; color: #666; }
-.divider { width: 1px; height: 24px; background: #ddd; margin: 0 8px; }
-.color-picker { width: 32px; height: 32px; padding: 0; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-.width-select { padding: 4px 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
-.zoom-value { font-size: 14px; color: #666; min-width: 50px; text-align: center; }
-</style>

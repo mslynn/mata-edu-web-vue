@@ -16,7 +16,7 @@
             >
               <MInput
                 v-model="searchName"
-                placeholder="请输入区域管理员人员名称"
+                :placeholder="$t('city.searchAdminPlaceholder')"
                 clearable
                 @enter="handleSearch"
                 @clear="handleSearch"
@@ -44,7 +44,7 @@
             >
               <MInput
                 v-model="searchPhone"
-                placeholder="请输入完整手机号码"
+                :placeholder="$t('city.searchPhonePlaceholder')"
                 clearable
                 @enter="handleSearch"
                 @clear="handleSearch"
@@ -73,14 +73,14 @@
                 class="!bg-[#FF9900] hover:!bg-[#e88a00] px-6 whitespace-nowrap"
                 @click="handleSearch"
               >
-                查询
+                {{ $t('city.query') }}
               </MButton>
               <MButton
                 type="primary"
                 class="!bg-[#FF9900] hover:!bg-[#e88a00] px-6 whitespace-nowrap"
                 @click="handleReset"
               >
-                重置
+                {{ $t('common.reset') }}
               </MButton>
             </div>
           </div>
@@ -92,7 +92,7 @@
               class="!bg-[#FF9900] hover:!bg-[#e88a00] px-6 whitespace-nowrap"
               @click="handleExport"
             >
-              导出数据
+              {{ $t('city.exportData') }}
             </MButton>
           </div>
         </div>
@@ -115,13 +115,13 @@
                   class="px-3 py-1 text-xs border border-[#FF9900] text-[#FF9900] rounded hover:bg-[#FF9900] hover:text-white transition-colors"
                   @click="handleViewDetail(row)"
                 >
-                  查看详情
+                  {{ $t('city.viewDetail') }}
                 </button>
                 <button
                   class="px-3 py-1 text-xs border border-[#FF9900] text-[#FF9900] rounded hover:bg-[#FF9900] hover:text-white transition-colors"
                   @click="handleResetPassword(row)"
                 >
-                  重置密码
+                  {{ $t('city.resetPassword') }}
                 </button>
               </div>
             </template>
@@ -143,29 +143,29 @@
     <!-- 查看详情弹窗 -->
     <MModal 
       v-model="detailModalVisible" 
-      title="查看区域管理人员"
+      :title="$t('city.viewAdminTitle')"
       :show-footer="false"
       size="small"
     >
       <div class="bg-[#F5F5F5] rounded-lg p-6 space-y-4">
         <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">姓　　名：</span>
+          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.name') }}</span>
           <span class="text-gray-600">{{ currentAdmin?.nickName || '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">手机号码：</span>
+          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.phoneNumber') }}</span>
           <span class="text-gray-600">{{ currentAdmin?.phonenumber || '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">学校数量：</span>
+          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.schoolCount') }}</span>
           <span class="text-gray-600">{{ currentAdmin?.schoolCount ?? '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">教师数量：</span>
+          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.teacherCount') }}</span>
           <span class="text-gray-600">{{ currentAdmin?.teacherCount ?? '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">学生数量：</span>
+          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.studentCount') }}</span>
           <span class="text-gray-600">{{ currentAdmin?.studentCount ?? '-' }}</span>
         </div>
       </div>
@@ -179,13 +179,13 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D]">{{ resetPasswordConfirmText }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
-          <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50" @click="showResetPasswordModal = false">取消</button>
-          <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]" @click="handleConfirmResetPassword">确定</button>
+          <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50" @click="showResetPasswordModal = false">{{ $t('common.cancel') }}</button>
+          <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]" @click="handleConfirmResetPassword">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -194,8 +194,10 @@
 
 <script setup lang="ts">
 import { MMessage } from '~/components/ui'
+import { useI18n } from 'vue-i18n'
 import { cityAdmin } from '~/composables/api/city'
 
+const { t } = useI18n()
 const { getCityAdminList, getCityAdminDetail, resetCityAdminPassword, exportCityAdminInfo } = cityAdmin()
 
 definePageMeta({
@@ -213,13 +215,13 @@ const total = ref(0)
 const loading = ref(false)
 
 // 表格列配置（适配不同宽度，使用 minWidth）
-const columns = [
-  { key: 'account', title: '账号', minWidth: '140px', align: 'center' as const },
-  { key: 'adminName', title: '区域管理员人员', minWidth: '160px', align: 'center' as const },
-  { key: 'phone', title: '手机号码', minWidth: '150px', align: 'center' as const },
-  { key: 'createTime', title: '创建时间', minWidth: '180px', align: 'center' as const },
-  { key: 'actions', title: '操作', minWidth: '220px', align: 'center' as const },
-]
+const columns = computed(() => [
+  { key: 'account', title: t('city.account'), minWidth: '140px', align: 'center' as const },
+  { key: 'adminName', title: t('city.adminName'), minWidth: '160px', align: 'center' as const },
+  { key: 'phone', title: t('city.phone'), minWidth: '150px', align: 'center' as const },
+  { key: 'createTime', title: t('city.createTime'), minWidth: '180px', align: 'center' as const },
+  { key: 'actions', title: t('city.operation'), minWidth: '220px', align: 'center' as const },
+])
 
 
 
@@ -257,7 +259,7 @@ const fetchList = async () => {
     total.value = res?.total || 0
   } catch (error: any) {
     console.error('获取市管理员列表失败：', error)
-    MMessage.error(error.message || '获取列表失败')
+    MMessage.error(error.message || t('city.getListFailed'))
   } finally {
     loading.value = false
   }
@@ -282,7 +284,7 @@ const handleExport = async () => {
   try {
     await exportCityAdminInfo()
   } catch (error: any) {
-    MMessage.error(error.message || '导出失败')
+    MMessage.error(error.message || t('common.exportFailed'))
   }
 }
 
@@ -300,7 +302,7 @@ const handleViewDetail = async (row: any) => {
 // 重置密码
 const handleResetPassword = (row: any) => {
   resetUserId.value = [row.id]
-  resetPasswordConfirmText.value = `确认重置"${row.adminName}"的密码吗？`
+  resetPasswordConfirmText.value = t('city.confirmResetPassword', { name: row.adminName })
   showResetPasswordModal.value = true
 }
 
@@ -308,10 +310,10 @@ const handleResetPassword = (row: any) => {
 const handleConfirmResetPassword = async () => {
   try {
     await resetCityAdminPassword(resetUserId.value)
-    MMessage.success('重置密码成功')
+    MMessage.success(t('city.resetPasswordSuccess'))
     showResetPasswordModal.value = false
   } catch (error: any) {
-    MMessage.error(error.message || '重置密码失败')
+    MMessage.error(error.message || t('city.resetPasswordFailed'))
   }
 }
 

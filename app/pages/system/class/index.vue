@@ -1,8 +1,5 @@
 <template>
-  <div class="class-page flex bg-[#FAFAFA]">
-    <!-- 公用左侧导航 -->
-    <AppSidebar class="hidden lg:flex" />
-
+  <div class="class-page flex-1 flex">
     <!-- 中间内容：年级树 + 主内容 -->
     <div class="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
       <!-- 年级/班级树 -->
@@ -14,7 +11,7 @@
             background-color: #ff9900;
             border-color: #ff9900;
           ">
-          全部班级
+          {{ $t('class.allClass') }}
         </MButton>
         <div class="bg-[#FFFFFF] shadow-sm flex-1 flex flex-col min-h-0">
           <!-- 有数据时显示树 -->
@@ -37,7 +34,7 @@
           </div>
           <!-- 无数据时显示空状态 -->
           <div v-else class="flex-1 flex flex-col items-center justify-center p-4">
-            <p class="text-gray-400 text-sm">暂无班级记录</p>
+            <p class="text-gray-400 text-sm">{{ $t('class.noClassRecord') }}</p>
           </div>
           <!-- 创建班级按钮始终固定在底部 -->
           <div class="flex-shrink-0 p-3 border-t border-gray-100 flex justify-center">
@@ -45,7 +42,7 @@
               class="w-[142px] h-[50px] flex items-center justify-center gap-2 bg-[#FF9900] text-white rounded-[20px] text-[16px]"
               @click="handleCreateNewClass(null)">
               <span class="text-xl">+</span>
-              <span>创建班级</span>
+              <span>{{ $t('class.createClass') }}</span>
             </button>
           </div>
         </div>
@@ -54,7 +51,14 @@
       <!-- 右侧主内容 -->
       <section class="main-panel flex-1 min-w-0 p-4 flex flex-col">
         <!-- Tab 切换 - 固定 -->
-        <MTabs v-model="activeTab" :tabs="tabList" class="mb-4 flex-shrink-0" />
+        <!-- <MTabs v-model="activeTab" :tabs="tabList" class="mb-4 flex-shrink-0" /> -->
+
+             <div class="mb-4 flex-shrink-0 relative">
+            <MTabs v-model="activeTab" :tabs="tabList" />
+            <span class="absolute top-1/2 -translate-y-1/2 right-[3%] text-xs sm:text-sm text-gray-500 whitespace-nowrap">{{
+              $t('user.studentCount') }}<span class="text-[#FF9900] font-medium ml-1">{{ studentList.length
+                }}人</span></span>
+          </div>
 
         <!-- 学生管理 Tab -->
         <div v-if="activeTab === 'student'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
@@ -62,7 +66,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
             <!-- 左侧：搜索框 + 提示 -->
             <div class="flex items-center gap-3">
-              <MInput v-model="searchKeyword" placeholder="输入学生账号或姓名进行查找" clearable class="w-[200px] xl:w-[270px]"
+              <MInput v-model="searchKeyword" :placeholder="$t('class.searchStudentPlaceholder')" clearable class="w-[200px] xl:w-[270px]"
                 @enter="handleSearch" @clear="handleSearch">
                 <template #prefix>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +75,7 @@
                   </svg>
                 </template>
               </MInput>
-              <span class="hidden lg:inline-block w-[180px] xl:w-[200px] text-sm text-[#CBCBCB]">学生统一密码为：{{
+              <span class="hidden lg:inline-block w-[180px] xl:w-[200px] text-sm text-[#CBCBCB]">{{ $t('class.studentDefaultPassword') }}{{
                 studentPassword ||
                 '-' }}</span>
             </div>
@@ -83,7 +87,7 @@
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-[#FF9900] text-white',
               ]" :disabled="activeAction === 'batch' || isCurrentClassQuickLogin" @click="handleCreateAction()">
-                + 创建学生
+                + {{ $t('class.createStudent') }}
               </button>
               <div class="relative group">
                 <button :class="[
@@ -92,14 +96,14 @@
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : isCurrentClassQuickLogin
                       ? 'bg-[#FF9900] text-white'
-                      : 'bg-[#FFF1DD] text-[#4D4D4D]',
+                      : 'bg-[#E5E5E5] text-[#4D4D4D]',
                 ]" :disabled="activeAction === 'batch' || isOtherClassQuickLogin" @click="handleQuickLogin">
-                  {{ isCurrentClassQuickLogin ? "停用快捷登录" : "启用快捷登录" }}
+                  {{ isCurrentClassQuickLogin ? $t('class.disableQuickLogin') : $t('class.enableQuickLogin') }}
                 </button>
                 <!-- 自定义tooltip -->
                 <div v-if="isOtherClassQuickLogin"
                   class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                  您已经在其他班级创建了班级码
+                  {{ $t('class.quickLoginTip') }}
                   <div
                     class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800">
                   </div>
@@ -109,9 +113,9 @@
                 'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
                 activeAction === 'batch'
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-[#FFF1DD] text-[#4D4D4D]',
+                  : 'bg-[#E5E5E5] text-[#4D4D4D]',
               ]" :disabled="activeAction === 'batch'" @click="handleExport">
-                导出学生信息
+                {{ $t('class.exportStudentInfo') }}
               </button>
               <button :class="[
                 'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
@@ -119,9 +123,9 @@
                   ? 'bg-[#FF9900] text-white'
                   : isCurrentClassQuickLogin
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#FFF1DD] text-[#4D4D4D]',
+                    : 'bg-[#E5E5E5] text-[#4D4D4D]',
               ]" :disabled="isCurrentClassQuickLogin && activeAction !== 'batch'" @click="handleBatchAction">
-                {{ activeAction === "batch" ? "取消批量操作" : "批量操作" }}
+                {{ activeAction === "batch" ? $t('class.cancelBatch') : $t('class.batchOperation') }}
               </button>
             </div>
           </div>
@@ -131,18 +135,18 @@
             class="flex items-center gap-4 px-4 py-3 mb-3 bg-[#FF9900] rounded-lg text-white text-sm">
             <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded">NEW</span>
 
-            <span class="border-l border-white/30 pl-4">班级码：{{ quickLoginData.classCode || '-' }}</span>
-            <span>统一登录密码：{{ quickLoginData.classCodePwd || '-' }}</span>
+            <span class="border-l border-white/30 pl-4">{{ $t('class.classCode') }}{{ quickLoginData.classCode || '-' }}</span>
+            <span>{{ $t('class.unifiedPassword') }}{{ quickLoginData.classCodePwd || '-' }}</span>
             <button class="px-2 py-1 border border-white/50 rounded text-xs hover:bg-white/10"
-              @click="copyToClipboard(quickLoginData.classCodePwd)">
-              复制
+              @click="copyQuickLoginInfo">
+              {{ $t('common.copy') }}
             </button>
             <span class="flex items-center gap-1 text-white/80 text-s ml-auto">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              (有效时长为2小时，{{ quickLoginData.expirationDate || '' }}过期)
+              ({{ $t('class.validFor2Hours') }}{{ quickLoginData.expirationDate || '' }}{{ $t('class.expire') }})
             </span>
             <button class="p-1 hover:bg-white/10 rounded" @click="handleRefreshQuickLogin">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -195,7 +199,7 @@
                     ]"
                     :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                     @click="handleResetPassword(row)">
-                    重置密码
+                    {{ $t('class.resetPassword') }}
                   </button>
                   <button
                     :class="[
@@ -206,7 +210,7 @@
                     ]"
                     :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                     @click="handleTransfer(row)">
-                    移班
+                    {{ $t('class.transfer') }}
                   </button>
                   <button
                     :class="[
@@ -217,7 +221,7 @@
                     ]"
                     :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                     @click="handleDeleteStudent(row)">
-                    删除
+                    {{ $t('common.delete') }}
                   </button>
                 </div>
               </template>
@@ -231,26 +235,26 @@
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" :checked="isAllSelected" class="w-4 h-4 accent-[#FF9900]"
                   @change="handleSelectAllToggle" />
-                <span class="text-sm text-[#4D4D4D]">全选</span>
+                <span class="text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
               </label>
-              <span class="text-sm text-[#4D4D4D]">已选
+              <span class="text-sm text-[#4D4D4D]">{{ $t('class.selected') }}
                 <span class="text-[#FF9900]">{{
                   selectedStudentIds.length
                 }}</span>
-                项</span>
+                {{ $t('class.items') }}</span>
             </div>
             <div class="flex items-center gap-4">
               <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchResetPassword">
-                批量重置密码
+                {{ $t('class.batchResetPassword') }}
               </button>
               <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchTransfer">
-                批量移班
+                {{ $t('class.batchTransfer') }}
               </button>
               <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDelete">
-                批量删除
+                {{ $t('class.batchDelete') }}
               </button>
               <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchAction">
-                取消批量操作
+                {{ $t('class.cancelBatch') }}
               </button>
             </div>
           </div>
@@ -262,7 +266,7 @@
           <div class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
             <!-- 左侧：搜索框 -->
             <div class="flex items-center gap-3">
-              <MInput v-model="groupSearchKeyword" placeholder="请输入小组名称及学生姓名" clearable class="w-[200px] xl:w-[270px]"
+              <MInput v-model="groupSearchKeyword" :placeholder="$t('class.searchGroupPlaceholder')" clearable class="w-[200px] xl:w-[270px]"
                 @enter="handleGroupSearch" @clear="handleGroupSearch">
                 <template #prefix>
                   <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,7 +284,7 @@
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-[#FF9900] text-white',
               ]" :disabled="groupActiveAction === 'batch'" @click="handleCreateGroup">
-                + 创建小组
+                + {{ $t('class.createGroup') }}
               </button>
               <button :class="[
                 'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
@@ -288,7 +292,7 @@
                   ? 'bg-[#FF9900] text-white'
                   : 'bg-[#FFF1DD] text-[#4D4D4D]',
               ]" @click="handleGroupBatchAction">
-                {{ groupActiveAction === 'batch' ? '取消批量操作' : '批量操作' }}
+                {{ groupActiveAction === 'batch' ? $t('class.cancelBatch') : $t('class.batchOperation') }}
               </button>
             </div>
           </div>
@@ -354,7 +358,7 @@
                     ]"
                     :disabled="groupActiveAction === 'batch'"
                     @click="handleEditGroup(row)">
-                    编辑
+                    {{ $t('common.edit') }}
                   </button>
                   <button
                     :class="[
@@ -365,7 +369,7 @@
                     ]"
                     :disabled="groupActiveAction === 'batch'"
                     @click="handleDeleteGroup(row)">
-                    删除
+                    {{ $t('common.delete') }}
                   </button>
                 </div>
               </template>
@@ -379,18 +383,18 @@
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" :checked="isAllGroupSelected" class="w-4 h-4 accent-[#FF9900]"
                   @change="handleGroupSelectAllToggle" />
-                <span class="text-sm text-[#4D4D4D]">全选</span>
+                <span class="text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
               </label>
               <span class="text-sm text-[#4D4D4D]">
-                已选 <span class="text-[#FF9900]">{{ selectedGroupIds.length }}</span> 项
+                {{ $t('class.selected') }} <span class="text-[#FF9900]">{{ selectedGroupIds.length }}</span> {{ $t('class.items') }}
               </span>
             </div>
             <div class="flex items-center gap-4">
               <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDeleteGroup">
-                批量删除
+                {{ $t('class.batchDelete') }}
               </button>
               <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleGroupBatchAction">
-                取消批量操作
+                {{ $t('class.cancelBatch') }}
               </button>
             </div>
           </div>
@@ -411,7 +415,7 @@
 
         <!-- 标题居中 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-          添加学生
+          {{ $t('class.addStudent') }}
         </h3>
 
         <!-- 添加方式切换 -->
@@ -422,7 +426,7 @@
               ? 'bg-[#FF9900] text-white'
               : 'border border-gray-300 text-[#FF9900]',
           ]" @click="addStudentMode = 'batch'">
-            批量导入添加
+            {{ $t('class.batchImport') }}
           </button>
           <button :class="[
             'w-[136px] h-[40px] rounded-lg text-[14px] font-medium transition-colors',
@@ -430,7 +434,7 @@
               ? 'bg-[#FF9900] text-white'
               : 'border border-gray-300 text-[#FF9900]',
           ]" @click="addStudentMode = 'manual'">
-            手动添加
+            {{ $t('class.manualAdd') }}
           </button>
         </div>
 
@@ -439,24 +443,24 @@
           <div class="flex justify-center gap-3 mb-6">
             <button class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500"
               @click="handleImportStudents">
-              导入学生信息
+              {{ $t('class.importStudentInfo') }}
             </button>
             <button class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500"
               @click="handleDownloadTemplate">
-              下载导入模版
+              {{ $t('class.downloadTemplate') }}
             </button>
           </div>
 
           <p class="text-sm text-gray-400 flex-1">
-            批量导入学生信息后，系统将自动创建学生账号，该班级学生默认密码统一为：{{ studentPassword }}
+            {{ $t('class.batchImportTip') }}{{ studentPassword }}
           </p>
         </template>
 
         <!-- 手动添加模式 -->
         <template v-else>
           <div class="flex flex-col items-center gap-3 flex-1">
-            <MInput v-model="createForm.name" placeholder="学生姓名" class="w-[275px]" />
-            <p class="text-sm text-gray-400">学生默认密码为: {{ studentPassword }}</p>
+            <MInput v-model="createForm.name" :placeholder="$t('class.studentName')" class="w-[275px]" />
+            <p class="text-sm text-gray-400">{{ $t('class.studentDefaultPasswordIs') }}{{ studentPassword }}</p>
           </div>
         </template>
 
@@ -464,11 +468,11 @@
         <div class="flex items-center justify-center gap-4 mt-auto pt-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showCreateModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleCreateStudent">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -487,25 +491,25 @@
 
         <!-- 标题居中 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-          {{ isEditClass ? "编辑班级" : "创建班级" }}
+          {{ isEditClass ? $t('class.editClass') : $t('class.createClass') }}
         </h3>
 
         <!-- 表单 -->
         <div class="space-y-4 px-2">
-          <MSelect v-model="createClassForm.gradeId" :options="gradeOptions" placeholder="年级" />
-          <MInput v-model="createClassForm.className" placeholder="班级" />
-          <MInput v-model="createClassForm.teacherName" placeholder="老师" disabled />
+          <MSelect v-model="createClassForm.gradeId" :options="gradeOptions" :placeholder="$t('class.grade')" />
+          <MInput v-model="createClassForm.className" :placeholder="$t('class.className')" />
+          <MInput v-model="createClassForm.teacherName" :placeholder="$t('class.teacher')" disabled />
         </div>
 
         <!-- 按钮 -->
         <div class="flex items-center justify-center gap-4 mt-8">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showCreateClassModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmCreateClass">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -524,23 +528,23 @@
 
         <!-- 标题 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
-          提示
+          {{ $t('common.tips') }}
         </h3>
 
         <!-- 内容居中 -->
         <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">确认要删除此班级吗？</p>
+          <p class="text-[16px] text-[#4D4D4D]">{{ $t('class.confirmDeleteClass') }}</p>
         </div>
 
         <!-- 按钮 -->
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteClassModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmDeleteClass">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -560,13 +564,13 @@
 
         <!-- 标题 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
-          提示
+          {{ $t('common.tips') }}
         </h3>
 
         <!-- 内容居中 -->
         <div class="flex-1 flex items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D]">
-            确认重置{{ resettingStudent?.studentName }}的密码吗？
+            {{ $t('class.confirmResetPassword', { name: resettingStudent?.studentName }) }}
           </p>
         </div>
 
@@ -574,11 +578,11 @@
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showResetPasswordModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmResetPassword">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -597,14 +601,14 @@
 
         <!-- 标题 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-          移班
+          {{ $t('class.transfer') }}
         </h3>
 
         <!-- 表单 -->
         <div class="space-y-4 px-2">
-          <MSelect v-model="transferForm.gradeId" :options="gradeOptions" placeholder="选择年级"
+          <MSelect v-model="transferForm.gradeId" :options="gradeOptions" :placeholder="$t('class.selectGrade')"
             @update:model-value="handleTransferGradeChange" />
-          <MSelect v-model="transferForm.classId" :options="transferClassOptions" placeholder="选择班级"
+          <MSelect v-model="transferForm.classId" :options="transferClassOptions" :placeholder="$t('class.selectClass')"
             :disabled="!transferForm.gradeId" @change="handleTransferClassChange" />
         </div>
 
@@ -612,11 +616,11 @@
         <div class="flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showTransferModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmTransfer">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -636,13 +640,13 @@
 
         <!-- 标题 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
-          提示
+          {{ $t('common.tips') }}
         </h3>
 
         <!-- 内容居中 -->
         <div class="flex-1 flex items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D]">
-            确认要删除{{ deletingStudent?.name }}吗？
+            {{ $t('class.confirmDeleteStudent', { name: deletingStudent?.name }) }}
           </p>
         </div>
 
@@ -650,11 +654,11 @@
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteStudentModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmDeleteStudent">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -674,13 +678,13 @@
 
         <!-- 标题 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
-          提示
+          {{ $t('common.tips') }}
         </h3>
 
         <!-- 内容居中 -->
         <div class="flex-1 flex items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D] text-center px-4">
-            确定将{{ selectedStudentNames }}学生的密码重置吗？
+            {{ $t('class.confirmBatchResetPassword', { names: selectedStudentNames }) }}
           </p>
         </div>
 
@@ -688,11 +692,11 @@
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showBatchResetPasswordModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmBatchResetPassword">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -708,21 +712,21 @@
           </svg>
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
-          提示
+          {{ $t('common.tips') }}
         </h3>
         <div class="flex-1 flex items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D] text-center px-4">
-            确认删除选中的 {{ selectedStudentIds.length }} 名学生吗？
+            {{ $t('class.confirmBatchDelete', { count: selectedStudentIds.length }) }}
           </p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showBatchDeleteModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmBatchDelete">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -742,21 +746,19 @@
 
         <!-- 标题 -->
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
-          批量移班
+          {{ $t('class.batchTransfer') }}
         </h3>
 
         <!-- 提示文字 -->
         <p class="text-sm text-gray-500 text-center mb-4">
-          已选中{{
-            selectedStudentIds.length
-          }}位学生，请选择所要移至的班级，完成批量移班
+          {{ $t('class.confirmBatchTransfer', { count: selectedStudentIds.length }) }}
         </p>
 
         <!-- 表单 -->
         <div class="space-y-4 px-2">
-          <MSelect v-model="batchTransferForm.gradeId" :options="gradeOptions" placeholder="选择年级"
+          <MSelect v-model="batchTransferForm.gradeId" :options="gradeOptions" :placeholder="$t('class.selectGrade')"
             @update:model-value="handleBatchTransferGradeChange" />
-          <MSelect v-model="batchTransferForm.classId" :options="batchTransferClassOptions" placeholder="选择班级"
+          <MSelect v-model="batchTransferForm.classId" :options="batchTransferClassOptions" :placeholder="$t('class.selectClass')"
             :disabled="!batchTransferForm.gradeId" />
         </div>
 
@@ -764,11 +766,11 @@
         <div class="flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showBatchTransferModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmBatchTransfer">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -784,18 +786,18 @@
           </svg>
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
-          提示
+          {{ $t('common.tips') }}
         </h3>
         <div class="flex-1 flex flex-col items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D] mb-2">密码重置成功</p>
+          <p class="text-[16px] text-[#4D4D4D] mb-2">{{ $t('class.passwordResetSuccess') }}</p>
           <p class="text-[18px] text-[#FF9900] font-medium">
-            新密码：{{ newPassword }}
+            {{ $t('class.newPassword') }}{{ newPassword }}
           </p>
         </div>
         <div class="flex items-center justify-center">
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="showNewPasswordModal = false">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -811,26 +813,26 @@
           </svg>
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-          启用快捷登录
+          {{ $t('class.enableQuickLoginTitle') }}
         </h3>
         <p class="text-center text-[#4D4D4D] mb-6">
-          学生可通过「快捷登录链接」免账号登录，或者使用「班级码+密码」登录。
+          {{ $t('class.quickLoginDesc') }}
         </p>
         <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>班级码使用期间，无法调整当前班级学生账号</span>
+          <span>{{ $t('class.quickLoginWarning') }}</span>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showQuickLoginModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmQuickLogin">
-            创建
+            {{ $t('class.create') }}
           </button>
         </div>
       </div>
@@ -846,22 +848,22 @@
         </button>
 
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-          {{ isEditGroupMode ? '编辑小组' : '创建小组' }}
+          {{ isEditGroupMode ? $t('class.editGroup') : $t('class.createGroup') }}
         </h3>
 
         <!-- 第一步：填写小组信息 -->
         <div class="mb-6">
-          <p class="text-[#4D4D4D] font-medium mb-4">第一步：填写小组信息：</p>
+          <p class="text-[#4D4D4D] font-medium mb-4">{{ $t('class.stepOneGroupInfo') }}</p>
           <div class="space-y-4 pl-4">
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="text-red-500">*</span>
-              <span class="text-[#4D4D4D]">小组名称：</span>
-              <MInput v-model="groupForm.name" placeholder="请输入" class="w-[280px]" />
+              <span class="text-[#4D4D4D]">{{ $t('class.groupName') }}：</span>
+              <MInput v-model="groupForm.name" :placeholder="$t('class.pleaseInputGroupName')" class="w-[280px]" />
             </div>
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="text-transparent">*</span>
-              <span class="text-[#4D4D4D]">小组描述：</span>
-              <MInput v-model="groupForm.remarks" placeholder="请输入" class="w-[280px]" />
+              <span class="text-[#4D4D4D]">{{ $t('class.groupDesc') }}：</span>
+              <MInput v-model="groupForm.remarks" :placeholder="$t('class.pleaseInputGroupName')" class="w-[280px]" />
             </div>
           </div>
         </div>
@@ -870,13 +872,13 @@
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
             <p class="text-[#4D4D4D] font-medium whitespace-nowrap">
-              第二步：添加小组成员：<span class="text-[#FF9900] text-sm font-normal">（请记得选择组长哦）</span>
+              {{ $t('class.stepTwoAddMembers') }}<span class="text-[#FF9900] text-sm font-normal">{{ $t('class.rememberSelectLeader') }}</span>
             </p>
             <button
               class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap"
               @click="handleAddGroupMember"
             >
-              + 添加成员
+              + {{ $t('class.addMember') }}
             </button>
           </div>
           
@@ -885,11 +887,11 @@
             <table class="w-full">
               <thead class="bg-[#FFF1DD]">
                 <tr>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">序号</th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">账号</th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">姓名</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">是否为组长</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">操作</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.serialNumber') }}</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.account') }}</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.name') }}</th>
+                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('class.isLeader') }}</th>
+                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('common.operation') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -908,7 +910,7 @@
                   </td>
                   <td class="px-3 py-2 text-center">
                     <button class="text-red-500 text-sm hover:text-red-600" @click="handleRemoveGroupMember(index)">
-                      删除
+                      {{ $t('common.delete') }}
                     </button>
                   </td>
                 </tr>
@@ -919,7 +921,7 @@
                       <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span class="text-sm">暂无数据</span>
+                      <span class="text-sm">{{ $t('common.noData') }}</span>
                     </div>
                   </td>
                 </tr>
@@ -931,11 +933,11 @@
         <div class="flex items-center justify-center gap-4">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showGroupModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmGroup">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -950,13 +952,13 @@
           </svg>
         </button>
 
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">选择成员</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('class.selectMembers') }}</h3>
 
         <!-- 搜索栏 -->
         <div class="mb-2">
           <MInput
             v-model="memberSearchKeyword"
-            placeholder="输入学生账号或姓名进行查找"
+            :placeholder="$t('class.searchStudentPlaceholder')"
             clearable
             class="w-full"
             @enter="handleMemberSearch"
@@ -972,7 +974,7 @@
 
         <!-- 学生统计 -->
         <div class="mb-2 text-sm text-[#4D4D4D]">
-          共 <span class="text-[#FF9900]">{{ filteredAvailableStudents.length }}</span> 名学生
+          {{ $t('class.totalStudents', { count: filteredAvailableStudents.length }) }}
         </div>
 
         <!-- 学生列表表格 -->
@@ -988,9 +990,9 @@
                     @change="toggleAllMemberSelection"
                   />
                 </th>
-                <th class="w-16 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">序号</th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">账号</th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">姓名</th>
+                <th class="w-16 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.serialNumber') }}</th>
+                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.account') }}</th>
+                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.name') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -1016,7 +1018,7 @@
             </tbody>
           </table>
           <div v-if="!filteredAvailableStudents.length" class="px-4 py-8 text-center text-gray-400">
-            暂无可添加的学生
+            {{ $t('class.noStudentsToAdd') }}
           </div>
         </div>
 
@@ -1044,11 +1046,11 @@
         <div class="flex items-center justify-center gap-4 mt-6">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showAddMemberModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmAddMembers">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -1064,22 +1066,22 @@
           </svg>
         </button>
 
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
 
         <div class="flex-1 flex items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D]">
-            {{ isBatchDeleteGroup ? `确认要删除选中的${selectedGroupIds.length}个小组吗？` : `确认要删除"${deletingGroup?.name}"吗？` }}
+            {{ isBatchDeleteGroup ? $t('class.confirmBatchDeleteGroup', { count: selectedGroupIds.length }) : $t('class.confirmDeleteGroup', { name: deletingGroup?.name }) }}
           </p>
         </div>
 
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteGroupModal = false">
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmDeleteGroup">
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -1090,6 +1092,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { MMessage } from "~/components/ui";
 import { useTeacher } from "@/composables/api/useTeacher";
 import { useAuth } from "@/composables/api/useAuth";
@@ -1097,10 +1100,11 @@ import { title } from "process";
 import { _minWidth } from "#tailwind-config/theme";
 
 definePageMeta({
-  layout: "default",
+  layout: "sidebar",
 });
 
 const route = useRoute();
+const { t } = useI18n();
 const { user } = useAuth();
 
 // 当前用户名称
@@ -1133,10 +1137,10 @@ const {
 } = useTeacher();
 
 // Tab 数据
-const tabList = [
-  { label: "学生管理", value: "student" },
-  { label: "小组管理", value: "group" },
-];
+const tabList = computed(() => [
+  { label: t('class.studentManagement'), value: "student" },
+  { label: t('class.groupManagement'), value: "group" },
+]);
 const activeTab = ref("student");
 
 // 搜索关键词
@@ -1169,12 +1173,12 @@ const classOptions = computed(() => {
 });
 
 // 表格列配置
-const tableColumns = [
-  { key: "studentName", title: "学生姓名", minWidth: "120px" },
-  { key: "studentNumber", title: "学生账号", minWidth: "150px" },
-  { key: "createTime", title: "创建时间", minWidth: "150px" },
-  { key: "action", title: "操作", width: "220px", align: "center" as const },
-];
+const tableColumns = computed(() => [
+  { key: "studentName", title: t('class.studentName'), minWidth: "120px" },
+  { key: "studentNumber", title: t('class.studentAccount'), minWidth: "150px" },
+  { key: "createTime", title: t('class.createTime'), minWidth: "150px" },
+  { key: "action", title: t('common.operation'), width: "220px", align: "center" as const },
+]);
 
 // 学生列表
 const studentList = ref<any[]>([]);
@@ -1188,14 +1192,14 @@ type GroupActionType = "batch" | null;
 const groupActiveAction = ref<GroupActionType>(null);
 
 // 小组表格列配置
-const groupTableColumns = [
-  { key: "teamName", title: "小组名称", minWidth: "80px" },
-  { key: "leaderName", title: "组长", minWidth: "60px" },
-  { key: "members", title: "组内成员", minWidth: "100px" },
-  { key: "remarks", title: "描述", minWidth: "100px" },
-  { key: "createTime", title: "创建时间", minWidth: "120px" },
-  { key: "action", title: "操作", width: "100px", align: "center" as const },
-];
+const groupTableColumns = computed(() => [
+  { key: "teamName", title: t('class.groupName'), minWidth: "80px" },
+  { key: "leaderName", title: t('class.groupLeader'), minWidth: "60px" },
+  { key: "members", title: t('class.groupMembers'), minWidth: "100px" },
+  { key: "remarks", title: t('class.groupRemarks'), minWidth: "100px" },
+  { key: "createTime", title: t('class.createTime'), minWidth: "120px" },
+  { key: "action", title: t('common.operation'), width: "100px", align: "center" as const },
+]);
 
 // 小组弹窗
 const showGroupModal = ref(false);
@@ -1405,7 +1409,7 @@ const activeAction = ref<ActionType>(null);
 // 选择全部班级
 const handleSelectAll = () => {
   selectedClass.value = null;
-  MMessage.info("已选择全部班级");
+  MMessage.info(t('class.selectedAllClass'));
 };
 // 加载年级字典
 const loadGradeOptions = async () => {
@@ -1596,11 +1600,11 @@ const handleCreateNewClass = (gradeNode: any) => {
 // 确认创建/编辑班级
 const handleConfirmCreateClass = async () => {
   if (!createClassForm.gradeId) {
-    MMessage.error("请选择年级");
+    MMessage.error(t('class.pleaseSelectGrade'));
     return;
   }
   if (!createClassForm.className) {
-    MMessage.error("请输入班级名称");
+    MMessage.error(t('class.pleaseInputClassName'));
     return;
   }
 
@@ -1618,7 +1622,7 @@ const handleConfirmCreateClass = async () => {
         grade: Number(createClassForm.gradeId),
         gradeName: selectedGrade?.label || "",
       });
-      MMessage.success("编辑班级成功");
+      MMessage.success(t('common.editSuccess'));
     } else {
       // 创建班级
       await createClass({
@@ -1626,7 +1630,7 @@ const handleConfirmCreateClass = async () => {
         grade: Number(createClassForm.gradeId),
         gradeName: selectedGrade?.label || "",
       });
-      MMessage.success("创建班级成功");
+      MMessage.success(t('common.createSuccess'));
     }
     // 刷新班级列表
     loadClassList();
@@ -1661,7 +1665,7 @@ const handleQuickLogin = async () => {
       isQuickLoginEnabled.value = false;
       quickLoginClassId.value = null;
       quickLoginData.value = {};
-      MMessage.info("快捷登录已停用");
+      MMessage.info(t('class.quickLoginDisabled'));
     } catch (error) {
       console.error("停用快捷登录失败:", error);
     }
@@ -1674,7 +1678,7 @@ const handleQuickLogin = async () => {
 // 确认创建快捷登录
 const handleConfirmQuickLogin = async () => {
   if (!selectedClass.value?.id) {
-    MMessage.error("请先选择班级");
+    MMessage.error(t('class.pleaseSelectClassFirst'));
     return;
   }
   try {
@@ -1682,7 +1686,7 @@ const handleConfirmQuickLogin = async () => {
     console.log('快捷登录数据:', data);
     quickLoginData.value = data || {};
     quickLoginClassId.value = selectedClass.value.id;
-    MMessage.success("快捷登录已启用");
+    MMessage.success(t('class.quickLoginEnabled'));
     isQuickLoginEnabled.value = true;
     showQuickLoginModal.value = false;
   } catch (error) {
@@ -1721,10 +1725,18 @@ const copyToClipboard = async (text?: string) => {
   if (!text) return;
   try {
     await navigator.clipboard.writeText(text);
-    MMessage.success("复制成功");
+    MMessage.success(t('common.copySuccess'));
   } catch (error) {
-    MMessage.error("复制失败");
+    MMessage.error(t('common.copyFailed'));
   }
+};
+
+// 复制快捷登录完整信息
+const copyQuickLoginInfo = async () => {
+  const classCode = quickLoginData.value.classCode || '';
+  const password = quickLoginData.value.classCodePwd || '';
+  const text = `${t('class.classCode')}${classCode} ${t('class.unifiedPassword')}${password}`;
+  await copyToClipboard(text);
 };
 
 // 刷新快捷登录
@@ -1733,7 +1745,7 @@ const handleRefreshQuickLogin = async () => {
   try {
     const data = await createQuickLogin(selectedClass.value.id);
     quickLoginData.value = data || {};
-    MMessage.success("已刷新");
+    MMessage.success(t('common.refreshed'));
   } catch (error) {
     console.error("刷新快捷登录失败:", error);
   }
@@ -1742,12 +1754,12 @@ const handleRefreshQuickLogin = async () => {
 // 导出
 const handleExport = async () => {
   try {
-    MMessage.info("正在导出学生信息...");
+    MMessage.info(t('common.exporting'));
     await exportStudentInfo();
-    MMessage.success("导出成功");
+    MMessage.success(t('common.exportSuccess'));
   } catch (error) {
     console.error("导出失败:", error);
-    MMessage.error("导出失败");
+    MMessage.error(t('common.exportFailed'));
   }
 };
 
@@ -1756,10 +1768,10 @@ const handleBatchAction = () => {
   if (activeAction.value === "batch") {
     activeAction.value = null;
     selectedStudentIds.value = [];
-    MMessage.info("已退出批量操作模式");
+    MMessage.info(t('class.exitBatchMode'));
   } else {
     activeAction.value = "batch";
-    MMessage.info("已进入批量操作模式，请勾选学生");
+    MMessage.info(t('class.enterBatchMode'));
   }
 };
 
@@ -1791,7 +1803,7 @@ const handleClearSelection = () => {
 // 批量删除
 const handleBatchDelete = () => {
   if (selectedStudentIds.value.length === 0) {
-    MMessage.warning("暂未选择任何学生，请在列表左侧进行勾选");
+    MMessage.warning(t('class.noStudentSelected'));
     return;
   }
   showBatchDeleteModal.value = true;
@@ -1801,7 +1813,7 @@ const handleBatchDelete = () => {
 const handleConfirmBatchDelete = async () => {
   try {
     await removeStudent(selectedStudentIds.value.map(String));
-    MMessage.success(`已删除 ${selectedStudentIds.value.length} 名学生`);
+    MMessage.success(t('class.deletedStudents', { count: selectedStudentIds.value.length }));
     selectedStudentIds.value = [];
     // 刷新学生列表
     loadStudentList();
@@ -1815,7 +1827,7 @@ const handleConfirmBatchDelete = async () => {
 // 批量移班
 const handleBatchTransfer = () => {
   if (selectedStudentIds.value.length === 0) {
-    MMessage.warning("暂未选择任何学生，请在列表左侧进行勾选");
+    MMessage.warning(t('class.noStudentSelected'));
     return;
   }
   batchTransferForm.gradeId = null;
@@ -1827,11 +1839,11 @@ const handleBatchTransfer = () => {
 const handleConfirmBatchTransfer = async () => {
   console.log("batchTransferForm:", batchTransferForm);
   if (!batchTransferForm.gradeId) {
-    MMessage.error("请选择年级");
+    MMessage.error(t('class.pleaseSelectGrade'));
     return;
   }
   if (!batchTransferForm.classId) {
-    MMessage.error("请选择班级");
+    MMessage.error(t('class.pleaseSelectClass'));
     return;
   }
 
@@ -1846,9 +1858,7 @@ const handleConfirmBatchTransfer = async () => {
       classId: batchTransferForm.classId as string,
       teacherId: targetClass?.teacherId || "",
     });
-    MMessage.success(
-      `已将 ${selectedStudentIds.value.length} 名学生移至新班级`
-    );
+    MMessage.success(t('class.transferredStudents', { count: selectedStudentIds.value.length }));
     // 刷新学生列表
     loadStudentList();
   } catch (error) {
@@ -1869,7 +1879,7 @@ const batchTransferClassOptions = computed(() => {
 // 批量重置密码
 const handleBatchResetPassword = () => {
   if (selectedStudentIds.value.length === 0) {
-    MMessage.warning("暂未选择任何学生，请在列表左侧进行勾选");
+    MMessage.warning(t('class.noStudentSelected'));
     return;
   }
   showBatchResetPasswordModal.value = true;
@@ -2151,10 +2161,13 @@ const handleCreateStudent = async () => {
 // ===== 小组管理方法 =====
 
 // 加载小组列表
-const loadGroupList = async () => {
+const loadGroupList = async (showLoading = true) => {
   if (!selectedClass.value?.id) return;
 
-  groupLoading.value = true;
+  // 只有在没有数据或明确要求时才显示 loading
+  if (showLoading && groupList.value.length === 0) {
+    groupLoading.value = true;
+  }
   try {
     const keyword = groupSearchKeyword.value?.trim();
     const params = {
@@ -2405,39 +2418,14 @@ watch(activeTab, (newTab) => {
 
 <style scoped>
 .class-page {
-  height: calc(100vh - 70px - 20px);
-  padding-left: 16px;
-  padding-right: 16px;
-  padding-top: 20px;
-  display: flex;
-  justify-content: center;
+  height: calc(100vh - 70px);
   overflow: hidden;
-  max-width: 100vw;
 }
 
 /* 平板及以上 */
 @media (min-width: 768px) {
   .class-page {
-    height: calc(100vh - 70px - 30px);
-    padding-left: 30px;
-    padding-right: 30px;
-    padding-top: 30px;
-  }
-}
-
-/* 中等屏幕 */
-@media (min-width: 1280px) {
-  .class-page {
-    padding-left: 40px;
-    padding-right: 40px;
-  }
-}
-
-/* 大屏幕 */
-@media (min-width: 1536px) {
-  .class-page {
-    padding-left: 60px;
-    padding-right: 60px;
+    height: calc(100vh - 70px);
   }
 }
 

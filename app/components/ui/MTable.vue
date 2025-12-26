@@ -2,7 +2,7 @@
   <div class="bg-white rounded-lg overflow-hidden shadow-sm">
     <!-- 加载遮罩 -->
     <div v-if="loading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-      <div class="text-[#4CB9CF]">加载中...</div>
+      <div class="text-[#4CB9CF]">{{ $t('common.loading') }}</div>
     </div>
     
     <div class="overflow-x-auto">
@@ -21,7 +21,7 @@
             </th>
             <!-- 序号列 -->
             <th v-if="showIndex" class="w-16 px-4 py-3 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
-              序号
+              {{ $t('common.serialNumber') }}
             </th>
             <!-- 数据列 -->
             <th 
@@ -89,7 +89,7 @@
                   <svg class="w-12 h-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                   </svg>
-                  <span>暂无数据</span>
+                  <span>{{ $t('common.noData') }}</span>
                 </div>
               </slot>
             </td>

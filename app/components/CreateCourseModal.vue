@@ -248,7 +248,7 @@ const formData = ref({
   description: '',
   permission: 'private',
   coverUrl: '',
-  chapters: [{ id: chapterId++, name: '', delFlag: 1 }] as { id: number; name: string; chapterId?: number; delFlag: number }[],
+  chapters: [{ id: chapterId++, name: '', delFlag: 0 }] as { id: number; name: string; chapterId?: number; delFlag: number }[],
 })
 
 // 触发文件选择
@@ -301,7 +301,7 @@ const resetForm = () => {
     description: '',
     permission: 'private',
     coverUrl: '',
-    chapters: [{ id: chapterId++, name: '', delFlag: 1 }] as { id: number; name: string; chapterId?: number; delFlag: number }[],
+    chapters: [{ id: chapterId++, name: '', delFlag: 0 }] as { id: number; name: string; chapterId?: number; delFlag: number }[],
   }
   errors.value = {}
 }
@@ -311,7 +311,7 @@ const isEditMode = computed(() => !!props.editData)
 
 // 可见的章节列表（过滤掉已删除的）
 const visibleChapters = computed(() => {
-  return formData.value.chapters.filter(c => c.delFlag !== 0)
+  return formData.value.chapters.filter(c => c.delFlag !== 1)
 })
 
 // 加载课程详情
@@ -330,9 +330,9 @@ const loadCourseDetail = async (courseId: string | number) => {
               id: chapterId++, 
               name: c.chapterName || '',
               chapterId: c.chapterId,
-              delFlag: 1 // 默认未删除
+              delFlag: 0 // 默认未删除
             }))
-          : [{ id: chapterId++, name: '', delFlag: 1 }],
+          : [{ id: chapterId++, name: '', delFlag: 0 }],
       }
     }
   } catch (error) {
@@ -352,7 +352,7 @@ watch(() => props.modelValue, async (val) => {
 })
 
 const addChapter = () => {
-  formData.value.chapters.push({ id: chapterId++, name: '', delFlag: 1 })
+  formData.value.chapters.push({ id: chapterId++, name: '', delFlag: 0 })
   clearError('chapters')
 }
 
@@ -424,8 +424,8 @@ const confirmDelete = () => {
     if (realIndex !== -1) {
       const chapter = formData.value.chapters[realIndex]
       if (isEditMode.value && chapter?.chapterId) {
-        // 编辑模式下，已有的章节标记为删除（delFlag: 0）
-        chapter.delFlag = 0
+        // 编辑模式下，已有的章节标记为删除（delFlag: 1）
+        chapter.delFlag = 1
       } else {
         // 新建模式或新增的章节，直接删除
         formData.value.chapters.splice(realIndex, 1)

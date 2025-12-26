@@ -1,7 +1,7 @@
 <template>
   <div class="h-screen flex flex-col bg-[#FAFAFA] font-sans overflow-hidden">
     <!-- 登录页专用顶部导航栏 -->
-    <header class="flex justify-between items-center pl-6 md:pl-[115px] bg-[#FF9900] h-[70px] flex-shrink-0">
+    <header class="flex justify-between items-center pl-6 md:pl-[115px] bg-[#FF9921] h-[70px] flex-shrink-0">
       <div class="flex items-baseline gap-1">
         <img src="~/assets/images/logo.png" alt="Logo" class="w-[220px] h-[37px] object-contain" />
       </div>

@@ -205,7 +205,7 @@
           <table class="w-full text-sm">
             <thead class="bg-gray-50 sticky top-0">
               <tr>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">序号</th>
+                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('common.serialNumber') }}</th>
                 <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">姓名</th>
                 <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">账号</th>
                 <th class="px-3 py-2 text-center text-[#4D4D4D] font-medium">选择</th>

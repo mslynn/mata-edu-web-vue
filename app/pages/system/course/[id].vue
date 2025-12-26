@@ -40,15 +40,27 @@
     <!-- 课程测评弹窗 -->
     <CourseEvaluationModal v-model:visible="showEvaluationModal" @distribute="handleDistribute" />
 
+    <!-- 开课设置弹窗 -->
+    <StartClassModal 
+      v-model:visible="showStartClassModal"
+      :class-list="startClassData.classList"
+      :course-list="startClassData.courseList"
+      :initial-course-id="startClassData.initialCourseId"
+      :initial-chapter-id="startClassData.initialChapterId"
+      ref="startClassModalRef"
+      @course-change="handleCourseChange"
+      @confirm="handleStartClassConfirm"
+    />
+
     <!-- 主体内容 -->
     <div ref="courseMainRef" class="course-main">
       <div class="chapter-sidebar">
         <div class="sidebar-title">章节详情</div>
         <div class="chapter-list">
-          <div v-for="(chapter, index) in chapters" :key="chapter.id" class="chapter-item" :class="{ active: activeChapter === chapter.id }" @click="activeChapter = chapter.id">
+          <div v-for="chapter in chapters" :key="chapter.id" class="chapter-item" :class="{ active: activeChapter === chapter.id }" @click="activeChapter = chapter.id">
             <span class="chapter-name">{{ chapter.name }}</span>
             <div class="chapter-actions">
-              <button class="action-btn prepare-btn" @click.stop="handlePrepare(chapter)">继续备课</button>
+              <button class="action-btn prepare-btn" @click.stop="handlePrepare(chapter)">{{ chapter.isPrepare === 1 ? '继续备课' : '开始备课' }}</button>
               <button class="action-btn start-btn" @click.stop="handleStartClass(chapter)">开始上课</button>
             </div>
           </div>
@@ -60,68 +72,77 @@
         </div>
         <div class="tab-content">
           <div v-if="activeTab === 'resource'" class="resource-panel">
-            <!-- 课件 -->
-            <div class="resource-section">
-              <div class="section-header" @click="expandedSections.courseware = !expandedSections.courseware">
-                <svg class="arrow-icon" :class="{ expanded: expandedSections.courseware }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-                <span>课件({{ resources.courseware.length }})</span>
-              </div>
-              <div v-if="expandedSections.courseware" class="section-content">
-                <div class="resource-grid">
-                  <div v-for="item in resources.courseware" :key="item.id" class="resource-item" @click="openDocument(item)">
-                    <div class="resource-icon" :class="getFileIconClass(item.type)">
-                      <span>{{ getFileIconText(item.type) }}</span>
+            <!-- 教学资源 - 动态渲染分组 -->
+            <template v-if="teachingResources.length > 0">
+              <div v-for="group in teachingResources" :key="group.resourceName" class="resource-section">
+                <div class="section-header" @click="toggleTeachingSection(group.resourceName)">
+                  <svg class="arrow-icon" :class="{ expanded: teachingExpandedSections[group.resourceName] }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <span>{{ group.resourceName }}({{ group.resourceList?.length || 0 }})</span>
+                </div>
+                <div v-if="teachingExpandedSections[group.resourceName]" class="section-content">
+                  <div class="resource-grid">
+                    <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item" @click="openTeachingResource(item)">
+                      <div class="resource-icon" :class="getFileIconClass(getFileType(item.fileName))">
+                        <span>{{ getFileIconText(getFileType(item.fileName)) }}</span>
+                      </div>
+                      <span class="resource-name">{{ item.fileName }}</span>
                     </div>
-                    <span class="resource-name">{{ item.name }}</span>
                   </div>
                 </div>
               </div>
-            </div>
-            
-            <!-- 教师程序 -->
-            <div class="resource-section">
-              <div class="section-header" @click="expandedSections.program = !expandedSections.program">
-                <svg class="arrow-icon" :class="{ expanded: expandedSections.program }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-                <span>教师程序({{ resources.program.length }})</span>
-              </div>
-              <div v-if="expandedSections.program" class="section-content">
-                <div class="resource-grid">
-                  <div v-for="item in resources.program" :key="item.id" class="resource-item" @click="openDocument(item)">
-                    <div class="resource-icon" :class="getFileIconClass(item.type)">
-                      <span>{{ getFileIconText(item.type) }}</span>
-                    </div>
-                    <span class="resource-name">{{ item.name }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 学生手册 -->
-            <div class="resource-section">
-              <div class="section-header" @click="expandedSections.handbook = !expandedSections.handbook">
-                <svg class="arrow-icon" :class="{ expanded: expandedSections.handbook }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                </svg>
-                <span>学生手册({{ resources.handbook.length }})</span>
-              </div>
-              <div v-if="expandedSections.handbook" class="section-content">
-                <div class="resource-grid">
-                  <div v-for="item in resources.handbook" :key="item.id" class="resource-item" @click="openDocument(item)">
-                    <div class="resource-icon" :class="getFileIconClass(item.type)">
-                      <span>{{ getFileIconText(item.type) }}</span>
-                    </div>
-                    <span class="resource-name">{{ item.name }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
+            </template>
+            <div v-else class="empty-state">暂无数据</div>
           </div>
-          <div v-else-if="activeTab === 'design'" class="empty-state">暂无内容</div>
-          <div v-else-if="activeTab === 'task'" class="empty-state">暂无内容</div>
+          <div v-else-if="activeTab === 'task'" class="resource-panel">
+            <template v-if="taskResources.length > 0">
+              <!-- 学习任务 - 动态渲染分组 -->
+              <div v-for="group in taskResources" :key="group.resourceName" class="resource-section">
+                <div class="section-header" @click="toggleTaskSection(group.resourceName)">
+                  <svg class="arrow-icon" :class="{ expanded: taskExpandedSections[group.resourceName] }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <span>{{ group.resourceName }}({{ group.resourceList?.length || 0 }})</span>
+                </div>
+                <div v-if="taskExpandedSections[group.resourceName]" class="section-content">
+                  <div class="resource-grid">
+                    <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item" @click="openTaskResource(item)">
+                      <div class="resource-icon" :class="getFileIconClass(getFileType(item.fileName))">
+                        <span>{{ getFileIconText(getFileType(item.fileName)) }}</span>
+                      </div>
+                      <span class="resource-name">{{ item.fileName }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <div v-else class="empty-state">暂无数据</div>
+          </div>
+          <div v-else-if="activeTab === 'personal'" class="resource-panel">
+            <!-- 个人资源 - 动态渲染分组 -->
+            <template v-if="personalResources.length > 0">
+              <div v-for="group in personalResources" :key="group.resourceName" class="resource-section">
+                <div class="section-header" @click="togglePersonalSection(group.resourceName)">
+                  <svg class="arrow-icon" :class="{ expanded: personalExpandedSections[group.resourceName] }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                  <span>{{ group.resourceName }}({{ group.resourceList?.length || 0 }})</span>
+                </div>
+                <div v-if="personalExpandedSections[group.resourceName]" class="section-content">
+                  <div class="resource-grid">
+                    <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item" @click="openPersonalResource(item)">
+                      <div class="resource-icon" :class="getFileIconClass(getFileType(item.fileName))">
+                        <span>{{ getFileIconText(getFileType(item.fileName)) }}</span>
+                      </div>
+                      <span class="resource-name">{{ item.fileName }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <div v-else class="empty-state">暂无内容</div>
+          </div>
           <div v-else class="empty-state">暂无内容</div>
         </div>
       </div>
@@ -130,14 +151,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue'
+import { ref, reactive, watch, onMounted, computed } from 'vue'
 import gsap from 'gsap'
 import { cursorAdmin } from '~/composables/api/curosr'
 
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
-const { getCursorDetail } = cursorAdmin()
+const { getCursorDetail, startPrepare, getChapterResourceList } = cursorAdmin()
 const isCollapsed = ref(false)
 const courseRowRef = ref<HTMLElement | null>(null)
 const wrapperRef = ref<HTMLElement | null>(null)
@@ -168,8 +189,14 @@ onMounted(async () => {
       if (data.chapterList && Array.isArray(data.chapterList)) {
         chapters.value = data.chapterList.map((c: any, idx: number) => ({
           id: c.chapterId || idx + 1,
-          name: c.chapterName || `章节${idx + 1}`
+          name: c.chapterName || `章节${idx + 1}`,
+          isPrepare: c.isPrepare || 0
         }))
+        
+        // 默认选中第一个章节并加载详情
+        if (chapters.value.length > 0 && chapters.value[0]) {
+          activeChapter.value = chapters.value[0].id
+        }
       }
     }
   } catch (error) {
@@ -239,30 +266,153 @@ const courseInfo = ref({
   description: '',
   courseCoverUrl: ''
 })
-const chapters = ref<{ id: number; name: string }[]>([])
-const activeChapter = ref(1)
+const chapters = ref<{ id: number; name: string; isPrepare: number }[]>([])
+const activeChapter = ref<number | null>(null)
+const chapterLoading = ref(false)
 const tabs = [
-  { label: '教学资源', value: 'resource' },
-  { label: '学习任务', value: 'task' },
-  { label: '个人资源', value: 'personal' }
+  { label: '教学资源', value: 'resource', resourceType: 1 },
+  { label: '学习任务', value: 'task', resourceType: 2 },
+  { label: '个人资源', value: 'personal', resourceType: 3 }
 ]
 const activeTab = ref('resource')
 
-// 资源数据
-const resources = reactive({
-  courseware: [
-    { id: 1, name: '主题01-"悟空"来了（课件）V1.5.pptx', type: 'ppt', url: '' }
-  ],
-  program: [
-    { id: 2, name: '1-1参考程序.ucd', type: 'ucd', url: '' },
-    { id: 3, name: '1-2参考程序.ucd', type: 'ucd', url: '' }
-  ],
-  handbook: [
-    { id: 4, name: '主题01-"悟空"来了（学生手册）V1.5.docx', type: 'word', url: 'http://192.168.0.30:9000/mata/2025/12/22/8e3ceba623c64d32bcced390d35e9832.docx' },
-    { id: 5, name: '测试PDF文档.pdf', type: 'pdf', url: 'http://192.168.0.30:9000/mata/2025/12/22/e98407271692446da69888b8068c0bfc.pdf' }
-  ]
+// 资源项接口定义
+interface ResourceItem {
+  resourceId: number
+  chapterId: string
+  resourceType: number
+  resourceCategory: number
+  resourceName: string
+  ossId: string
+  fileName: string
+  modifyNum: number
+}
+interface ResourceGroup {
+  resourceCategory: number | null
+  resourceName: string
+  resourceList: ResourceItem[]
+}
+
+// 教学资源数据
+const teachingResources = ref<ResourceGroup[]>([])
+const teachingExpandedSections = reactive<Record<string, boolean>>({})
+
+// 学习任务数据
+const taskResources = ref<ResourceGroup[]>([])
+const taskExpandedSections = reactive<Record<string, boolean>>({})
+
+// 个人资源数据
+const personalResources = ref<ResourceGroup[]>([])
+const personalExpandedSections = reactive<Record<string, boolean>>({})
+
+// 切换教学资源分组展开状态
+const toggleTeachingSection = (name: string) => {
+  teachingExpandedSections[name] = !teachingExpandedSections[name]
+}
+
+// 切换学习任务分组展开状态
+const toggleTaskSection = (name: string) => {
+  taskExpandedSections[name] = !taskExpandedSections[name]
+}
+
+// 切换个人资源分组展开状态
+const togglePersonalSection = (name: string) => {
+  personalExpandedSections[name] = !personalExpandedSections[name]
+}
+
+// 根据文件名获取文件类型
+const getFileType = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
+  const typeMap: Record<string, string> = {
+    doc: 'word',
+    docx: 'word',
+    ppt: 'ppt',
+    pptx: 'ppt',
+    xls: 'excel',
+    xlsx: 'excel',
+    pdf: 'pdf',
+    ucd: 'ucd'
+  }
+  return typeMap[ext] || 'default'
+}
+
+// 打开教学资源
+const openTeachingResource = (item: ResourceItem) => {
+  const type = getFileType(item.fileName)
+  navigateTo(`/system/course/prepare/${route.params.id}?chapterId=${activeChapter.value}&resourceId=${item.resourceId}&tab=resource&ossId=${item.ossId}&resourceName=${encodeURIComponent(item.fileName)}&resourceType=${type}`)
+}
+
+// 打开学习任务资源
+const openTaskResource = (item: ResourceItem) => {
+  const type = getFileType(item.fileName)
+  navigateTo(`/system/course/prepare/${route.params.id}?chapterId=${activeChapter.value}&resourceId=${item.resourceId}&tab=task&ossId=${item.ossId}&resourceName=${encodeURIComponent(item.fileName)}&resourceType=${type}`)
+}
+
+// 打开个人资源
+const openPersonalResource = (item: ResourceItem) => {
+  const type = getFileType(item.fileName)
+  navigateTo(`/system/course/prepare/${route.params.id}?chapterId=${activeChapter.value}&resourceId=${item.resourceId}&tab=personal&ossId=${item.ossId}&resourceName=${encodeURIComponent(item.fileName)}&resourceType=${type}`)
+}
+
+// 获取当前 tab 对应的 resourceType
+const getCurrentResourceType = () => {
+  const currentTab = tabs.find(t => t.value === activeTab.value)
+  return currentTab?.resourceType || 1
+}
+
+// 加载章节资源
+const loadChapterDetail = async (chapterId: number, resourceType?: number) => {
+  chapterLoading.value = true
+  try {
+    const type = resourceType ?? getCurrentResourceType()
+    const data = await getChapterResourceList(String(chapterId), type)
+    if (data) {
+      if (type === 1) {
+        // 教学资源
+        teachingResources.value = data || []
+        teachingResources.value.forEach(group => {
+          if (teachingExpandedSections[group.resourceName] === undefined) {
+            teachingExpandedSections[group.resourceName] = true
+          }
+        })
+      } else if (type === 2) {
+        // 学习任务
+        taskResources.value = data || []
+        taskResources.value.forEach(group => {
+          if (taskExpandedSections[group.resourceName] === undefined) {
+            taskExpandedSections[group.resourceName] = true
+          }
+        })
+      } else if (type === 3) {
+        // 个人资源
+        personalResources.value = data || []
+        personalResources.value.forEach(group => {
+          if (personalExpandedSections[group.resourceName] === undefined) {
+            personalExpandedSections[group.resourceName] = true
+          }
+        })
+      }
+    }
+  } catch (error) {
+    console.error('加载章节资源失败:', error)
+  } finally {
+    chapterLoading.value = false
+  }
+}
+
+// 监听章节切换
+watch(activeChapter, (newChapterId) => {
+  if (newChapterId) {
+    loadChapterDetail(newChapterId)
+  }
 })
-const expandedSections = reactive({ courseware: true, program: true, handbook: true })
+
+// 监听 tab 切换
+watch(activeTab, () => {
+  if (activeChapter.value) {
+    loadChapterDetail(activeChapter.value)
+  }
+})
 
 // 根据文件类型获取图标样式
 const getFileIconClass = (type: string) => {
@@ -300,13 +450,75 @@ const handleDistribute = (item: { id: number; name: string }) => {
   console.log('下发测评:', item)
 }
 
+// 开课设置弹窗
+const showStartClassModal = ref(false)
+const startClassModalRef = ref<any>(null)
+const startClassData = reactive({
+  classList: [] as { classId: string; className: string }[],
+  courseList: [] as { courseId: string; courseName: string }[],
+  initialCourseId: '',
+  initialChapterId: ''
+})
+
+// 课程切换时加载章节列表
+const handleCourseChange = async (courseId: string) => {
+  try {
+    const data = await getCursorDetail(courseId)
+    if (data?.chapterList && startClassModalRef.value) {
+      const chapters = data.chapterList.map((c: any) => ({
+        chapterId: c.chapterId,
+        chapterName: c.chapterName,
+        isLastClass: c.isLastClass || false
+      }))
+      startClassModalRef.value.setChapterList(chapters)
+    }
+  } catch (error) {
+    console.error('加载章节列表失败:', error)
+  }
+}
+
+// 确认开课
+const handleStartClassConfirm = (data: { classId: string; courseId: string; chapterId: string }) => {
+  console.log('开课数据:', data)
+  // 跳转到上课页面
+  navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}`)
+}
+
 // 章节操作
-const handlePrepare = (chapter: { id: number; name: string }) => {
+const handlePrepare = async (chapter: { id: number; name: string; isPrepare: number }) => {
+  // 如果是开始备课（isPrepare === 0），先调用接口
+  if (chapter.isPrepare === 0) {
+    try {
+      await startPrepare(String(chapter.id))
+      // 更新本地状态
+      chapter.isPrepare = 1
+    } catch (error) {
+      console.error('开始备课失败:', error)
+      return
+    }
+  }
+  // 跳转到备课页面
   navigateTo(`/system/course/prepare/${route.params.id}?chapterId=${chapter.id}`)
 }
 
-const handleStartClass = (chapter: { id: number; name: string }) => {
+const handleStartClass = async (chapter: { id: number; name: string }) => {
   console.log('开始上课:', chapter)
+  
+  // 设置初始数据
+  startClassData.initialCourseId = String(route.params.id)
+  startClassData.initialChapterId = String(chapter.id)
+  
+  // TODO: 加载班级列表和课程列表
+  // 这里需要调用接口获取数据，暂时用模拟数据
+  startClassData.classList = [
+    { classId: '1', className: '1年级1111111' }
+  ]
+  startClassData.courseList = [
+    { courseId: String(route.params.id), courseName: courseInfo.value.name }
+  ]
+  
+  // 打开弹窗
+  showStartClassModal.value = true
 }
 
 // 打开资源 - 跳转到备课页面
@@ -326,7 +538,7 @@ const openDocument = (item: { id: number; name: string; type: string; url?: stri
 .header-section {
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 10;
   background: #f5f5f5;
   padding: 12px 40px 0;
 }

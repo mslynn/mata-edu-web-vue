@@ -3,16 +3,20 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.30:8001'
+  : 'http://192.168.0.78:8001'
+
+// 预览服务地址
+const previewBaseUrl = process.env.NUXT_PUBLIC_PREVIEW_BASE_URL || 'http://192.168.0.145:8012'
 
 console.log('NODE_ENV:', process.env.NODE_ENV)
 console.log('apiBaseUrl:', apiBaseUrl)
+console.log('previewBaseUrl:', previewBaseUrl)
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   devServer: {
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 3001,
   },
 
@@ -21,7 +25,9 @@ export default defineNuxtConfig({
     public: {
     //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
-     apiBaseUrl:apiBaseUrl || 'http://192.168.0.30:8001',
+      apiBaseUrl: apiBaseUrl || 'http://192.168.0.78:8001',
+      // 预览服务地址
+      previewBaseUrl: previewBaseUrl || 'http://192.168.0.145:8012',
     }
   },
 

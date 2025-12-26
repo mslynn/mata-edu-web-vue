@@ -63,7 +63,7 @@ export const useAuth = () => {
   }
 
   // 登录
-  const login = async (username: string, password: string, grantType: string = 'password') => {
+  const login = async (username: string, password: string, grantType: string = 'password', studentNumber?: string) => {
     try {
       // 根据 grantType 构建请求参数
       let requestBody: any = { grantType }
@@ -72,6 +72,11 @@ export const useAuth = () => {
         // 验证码登录：phonenumber + smsCode
         requestBody.phonenumber = username
         requestBody.smsCode = password
+      } else if (grantType === 'classcode') {
+        // 班级码登录：classCode + classCodePwd + studentNumber
+        requestBody.classCode = username
+        requestBody.classCodePwd = password
+        requestBody.studentNumber = studentNumber
       } else {
         // 密码登录：username + password
         requestBody.username = username
@@ -187,6 +192,15 @@ export const useAuth = () => {
       throw error
     }
   }
+  //获取班级码登录列表
+  const getClassCodeLoginList = async (classId: string) => {
+    try {
+      const response = await http.get(`/auth/student/list/${classId}`)
+      return response
+    } catch (error: any) {
+      throw error
+    }
+  }
 
 
 
@@ -200,6 +214,7 @@ export const useAuth = () => {
     getRedirectPathByRole,
     getSmsCode,
     applyTrialAccount,
-    resetPassword
+    resetPassword,
+    getClassCodeLoginList
   }
 }

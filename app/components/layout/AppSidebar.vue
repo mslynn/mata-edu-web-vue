@@ -31,11 +31,13 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useTeacherNav } from '~/composables/api/useTeacherNav'
 
 const route = useRoute()
+const { locale } = useI18n()
 const { menuItems, loadMenus } = useTeacherNav()
 
 const go = (path: string) => {
@@ -49,6 +51,11 @@ const isActiveItem = (item: any) => {
 
 onMounted(() => {
   loadMenus()
+})
+
+// 监听语言切换，强制重新加载菜单
+watch(locale, () => {
+  loadMenus(true)
 })
 </script>
 

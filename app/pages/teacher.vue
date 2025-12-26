@@ -1,8 +1,5 @@
 <template>
-  <div class="teacher-page flex justify-center bg-[#FAFAFA] px-[60px]">
-    <!-- 公用左侧导航 -->
-    <AppSidebar class="hidden lg:flex" />
-
+  <div class="teacher-page flex-1 flex">
     <!-- 主内容区 -->
     <div class="main-content flex flex-1 p-4 min-h-0">
       <!-- 左侧主内容 -->
@@ -10,11 +7,11 @@
         <!-- 顶部三个授课卡片 - 居中，两边安全距离 -->
         <div class="top-cards flex gap-[45px] mb-[60px] justify-center mx-auto max-w-[900px]">
           <!-- 授课卡片1 -->
-          <div class="flex flex-col items-center cursor-pointer group border-2 rounded-lg">
+          <div class="flex flex-col items-center cursor-pointer group border-2 rounded-lg" @click="goToLessons">
             <div class="card-img rounded-[20px] flex items-center justify-center transition-colors">
               <img src="~/assets/images/one.png" alt="授课" class="card-icon object-contain" />
             </div>
-            <span class="mt-2 text-gray-600 text-sm pb-4">授课</span>
+            <span class="mt-2 text-gray-600 text-sm pb-4">备课</span>
           </div>
 
           <!-- 授课卡片2 -->
@@ -30,7 +27,7 @@
             <div class="card-img rounded-[20px] flex items-center justify-center transition-colors">
               <img src="~/assets/images/three.png" alt="授课" class="card-icon object-contain" />
             </div>
-            <span class="mt-2 text-gray-600 text-sm pb-4">授课</span>
+            <span class="mt-2 text-gray-600 text-sm pb-4">作业</span>
           </div>
         </div>
 
@@ -136,9 +133,15 @@
 </template>
 
 <script setup lang="ts">
+const router = useRouter()
+
 definePageMeta({
-  layout: 'default'
+  layout: 'sidebar'
 })
+
+const goToLessons = () => {
+  router.push('/lessons')
+}
 </script>
 
 <style scoped>

@@ -14,17 +14,9 @@
       <div class="modal-body">
         <p class="upload-tip">请选择对应本地个人文件上传或关联作品中心文件：</p>
         
-        <button class="upload-btn" @click="triggerFileInput">
+        <button class="upload-btn" @click="showUploadDialog = true">
           <span>点击上传本地资源</span>
         </button>
-        <input 
-          ref="fileInputRef" 
-          type="file" 
-          multiple 
-          accept=".doc,.docx,.ppt,.pptx,.pdf,.xls,.xlsx"
-          style="display: none" 
-          @change="handleFileSelect"
-        />
         
         <div class="warning-box">
           <div class="warning-header">
@@ -58,44 +50,30 @@
             <div class="col-index">序号</div>
             <div class="col-name">文件名称</div>
             <div class="col-progress">上传进度</div>
-            <div class="col-type">
-              <div class="type-dropdown" :class="{ open: typeDropdownOpen }">
-                <div class="type-dropdown-trigger" @click.stop="typeDropdownOpen = !typeDropdownOpen">
-                  <span>{{ filterResourceType ? getResourceTypeName(filterResourceType) : '资源类型' }}</span>
-                  <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                  </svg>
-                </div>
-                <div class="type-dropdown-menu" v-if="typeDropdownOpen">
-                  <div class="type-dropdown-item" :class="{ active: filterResourceType === '' }" @click="selectResourceType('')">全部类型</div>
-                  <div class="type-dropdown-item" :class="{ active: filterResourceType === 'courseResource' }" @click="selectResourceType('courseResource')">课程资源</div>
-                  <div class="type-dropdown-item" :class="{ active: filterResourceType === 'personalProgram' }" @click="selectResourceType('personalProgram')">个人程序</div>
-                  <div class="type-dropdown-item" :class="{ active: filterResourceType === 'aiTraining' }" @click="selectResourceType('aiTraining')">AI实训资源</div>
-                  <div class="type-dropdown-item" :class="{ active: filterResourceType === 'customExercise' }" @click="selectResourceType('customExercise')">自定义练习题</div>
-                </div>
-              </div>
-            </div>
+            <div class="col-type">资源类型</div>
             <div class="col-action">操作</div>
           </div>
           
           <!-- 表格内容区域 - 固定高度 -->
           <div class="table-content">
             <!-- 有数据时显示列表 -->
-            <template v-if="uploadFiles.length > 0">
-              <div v-for="(file, index) in uploadFiles" :key="file.id" class="table-row">
+            <template v-if="resourceList.length > 0">
+              <div v-for="(item, index) in resourceList" :key="item.resourceId" class="table-row">
                 <div class="col-index">{{ index + 1 }}</div>
-                <div class="col-name">{{ file.name }}</div>
+                <div class="col-name">{{ item.fileName }}</div>
                 <div class="col-progress">
                   <div class="progress-bar">
-                    <div class="progress-fill" :style="{ width: file.progress + '%' }"></div>
+                    <div class="progress-fill" style="width: 100%"></div>
                   </div>
-                  <span class="progress-text" :class="{ complete: file.progress === 100 }">{{ file.progress }}%</span>
+                  <span class="progress-text complete">100%</span>
                 </div>
                 <div class="col-type">
-                  <span class="type-text">{{ getResourceTypeName(file.resourceType) }}</span>
+                  <span class="type-text">{{ item.fileTypeName || '-' }}</span>
                 </div>
                 <div class="col-action">
-                  <button class="delete-btn" @click="removeFile(index)">删 除</button>
+                  <button class="action-btn delete-btn" @click="deleteResource(item)">删除</button>
+                  <button class="action-btn cancel-upload-btn" @click="deleteResource(item)">取消上传</button>
+                  <button class="action-btn config-btn" @click="configEvaluation(item)">配置素养评价</button>
                 </div>
               </div>
             </template>
@@ -121,11 +99,70 @@
         </div>
       </div>
     </div>
+
+    <!-- 上传文件弹窗 -->
+    <div v-if="showUploadDialog" class="upload-dialog-overlay" @click.self="closeUploadDialog">
+      <div class="upload-dialog">
+        <div class="upload-dialog-header">
+          <span>上传本地资源</span>
+          <button class="close-btn" @click="closeUploadDialog">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+        <div class="upload-dialog-body">
+          <!-- mc 文件需要选择资源类型 -->
+          <div v-if="pendingMcFiles.length > 0" class="form-item">
+            <label>资源类型 <span class="required">*</span></label>
+            <MSelect
+              v-model="selectedResourceType"
+              :options="resourceTypeList"
+              value-key="dictValue"
+              label-key="dictLabel"
+              placeholder="请选择资源类型"
+            />
+            <p class="mc-tip">检测到 MC 文件，请选择资源类型后确认上传</p>
+            <div class="mc-file-list">
+              <span v-for="file in pendingMcFiles" :key="file.name" class="mc-file-tag">{{ file.name }}</span>
+            </div>
+            <div class="dialog-footer">
+              <button class="cancel-btn" @click="closeUploadDialog">取消</button>
+              <button class="confirm-btn" @click="confirmMcUpload" :disabled="!selectedResourceType">确认上传</button>
+            </div>
+          </div>
+          <!-- 非 mc 文件直接选择上传 -->
+          <div v-else class="form-item">
+            <label>选择文件</label>
+            <button class="select-file-btn" @click="triggerFileInput">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span>选择文件</span>
+            </button>
+            <input 
+              ref="fileInputRef" 
+              type="file" 
+              multiple 
+              accept=".doc,.docx,.ppt,.pptx,.pdf,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.ucd,.mc"
+              style="display: none" 
+              @change="handleFileSelect"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { cursorAdmin } from '~/composables/api/curosr'
+import { useHttp } from '~/composables/api/useHttp'
 
 interface UploadFile {
   id: number
@@ -134,10 +171,20 @@ interface UploadFile {
   progress: number
   resourceType: string
   status: 'pending' | 'uploading' | 'success' | 'error'
+  ossId?: string
+  url?: string
+  fileType?: string
+  fileTypeName?: string
+}
+
+interface DictItem {
+  dictValue: string
+  dictLabel: string
 }
 
 const props = defineProps<{
   visible: boolean
+  chapterId: string
 }>()
 
 const emit = defineEmits<{
@@ -145,34 +192,156 @@ const emit = defineEmits<{
   (e: 'uploaded', files: UploadFile[]): void
 }>()
 
+const { createChapterResource, getResourceeDict, getChapterResourceListPage, deleteChapterResource } = cursorAdmin()
+const http = useHttp()
+
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadFiles = ref<UploadFile[]>([])
-const filterResourceType = ref('')
-const typeDropdownOpen = ref(false)
+const showUploadDialog = ref(false)
+const selectedResourceType = ref('')
+const resourceTypeList = ref<DictItem[]>([])
+const pendingMcFiles = ref<File[]>([])
+
+// 资源列表
+interface ResourceItem {
+  resourceId: number
+  fileName: string
+  fileType?: string
+  fileTypeName?: string
+}
+const resourceList = ref<ResourceItem[]>([])
+
+// 加载资源列表
+const loadResourceList = async () => {
+  if (!props.chapterId) return
+  try {
+    const data = await getChapterResourceListPage({
+      chapterId: props.chapterId,
+      resourceType: 3, // 个人资源
+      page: 1,
+      pageSize: 100
+    })
+    console.log(data,'个人资源列表')
+    resourceList.value = data || []
+  } catch (error) {
+    console.error('加载资源列表失败:', error)
+  }
+}
+
+// 删除资源
+const deleteResource = async (item: ResourceItem) => {
+  try {
+    await deleteChapterResource(String(item.resourceId))
+    // 刷新列表
+    await loadResourceList()
+    // 通知父组件
+    emit('uploaded', [])
+  } catch (error) {
+    console.error('删除资源失败:', error)
+  }
+}
+
+// 取消上传
+
+
+// 配置素养评价
+const configEvaluation = (item: ResourceItem) => {
+  // TODO: 实现配置素养评价逻辑
+  console.log('配置素养评价:', item)
+}
+
+// 加载资源类型字典
+const loadResourceTypeDict = async () => {
+  try {
+    const data = await getResourceeDict()
+    resourceTypeList.value = data || []
+    if (resourceTypeList.value.length > 0 && resourceTypeList.value[0]) {
+      selectedResourceType.value = resourceTypeList.value[0].dictValue
+    }
+  } catch (error) {
+    console.error('加载资源类型字典失败:', error)
+  }
+}
+
+// 关闭上传弹窗
+const closeUploadDialog = () => {
+  showUploadDialog.value = false
+  pendingMcFiles.value = []
+}
+
+// 监听弹窗打开，加载数据
+watch(() => props.visible, (val) => {
+  if (val) {
+    loadResourceList()
+  }
+})
+
+onMounted(() => {
+  loadResourceTypeDict()
+  if (props.visible) {
+    loadResourceList()
+  }
+})
 let fileIdCounter = 0
 
+// 使用 XMLHttpRequest 上传文件（支持真实进度）
+const uploadWithProgress = (
+  file: File,
+  onProgress: (percent: number) => void
+): Promise<{ ossId: string; url: string; fileName: string }> => {
+  return new Promise((resolve, reject) => {
+    if (!process.client) {
+      reject(new Error('仅支持客户端上传'))
+      return
+    }
+
+    const config = useRuntimeConfig()
+    const token = http.getToken()
+
+    const xhr = new XMLHttpRequest()
+    const formData = new FormData()
+    formData.append('file', file)
+
+    // 监听上传进度
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100)
+        onProgress(percent)
+      }
+    }
+
+    xhr.onload = () => {
+      if (xhr.status === 200) {
+        try {
+          const response = JSON.parse(xhr.responseText)
+          if (response.code === 200) {
+            resolve(response.data)
+          } else {
+            reject(new Error(response.msg || '上传失败'))
+          }
+        } catch {
+          reject(new Error('解析响应失败'))
+        }
+      } else {
+        reject(new Error(`上传失败: ${xhr.status}`))
+      }
+    }
+
+    xhr.onerror = () => reject(new Error('网络错误'))
+    xhr.onabort = () => reject(new Error('上传已取消'))
+
+    xhr.open('POST', `${config.public.apiBaseUrl}/resource/oss/upload`)
+    if (token) {
+      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
+    }
+    xhr.send(formData)
+  })
+}
+
 const getResourceTypeName = (type: string) => {
-  const typeMap: Record<string, string> = {
-    courseResource: '课程资源',
-    personalProgram: '个人程序',
-    aiTraining: 'AI实训资源',
-    customExercise: '自定义练习题'
-  }
-  return typeMap[type] || type
+  const item = resourceTypeList.value.find(d => d.dictValue === type)
+  return item?.dictLabel || type
 }
-
-const selectResourceType = (type: string) => {
-  filterResourceType.value = type
-  typeDropdownOpen.value = false
-}
-
-// 点击外部关闭下拉框
-const closeDropdown = () => {
-  typeDropdownOpen.value = false
-}
-
-onMounted(() => document.addEventListener('click', closeDropdown))
-onUnmounted(() => document.removeEventListener('click', closeDropdown))
 
 const handleClose = () => {
   emit('update:visible', false)
@@ -182,40 +351,127 @@ const triggerFileInput = () => {
   fileInputRef.value?.click()
 }
 
+// 判断是否是 mc 文件
+const isMcFile = (fileName: string) => {
+  return fileName.toLowerCase().endsWith('.mc')
+}
+
+// 文件大小限制 200MB
+const MAX_FILE_SIZE = 200 * 1024 * 1024
+
 const handleFileSelect = (e: Event) => {
   const input = e.target as HTMLInputElement
   if (!input.files) return
   
-  Array.from(input.files).forEach(file => {
+  const files = Array.from(input.files)
+  
+  // 检查文件大小
+  const oversizedFiles = files.filter(f => f.size > MAX_FILE_SIZE)
+  if (oversizedFiles.length > 0) {
+    ElMessage.warning(`文件大小不能超过200MB，以下文件超出限制：${oversizedFiles.map(f => f.name).join('、')}`)
+    // 过滤掉超出大小的文件
+    const validFiles = files.filter(f => f.size <= MAX_FILE_SIZE)
+    if (validFiles.length === 0) {
+      input.value = ''
+      return
+    }
+  }
+  
+  const validFiles = files.filter(f => f.size <= MAX_FILE_SIZE)
+  const mcFiles = validFiles.filter(f => isMcFile(f.name))
+  const otherFiles = validFiles.filter(f => !isMcFile(f.name))
+  
+  // 非 mc 文件直接上传
+  otherFiles.forEach(file => {
     const uploadFile: UploadFile = {
       id: ++fileIdCounter,
       name: file.name,
       file: file,
       progress: 0,
-      resourceType: 'courseResource',
+      resourceType: '',
       status: 'pending'
     }
     uploadFiles.value.push(uploadFile)
-    
-    // 模拟上传进度
-    simulateUpload(uploadFile)
+    doUpload(uploadFile)
   })
+  
+  // mc 文件需要选择类型
+  if (mcFiles.length > 0) {
+    pendingMcFiles.value = mcFiles
+  } else {
+    // 没有 mc 文件，关闭弹窗
+    showUploadDialog.value = false
+  }
   
   // 清空 input 以便重复选择同一文件
   input.value = ''
 }
 
-const simulateUpload = (file: UploadFile) => {
-  file.status = 'uploading'
-  const interval = setInterval(() => {
-    if (file.progress < 100) {
-      file.progress += Math.floor(Math.random() * 20) + 10
-      if (file.progress > 100) file.progress = 100
-    } else {
-      file.status = 'success'
-      clearInterval(interval)
+// 确认上传 mc 文件
+const confirmMcUpload = () => {
+  if (!selectedResourceType.value) return
+  
+  // 获取选中的资源类型名称
+  const selectedItem = resourceTypeList.value.find(d => d.dictValue === selectedResourceType.value)
+  const fileTypeName = selectedItem?.dictLabel || ''
+  
+  pendingMcFiles.value.forEach(file => {
+    const uploadFile: UploadFile = {
+      id: ++fileIdCounter,
+      name: file.name,
+      file: file,
+      progress: 0,
+      resourceType: selectedResourceType.value,
+      status: 'pending',
+      fileType: selectedResourceType.value,
+      fileTypeName: fileTypeName
     }
-  }, 200)
+    uploadFiles.value.push(uploadFile)
+    doUpload(uploadFile)
+  })
+  
+  // 清空并关闭
+  pendingMcFiles.value = []
+  showUploadDialog.value = false
+}
+
+// 真实上传（使用 XMLHttpRequest 获取真实进度）
+const doUpload = async (uploadFile: UploadFile) => {
+  uploadFile.status = 'uploading'
+  
+  try {
+    // 1. 上传到 OSS（带真实进度）
+    const result = await uploadWithProgress(uploadFile.file, (percent) => {
+      uploadFile.progress = percent
+    })
+    
+    uploadFile.status = 'success'
+    uploadFile.ossId = result.ossId
+    uploadFile.url = result.url
+    
+    // 2. 调用 createChapterResource 创建章节资源
+    if (props.chapterId && result.ossId) {
+      const params: any = {
+        chapterId: props.chapterId,
+        resourceType: 3, // 个人资源
+        ossId: result.ossId,
+        fileName: uploadFile.name
+      }
+      // mc 文件需要传 fileType 和 fileTypeName
+      if (uploadFile.fileType) {
+        params.fileType = uploadFile.fileType
+        params.fileTypeName = uploadFile.fileTypeName
+      }
+      await createChapterResource(params)
+      // 刷新资源列表
+      await loadResourceList()
+      // 通知父组件刷新资源列表
+      emit('uploaded', uploadFiles.value.filter(f => f.status === 'success'))
+    }
+  } catch (error) {
+    uploadFile.status = 'error'
+    console.error('上传失败:', error)
+  }
 }
 
 const removeFile = (index: number) => {
@@ -388,6 +644,7 @@ const removeFile = (index: number) => {
 
 .file-table {
   border-top: 1px solid #f0f0f0;
+  width: 100%;
 }
 
 .table-header {
@@ -396,82 +653,26 @@ const removeFile = (index: number) => {
   border-bottom: 1px solid #f0f0f0;
   font-size: 13px;
   color: #666;
+  width: 100%;
 }
 
 .table-header > div,
 .table-row > div {
-  padding: 14px 12px;
+  padding: 14px 8px;
   display: flex;
   align-items: center;
 }
 
-.col-index { width: 60px; }
+.col-index { width: 60px; flex-shrink: 0; justify-content: center; }
 .col-name { flex: 1; min-width: 0; }
-.col-progress { width: 280px; gap: 10px; }
-.col-type { width: 140px; }
-.col-action { width: 80px; justify-content: center; }
-
-/* 自定义下拉框 */
-.type-dropdown {
-  position: relative;
-}
-
-.type-dropdown-trigger {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  color: #666;
-  font-size: 13px;
-}
-
-.type-dropdown-trigger:hover {
-  color: #2cb0ff;
-}
-
-.dropdown-arrow {
-  width: 14px;
-  height: 14px;
-  transition: transform 0.2s;
-}
-
-.type-dropdown.open .dropdown-arrow {
-  transform: rotate(180deg);
-}
-
-.type-dropdown-menu {
-  position: absolute;
-  top: calc(100% + 8px);
-  left: -12px;
-  min-width: 130px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  z-index: 100;
-  padding: 6px 0;
-  overflow: hidden;
-}
-
-.type-dropdown-item {
-  padding: 10px 16px;
-  font-size: 13px;
-  color: #333;
-  cursor: pointer;
-  transition: all 0.15s;
-}
-
-.type-dropdown-item:hover {
-  background: #f5f7fa;
-}
-
-.type-dropdown-item.active {
-  background: #e6f7ff;
-  color: #2cb0ff;
-}
+.col-progress { width: 200px; flex-shrink: 0; gap: 8px; }
+.col-type { width: 100px; flex-shrink: 0; justify-content: center; }
+.col-action { width: 220px; justify-content: center; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; }
 
 .table-content {
   height: 300px;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .table-row {
@@ -479,6 +680,7 @@ const removeFile = (index: number) => {
   border-bottom: 1px solid #f5f5f5;
   font-size: 13px;
   color: #333;
+  width: 100%;
 }
 
 .table-row:last-child {
@@ -538,19 +740,50 @@ const removeFile = (index: number) => {
   border-color: #2cb0ff;
 }
 
-.delete-btn {
-  padding: 4px 12px;
-  background: white;
-  border: 1px solid #ff4d4f;
+/* 操作按钮通用样式 */
+.action-btn {
+  padding: 4px 8px;
   border-radius: 4px;
-  color: #ff4d4f;
   font-size: 12px;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.delete-btn {
+  background: white;
+  border: 1px solid #ff4d4f;
+  color: #ff4d4f;
 }
 
 .delete-btn:hover {
   background: #fff1f0;
+}
+
+.cancel-upload-btn {
+  background: white;
+  border: 1px solid #ff4d4f;
+  color: #ff4d4f;
+}
+
+.cancel-upload-btn:hover {
+  background: #fff1f0;
+}
+
+.config-btn {
+  background: white;
+  border: 1px solid #FF9900;
+  color: #FF9900;
+}
+
+.config-btn:hover {
+  background: #fff7e6;
+}
+
+.progress-complete {
+  color: #999;
+  font-size: 13px;
 }
 
 /* 空状态 */
@@ -577,5 +810,170 @@ const removeFile = (index: number) => {
   font-size: 14px;
   color: #999;
   margin: 0;
+}
+
+/* 上传文件弹窗 */
+.upload-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2100;
+}
+
+.upload-dialog {
+  background: white;
+  border-radius: 8px;
+  width: 400px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.upload-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.upload-dialog-body {
+  padding: 24px 20px;
+}
+
+.form-item {
+  margin-bottom: 20px;
+}
+
+.form-item:last-child {
+  margin-bottom: 0;
+}
+
+.form-item label {
+  display: block;
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.form-item .type-select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  background: white;
+  cursor: pointer;
+}
+
+.form-item .type-select:focus {
+  outline: none;
+  border-color: #FF9900;
+}
+
+.select-file-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #FF9900;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.select-file-btn:hover {
+  background: #e68a00;
+}
+
+.select-file-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* MC 文件上传相关样式 */
+.required {
+  color: #ff4d4f;
+}
+
+.mc-tip {
+  font-size: 12px;
+  color: #999;
+  margin: 8px 0 12px 0;
+}
+
+.mc-file-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.mc-file-tag {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #666;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cancel-btn {
+  padding: 8px 20px;
+  background: white;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  border-color: #FF9900;
+  color: #FF9900;
+}
+
+.confirm-btn {
+  padding: 8px 20px;
+  background: #FF9900;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.confirm-btn:hover {
+  background: #e68a00;
+}
+
+.confirm-btn:disabled {
+  background: #d9d9d9;
+  cursor: not-allowed;
 }
 </style>

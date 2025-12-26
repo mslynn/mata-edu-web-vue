@@ -8,7 +8,7 @@
           <div class="w-full sm:w-auto sm:min-w-[280px] lg:min-w-[320px]">
             <MInput 
               v-model="searchKeyword" 
-              placeholder="请输入学校名称或编号"
+              :placeholder="$t('school.searchPlaceholder')"
               clearable
               @enter="handleSearch"
             >
@@ -20,7 +20,7 @@
             </MInput>
           </div>
           <MButton type="primary" class="!bg-[#FE9900] hover:!bg-[#e88a00] whitespace-nowrap" @click="handleExport">
-            导出数据
+            {{ $t('school.exportData') }}
           </MButton>
         </div>
 
@@ -40,19 +40,19 @@
                   class="px-3 py-1 text-xs border border-[#FE9900] text-[#FE9900] rounded hover:bg-[#FE9900] hover:text-white transition-colors"
                   @click="handleViewDetail(row)"
                 >
-                  查看详情
+                  {{ $t('school.viewDetail') }}
                 </button>
                 <button 
                   class="px-3 py-1 text-xs border border-[#FE9900] text-[#FE9900] rounded hover:bg-[#FE9900] hover:text-white transition-colors"
                   @click="handleSchoolManage(row)"
                 >
-                  学校管理
+                  {{ $t('school.schoolManage') }}
                 </button>
                 <button 
                   class="px-3 py-1 text-xs border border-[#FE9900] text-[#FE9900] rounded hover:bg-[#FE9900] hover:text-white transition-colors"
                   @click="handleAdminManage(row)"
                 >
-                  校管理员管理
+                  {{ $t('school.adminManage') }}
                 </button>
               </div>
             </template>
@@ -74,37 +74,37 @@
     <!-- 查看详情弹窗 -->
     <MModal 
       v-model="detailModalVisible" 
-      title="查看学校信息"
+      :title="$t('school.viewSchoolTitle')"
       :show-footer="false"
       size="small"
     >
       <div class="bg-[#F5F5F5] rounded-lg p-6 space-y-4">
         <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">学校名称：</span>
+          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.schoolNameLabel') }}</span>
           <span class="text-gray-600">{{ currentSchool?.orgName || '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">学校编号：</span>
+          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.schoolNumberLabel') }}</span>
           <span class="text-gray-600">{{ currentSchool?.orgNumber || '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">所属国家：</span>
+          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.country') }}</span>
           <span class="text-gray-600">{{ currentSchool?.country || '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">所属地区：</span>
+          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.area') }}</span>
           <span class="text-gray-600">{{ currentSchool?.area || '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">校管理员人数：</span>
+          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.adminCount') }}</span>
           <span class="text-gray-600">{{ currentSchool?.adminCount ?? '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">教师人数：</span>
+          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.teacherCount') }}</span>
           <span class="text-gray-600">{{ currentSchool?.teacherCount ?? '-' }}</span>
         </div>
         <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">学生人数：</span>
+          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.studentCount') }}</span>
           <span class="text-gray-600">{{ currentSchool?.studentCount ?? '-' }}</span>
         </div>
       </div>
@@ -130,13 +130,13 @@
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">编辑学校信息</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('school.editSchoolTitle') }}</h3>
 
         <!-- 学校名称输入框 -->
         <div class="mb-6">
           <MInput 
             v-model="editSchoolForm.orgName" 
-            placeholder="请输入学校名称"
+            :placeholder="$t('school.inputSchoolName')"
           >
             <template #prefix>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -152,13 +152,13 @@
             class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50 transition-colors" 
             @click="editSchoolModalVisible = false"
           >
-            取消
+            {{ $t('common.cancel') }}
           </button>
           <button 
             class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00] transition-colors" 
             @click="handleConfirmEditSchool"
           >
-            确定
+            {{ $t('common.confirm') }}
           </button>
         </div>
       </div>
@@ -168,12 +168,14 @@
 
 <script setup lang="ts">
 import { districtAdmin } from '~/composables/api/districtAdmin'
+import { useI18n } from 'vue-i18n'
 import { MMessage } from "~/components/ui";
 
 definePageMeta({
   layout: 'default'
 })
 
+const { t } = useI18n()
 const { getSchooleList, getSchoolDetail, updateSchool, exportSchoolInfo } = districtAdmin()
 
 // 搜索
@@ -186,12 +188,12 @@ const total = ref(0)
 const loading = ref(false)
 
 // 表格列配置
-const columns = [
-  { key: 'orgName', title: '学校名称', minWidth: '150px', align: 'center' as const },
-  { key: 'orgNumber', title: '学校编号', minWidth: '100px', align: 'center' as const },
-  { key: 'createTime', title: '创建时间', minWidth: '150px', align: 'center' as const },
-  { key: 'actions', title: '操作', minWidth: '280px', align: 'center' as const }
-]
+const columns = computed(() => [
+  { key: 'orgName', title: t('school.schoolName'), minWidth: '150px', align: 'center' as const },
+  { key: 'orgNumber', title: t('school.schoolNumber'), minWidth: '100px', align: 'center' as const },
+  { key: 'createTime', title: t('school.createTime'), minWidth: '150px', align: 'center' as const },
+  { key: 'actions', title: t('school.operation'), minWidth: '280px', align: 'center' as const }
+])
 
 // 表格数据
 const tableData = ref<any[]>([])
@@ -244,7 +246,7 @@ const handleExport = async () => {
     await exportSchoolInfo()
     // MMessage.success('导出成功')
   } catch (error: any) {
-    MMessage.error(error.message || '导出失败')
+    MMessage.error(error.message || t('common.exportFailed'))
   }
 }
 
@@ -273,7 +275,7 @@ const handleSchoolManage = async (row: any) => {
 const handleConfirmEditSchool = async () => {
   if (!editSchoolForm.value.orgName.trim()) {
 
-    MMessage.warning('请输入学校名称')
+    MMessage.warning(t('school.pleaseInputSchoolName'))
     return
   }
 
@@ -290,7 +292,7 @@ const handleConfirmEditSchool = async () => {
     fetchSchoolList()
   } catch (error: any) {
 
-    MMessage.error(error.message || '更新失败')
+    MMessage.error(error.message || t('school.updateFailed'))
   } finally {
     editSchoolLoading.value = false
   }

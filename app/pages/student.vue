@@ -112,10 +112,8 @@ definePageMeta({
 })
 
 const { logout } = useAuth()
-const { allowNavigation } = usePreventBack()
 
 const handleLogout = () => {
-  allowNavigation()
   logout()
 }
 </script>

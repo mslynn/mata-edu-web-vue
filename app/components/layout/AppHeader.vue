@@ -8,6 +8,9 @@
         <!-- 导航菜单占位 -->
       </nav>
       <div class="flex items-center gap-4">
+        <!-- 语言切换 -->
+        <LanguageSwitcher />
+        
         <img src="~/assets/images/infor.png" alt="infor" class="w-10 h-10 rounded-lg object-cover transition-all cursor-pointer" />
         
         <!-- 用户头像下拉菜单 -->
@@ -38,7 +41,7 @@
                   <polyline points="16 17 21 12 16 7"/>
                   <line x1="21" y1="12" x2="9" y2="12"/>
                 </svg>
-                退出登录
+                {{ $t('auth.logout') }}
               </button>
             </div>
           </Transition>
@@ -53,7 +56,6 @@ import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
 
 const { logout, user } = useAuth()
-const { allowNavigation } = usePreventBack()
 
 const showDropdown = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
@@ -64,7 +66,6 @@ const toggleDropdown = () => {
 
 const handleLogout = () => {
   showDropdown.value = false
-  allowNavigation()
   logout()
 }
 

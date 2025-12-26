@@ -64,6 +64,11 @@ export const useHttp = () => {
       headers['Authorization'] = `Bearer ${token}`
     }
     
+    // 添加语言标识到请求头
+    const locale = process.client ? (localStorage.getItem('app_locale') || 'zh') : 'zh'
+    console.log(locale,'语言包')
+    headers['Content-Language'] = locale === 'en' ? 'en_US' : 'zh_CN'
+    
     // 检查是否需要加密
     const needEncrypt = headers['isEncrypt'] === 'true'
     
