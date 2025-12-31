@@ -1,7 +1,7 @@
 <template>
   <div class="h-full flex flex-col login-form">
     <!-- 标题 -->
-    <h2 class="text-center text-base text-[#808080] mb-6">找回密码</h2>
+    <h2 class="text-center text-base text-[#808080] mb-6">{{ t('auth.resetPassword') }}</h2>
 
     <!-- 手机号输入 -->
     <div class="form-field">
@@ -9,7 +9,7 @@
         'flex items-center input-line px-4 py-3 bg-white',
         errors.phone && 'has-error'
       ]">
-        <img src="~/assets/images/tel.png" alt="手机" class="w-5 h-5 mr-3 opacity-50" />
+        <img src="~/assets/images/tel.png" alt="phone" class="w-5 h-5 mr-3 opacity-50" />
         <CountryCodeSelector 
           v-model="countryCode" 
           class="mr-3"
@@ -18,7 +18,7 @@
           type="tel" 
           v-model="formData.phone"
           @input="clearError('phone')"
-          placeholder="请输入手机号"
+          :placeholder="t('auth.pleaseInputPhone')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
       </div>
@@ -31,12 +31,12 @@
         'flex items-center input-line px-4 py-3 bg-white',
         errors.code && 'has-error'
       ]">
-        <img src="~/assets/images/code.png" alt="验证码" class="w-5 h-5 mr-3 opacity-50" />
+        <img src="~/assets/images/code.png" alt="code" class="w-5 h-5 mr-3 opacity-50" />
         <input 
           type="text" 
           v-model="formData.code"
           @input="clearError('code')"
-          placeholder="请输入验证码"
+          :placeholder="t('auth.pleaseInputCode')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
         <button 
@@ -45,7 +45,7 @@
           :disabled="countdown > 0" 
           @click="handleSendCode"
         >
-          {{ countdown > 0 ? `${countdown}s 后重发` : '发送验证码' }}
+          {{ countdown > 0 ? `${countdown}${t('auth.resendAfter')}` : t('auth.sendCode') }}
         </button>
       </div>
       <p v-if="errors.code" class="field-error">{{ errors.code }}</p>
@@ -57,12 +57,12 @@
         'flex items-center input-line px-4 py-3 bg-white',
         errors.password && 'has-error'
       ]">
-        <img src="~/assets/images/mima.png" alt="密码" class="w-5 h-5 mr-3 opacity-50" />
+        <img src="~/assets/images/mima.png" alt="password" class="w-5 h-5 mr-3 opacity-50" />
         <input 
           :type="showPassword ? 'text' : 'password'"
           v-model="formData.password"
           @input="clearError('password')"
-          placeholder="请输入新密码"
+          :placeholder="t('auth.newPassword')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
         <button 
@@ -73,13 +73,13 @@
           <img 
             v-if="showPassword" 
             src="~/assets/images/eye-open.png" 
-            alt="显示密码" 
+            alt="show" 
             class="w-4 h-4"
           />
           <img 
             v-else 
             src="~/assets/images/eye-close.png" 
-            alt="隐藏密码" 
+            alt="hide" 
             class="w-4 h-4"
           />
         </button>
@@ -93,12 +93,12 @@
         'flex items-center input-line px-4 py-3 bg-white',
         errors.confirmPassword && 'has-error'
       ]">
-        <img src="~/assets/images/mima.png" alt="密码" class="w-5 h-5 mr-3 opacity-50" />
+        <img src="~/assets/images/mima.png" alt="password" class="w-5 h-5 mr-3 opacity-50" />
         <input 
           :type="showConfirmPassword ? 'text' : 'password'"
           v-model="formData.confirmPassword"
           @input="clearError('confirmPassword')"
-          placeholder="请再次输入新密码"
+          :placeholder="t('auth.confirmNewPassword')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
         <button 
@@ -109,13 +109,13 @@
           <img 
             v-if="showConfirmPassword" 
             src="~/assets/images/eye-open.png" 
-            alt="显示密码" 
+            alt="show" 
             class="w-4 h-4"
           />
           <img 
             v-else 
             src="~/assets/images/eye-close.png" 
-            alt="隐藏密码" 
+            alt="hide" 
             class="w-4 h-4"
           />
         </button>
@@ -128,7 +128,7 @@
       class="w-full py-3 mt-4 bg-[#FFA54D] border border-solid border-gray-300 rounded-[40px] text-white text-base font-medium cursor-pointer transition-colors"
       @click="handleSubmit"
     >
-      提交
+      {{ t('auth.submit') }}
     </button>
   </div>
 </template>
@@ -136,6 +136,9 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
+
+const { $i18n } = useNuxtApp()
+const t = (key: string) => $i18n.t(key)
 
 const { getSmsCode } = useAuth()
 
@@ -183,15 +186,15 @@ const handleSendCode = async () => {
   const phone = formData.phone.trim()
   
   if (!phone) {
-    errors.phone = '请输入手机号'
+    errors.phone = t('auth.pleaseInputPhone')
     return
   }
   
   if (!validatePhone(phone)) {
     if (countryCode.value === '86') {
-      errors.phone = '请输入正确的11位手机号'
+      errors.phone = t('auth.phoneError11')
     } else if (countryCode.value === '852') {
-      errors.phone = '请输入正确的8位香港手机号'
+      errors.phone = t('auth.phoneError8')
     }
     return
   }
@@ -214,7 +217,7 @@ const handleSendCode = async () => {
     }, 1000)
   } catch (error: any) {
     console.error('❌ 验证码发送失败:', error)
-    errors.phone = error?.data?.msg || error?.message || '验证码发送失败'
+    errors.phone = error?.data?.msg || error?.message || t('auth.codeSendFailed')
   }
 }
 
@@ -229,39 +232,39 @@ const handleSubmit = () => {
   
   // 校验手机号
   if (!formData.phone.trim()) {
-    errors.phone = '请输入手机号'
+    errors.phone = t('auth.pleaseInputPhone')
     hasError = true
   } else if (!validatePhone(formData.phone.trim())) {
     if (countryCode.value === '86') {
-      errors.phone = '请输入正确的11位手机号'
+      errors.phone = t('auth.phoneError11')
     } else {
-      errors.phone = '请输入正确的8位香港手机号'
+      errors.phone = t('auth.phoneError8')
     }
     hasError = true
   }
   
   // 校验验证码
   if (!formData.code.trim()) {
-    errors.code = '请输入验证码'
+    errors.code = t('auth.pleaseInputCode')
     hasError = true
   }
   
   // 校验新密码（8-16位，必须包含数字+大小写字母）
   const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,16}$/
   if (!formData.password.trim()) {
-    errors.password = '请输入新密码'
+    errors.password = t('auth.newPassword')
     hasError = true
   } else if (!passwordRegex.test(formData.password)) {
-    errors.password = '密码需由8-16位数字+大小写字母组成'
+    errors.password = t('auth.passwordRule')
     hasError = true
   }
   
   // 校验确认密码
   if (!formData.confirmPassword.trim()) {
-    errors.confirmPassword = '请再次输入新密码'
+    errors.confirmPassword = t('auth.confirmNewPassword')
     hasError = true
   } else if (formData.confirmPassword !== formData.password) {
-    errors.confirmPassword = '两次输入的密码不一致'
+    errors.confirmPassword = t('auth.passwordNotMatch')
     hasError = true
   }
   

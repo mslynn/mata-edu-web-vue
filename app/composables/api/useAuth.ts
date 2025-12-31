@@ -3,6 +3,8 @@
  * 使用 useHttp 封装
  */
 import { useHttp } from './useHttp'
+import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 
 // 登录请求参数
 interface LoginParams {
@@ -26,6 +28,7 @@ interface LoginResponse {
 
 export const useAuth = () => {
   const http = useHttp()
+  const { t } = useI18n()
   
   // 从 localStorage 初始化用户信息
   const getUserFromStorage = () => {
@@ -106,12 +109,19 @@ export const useAuth = () => {
         localStorage.setItem('user_info', JSON.stringify(userInfo))
       }
       
+      // 登录成功提示
+      ElMessage.success(t('auth.loginSuccess'))
+      
       console.log('👤 用户信息已保存:', userInfo)
+      
+      // 等待 1 秒让用户看到成功提示
+      await new Promise(resolve => setTimeout(resolve, 1000))
       
       // 根据角色跳转到对应页面
       const redirectPath = getRedirectPathByRole(userInfo?.role_key)
       
       return { ...response, redirectPath }
+      
     } catch (error: any) {
       throw error
     }

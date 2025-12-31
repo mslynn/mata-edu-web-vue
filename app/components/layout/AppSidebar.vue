@@ -7,7 +7,7 @@
         type="button"
         :disabled="isActiveItem(item)"
         :class="[
-          'w-full text-left flex items-center h-[50px] gap-3 px-4 py-3 transition-colors',
+          'w-full text-left flex items-center h-[50px] gap-3 px-4 py-3',
           isActiveItem(item)
             ? 'bg-[#FF9900] text-white font-normal cursor-default rounded-lg'
             : 'text-gray-700 hover:bg-gray-50 cursor-pointer text-sm'
@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, watch, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTeacherNav } from '~/composables/api/useTeacherNav'
@@ -49,8 +49,11 @@ const isActiveItem = (item: any) => {
   return route.path.startsWith(item.path)
 }
 
+// 只在菜单为空时才加载，避免重复请求导致闪烁
 onMounted(() => {
-  loadMenus()
+  if (!menuItems.value.length) {
+    loadMenus()
+  }
 })
 
 // 监听语言切换，强制重新加载菜单

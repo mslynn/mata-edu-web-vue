@@ -108,8 +108,19 @@ const setStoredMenus = (menus: TeacherMenuItem[]) => {
 export const useTeacherNav = () => {
   const { getTeacherMenu } = useTeacher()
 
-  const menuState = useState<TeacherMenuItem[]>('teacher-nav', () => getStoredMenus())
+  // 使用 useState 保持跨页面状态，初始值从 localStorage 读取
+  const menuState = useState<TeacherMenuItem[]>('teacher-nav', () => [])
   const loadingState = useState<boolean>('teacher-nav-loading', () => false)
+  const initializedState = useState<boolean>('teacher-nav-initialized', () => false)
+
+  // 客户端初始化时立即从 localStorage 读取，避免闪烁
+  if (import.meta.client && !initializedState.value) {
+    const stored = getStoredMenus()
+    if (stored.length) {
+      menuState.value = stored
+    }
+    initializedState.value = true
+  }
 
   const menuItems = computed(() => menuState.value)
   const loading = computed(() => loadingState.value)
@@ -129,6 +140,7 @@ export const useTeacherNav = () => {
     if (hit('AI')) return aiIcon
     if (hit('成长') || hit('教师')) return teacherIcon
     if (hit('赛事') || hit('比赛')) return eventIcon
+    if (hit('账号') || hit('班级')) return classIcon
     // 本地映射
     if (path && localIcons[path]) return localIcons[path]
     if (activeMenu && localIcons[activeMenu]) return localIcons[activeMenu]
@@ -159,6 +171,7 @@ export const useTeacherNav = () => {
     if (hit('AI')) return localSelectedIcons['/ai'] || fallback || ''
     if (hit('成长') || hit('教师')) return localSelectedIcons['/growth'] || fallback || ''
     if (hit('赛事') || hit('比赛')) return localSelectedIcons['/event'] || fallback || ''
+    if (hit('账号') || hit('班级')) return localSelectedIcons['/system/class'] || fallback || ''
     return fallback || ''
   }
 

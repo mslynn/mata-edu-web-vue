@@ -1,55 +1,71 @@
 <template>
-  <div class="h-full bg-[#F5F7FA] p-4 lg:p-6 overflow-hidden">
-    <div class="max-w-[1600px] mx-auto h-full">
-      <!-- 白色卡片容器 -->
-      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 h-full flex flex-col">
-        <!-- 顶部搜索栏 -->
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6 flex-shrink-0">
-          <div class="w-full sm:w-auto sm:min-w-[280px] lg:min-w-[320px]">
+  <div class="h-full bg-[#FAFAFA] py-4 lg:py-6 overflow-auto">
+    <div class="w-[92%] mx-auto">
+      <!-- 页面标题和学校数量（白色卡片外面） -->
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-base font-medium text-gray-800">{{ $t('school.schoolManage') }}</h1>
+        <div class="text-gray-600 text-sm">
+          {{ $t('school.schoolCount') }}：{{ total }}
+        </div>
+      </div>
+
+      <!-- 内容区域（白色卡片） -->
+      <div class="bg-[#FFFFFF] rounded-[20px] p-6 shadow-mg">
+        <!-- 搜索栏 -->
+        <div class="flex items-center justify-between mb-4">
+          <!-- 搜索框 -->
+          <div class="w-[240px]">
             <MInput 
               v-model="searchKeyword" 
               :placeholder="$t('school.searchPlaceholder')"
               clearable
               @enter="handleSearch"
+              @clear="handleSearch"
             >
               <template #prefix>
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </template>
             </MInput>
           </div>
-          <MButton type="primary" class="!bg-[#FE9900] hover:!bg-[#e88a00] whitespace-nowrap" @click="handleExport">
+
+          <!-- 导出按钮 -->
+          <MButton 
+            type="primary" 
+            class="!bg-[#FAFAFA] px-6 !text-[#4D4D4D] border border-[#E5E5E5]"
+            @click="handleExport"
+          >
             {{ $t('school.exportData') }}
           </MButton>
         </div>
 
         <!-- 表格 -->
-        <div class="flex-1 overflow-auto min-h-0">
+        <div class="h-[480px] overflow-auto">
           <MTable 
             :columns="columns" 
             :data="tableData" 
             :loading="loading"
             show-index
             row-key="id"
-            class="!shadow-none !rounded-none"
+            class="school-table"
           >
             <template #actions="{ row }">
-              <div class="flex items-center justify-center gap-2 flex-wrap">
+              <div class="flex items-center justify-center gap-2">
                 <button 
-                  class="px-3 py-1 text-xs border border-[#FE9900] text-[#FE9900] rounded hover:bg-[#FE9900] hover:text-white transition-colors"
+                  class="px-3 py-1 text-xs border text-[#4D4D4D] rounded hover:bg-[#FFF8F0] transition-colors"
                   @click="handleViewDetail(row)"
                 >
                   {{ $t('school.viewDetail') }}
                 </button>
                 <button 
-                  class="px-3 py-1 text-xs border border-[#FE9900] text-[#FE9900] rounded hover:bg-[#FE9900] hover:text-white transition-colors"
+                  class="px-3 py-1 text-xs border text-[#4D4D4D] rounded hover:bg-[#FFF8F0] transition-colors"
                   @click="handleSchoolManage(row)"
                 >
                   {{ $t('school.schoolManage') }}
                 </button>
                 <button 
-                  class="px-3 py-1 text-xs border border-[#FE9900] text-[#FE9900] rounded hover:bg-[#FE9900] hover:text-white transition-colors"
+                  class="px-3 py-1 text-xs border  text-[#4D4D4D] rounded hover:bg-[#FFF8F0] transition-colors"
                   @click="handleAdminManage(row)"
                 >
                   {{ $t('school.adminManage') }}
@@ -59,8 +75,8 @@
           </MTable>
         </div>
 
-        <!-- 分页 - 右下角 -->
-        <div class="mt-4 flex justify-end flex-shrink-0">
+        <!-- 分页 -->
+        <div class="mt-6 flex justify-center">
           <MPagination 
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
@@ -74,38 +90,68 @@
     <!-- 查看详情弹窗 -->
     <MModal 
       v-model="detailModalVisible" 
-      :title="$t('school.viewSchoolTitle')"
+      custom-width="381px"
       :show-footer="false"
-      size="small"
+      :show-close="false"
+      content-class="!p-0"
     >
-      <div class="bg-[#F5F5F5] rounded-lg p-6 space-y-4">
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.schoolNameLabel') }}</span>
-          <span class="text-gray-600">{{ currentSchool?.orgName || '-' }}</span>
+      <div class="p-6 relative">
+        <!-- 关闭按钮 -->
+        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="detailModalVisible = false">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('school.viewSchoolTitle') }}</h3>
+        
+        <!-- 内容区域 -->
+        <div class="bg-[#FEF2DB] rounded-lg p-5 space-y-3 mb-6">
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.schoolNameLabel') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentSchool?.orgName || '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.schoolNumberLabel') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentSchool?.orgNumber || '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.country') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentSchool?.country || '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.area') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentSchool?.area || '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-26 flex-shrink-0">{{ $t('school.adminCount') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentSchool?.schoolAdminCount ?? '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.teacherCount') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentSchool?.teacherCount ?? '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.studentCount') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentSchool?.studentCount ?? '-' }}</span>
+          </div>
         </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.schoolNumberLabel') }}</span>
-          <span class="text-gray-600">{{ currentSchool?.orgNumber || '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.country') }}</span>
-          <span class="text-gray-600">{{ currentSchool?.country || '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.area') }}</span>
-          <span class="text-gray-600">{{ currentSchool?.area || '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.adminCount') }}</span>
-          <span class="text-gray-600">{{ currentSchool?.adminCount ?? '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.teacherCount') }}</span>
-          <span class="text-gray-600">{{ currentSchool?.teacherCount ?? '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-28 flex-shrink-0">{{ $t('school.studentCount') }}</span>
-          <span class="text-gray-600">{{ currentSchool?.studentCount ?? '-' }}</span>
+        
+        <!-- 按钮组 -->
+        <div class="flex items-center justify-center gap-4">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-full text-[#4D4D4D] hover:bg-gray-50 transition-colors" 
+            @click="detailModalVisible = false"
+          >
+            {{ $t('common.cancel') }}
+          </button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-full hover:bg-[#E68A00] transition-colors" 
+            @click="detailModalVisible = false"
+          >
+            {{ $t('common.confirm') }}
+          </button>
         </div>
       </div>
     </MModal>
@@ -169,7 +215,7 @@
 <script setup lang="ts">
 import { districtAdmin } from '~/composables/api/districtAdmin'
 import { useI18n } from 'vue-i18n'
-import { MMessage } from "~/components/ui";
+import { ElMessage } from 'element-plus'
 
 definePageMeta({
   layout: 'default'
@@ -244,9 +290,8 @@ onMounted(() => {
 const handleExport = async () => {
   try {
     await exportSchoolInfo()
-    // MMessage.success('导出成功')
   } catch (error: any) {
-    MMessage.error(error.message || t('common.exportFailed'))
+    ElMessage.error(error.message || t('common.exportFailed'))
   }
 }
 
@@ -274,8 +319,7 @@ const handleSchoolManage = async (row: any) => {
 // 确认编辑学校
 const handleConfirmEditSchool = async () => {
   if (!editSchoolForm.value.orgName.trim()) {
-
-    MMessage.warning(t('school.pleaseInputSchoolName'))
+    ElMessage.warning(t('school.pleaseInputSchoolName'))
     return
   }
 
@@ -285,14 +329,14 @@ const handleConfirmEditSchool = async () => {
       orgId: editSchoolForm.value.orgId,
       orgName: editSchoolForm.value.orgName.trim()
     })
- 
-    // MMessage.success('更新成功')
     editSchoolModalVisible.value = false
+    // 显示成功提示
+    // 这个提示为啥不出现
+    ElMessage.success(t('school.updateSuccess'))
     // 刷新列表
     fetchSchoolList()
   } catch (error: any) {
-
-    MMessage.error(error.message || t('school.updateFailed'))
+    ElMessage.error(error.message || t('school.updateFailed'))
   } finally {
     editSchoolLoading.value = false
   }
@@ -310,11 +354,54 @@ watch([currentPage, pageSize], () => {
 </script>
 
 <style scoped>
-/* 响应式调整 */
-@media (max-width: 1200px) {
-  .max-w-\[1600px\] {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
+/* 覆盖 MTable 表头背景色 */
+.school-table :deep(thead) {
+  background-color: #FAFAFA !important;
+}
+
+.school-table :deep(thead th) {
+  background-color: transparent !important;
+}
+
+/* 去掉表格圆角和阴影 */
+.school-table {
+  box-shadow: none !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 表格行间距样式 - 卡片效果 */
+.school-table :deep(tbody tr) {
+  background-color: #FFFFFF;
+  border-bottom: 8px solid #F5F5F5 !important;
+}
+
+.school-table :deep(tbody tr:last-child) {
+  border-bottom: none !important;
+}
+
+.school-table :deep(tbody td) {
+  border-bottom: none !important;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>

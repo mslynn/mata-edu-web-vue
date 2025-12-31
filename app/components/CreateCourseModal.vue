@@ -10,11 +10,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h3 class="confirm-title">删除课程提醒</h3>
-            <p class="confirm-content">删除后，章节中所添加课件/任务数据也清除，<br />是否确认？</p>
+            <h3 class="confirm-title">{{ $t('course.deleteChapterReminder') }}</h3>
+            <p class="confirm-content" v-html="$t('course.deleteChapterContent')"></p>
             <div class="confirm-footer">
-              <button class="confirm-btn-cancel" @click="cancelDelete">取 消</button>
-              <button class="confirm-btn-delete" @click="confirmDelete">删 除</button>
+              <button class="confirm-btn-cancel" @click="cancelDelete">{{ $t('common.cancel') }}</button>
+              <button class="confirm-btn-delete" @click="confirmDelete">{{ $t('common.delete') }}</button>
             </div>
           </div>
         </Transition>
@@ -31,11 +31,11 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <h3 class="confirm-title">关闭提醒</h3>
-            <p class="confirm-content">退出后不会保存当前内容，是否退出？</p>
+            <h3 class="confirm-title">{{ $t('course.closeReminder') }}</h3>
+            <p class="confirm-content">{{ $t('course.closeReminderContent') }}</p>
             <div class="confirm-footer">
-              <button class="confirm-btn-cancel" @click="cancelClose">取 消</button>
-              <button class="confirm-btn-delete" @click="confirmClose">退 出</button>
+              <button class="confirm-btn-cancel" @click="cancelClose">{{ $t('common.cancel') }}</button>
+              <button class="confirm-btn-delete" @click="confirmClose">{{ $t('course.exit') }}</button>
             </div>
           </div>
         </Transition>
@@ -54,24 +54,24 @@
             </button>
 
             <!-- 标题 -->
-            <h2 class="modal-title">{{ isEditMode ? '编辑课程' : '创建课程' }}</h2>
+            <h2 class="modal-title">{{ isEditMode ? $t('course.editCourse') : $t('course.createCourse') }}</h2>
 
             <!-- 加载状态 -->
             <div v-if="detailLoading" class="loading-overlay">
               <div class="loading-spinner"></div>
-              <span class="loading-text">加载中...</span>
+              <span class="loading-text">{{ $t('common.loading') }}</span>
             </div>
 
             <!-- 内容区域 -->
             <div class="modal-content" :class="{ 'opacity-50 pointer-events-none': detailLoading }">
               <!-- 课程名称 -->
               <div class="form-row">
-                <label class="form-label"><span class="required">*</span>课程名称：</label>
+                <label class="form-label"><span class="required">*</span>{{ $t('course.courseName') }}：</label>
                 <div class="form-input-wrapper">
                   <input
                     v-model="formData.name"
                     type="text"
-                    placeholder="请输入课程名称"
+                    :placeholder="$t('course.pleaseInputCourseName')"
                     maxlength="20"
                     class="form-input"
                     :class="{ 'input-error': errors.name }"
@@ -86,15 +86,15 @@
 
               <!-- 封面 -->
               <div class="form-row items-start">
-                <label class="form-label mt-4">封面：</label>
+                <label class="form-label mt-4">{{ $t('course.cover') }}：</label>
                 <div class="cover-section">
                   <div class="cover-preview">
-                    <img v-if="formData.coverUrl" :src="formData.coverUrl" alt="课程封面" class="cover-img" />
-                    <img v-else src="../assets/images/two.png" alt="课程封面" class="cover-img" />
+                    <img v-if="formData.coverUrl" :src="formData.coverUrl" :alt="$t('common.courseCover')" class="cover-img" />
+                    <img v-else src="../assets/images/two.png" :alt="$t('common.courseCover')" class="cover-img" />
                   </div>
                   <div class="cover-info">
                     <button class="upload-btn" :disabled="uploading" @click="triggerUpload">
-                      {{ uploading ? '上传中...' : '更换封面' }}
+                      {{ uploading ? $t('course.uploading') : $t('course.changeCover') }}
                     </button>
                     <input
                       ref="fileInputRef"
@@ -103,19 +103,19 @@
                       class="hidden"
                       @change="handleFileChange"
                     />
-                    <p class="cover-tip">规格说明：上传图片要求尺寸268*320，10M以内，图片支持png、jpg、jpeg</p>
+                    <p class="cover-tip">{{ $t('course.coverTip') }}</p>
                   </div>
                 </div>
               </div>
 
               <!-- 课程章节 -->
               <div class="form-row items-start">
-                <label class="form-label mt-3"><span class="required">*</span>课程章节：</label>
+                <label class="form-label mt-3"><span class="required">*</span>{{ $t('course.courseChapter') }}：</label>
                 <div class="form-input-wrapper">
                   <div class="chapters-wrapper" :class="{ 'wrapper-error': errors.chapters }">
                     <button class="add-chapter-btn" @click="addChapter">
                       <span class="plus">+</span>
-                      <span>创建章节</span>
+                      <span>{{ $t('course.createChapter') }}</span>
                     </button>
                     <div class="chapters-list">
                       <div
@@ -132,7 +132,7 @@
                         <input
                           v-model="chapter.name"
                           type="text"
-                          placeholder="请输入章节名称"
+                          :placeholder="$t('course.pleaseInputChapterName')"
                           maxlength="20"
                           class="chapter-input"
                           @input="clearError('chapters')"
@@ -161,11 +161,11 @@
 
               <!-- 简介 -->
               <div class="form-row items-start">
-                <label class="form-label mt-3">简介：</label>
+                <label class="form-label mt-3">{{ $t('course.description') }}：</label>
                 <div class="form-input-wrapper">
                   <textarea
                     v-model="formData.description"
-                    placeholder="请输入课程简介"
+                    :placeholder="$t('course.pleaseInputDesc')"
                     maxlength="100"
                     rows="4"
                     class="form-textarea"
@@ -176,27 +176,27 @@
 
               <!-- 课程权限 -->
               <div class="form-row">
-                <label class="form-label">课程权限：</label>
+                <label class="form-label">{{ $t('course.coursePermission') }}：</label>
                 <div class="permission-section">
                   <label class="radio-label">
                     <input v-model="formData.permission" type="radio" value="private" class="radio-input" />
                     <span class="radio-circle"></span>
-                    <span>仅自己可见</span>
+                    <span>{{ $t('course.privateOnly') }}</span>
                   </label>
                   <label class="radio-label">
                     <input v-model="formData.permission" type="radio" value="public" class="radio-input" />
                     <span class="radio-circle"></span>
-                    <span>全校老师可见</span>
+                    <span>{{ $t('course.publicToSchool') }}</span>
                   </label>
-                  <span class="permission-tip">*若删除课程，课程需为「<span class="highlight">仅自己可见</span>」</span>
+                  <span class="permission-tip">{{ $t('course.permissionTip') }}<span class="highlight">{{ $t('course.privateOnly') }}</span>{{ $t('course.permissionTip2') }}</span>
                 </div>
               </div>
             </div>
 
             <!-- 底部按钮 -->
             <div class="modal-footer">
-              <button class="btn-cancel" @click="handleCancel">取 消</button>
-              <button class="btn-confirm" @click="handleConfirm">{{ isEditMode ? '保存修改' : '完成创建' }}</button>
+              <button class="btn-cancel" @click="handleCancel">{{ $t('common.cancel') }}</button>
+              <button class="btn-confirm" @click="handleConfirm">{{ isEditMode ? $t('course.saveChanges') : $t('course.completeCreate') }}</button>
             </div>
           </div>
         </Transition>
@@ -207,7 +207,10 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { cursorAdmin } from '~/composables/api/curosr'
+
+const { t } = useI18n()
 
 interface CourseData {
   id?: number | string
@@ -448,14 +451,14 @@ const validate = () => {
 
   // 校验课程名称
   if (!formData.value.name.trim()) {
-    errors.value.name = '请输入课程名称'
+    errors.value.name = t('course.pleaseInputCourseName')
     isValid = false
   }
 
   // 校验章节
   const hasValidChapter = formData.value.chapters.some(c => c.name.trim())
   if (!hasValidChapter) {
-    errors.value.chapters = '请至少填写一个章节名称'
+    errors.value.chapters = t('course.atLeastOneChapter')
     isValid = false
   }
 

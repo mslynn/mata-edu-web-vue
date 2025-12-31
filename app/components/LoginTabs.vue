@@ -7,7 +7,7 @@
       ]"
       @click="$emit('update:modelValue', 'campus')"
     >
-      校园账号登录
+      {{ t('auth.campusLogin') }}
       <span 
         :class="[
           'absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-in-out',
@@ -22,7 +22,7 @@
       ]"
       @click="$emit('update:modelValue', 'phonenumber')"
     >
-      手机号登录
+      {{ t('auth.phoneLogin') }}
       <span 
         :class="[
           'absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-in-out',
@@ -34,6 +34,9 @@
 </template>
 
 <script setup lang="ts">
+const { $i18n } = useNuxtApp()
+const t = (key: string) => $i18n.t(key)
+
 defineProps<{
   modelValue: 'campus' | 'phonenumber'
 }>()

@@ -2,6 +2,7 @@
  * HTTP 请求封装
  * 基于 Nuxt3 的 $fetch
  */
+// 已全局引入 ElMessage，无需在此单独引入
 import { ElMessage } from 'element-plus'
 import { generateAesKey, encryptWithAes, encryptBase64 } from '~/utils/crypto'
 import { encrypt } from '~/utils/jsencrypt'
@@ -105,6 +106,8 @@ export const useHttp = () => {
     const shouldShowSuccess = showSuccessMsg && method !== 'GET'
     
     try {
+      console.log('🚀 发起请求:', method, url, { body, params })
+      
       const response = await $fetch<T>(url, {
         baseURL: BASE_URL,
         method,
@@ -116,20 +119,20 @@ export const useHttp = () => {
         },
         // 请求拦截
         onRequest({ options }) {
-          console.log('📤 请求:', method, url, body || params || '')
+          console.log('📤 请求已发送:', method, url)
         },
         // 响应拦截
         onResponse({ response }) {
-          console.log('📥 响应:', response._data)
+          console.log('📥 [onResponse] 状态码:', response.status, '数据:', response._data)
           const { code, msg } = response._data || {}
           
           // Token 失效处理
           if (code === 401) {
-            removeToken()
+          //  removeToken()
             ElMessage.error('登录已过期，2秒后跳转到登录页')
             setTimeout(() => {
               if (process.client) {
-                window.location.href = '/'
+              //  window.location.href = '/'
               }
             }, 2000)
             return
@@ -141,7 +144,7 @@ export const useHttp = () => {
             ElMessage.error('无访问权限，2秒后跳转到登录页')
             setTimeout(() => {
               if (process.client) {
-                window.location.href = '/'
+              //  window.location.href = '/'
               }
             }, 2000)
             return
@@ -151,7 +154,7 @@ export const useHttp = () => {
             // GET 请求（查询类）默认不显示成功提示，避免列表查询时出现大量提示
             // POST/PUT/DELETE 等操作类请求，如果 shouldShowSuccess 为 true 且有 msg 才显示成功提示
             if (msg && shouldShowSuccess) {
-              ElMessage.success(msg)
+            //  ElMessage.success(msg)
             }
           } else if (code) {
             // 业务错误
@@ -190,8 +193,10 @@ export const useHttp = () => {
         }
       })
 
+      console.log('✅ 请求完成:', method, url, '响应:', response)
       return response
     } catch (error: any) {
+      console.error('❌ 请求失败:', method, url, '错误:', error)
       // 网络错误等异常
       if (!error?.response) {
         ElMessage.error('网络连接失败，请检查网络')

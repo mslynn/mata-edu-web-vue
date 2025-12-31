@@ -26,10 +26,10 @@
           </Transition>
         </div>
       </div>
-      <div class="header-center"><span class="status-tag">🎓 备课中...</span></div>
+      <div class="header-center"><span class="status-tag">{{ t('prepare.preparing') }}</span></div>
       <div class="header-right">
-        <button class="btn-outline" @click="showStudentVisibleModal = true">设置学生可见资源</button>
-        <button class="btn-white" @click="handleFinish">退出备课</button>
+        <button class="btn-outline" @click="showStudentVisibleModal = true">{{ t('prepare.setStudentVisibleResource') }}</button>
+        <button class="btn-white" @click="handleFinish">{{ t('prepare.exitPrepare') }}</button>
       </div>
     </div>
 
@@ -85,7 +85,7 @@
                       <div class="item-info">
                         <span class="item-name">{{ item.fileName }}</span>
                       </div>
-                      <button class="item-download" @click.stop="downloadResource(item)" title="下载">
+                      <button class="item-download" @click.stop="downloadResource(item)" :title="t('common.download')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                           <polyline points="7 10 12 15 17 10"></polyline>
@@ -95,11 +95,11 @@
                     </div>
                     <div class="item-actions">
                       <template v-if="item.modifyNum === 0">
-                        <span class="action-link" @click.stop="startModify(item)">我要修改</span>
+                        <span class="action-link" @click.stop="startModify(item)">{{ t('prepare.startModify') }}</span>
                       </template>
                       <template v-else>
-                        <span class="action-link" @click.stop="continueModify(item)">继续修改</span>
-                        <span class="action-link" @click.stop="addCopy(item)">新增副本</span>
+                        <span class="action-link" @click.stop="continueModify(item)">{{ t('prepare.continueModify') }}</span>
+                        <span class="action-link" @click.stop="addCopy(item)">{{ t('prepare.addCopy') }}</span>
                       </template>
                     </div>
                   </div>
@@ -114,7 +114,7 @@
                 <line x1="75" y1="105" x2="115" y2="105" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
                 <line x1="75" y1="125" x2="105" y2="125" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
               </svg>
-              <p class="empty-text">暂无数据</p>
+              <p class="empty-text">{{ t('common.noData') }}</p>
             </div>
           </div>
 
@@ -137,7 +137,7 @@
                     <div class="item-info">
                       <span class="item-name">{{ item.fileName }}</span>
                     </div>
-                    <button class="item-download" @click.stop="downloadResource(item)" title="下载">
+                    <button class="item-download" @click.stop="downloadResource(item)" :title="t('common.download')">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
@@ -156,7 +156,7 @@
                 <line x1="75" y1="105" x2="115" y2="105" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
                 <line x1="75" y1="125" x2="105" y2="125" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
               </svg>
-              <p class="empty-text">暂无数据</p>
+              <p class="empty-text">{{ t('common.noData') }}</p>
             </div>
           </div>
 
@@ -164,8 +164,8 @@
           <div v-else-if="activeTab === 'personal'" class="personal-resource-panel">
             <!-- 顶部按钮 -->
             <div class="personal-header">
-              <button class="btn-primary" @click="showLinkModal = true">关联平台资源</button>
-              <button class="btn-primary" @click="showUploadModal = true">上传个人资源</button>
+              <button class="btn-primary" @click="showLinkModal = true">{{ t('prepare.linkPlatformResource') }}</button>
+              <button class="btn-primary" @click="showUploadModal = true">{{ t('prepare.uploadPersonalResource') }}</button>
             </div>
 
             <div class="resource-list">
@@ -188,7 +188,7 @@
                       <div class="item-info">
                         <span class="item-name">{{ item.fileName }}</span>
                       </div>
-                      <button class="item-download" @click.stop="downloadResource(item)" title="下载">
+                      <button class="item-download" @click.stop="downloadResource(item)" :title="t('common.download')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                           <polyline points="7 10 12 15 17 10"></polyline>
@@ -196,7 +196,7 @@
                         </svg>
                       </button>
                       <button v-if="selectedResource?.resourceId === item.resourceId" class="item-delete"
-                        @click.stop="deletePersonalResource(item)" title="删除">
+                        @click.stop="deletePersonalResource(item)" :title="t('common.delete')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                           <polyline points="3 6 5 6 21 6"></polyline>
                           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
@@ -215,7 +215,7 @@
                   <line x1="75" y1="105" x2="115" y2="105" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
                   <line x1="75" y1="125" x2="105" y2="125" stroke="#e0e0e0" stroke-width="3" stroke-linecap="round" />
                 </svg>
-                <p class="empty-text">暂无数据</p>
+                <p class="empty-text">{{ t('common.noData') }}</p>
               </div>
             </div>
           </div>
@@ -234,7 +234,7 @@
       <div class="preview-area">
         <!-- 无选中资源时的空状态 -->
         <div v-if="previewLoading" class="preview-loading">
-          <div class="spinner"></div><span>加载中...</span>
+          <div class="spinner"></div><span>{{ t('common.loading') }}</span>
         </div>
         <div v-else-if="!selectedResource" class="preview-empty">
           <svg class="empty-svg-large" viewBox="0 0 200 200" fill="none">
@@ -247,7 +247,7 @@
             <circle cx="80" cy="130" r="8" fill="#e8e8e8" />
             <line x1="95" y1="130" x2="120" y2="130" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round" />
           </svg>
-          <p class="empty-text-large">请从左侧选择资源进行预览</p>
+          <p class="empty-text-large">{{ t('prepare.selectResourceToPreview') }}</p>
         </div>
         <div v-else class="preview-content">
           <div v-if="getFileType(selectedResource.fileName) === 'word'" class="ppt-preview-wrapper">
@@ -275,8 +275,8 @@
               </div>
               <p class="ucd-filename">{{ selectedResource.fileName }}</p>
               <div class="ucd-actions">
-                <button class="ucd-btn ucd-btn-edit" @click="editUcdFile(selectedResource)">编辑</button>
-                <button class="ucd-btn ucd-btn-download" @click="downloadResource(selectedResource)">下载</button>
+                <button class="ucd-btn ucd-btn-edit" @click="editUcdFile(selectedResource)">{{ t('common.edit') }}</button>
+                <button class="ucd-btn ucd-btn-download" @click="downloadResource(selectedResource)">{{ t('common.download') }}</button>
               </div>
             </div>
           </div>
@@ -287,8 +287,8 @@
               </div>
               <p class="ucd-filename">{{ selectedResource.fileName }}</p>
               <div class="ucd-actions">
-                <button class="ucd-btn ucd-btn-edit" @click="editMcFile(selectedResource)">编辑</button>
-                <button class="ucd-btn ucd-btn-download" @click="downloadResource(selectedResource)">下载</button>
+                <button class="ucd-btn ucd-btn-edit" @click="editMcFile(selectedResource)">{{ t('common.edit') }}</button>
+                <button class="ucd-btn ucd-btn-download" @click="downloadResource(selectedResource)">{{ t('common.download') }}</button>
               </div>
             </div>
           </div>
@@ -299,11 +299,11 @@
               class="preview-video"
               preload="metadata"
             >
-              您的浏览器不支持视频播放
+              {{ t('prepare.browserNotSupportVideo') }}
             </video>
           </div>
           <div v-else class="preview-unsupported">
-            <p>暂不支持预览该类型文件</p>
+            <p>{{ t('prepare.previewNotSupported') }}</p>
           </div>
         </div>
       </div>
@@ -316,32 +316,32 @@
         <span class="page-info">{{ pdfCurrentPage }} / {{ pdfTotalPages || 1 }}</span>
         <button class="tool-btn" @click="nextPage" :disabled="pdfCurrentPage >= pdfTotalPages">›</button>
         <span class="divider"></span>
-        <span class="tool-label">跳转第</span>
+        <span class="tool-label">{{ t('prepare.jumpToPage') }}</span>
         <input type="number" v-model.number="jumpPage" class="page-input" min="1" :max="pdfTotalPages"
           @keyup.enter="goToPage" />
-        <span class="tool-label">页</span>
-        <button class="tool-btn small" @click="goToPage">跳转</button>
+        <span class="tool-label">{{ t('prepare.page') }}</span>
+        <button class="tool-btn small" @click="goToPage">{{ t('prepare.jump') }}</button>
       </div>
       <div class="toolbar-center">
         <button class="tool-btn icon" :class="{ active: currentTool === 'pencil' }" @click="setTool('pencil')"
-          title="铅笔">✏️</button>
+          :title="t('prepare.pencil')">✏️</button>
         <button class="tool-btn icon" :class="{ active: currentTool === 'brush' }" @click="setTool('brush')"
-          title="画笔">🖌️</button>
+          :title="t('prepare.brush')">🖌️</button>
         <button class="tool-btn icon" :class="{ active: currentTool === 'highlighter' }" @click="setTool('highlighter')"
-          title="荧光笔">🖍️</button>
+          :title="t('prepare.highlighter')">🖍️</button>
         <button class="tool-btn icon" :class="{ active: currentTool === 'eraser' }" @click="setTool('eraser')"
-          title="橡皮擦">🧹</button>
+          :title="t('prepare.eraser')">🧹</button>
         <button class="tool-btn icon" :class="{ active: currentTool === 'laser' }" @click="setTool('laser')"
-          title="激光笔">🔴</button>
+          :title="t('prepare.laser')">🔴</button>
         <span class="divider"></span>
-        <input type="color" v-model="penColor" class="color-picker" title="画笔颜色" />
-        <select v-model="penWidth" class="width-select" title="线宽">
-          <option :value="2">细</option>
-          <option :value="4">中</option>
-          <option :value="8">粗</option>
+        <input type="color" v-model="penColor" class="color-picker" :title="t('prepare.penColor')" />
+        <select v-model="penWidth" class="width-select" :title="t('prepare.lineWidth')">
+          <option :value="2">{{ t('prepare.thin') }}</option>
+          <option :value="4">{{ t('prepare.medium') }}</option>
+          <option :value="8">{{ t('prepare.thick') }}</option>
         </select>
         <span class="divider"></span>
-        <button class="tool-btn" @click="clearAnnotations">清除标注</button>
+        <button class="tool-btn" @click="clearAnnotations">{{ t('prepare.clearAnnotations') }}</button>
       </div>
       <div class="toolbar-right">
         <button class="tool-btn" @click="zoomOut">−</button>
@@ -358,17 +358,20 @@
     <LinkPlatformResourceModal v-model:visible="showLinkModal" />
 
     <!-- 设置学生可见资源弹窗 -->
-    <SetStudentVisibleModal v-model:visible="showStudentVisibleModal" />
+    <SetStudentVisibleModal v-model:visible="showStudentVisibleModal" :chapter-id="currentChapterId" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, nextTick, computed, onUnmounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { cursorAdmin } from '~/composables/api/curosr'
 import '~/assets/css/prepare.css'
 
 definePageMeta({ layout: 'blank' })
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -399,7 +402,7 @@ onMounted(async () => {
       if (data.chapterList && Array.isArray(data.chapterList)) {
         chapterList.value = data.chapterList.map((c: any, idx: number) => ({
           id: String(c.chapterId || idx + 1),
-          name: c.chapterName || `章节${idx + 1}`
+          name: c.chapterName || t('prepare.defaultChapter', { idx: idx + 1 })
         }))
 
         // 从 URL 获取 chapterId 或默认选中第一个
@@ -463,7 +466,7 @@ onMounted(async () => {
       }
     }
   } catch (error) {
-    console.error('加载课程详情失败:', error)
+    console.error(t('prepare.loadCourseDetailFailed'), error)
   }
   // 初始化完成，允许 watch 正常工作
   isInitialLoad.value = false
@@ -489,16 +492,20 @@ watch(activeTab, async () => {
   // 初始化加载时跳过，由 onMounted 处理自动选中
   if (isInitialLoad.value) return
   
+  // 切换 tab 时清空右侧预览
+  selectedResource.value = null
+  pdfReady.value = false
+  pptPreviewUrl.value = ''
+  
   if (currentChapterId.value) {
     await loadChapterResources(currentChapterId.value)
-    // 切换到个人资源 tab 时自动选中第一个
+    
+    // 切换到个人资源 tab 时自动选中第一个资源并预览
     if (activeTab.value === 'personal') {
       const firstGroup = personalResourceGroups.value[0]
       const firstResource = firstGroup?.resourceList?.[0]
       if (firstResource) {
         selectResource(firstResource)
-      } else {
-        selectedResource.value = null
       }
     }
   }
@@ -507,20 +514,36 @@ watch(activeTab, async () => {
 // 计算当前章节名称
 const currentChapterName = computed(() => {
   const chapter = chapterList.value.find(c => c.id === currentChapterId.value)
-  return chapter?.name || '选择章节'
+  return chapter?.name || t('prepare.selectChapter')
 })
 
-const selectChapter = (chapter: { id: string; name: string }) => {
+const selectChapter = async (chapter: { id: string; name: string }) => {
   currentChapterId.value = chapter.id
   dropdownOpen.value = false
+  
+  // 切换章节时清空右侧预览
+  selectedResource.value = null
+  pdfReady.value = false
+  pptPreviewUrl.value = ''
+  
   // 切换章节时加载对应章节的资源
-  loadChapterResources(chapter.id)
+  await loadChapterResources(chapter.id)
+  
+  // 如果是个人资源 tab，自动选中第一个资源并预览
+  if (activeTab.value === 'personal') {
+    const firstGroup = personalResourceGroups.value[0]
+    const firstResource = firstGroup?.resourceList?.[0]
+    if (firstResource) {
+      selectResource(firstResource)
+    }
+  }
 }
-const tabs = [
-  { label: '教学资源', value: 'resource', resourceType: 1 },
-  { label: '学习任务', value: 'task', resourceType: 2 },
-  { label: '个人资源\n(可修改)', value: 'personal', resourceType: 3 }
-]
+// tabs 使用 computed 以支持动态语言切换
+const tabs = computed(() => [
+  { label: t('prepare.teachingResource'), value: 'resource', resourceType: 1 },
+  { label: t('prepare.learningTask'), value: 'task', resourceType: 2 },
+  { label: t('prepare.personalResourceEditable'), value: 'personal', resourceType: 3 }
+])
 
 // 资源项接口定义
 interface ResourceItem {
@@ -581,7 +604,7 @@ const getFileType = (fileName: string) => {
 
 // 获取当前 tab 对应的 resourceType
 const getCurrentResourceType = () => {
-  const currentTab = tabs.find(t => t.value === activeTab.value)
+  const currentTab = tabs.value.find(tab => tab.value === activeTab.value)
   return currentTab?.resourceType || 1
 }
 
@@ -615,7 +638,7 @@ const loadChapterResources = async (chapterId: string, resourceType?: number) =>
       }
     }
   } catch (error) {
-    console.error('加载章节资源失败:', error)
+    console.error(t('prepare.loadChapterResourceFailed'), error)
   }
 }
 
@@ -653,13 +676,13 @@ const getIconText = (type: string) => ({ word: 'W', ppt: 'P', pdf: 'PDF', ucd: '
 const startModify = async (item: ResourceItem) => {
   try {
     await copyChapterResource(String(item.resourceId))
-    ElMessage.success('已成功在"个人资源"中创建副本')
+    ElMessage.success(t('prepare.copySuccess'))
     // 刷新教学资源列表
     if (currentChapterId.value) {
       await loadChapterResources(currentChapterId.value, 1)
     }
   } catch (error) {
-    console.error('我要修改失败:', error)
+    console.error(t('prepare.modifyFailed'), error)
   }
 }
 
@@ -667,7 +690,7 @@ const startModify = async (item: ResourceItem) => {
 const continueModify = async (item: ResourceItem) => {
   try {
     await copyChapterResource(String(item.resourceId))
-    ElMessage.success('已成功在"个人资源"中创建副本')
+    ElMessage.success(t('prepare.copySuccess'))
     // 切换到个人资源 tab
     activeTab.value = 'personal'
     // 刷新个人资源列表
@@ -681,7 +704,7 @@ const continueModify = async (item: ResourceItem) => {
       }
     }
   } catch (error) {
-    console.error('继续修改失败:', error)
+    console.error(t('prepare.continueModifyFailed'), error)
   }
 }
 
@@ -689,13 +712,13 @@ const continueModify = async (item: ResourceItem) => {
 const addCopy = async (item: ResourceItem) => {
   try {
     await copyChapterResource(String(item.resourceId))
-    ElMessage.success('已成功在"个人资源"中创建副本')
+    ElMessage.success(t('prepare.copySuccess'))
     // 刷新教学资源列表
     if (currentChapterId.value) {
       await loadChapterResources(currentChapterId.value, 1)
     }
   } catch (error) {
-    console.error('新增副本失败:', error)
+    console.error(t('prepare.addCopyFailed'), error)
   }
 }
 
@@ -710,7 +733,7 @@ const downloadResource = async (item: ResourceItem) => {
       // 释放 blob URL
       URL.revokeObjectURL(blobUrl)
     } catch (error) {
-      console.error('下载失败:', error)
+      console.error(t('prepare.downloadFailed'), error)
     }
   }
 }
@@ -730,7 +753,7 @@ const deletePersonalResource = async (item: ResourceItem) => {
       }
     }
   } catch (error) {
-    console.error('删除资源失败:', error)
+    console.error(t('prepare.deleteResourceFailed'), error)
   }
 }
 
@@ -745,13 +768,13 @@ const handleFinish = () => router.push(`/system/course/${route.params.id}`)
 // 编辑 UCD 文件
 const editUcdFile = (item: ResourceItem) => {
   // TODO: 实现 UCD 编辑功能
-  ElMessage.info('UCD 编辑功能开发中')
+  ElMessage.info(t('prepare.ucdEditInDev'))
 }
 
 // 编辑 MC 文件
 const editMcFile = (item: ResourceItem) => {
   // TODO: 实现 MC 编辑功能
-  ElMessage.info('MC 编辑功能开发中')
+  ElMessage.info(t('prepare.mcEditInDev'))
 }
 
 // 获取运行时配置
@@ -809,7 +832,7 @@ const selectResource = async (item: ResourceItem) => {
       previewLoading.value = false
     }
   } catch (error) {
-    console.error('加载失败:', error)
+    console.error(t('prepare.loadFailed'), error)
     previewLoading.value = false
   }
 }
@@ -819,7 +842,7 @@ const loadWord = async (url: string) => {
   try {
     // 检查文件扩展名
     if (url.toLowerCase().endsWith('.doc') && !url.toLowerCase().endsWith('.docx')) {
-      wordError.value = '不支持 .doc 格式文件'
+      wordError.value = t('prepare.docNotSupported')
       return
     }
     const { renderAsync } = await import('docx-preview')
@@ -841,11 +864,11 @@ const loadWord = async (url: string) => {
       })
     }
   } catch (error: any) {
-    console.error('Word加载失败:', error)
+    console.error(t('prepare.fileLoadFailed'), error)
     if (error.message?.includes('zip') || error.message?.includes('central directory')) {
-      wordError.value = '文件格式不正确，可能是 .doc 格式'
+      wordError.value = t('prepare.fileFormatError')
     } else {
-      wordError.value = '文件加载失败'
+      wordError.value = t('prepare.fileLoadFailed')
     }
   }
 }

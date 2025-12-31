@@ -6,16 +6,16 @@
         'flex items-center input-line px-4 py-3 bg-white',
         errors.username && 'has-error'
       ]">
-        <img src="~/assets/images/account.png" alt="账号" class="mr-3  w-5 h-5" />
+        <img src="~/assets/images/account.png" :alt="t('auth.username')" class="mr-3  w-5 h-5" />
         <input 
           type="text" 
           :value="modelValue.username"
           @input="handleInput('username', $event)"
-          placeholder="请输入账号"
+          :placeholder="t('auth.pleaseInputAccount')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
       </div>
-      <p v-if="errors.username" class="field-error">请输入账号</p>
+      <p v-if="errors.username" class="field-error">{{ t('auth.pleaseInputAccount') }}</p>
     </div>
 
     <!-- 密码输入 -->
@@ -24,12 +24,12 @@
         'flex items-center input-line px-4 py-3 bg-white relative',
         errors.password && 'has-error'
       ]">
-        <img src="~/assets/images/mima.png" alt="密码" class="mr-3  w-5 h-5" />
+        <img src="~/assets/images/mima.png" :alt="t('auth.password')" class="mr-3  w-5 h-5" />
         <input 
           :type="showPassword ? 'text' : 'password'"
           :value="modelValue.password"
           @input="handleInput('password', $event)"
-          placeholder="请输入密码"
+          :placeholder="t('auth.pleaseInputPassword')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
         <button 
@@ -40,29 +40,32 @@
           <img 
             v-if="showPassword" 
             src="~/assets/images/eye-open.png" 
-            alt="显示密码" 
+            alt="show password" 
             class="w-4 h-4"
           />
           <img 
             v-else 
             src="~/assets/images/eye-close.png" 
-            alt="隐藏密码" 
+            alt="hide password" 
             class="w-4 h-4"
           />
         </button>
       </div>
-      <p v-if="errors.password" class="field-error">请输入密码</p>
+      <p v-if="errors.password" class="field-error">{{ t('auth.pleaseInputPassword') }}</p>
     </div>
 
     <!-- 忘记密码链接 -->
     <div class="text-right mb-6">
-      <a href="#" class="text-gray-400 text-xs hover:text-[#e8a063] no-underline" @click.prevent="emit('forgot-password')">忘记密码</a>
+      <a href="#" class="text-gray-400 text-xs hover:text-[#e8a063] no-underline" @click.prevent="emit('forgot-password')">{{ t('auth.forgotPassword') }}</a>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+
+const { $i18n } = useNuxtApp()
+const t = (key: string) => $i18n.t(key)
 
 interface Props {
   modelValue: {

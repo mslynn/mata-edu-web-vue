@@ -13,6 +13,7 @@
   "dependencies": {
     "@css-render/vue3-ssr": "^0.15.14",
     "@nuxtjs/i18n": "^10.2.1",
+    "@stomp/stompjs": "^7.2.1",
     "axios": "^1.13.2",
     "crypto-js": "^4.2.0",
     "docx-preview": "^0.3.7",
@@ -26,6 +27,7 @@
     "mammoth": "^1.11.0",
     "nuxt": "^4.2.1",
     "pdfjs-dist": "^5.4.449",
+    "peerjs": "^1.5.4",
     "vue": "^3.5.25",
     "vue-i18n": "^11.2.7",
     "vue-router": "^4.6.3"

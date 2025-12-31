@@ -1,124 +1,70 @@
 <template>
-  <div class="h-full bg-[#F5F7FA] p-4 lg:p-6 overflow-hidden">
-    <div class="max-w-[1600px] mx-auto h-full">
-      <!-- 白色卡片容器 -->
-      <div class="bg-white rounded-lg shadow-sm p-4 lg:p-6 h-full flex flex-col">
-        <!-- 顶部搜索栏 -->
-        <div
-          class="flex flex-col xl:flex-row items-start xl:items-center justify-between gap-4 mb-6 flex-shrink-0"
-        >
-          <!-- 左侧：搜索条件 -->
-          <div
-            class="w-full xl:w-auto flex flex-col lg:flex-row items-start lg:items-center gap-3 lg:gap-4"
+  <div class="h-full bg-[#FAFAFA] p-4 lg:p-6 overflow-auto">
+    <div class="w-[90%] mx-auto">
+      <!-- 页面标题 -->
+      <h1 class="text-lg font-medium text-gray-800 mb-4">{{ $t('city.districtManage') }}</h1>
+
+      <!-- 内容区域（搜索栏 + 表格 + 分页） -->
+      <div class="bg-[#FFFFFF] rounded-[20px] p-6 shadow-sm">
+        <!-- 搜索栏 -->
+        <div class="flex items-center justify-between mb-4">
+          <!-- 搜索框 -->
+          <div class="w-[240px]">
+            <MInput
+              v-model="searchKeyword"
+              :placeholder="$t('city.searchAdminPlaceholder')"
+              clearable
+              @enter="handleSearch"
+              @clear="handleSearch"
+            >
+              <template #prefix>
+                <svg
+                  class="w-4 h-4 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                  />
+                </svg>
+              </template>
+            </MInput>
+          </div>
+
+          <!-- 导出按钮 -->
+          <MButton
+            type="primary"
+            class="!bg-[#FAFAFA] px-6 !text-[#4D4D4D] border border-[#E5E5E5] hover:!bg-[#F0F0F0]"
+            @click="handleExport"
           >
-            <div
-              class="w-full sm:w-auto sm:min-w-[220px] lg:min-w-[260px] xl:min-w-[280px]"
-            >
-              <MInput
-                v-model="searchName"
-                :placeholder="$t('city.searchAdminPlaceholder')"
-                clearable
-                @enter="handleSearch"
-                @clear="handleSearch"
-              >
-                <template #prefix>
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </template>
-              </MInput>
-            </div>
-
-            <div
-              class="w-full sm:w-auto sm:min-w-[220px] lg:min-w-[240px] xl:min-w-[260px]"
-            >
-              <MInput
-                v-model="searchPhone"
-                :placeholder="$t('city.searchPhonePlaceholder')"
-                clearable
-                @enter="handleSearch"
-                @clear="handleSearch"
-              >
-                <template #prefix>
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M3 5h2l3 10h10l3-8H8"
-                    />
-                  </svg>
-                </template>
-              </MInput>
-            </div>
-
-            <div class="flex items-center gap-3 flex-shrink-0">
-              <MButton
-                type="primary"
-                class="!bg-[#FF9900] hover:!bg-[#e88a00] px-6 whitespace-nowrap"
-                @click="handleSearch"
-              >
-                {{ $t('city.query') }}
-              </MButton>
-              <MButton
-                type="primary"
-                class="!bg-[#FF9900] hover:!bg-[#e88a00] px-6 whitespace-nowrap"
-                @click="handleReset"
-              >
-                {{ $t('common.reset') }}
-              </MButton>
-            </div>
-          </div>
-
-          <!-- 右侧：导出按钮 -->
-          <div class="w-full xl:w-auto flex justify-start xl:justify-end flex-shrink-0">
-            <MButton
-              type="primary"
-              class="!bg-[#FF9900] hover:!bg-[#e88a00] px-6 whitespace-nowrap"
-              @click="handleExport"
-            >
-              {{ $t('city.exportData') }}
-            </MButton>
-          </div>
+            {{ $t('city.exportData') }}
+          </MButton>
         </div>
 
         <!-- 表格 -->
-        <div class="flex-1 overflow-auto min-h-0">
+        <div class="h-[480px] overflow-auto">
           <MTable
             :columns="columns"
             :data="tableData"
             :loading="loading"
             show-index
             row-key="id"
-            class="!shadow-none !rounded-none"
+            class="city-table"
           >
             <template #actions="{ row }">
-              <div
-                class="flex items-center justify-center gap-2 flex-wrap whitespace-nowrap"
-              >
+              <div class="flex items-center justify-center gap-2">
                 <button
-                  class="px-3 py-1 text-xs border border-[#FF9900] text-[#FF9900] rounded hover:bg-[#FF9900] hover:text-white transition-colors"
+                  class="px-3 py-1 text-xs border  rounded hover:bg-[#FFF8F0] transition-colors"
                   @click="handleViewDetail(row)"
                 >
                   {{ $t('city.viewDetail') }}
                 </button>
                 <button
-                  class="px-3 py-1 text-xs border border-[#FF9900] text-[#FF9900] rounded hover:bg-[#FF9900] hover:text-white transition-colors"
+                  class="px-3 py-1 text-xs border  rounded hover:bg-[#FFF8F0] transition-colors"
                   @click="handleResetPassword(row)"
                 >
                   {{ $t('city.resetPassword') }}
@@ -128,8 +74,8 @@
           </MTable>
         </div>
 
-        <!-- 分页 - 右下角 -->
-        <div class="mt-4 flex justify-end flex-shrink-0">
+        <!-- 分页 -->
+        <div class="mt-6 flex justify-center">
           <MPagination
             v-model:current-page="currentPage"
             v-model:page-size="pageSize"
@@ -143,30 +89,60 @@
     <!-- 查看详情弹窗 -->
     <MModal 
       v-model="detailModalVisible" 
-      :title="$t('city.viewAdminTitle')"
+      custom-width="381px"
       :show-footer="false"
-      size="small"
+      :show-close="false"
+      content-class="!p-0"
     >
-      <div class="bg-[#F5F5F5] rounded-lg p-6 space-y-4">
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.name') }}</span>
-          <span class="text-gray-600">{{ currentAdmin?.nickName || '-' }}</span>
+      <div class="p-6 relative">
+        <!-- 关闭按钮 -->
+        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="detailModalVisible = false">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <!-- 标题 -->
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('city.viewAdminTitle') }}</h3>
+        
+        <!-- 内容区域 -->
+        <div class="bg-[#FEF2DB] rounded-lg p-5 space-y-3 mb-6">
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{ $t('city.name') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentAdmin?.nickName || '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{ $t('city.manageArea') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentAdmin?.areaName || currentAdmin?.deptName || '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{ $t('city.schoolCount') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentAdmin?.schoolCount ?? '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{ $t('city.teacherCount') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentAdmin?.teacherCount ?? '-' }}</span>
+          </div>
+          <div class="flex">
+            <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{ $t('city.studentCount') }}</span>
+            <span class="text-[#4D4D4D]">{{ currentAdmin?.studentCount ?? '-' }}</span>
+          </div>
         </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.phoneNumber') }}</span>
-          <span class="text-gray-600">{{ currentAdmin?.phonenumber || '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.schoolCount') }}</span>
-          <span class="text-gray-600">{{ currentAdmin?.schoolCount ?? '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.teacherCount') }}</span>
-          <span class="text-gray-600">{{ currentAdmin?.teacherCount ?? '-' }}</span>
-        </div>
-        <div class="flex">
-          <span class="text-gray-800 font-medium w-24 flex-shrink-0">{{ $t('city.studentCount') }}</span>
-          <span class="text-gray-600">{{ currentAdmin?.studentCount ?? '-' }}</span>
+        
+        <!-- 按钮组 -->
+        <div class="flex items-center justify-center gap-4">
+          <button 
+            class="w-[136px] h-[40px] border border-gray-300 rounded-full text-[#4D4D4D] hover:bg-gray-50 transition-colors" 
+            @click="detailModalVisible = false"
+          >
+            {{ $t('common.cancel') }}
+          </button>
+          <button 
+            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-full hover:bg-[#E68A00] transition-colors" 
+            @click="detailModalVisible = false"
+          >
+            {{ $t('common.confirm') }}
+          </button>
         </div>
       </div>
     </MModal>
@@ -189,11 +165,33 @@
         </div>
       </div>
     </MModal>
+
+    <!-- 重置密码成功弹窗 -->
+    <MModal v-model="showResetSuccessModal" custom-width="381px" :show-footer="false" :show-close="false" content-class="!p-0">
+      <div class="h-[195px] p-6 relative flex flex-col justify-center">
+        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showResetSuccessModal = false">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('city.resetPasswordSuccess') }}</h3>
+        <div class="bg-[#FEF2DB] rounded-lg px-6 py-3 flex items-center justify-center">
+          <p class="text-center text-[16px] text-[#4D4D4D]">
+            <span>{{ $t('city.newPasswordIs') }}</span>
+            <span 
+              class="cursor-pointer hover:text-[#FF9900] transition-colors select-all"
+              @click="handleCopyPassword"
+              :title="$t('common.clickToCopy')"
+            >{{ newPassword }}</span>
+          </p>
+        </div>
+      </div>
+    </MModal>
   </div>
 </template>
 
 <script setup lang="ts">
-import { MMessage } from '~/components/ui'
+import { ElMessage } from '~/components/ui'
 import { useI18n } from 'vue-i18n'
 import { cityAdmin } from '~/composables/api/city'
 
@@ -205,8 +203,7 @@ definePageMeta({
 })
 
 // 搜索条件
-const searchName = ref('')
-const searchPhone = ref('')
+const searchKeyword = ref('')
 
 // 分页
 const currentPage = ref(1)
@@ -214,16 +211,15 @@ const pageSize = ref(10)
 const total = ref(0)
 const loading = ref(false)
 
-// 表格列配置（适配不同宽度，使用 minWidth）
+// 表格列配置
 const columns = computed(() => [
+  { key: 'areaName', title: t('city.belongArea'), minWidth: '120px', align: 'center' as const },
+  { key: 'adminName', title: t('city.adminName'), minWidth: '140px', align: 'center' as const },
   { key: 'account', title: t('city.account'), minWidth: '140px', align: 'center' as const },
-  { key: 'adminName', title: t('city.adminName'), minWidth: '160px', align: 'center' as const },
-  { key: 'phone', title: t('city.phone'), minWidth: '150px', align: 'center' as const },
+  { key: 'phone', title: t('city.phone'), minWidth: '140px', align: 'center' as const },
   { key: 'createTime', title: t('city.createTime'), minWidth: '180px', align: 'center' as const },
-  { key: 'actions', title: t('city.operation'), minWidth: '220px', align: 'center' as const },
+  { key: 'actions', title: t('city.operation'), minWidth: '200px', align: 'center' as const },
 ])
-
-
 
 // 表格数据
 const tableData = ref<any[]>([])
@@ -237,13 +233,16 @@ const showResetPasswordModal = ref(false)
 const resetPasswordConfirmText = ref('')
 const resetUserId = ref<string[]>([])
 
-// 获取市管理员列表
+// 重置密码成功弹窗
+const showResetSuccessModal = ref(false)
+const newPassword = ref('')
+
+// 获取列表
 const fetchList = async () => {
   loading.value = true
   try {
     const res = await getCityAdminList({
-      nickName: searchName.value.trim() || undefined,
-      phonenumber: searchPhone.value.trim() ? Number(searchPhone.value.trim()) : undefined,
+      nickName: searchKeyword.value.trim() || undefined,
       pageNum: currentPage.value,
       pageSize: pageSize.value,
     })
@@ -251,15 +250,16 @@ const fetchList = async () => {
     const list = (res?.list || []) as any[]
     tableData.value = list.map((item, index) => ({
       id: item.userId || index + 1,
-      account: item.userName || '',
-      adminName: item.nickName || '',
-      phone: item.phonenumber || '',
-      createTime: item.createTime || '',
+      areaName: item.areaName || item.deptName || '-',
+      adminName: item.nickName || '-',
+      account: item.userName || '-',
+      phone: item.phonenumber || '-',
+      createTime: item.createTime || '-',
     }))
     total.value = res?.total || 0
   } catch (error: any) {
-    console.error('获取市管理员列表失败：', error)
-    MMessage.error(error.message || t('city.getListFailed'))
+    console.error('获取列表失败：', error)
+    ElMessage.error(error.message || t('city.getListFailed'))
   } finally {
     loading.value = false
   }
@@ -271,20 +271,12 @@ const handleSearch = () => {
   fetchList()
 }
 
-// 重置
-const handleReset = () => {
-  searchName.value = ''
-  searchPhone.value = ''
-  currentPage.value = 1
-  fetchList()
-}
-
 // 导出
 const handleExport = async () => {
   try {
     await exportCityAdminInfo()
   } catch (error: any) {
-    MMessage.error(error.message || t('common.exportFailed'))
+    ElMessage.error(error.message || t('common.exportFailed'))
   }
 }
 
@@ -309,11 +301,38 @@ const handleResetPassword = (row: any) => {
 // 确认重置密码
 const handleConfirmResetPassword = async () => {
   try {
-    await resetCityAdminPassword(resetUserId.value)
-    MMessage.success(t('city.resetPasswordSuccess'))
+    const res = await resetCityAdminPassword(resetUserId.value)
     showResetPasswordModal.value = false
+    // 显示成功弹窗，展示新密码
+    newPassword.value = res?.password || res || '12345678'
+    showResetSuccessModal.value = true
   } catch (error: any) {
-    MMessage.error(error.message || t('city.resetPasswordFailed'))
+    ElMessage.error(error.message || t('city.resetPasswordFailed'))
+  }
+}
+
+// 复制密码
+const handleCopyPassword = async () => {
+  if (!newPassword.value) return
+  
+  try {
+    await navigator.clipboard.writeText(newPassword.value)
+    ElMessage.success(t('common.copySuccess'))
+  } catch (error) {
+    // 降级方案：使用传统方法
+    const textArea = document.createElement('textarea')
+    textArea.value = newPassword.value
+    textArea.style.position = 'fixed'
+    textArea.style.opacity = '0'
+    document.body.appendChild(textArea)
+    textArea.select()
+    try {
+      document.execCommand('copy')
+      ElMessage.success(t('common.copySuccess'))
+    } catch (err) {
+      ElMessage.error(t('common.copyFailed'))
+    }
+    document.body.removeChild(textArea)
   }
 }
 
@@ -329,13 +348,51 @@ watch([currentPage, pageSize], () => {
 </script>
 
 <style scoped>
-/* 适配 1200 / 1300 / 1400 / 1500 宽度时，整体最大宽度控制在 1600 内，保证居中效果 */
-@media (max-width: 1200px) {
-  .max-w-\[1600px\] {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
+/* 覆盖 MTable 表头背景色为浅蓝色 */
+.city-table :deep(thead) {
+  background-color: #FAFAFA !important;
+}
+
+.city-table :deep(thead th) {
+  background-color: transparent !important;
+}
+
+/* 去掉表格圆角和阴影 */
+.city-table {
+  box-shadow: none !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* 表格行斑马纹 - 交叉间隔色 */
+.city-table :deep(tbody tr:nth-child(odd)) {
+  background-color: #FFFFFF;
+}
+
+.city-table :deep(tbody tr:nth-child(even)) {
+  background-color: #F9F9F9;
+}
+
+.city-table :deep(tbody tr:hover) {
+  background-color: #FFF8F0 !important;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>
-
-

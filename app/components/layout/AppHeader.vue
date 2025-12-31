@@ -26,12 +26,26 @@
           <Transition name="dropdown">
             <div 
               v-if="showDropdown"
-              class="absolute right-0 top-12 w-40 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
+              class="absolute right-0 top-12 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
             >
               <div class="px-4 py-2 border-b border-gray-100">
                 <p class="text-sm font-medium text-gray-800 truncate">{{ user?.nick_name || '用户' }}</p>
                 <p class="text-xs text-gray-400 truncate">{{ user?.role_name || '' }}</p>
               </div>
+              <!-- 模块切换 - 仅市/区管理员显示 -->
+              <button 
+                v-if="showModuleSwitch"
+                @click="handleModuleSwitch"
+                class="w-full px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 hover:text-[#FF9900] transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
+                </svg>
+                {{ $t('common.moduleSwitch') }}
+              </button>
               <button 
                 @click="handleLogout"
                 class="w-full px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 hover:text-red-500 transition-colors flex items-center gap-2"
@@ -52,16 +66,29 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
 
+const router = useRouter()
 const { logout, user } = useAuth()
 
 const showDropdown = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
 
+// 判断是否显示模块切换（仅市/区管理员）
+const showModuleSwitch = computed(() => {
+  const roleKey = user.value?.role_key
+  return roleKey === 'city_admin' || roleKey === 'district_admin'
+})
+
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
+}
+
+// 模块切换 - 跳转到模块选择页面
+const handleModuleSwitch = () => {
+  showDropdown.value = false
+  router.push('/district')
 }
 
 const handleLogout = () => {

@@ -5,11 +5,11 @@
  * 可以直接在模板中使用：<MButton>、<MInput> 等
  * 
  * 如果需要手动导入：
- * import { MMessage } from '~/components/ui'
+ * import { ElMessage } from '~/components/ui'
  */
 
 // 函数式组件需要手动导入
-export { MMessage } from './MMessage'
+export { ElMessage } from 'element-plus'
 
 // Vue 组件（Nuxt 自动导入，无需手动导出）
 // MButton - 按钮组件

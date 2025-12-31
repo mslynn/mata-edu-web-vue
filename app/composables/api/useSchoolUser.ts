@@ -97,6 +97,7 @@ export const useSchoolUser = () => {
     orgId: string;
     nickName: string;
     phonenumber: string;
+    countryCode?: string;
   }) => {
     try {
       const response = await http.post("/system/user", data);
@@ -114,6 +115,7 @@ export const useSchoolUser = () => {
     userId: string;
     nickName: string;
     phonenumber: string;
+    countryCode?: string;
   }) => {
     try {
       const response = await http.put("/system/user", data);
@@ -127,9 +129,11 @@ export const useSchoolUser = () => {
   };
 
   // 删除教师
-  const deleteTeacher = async (userIds: string[]) => {
+  const deleteTeacher = async (userIds: string[], password?: string) => {
     try {
-      const response = await http.del(`/system/user/${userIds.join(",")}`);
+      // 有密码时需要加密（批量删除），无密码时不加密（单个删除）
+      const headers = password ? { 'isEncrypt': 'true' } : {}
+      const response = await http.post("/system/user/remove", { ids: userIds, password }, { 'isEncrypt': 'true' });
       if (response.code !== 200) {
         throw new Error(response.msg || "删除教师失败");
       }
@@ -140,9 +144,11 @@ export const useSchoolUser = () => {
   };
 
   // 重置教师密码
-  const resetTeacherPassword = async (ids: string[]) => {
+  const resetTeacherPassword = async (ids: string[], password?: string) => {
     try {
-      const response = await http.post("/system/user/reset", { ids });
+      // 始终加密
+      const headers = { 'isEncrypt': 'true' }
+      const response = await http.post("/system/user/reset", { ids, password }, headers);
       if (response.code !== 200) {
         throw new Error(response.msg || "重置密码失败");
       }
@@ -165,9 +171,11 @@ export const useSchoolUser = () => {
     }
   };
   //班级转让对应老师年级列表
-  const transferGrade = async (userId: string) => {
+  const transferGrade = async (userId: string, orgId?: string) => {
     try {
-      const response = await http.get("/system/user/grade", { userId });
+      const params: any = { userId }
+      if (orgId) params.orgId = orgId
+      const response = await http.get("/system/user/grade", params);
       if (response.code !== 200) {
         throw new Error(response.msg || "获取班级转让年级列表失败");
       }
@@ -216,7 +224,7 @@ export const useSchoolUser = () => {
   // 获取教师统一密码
   const getTeacherPassword = async () => {
     try {
-      const response = await http.get("/system/teacher/getSchoolPwd");
+      const response = await http.get("/system/org/getPwd");
       if (response.code !== 200) {
         throw new Error(response.msg || "获取教师统一密码失败");
       }
@@ -260,28 +268,8 @@ export const useSchoolUser = () => {
         throw new Error("导出失败");
       }
 
-      // 获取文件名
-      const contentDisposition = response.headers.get("content-disposition");
-      let filename = "教师管理列表.xlsx";
-      if (contentDisposition) {
-        // 优先匹配 filename*=utf-8''xxx 格式（URL编码的中文）
-        let match = contentDisposition.match(/filename\*=utf-8''([^;\s]+)/i);
-        if (match && match[1]) {
-          filename = decodeURIComponent(match[1] || "");
-        } else {
-          // 尝试匹配 filename=xxx 格式
-          match = contentDisposition.match(/filename=([^;\s]+)/i);
-          if (match) {
-            // 去掉可能的引号，然后解码
-            filename = decodeURIComponent(match[1]?.replace(/['"]/g, "") || "");
-          }
-        }
-        // 截取 _ 后面的部分作为文件名
-        const underscoreIndex = filename.indexOf("_");
-        if (underscoreIndex !== -1) {
-          filename = filename.substring(underscoreIndex + 1);
-        }
-      }
+      // 使用自定义文件名
+      const filename = "校管理员信息.xlsx";
 
       // 下载文件
       const blob = await response.blob();

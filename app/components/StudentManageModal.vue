@@ -532,7 +532,7 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
-import { MMessage } from '~/components/ui'
+import { ElMessage } from '~/components/ui'
 
 interface Student {
   id: string
@@ -861,7 +861,7 @@ const handleDeleteGroup = (row: Group) => {
 // 批量删除小组
 const handleBatchDeleteGroup = () => {
   if (selectedGroupIds.value.length === 0) {
-    MMessage.warning('请先选择要删除的小组')
+    ElMessage.warning(t('class.noGroupSelected'))
     return
   }
   isBatchDeleteGroup.value = true

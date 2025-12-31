@@ -8,21 +8,23 @@
         class="custom-checkbox"
       />
       <span class="text-xs text-gray-500 text-[16px] block">
-        我已阅读并同意，
+        {{ t('auth.agreementPrefix') }}
         <a
-          href="#"
-          @click.prevent="$emit('show-agreement')"
-          class="no-underline hover:underline text-[#3366FF] cursor-pointer"
+          href="https://nous.matatastudio.com/static/privacy_policy_matatalab_zh.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="no-underline text-[#3366FF] cursor-pointer"
         >
-          《用户协议》
+          {{ t('auth.userAgreement') }}
         </a>
-        及
+        {{ t('auth.and') }}
         <a
-          href="#"
-          @click.prevent="$emit('show-privacy')"
-          class="no-underline hover:underline text-[#3366FF] cursor-pointer"
+          href="https://matatalab.com/app/user_agreement.html"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="no-underline text-[#3366FF] cursor-pointer"
         >
-          《隐私协议》
+          {{ t('auth.privacyPolicy') }}
         </a>
       </span>
     </label>
@@ -30,6 +32,9 @@
 </template>
 
 <script setup lang="ts">
+const { $i18n } = useNuxtApp()
+const t = (key: string) => $i18n.t(key)
+
 defineProps<{
   modelValue: boolean
 }>()

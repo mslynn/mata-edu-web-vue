@@ -6,7 +6,7 @@
         'flex items-center input-line px-4 py-3 bg-white',
         errors.phone && 'has-error'
       ]">
-        <img src="~/assets/images/tel.png" alt="手机" class="w-5 h-5 mr-3" />
+        <img src="~/assets/images/tel.png" alt="phone" class="w-5 h-5 mr-3" />
         <CountryCodeSelector 
           v-model="countryCode" 
           ref="countryCodeSelectorRef"
@@ -17,7 +17,7 @@
           type="tel" 
           :value="modelValue.phone"
           @input="handleInput('phone', $event)"
-          placeholder="请输入手机号"
+          :placeholder="t('auth.pleaseInputPhone')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
       </div>
@@ -30,29 +30,32 @@
         'flex items-center input-line px-4 py-3 bg-white',
         errors.code && 'has-error'
       ]">
-        <img src="~/assets/images/code.png" alt="验证码" class="w-5 h-5 mr-3" />
+        <img src="~/assets/images/code.png" alt="code" class="w-5 h-5 mr-3" />
         <input 
           type="text" 
           :value="modelValue.code"
           @input="handleInput('code', $event)"
-          placeholder="请输入验证码"
+          :placeholder="t('auth.pleaseInputCode')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
         <button 
           class="send-code-btn"
-          :class="{ 'is-counting': countdown > 0 }"
+          :class="[
+            { 'is-counting': countdown > 0 },
+            'bg-primary text-white'
+          ]"
           :disabled="countdown > 0" 
           @click="handleSendCode"
         >
-          {{ countdown > 0 ? `${countdown}s 后重发` : '获取验证码' }}
+          {{ countdown > 0 ? `${countdown}${t('auth.resendAfter')}` : t('auth.getCode') }}
         </button>
       </div>
-      <p v-if="errors.code" class="field-error">请输入验证码</p>
+      <p v-if="errors.code" class="field-error">{{ t('auth.pleaseInputCode') }}</p>
     </div>
 
     <!-- 密码登录链接 - 右对齐，和上面按钮对齐 -->
     <div class="text-right mb-6 px-4">
-      <a href="#" class="text-gray-400 text-xs hover:text-[#e8a063] no-underline" @click.prevent="handleTogglePasswordLogin">密码登录</a>
+      <a href="#" class="text-gray-400 text-xs hover:text-[#e8a063] no-underline" @click.prevent="handleTogglePasswordLogin">{{ t('auth.passwordLogin') }}</a>
     </div>
   </div>
 </template>
@@ -61,6 +64,9 @@
 import { ref } from 'vue'
 import type { Country } from './CountryCodeSelector.vue'
 import { useAuth } from '~/composables/api/useAuth'
+
+const { $i18n } = useNuxtApp()
+const t = (key: string) => $i18n.t(key)
 const { getSmsCode } = useAuth();
 
 interface Props {
@@ -85,14 +91,9 @@ const emit = defineEmits<{
 }>()
 
 const countdown = ref(0)
-const phoneErrorMsg = ref('请输入手机号')
+const phoneErrorMsg = ref(t('auth.pleaseInputPhone'))
 const countryCode = ref('86') // 默认中国大陆
 const countryCodeSelectorRef = ref<InstanceType<typeof import('./CountryCodeSelector.vue').default> | null>(null)
-
-// 获取当前选中的国家信息
-const getSelectedCountry = (): Country => {
-  return countryCodeSelectorRef.value?.selectedCountry || { code: '86', name: '中国大陆' }
-}
 
 const handleCountryChange = (country: Country) => {
   emit('update:countryCode', country.code)
@@ -113,41 +114,27 @@ const handleInput = (field: 'phone' | 'code', event: Event) => {
   }
 }
 
-// 校验手机号格式
-const validatePhone = (phone: string): boolean => {
-  const selectedCountry = getSelectedCountry()
-  if (selectedCountry.code === '86') {
-    // 中国大陆：11位，1开头，第二位3-9
-    return /^1[3-9]\d{9}$/.test(phone)
-  } else if (selectedCountry.code === '852') {
-    // 香港：8位数字，以5/6/9开头
-    return /^[569]\d{7}$/.test(phone)
+// 校验手机号格式 - 使用 CountryCodeSelector 的验证方法
+const validatePhone = (phone: string): { valid: boolean; message: string } => {
+  if (countryCodeSelectorRef.value?.validatePhone) {
+    return countryCodeSelectorRef.value.validatePhone(phone)
   }
-  return false
+  // 降级处理
+  if (!phone) {
+    return { valid: false, message: 'auth.pleaseInputPhone' }
+  }
+  return { valid: true, message: '' }
 }
 
 const handleSendCode = async () => {
   if (countdown.value > 0) return
   
   const phone = props.modelValue.phone.trim()
-  const selectedCountry = getSelectedCountry()
   
-  // 校验手机号是否为空
-  if (!phone) {
-    phoneErrorMsg.value = '请输入手机号'
-    emit('update:errors', { ...props.errors, phone: true })
-    return
-  }
-  
-  // 校验手机号格式
-  if (!validatePhone(phone)) {
-    if (selectedCountry.code === '86') {
-      phoneErrorMsg.value = '请输入正确的11位手机号'
-    } else if (selectedCountry.code === '852') {
-      phoneErrorMsg.value = '请输入正确的8位香港手机号'
-    } else {
-      phoneErrorMsg.value = '请输入正确的手机号'
-    }
+  // 使用统一的验证方法
+  const validation = validatePhone(phone)
+  if (!validation.valid) {
+    phoneErrorMsg.value = t(validation.message)
     emit('update:errors', { ...props.errors, phone: true })
     return
   }
@@ -174,7 +161,7 @@ const handleSendCode = async () => {
     }, 1000)
   } catch (error: any) {
     console.error('❌ 验证码发送失败:', error)
-    phoneErrorMsg.value = error?.data?.msg || error?.message || '验证码发送失败'
+    phoneErrorMsg.value = error?.data?.msg || error?.message || t('auth.codeSendFailed')
     emit('update:errors', { ...props.errors, phone: true })
   }
 }

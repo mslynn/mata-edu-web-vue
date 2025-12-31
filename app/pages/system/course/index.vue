@@ -284,12 +284,12 @@ const loadMenuData = async () => {
                     // 设置特殊分类的二级分类
                     if (item.menuName === '自定义课程') {
                         subCategoryMap.value[menuValue] = [
-                            { label: '个人可见', value: 'private' },
-                            { label: '学校可见', value: 'public' },
+                            { label: t('common.privateVisible'), value: 'private' },
+                            { label: t('common.schoolVisible'), value: 'public' },
                         ]
                     } else if (item.menuName === '共享课程') {
                         subCategoryMap.value[menuValue] = [
-                            { label: '全部', value: 'all' },
+                            { label: t('common.all'), value: 'all' },
                         ]
                     }
                 } else {
@@ -301,7 +301,7 @@ const loadMenuData = async () => {
                     const subList: { label: string; value: string; hasChildren?: boolean }[] = []
 
                     if (!hasAll) {
-                        subList.push({ label: '全部', value: 'all' })
+                        subList.push({ label: t('common.all'), value: 'all' })
                     }
 
                     children.forEach((child: MenuNode) => {
@@ -321,7 +321,7 @@ const loadMenuData = async () => {
                             const thirdList: { label: string; value: string }[] = []
 
                             if (!hasThirdAll) {
-                                thirdList.push({ label: '全部', value: 'all' })
+                                thirdList.push({ label: t('common.all'), value: 'all' })
                             }
 
                             child.children.forEach((grandChild: MenuNode) => {
@@ -363,7 +363,7 @@ const loadMenuData = async () => {
 
 // 根据当前一级分类计算二级分类列表
 const subCategories = computed(() => {
-    return subCategoryMap.value[activeCategory.value] || [{ label: '全部', value: 'all' }]
+    return subCategoryMap.value[activeCategory.value] || [{ label: t('common.all'), value: 'all' }]
 })
 
 const activeSubCategory = ref('all')

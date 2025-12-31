@@ -24,8 +24,14 @@
           
           <!-- 资源树 -->
           <div class="resource-tree">
+            <!-- 加载中 -->
+            <div v-if="loading" class="loading-state">
+              <div class="spinner"></div>
+              <span>加载中...</span>
+            </div>
+            
             <!-- 暂无数据 -->
-            <div v-if="filteredResourceGroups.length === 0" class="empty-state">
+            <div v-else-if="filteredResourceGroups.length === 0" class="empty-state">
               <svg viewBox="0 0 100 100" fill="none">
                 <rect x="20" y="25" width="60" height="50" rx="4" stroke="#d9d9d9" stroke-width="2" fill="none"/>
                 <line x1="30" y1="40" x2="70" y2="40" stroke="#d9d9d9" stroke-width="2"/>
@@ -35,34 +41,31 @@
               <span>暂无数据</span>
             </div>
             
-            <div v-for="group in filteredResourceGroups" :key="group.id" class="tree-group">
-              <div class="tree-group-header" @click="toggleGroup(group)">
-                <input type="checkbox" :checked="isGroupChecked(group)" @click.stop="toggleGroupCheck(group)" />
-                <svg class="expand-icon" :class="{ expanded: group.expanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <div v-else v-for="group in filteredResourceGroups" :key="group.resourceName" class="tree-group">
+              <div class="tree-group-header" @click="toggleGroup(group.resourceName)">
+                <svg class="expand-icon" :class="{ expanded: expandedGroups[group.resourceName] }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="6 9 12 15 18 9"></polyline>
                 </svg>
-                <span>{{ group.name }}</span>
+                <span>{{ group.resourceName }} ({{ group.resourceList?.length || 0 }})</span>
               </div>
               
-              <div v-if="group.expanded" class="tree-children">
-                <div v-for="category in getFilteredCategories(group)" :key="category.id" class="tree-category">
-                  <div class="tree-category-header" @click="toggleCategory(category)">
-                    <input type="checkbox" :checked="isCategoryChecked(category)" @click.stop="toggleCategoryCheck(category)" />
-                    <svg class="expand-icon" :class="{ expanded: category.expanded }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <polyline points="6 9 12 15 18 9"></polyline>
+              <div v-if="expandedGroups[group.resourceName]" class="tree-items">
+                <div 
+                  v-for="item in getFilteredItems(group)" 
+                  :key="item.resourceId" 
+                  class="tree-item"
+                  :class="{ selected: isSelected(item.resourceId) }"
+                  @click="selectItem(item)"
+                >
+                  <div class="item-checkbox" :class="{ checked: isSelected(item.resourceId) }">
+                    <svg v-if="isSelected(item.resourceId)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span>{{ category.name }}</span>
                   </div>
-                  
-                  <div v-if="category.expanded" class="tree-items">
-                    <div v-for="item in getFilteredItems(category)" :key="item.id" class="tree-item">
-                      <input type="checkbox" :checked="selectedIds.includes(item.id)" @change="toggleItem(item)" />
-                      <div class="item-icon" :class="getIconClass(item.type)">
-                        <span>{{ getIconText(item.type) }}</span>
-                      </div>
-                      <span class="item-name" :title="item.name">{{ item.name }}</span>
-                    </div>
+                  <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">
+                    <span>{{ getIconText(getFileType(item.fileName)) }}</span>
                   </div>
+                  <span class="item-name" :title="item.fileName">{{ item.fileName }}</span>
                 </div>
               </div>
             </div>
@@ -72,22 +75,26 @@
         <div class="right-panel">
           <div class="selected-header">已选资源（{{ selectedItems.length }}）</div>
           <div class="selected-list">
-            <div v-for="item in selectedItems" :key="item.id" class="selected-item">
-              <div class="item-icon" :class="getIconClass(item.type)">
-                <span>{{ getIconText(item.type) }}</span>
+            <template v-if="selectedItems.length > 0">
+              <div v-for="item in selectedItems" :key="item.resourceId" class="selected-item">
+                <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">
+                  <span>{{ getIconText(getFileType(item.fileName)) }}</span>
+                </div>
+                <span class="item-name">{{ item.fileName }}</span>
+                <div class="item-tags">
+                  <span class="tag tag-green">{{ item.resourceName }}</span>
+                </div>
+                <button class="remove-btn" @click="removeItem(item)">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                </button>
               </div>
-              <span class="item-name">{{ item.name }}</span>
-              <div class="item-tags">
-                <span class="tag tag-green">{{ item.groupName }}</span>
-                <span class="tag tag-outline">{{ item.categoryName }}</span>
-              </div>
-              <button class="remove-btn" @click="removeItem(item)">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="15" y1="9" x2="9" y2="15"></line>
-                  <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-              </button>
+            </template>
+            <div v-else class="empty-selected">
+              <span>请从左侧选择资源</span>
             </div>
           </div>
         </div>
@@ -95,135 +102,90 @@
       
       <div class="modal-footer">
         <button class="btn-cancel" @click="handleClose">取 消</button>
-        <button class="btn-confirm" @click="handleConfirm">确 定</button>
+        <button class="btn-confirm" :disabled="saving" @click="handleConfirm">
+          {{ saving ? '保存中...' : '确 定' }}
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
+import { cursorAdmin } from '~/composables/api/curosr'
 
 interface ResourceItem {
-  id: number
-  name: string
-  type: string
-  groupName?: string
-  categoryName?: string
-}
-
-interface Category {
-  id: number
-  name: string
-  expanded: boolean
-  items: ResourceItem[]
+  resourceId: number
+  chapterId: string
+  resourceType: number
+  resourceCategory: number
+  resourceName: string
+  ossId: string
+  fileName: string
+  modifyNum: number
+  resourceUrl?: string
+  isVisible?: number  // 1=学生可见, 0=不可见
 }
 
 interface ResourceGroup {
-  id: number
-  name: string
-  expanded: boolean
-  children: Category[]
+  resourceCategory: number | null
+  resourceName: string
+  resourceList: ResourceItem[]
 }
 
 const props = defineProps<{
   visible: boolean
+  chapterId: string
 }>()
 
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
-  (e: 'confirm', ids: number[]): void
+  (e: 'confirm', resourceIds: number[]): void
 }>()
 
+const { getChapterResourceList, setChapterResourceVisibleStudent } = cursorAdmin()
+
 const searchKeyword = ref('')
-const selectedIds = ref<number[]>([2, 3, 4, 5, 6])
+const loading = ref(false)
+const saving = ref(false)
+const selectedResourceIds = ref<number[]>([])
+const resourceGroups = ref<ResourceGroup[]>([])
+const expandedGroups = reactive<Record<string, boolean>>({})
 
-// 模拟资源数据
-const resourceGroups = ref<ResourceGroup[]>([
-  {
-    id: 1,
-    name: '教学设计',
-    expanded: false,
-    children: [
-      {
-        id: 11,
-        name: '教案',
-        expanded: false,
-        items: [
-          { id: 1, name: '主题01-"悟空"来了...', type: 'ppt' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 2,
-    name: '教学资源',
-    expanded: true,
-    children: [
-      {
-        id: 21,
-        name: '课件',
-        expanded: true,
-        items: [
-          { id: 2, name: '主题01-"悟空"来了（课件）V1.5.pptx', type: 'ppt' }
-        ]
-      },
-      {
-        id: 22,
-        name: '教师程序',
-        expanded: true,
-        items: [
-          { id: 3, name: '1-1参考程序.ucd', type: 'ucd' },
-          { id: 4, name: '1-2参考程序.ucd', type: 'ucd' }
-        ]
-      },
-      {
-        id: 23,
-        name: '学生手册',
-        expanded: true,
-        items: [
-          { id: 5, name: '主题01-"悟空"来了（学生手册）V1.5.docx', type: 'word' }
-        ]
-      }
-    ]
-  },
-  {
-    id: 3,
-    name: '个人资源',
-    expanded: false,
-    children: [
-      {
-        id: 31,
-        name: '课程资源',
-        expanded: false,
-        items: [
-          { id: 6, name: '万正洋-SAP SD顾问.pdf', type: 'pdf' }
-        ]
-      }
-    ]
+// 根据文件名获取文件类型
+const getFileType = (fileName: string) => {
+  const ext = fileName?.split('.').pop()?.toLowerCase() || ''
+  const typeMap: Record<string, string> = {
+    doc: 'word', docx: 'word',
+    ppt: 'ppt', pptx: 'ppt',
+    xls: 'excel', xlsx: 'excel',
+    pdf: 'pdf',
+    ucd: 'ucd',
+    mc: 'mc',
+    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image',
+    mp4: 'video', mov: 'video', webm: 'video'
   }
-])
+  return typeMap[ext] || 'default'
+}
 
-// 获取所有资源项的扁平列表
+// 获取所有资源项的扁平列表（附带分组名）
 const allItems = computed(() => {
-  const items: ResourceItem[] = []
+  const items: (ResourceItem & { groupName: string })[] = []
   resourceGroups.value.forEach(group => {
-    group.children.forEach(category => {
-      category.items.forEach(item => {
-        items.push({
-          ...item,
-          groupName: group.name,
-          categoryName: category.name
-        })
+    group.resourceList?.forEach(item => {
+      items.push({
+        ...item,
+        groupName: group.resourceName
       })
     })
   })
   return items
 })
 
-// 已选中的资源列表
+// 当前选中的资源列表
 const selectedItems = computed(() => {
-  return allItems.value.filter(item => selectedIds.value.includes(item.id))
+  return allItems.value.filter(i => selectedResourceIds.value.includes(i.resourceId))
 })
 
 // 根据搜索关键词过滤资源组
@@ -232,29 +194,20 @@ const filteredResourceGroups = computed(() => {
   if (!keyword) return resourceGroups.value
   
   return resourceGroups.value.filter(group => {
-    // 检查组内是否有匹配的项
-    return group.children.some(category => 
-      category.items.some(item => item.name.toLowerCase().includes(keyword))
+    return group.resourceList?.some(item => 
+      item.fileName.toLowerCase().includes(keyword)
     )
   })
 })
 
-// 获取过滤后的分类
-const getFilteredCategories = (group: ResourceGroup) => {
-  const keyword = searchKeyword.value.trim().toLowerCase()
-  if (!keyword) return group.children
-  
-  return group.children.filter(category => 
-    category.items.some(item => item.name.toLowerCase().includes(keyword))
-  )
-}
-
 // 获取过滤后的资源项
-const getFilteredItems = (category: Category) => {
+const getFilteredItems = (group: ResourceGroup) => {
   const keyword = searchKeyword.value.trim().toLowerCase()
-  if (!keyword) return category.items
+  if (!keyword) return group.resourceList || []
   
-  return category.items.filter(item => item.name.toLowerCase().includes(keyword))
+  return (group.resourceList || []).filter(item => 
+    item.fileName.toLowerCase().includes(keyword)
+  )
 }
 
 const getIconClass = (type: string) => {
@@ -262,7 +215,11 @@ const getIconClass = (type: string) => {
     word: 'icon-word',
     ppt: 'icon-ppt',
     pdf: 'icon-pdf',
-    ucd: 'icon-ucd'
+    ucd: 'icon-ucd',
+    mc: 'icon-mc',
+    excel: 'icon-excel',
+    image: 'icon-image',
+    video: 'icon-video'
   }[type] || 'icon-default'
 }
 
@@ -271,79 +228,104 @@ const getIconText = (type: string) => {
     word: 'W',
     ppt: 'P',
     pdf: 'PDF',
-    ucd: 'ucd'
+    ucd: 'ucd',
+    mc: 'mc',
+    excel: 'X',
+    image: '图',
+    video: '视'
   }[type] || '?'
 }
 
-const toggleGroup = (group: ResourceGroup) => {
-  group.expanded = !group.expanded
+const toggleGroup = (groupName: string) => {
+  expandedGroups[groupName] = !expandedGroups[groupName]
 }
 
-const toggleCategory = (category: Category) => {
-  category.expanded = !category.expanded
-}
-
-const isGroupChecked = (group: ResourceGroup) => {
-  const allIds = group.children.flatMap(c => c.items.map(i => i.id))
-  return allIds.length > 0 && allIds.every(id => selectedIds.value.includes(id))
-}
-
-const isCategoryChecked = (category: Category) => {
-  const allIds = category.items.map(i => i.id)
-  return allIds.length > 0 && allIds.every(id => selectedIds.value.includes(id))
-}
-
-const toggleGroupCheck = (group: ResourceGroup) => {
-  const allIds = group.children.flatMap(c => c.items.map(i => i.id))
-  const allChecked = isGroupChecked(group)
-  if (allChecked) {
-    selectedIds.value = selectedIds.value.filter(id => !allIds.includes(id))
-  } else {
-    allIds.forEach(id => {
-      if (!selectedIds.value.includes(id)) {
-        selectedIds.value.push(id)
-      }
-    })
+const selectItem = (item: ResourceItem) => {
+  // 如果已选中则不重复添加
+  if (!selectedResourceIds.value.includes(item.resourceId)) {
+    selectedResourceIds.value.push(item.resourceId)
   }
 }
 
-const toggleCategoryCheck = (category: Category) => {
-  const allIds = category.items.map(i => i.id)
-  const allChecked = isCategoryChecked(category)
-  if (allChecked) {
-    selectedIds.value = selectedIds.value.filter(id => !allIds.includes(id))
-  } else {
-    allIds.forEach(id => {
-      if (!selectedIds.value.includes(id)) {
-        selectedIds.value.push(id)
-      }
-    })
-  }
-}
-
-const toggleItem = (item: ResourceItem) => {
-  const index = selectedIds.value.indexOf(item.id)
+const removeItem = (item: ResourceItem & { groupName: string }) => {
+  const index = selectedResourceIds.value.indexOf(item.resourceId)
   if (index > -1) {
-    selectedIds.value.splice(index, 1)
-  } else {
-    selectedIds.value.push(item.id)
+    selectedResourceIds.value.splice(index, 1)
   }
 }
 
-const removeItem = (item: ResourceItem) => {
-  const index = selectedIds.value.indexOf(item.id)
-  if (index > -1) {
-    selectedIds.value.splice(index, 1)
+// 判断资源是否已选中
+const isSelected = (resourceId: number) => {
+  return selectedResourceIds.value.includes(resourceId)
+}
+
+// 加载资源数据
+const loadResources = async () => {
+  if (!props.chapterId) return
+  
+  loading.value = true
+  try {
+    // 不传 resourceType，获取所有类型的资源
+    const data = await getChapterResourceList(props.chapterId)
+    resourceGroups.value = data || []
+    
+    // 默认展开所有分组
+    resourceGroups.value.forEach(group => {
+      expandedGroups[group.resourceName] = true
+    })
+    
+    // 根据 isVisible 初始化已选状态
+    selectedResourceIds.value = []
+    resourceGroups.value.forEach(group => {
+      group.resourceList?.forEach(item => {
+        if (item.isVisible === 1) {
+          selectedResourceIds.value.push(item.resourceId)
+        }
+      })
+    })
+  } catch (error) {
+    console.error('加载资源失败:', error)
+    ElMessage.error('加载资源失败')
+  } finally {
+    loading.value = false
   }
 }
+
+// 监听弹窗打开
+watch(() => props.visible, (newVal) => {
+  if (newVal) {
+    searchKeyword.value = ''
+    loadResources()  // loadResources 会根据 isVisible 初始化已选状态
+  }
+})
 
 const handleClose = () => {
   emit('update:visible', false)
 }
 
-const handleConfirm = () => {
-  emit('confirm', selectedIds.value)
-  emit('update:visible', false)
+const handleConfirm = async () => {
+  saving.value = true
+  try {
+    // 构建所有资源的可见状态：已选的 isVisible=1，未选的 isVisible=0
+    const resourceList = allItems.value.map(item => ({
+      resourceId: String(item.resourceId),
+      isVisible: selectedResourceIds.value.includes(item.resourceId) ? 1 : 0
+    }))
+    
+    await setChapterResourceVisibleStudent({ resourceList })
+    ElMessage.success('设置成功')
+    
+    // 提交成功后重新加载列表
+    await loadResources()
+    
+    emit('confirm', selectedResourceIds.value)
+    emit('update:visible', false)
+  } catch (error) {
+    console.error('设置失败:', error)
+    ElMessage.error('设置失败')
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 
@@ -364,9 +346,9 @@ const handleConfirm = () => {
 .modal-container {
   background: white;
   border-radius: 8px;
-  width: 1180px;
+  width: 900px;
   max-width: 95vw;
-  height: 700px;
+  height: 600px;
   max-height: 90vh;
   display: flex;
   flex-direction: column;
@@ -385,7 +367,7 @@ const handleConfirm = () => {
 .modal-title {
   font-size: 16px;
   font-weight: 500;
-  color: #2cb0ff;
+  color: #FF9900;
 }
 
 .close-btn {
@@ -414,7 +396,7 @@ const handleConfirm = () => {
 }
 
 .left-panel {
-  width: 320px;
+  width: 400px;
   display: flex;
   flex-direction: column;
   border: 1px solid #e8e8e8;
@@ -437,7 +419,7 @@ const handleConfirm = () => {
   outline: none;
 }
 
-.search-box input:focus { border-color: #2cb0ff; }
+.search-box input:focus { border-color: #FF9900; }
 
 .search-icon {
   position: absolute;
@@ -446,7 +428,7 @@ const handleConfirm = () => {
   transform: translateY(-50%);
   width: 18px;
   height: 18px;
-  color: #2cb0ff;
+  color: #FF9900;
 }
 
 .resource-tree {
@@ -455,6 +437,7 @@ const handleConfirm = () => {
   padding: 8px 0;
 }
 
+.loading-state,
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -465,27 +448,39 @@ const handleConfirm = () => {
   font-size: 14px;
 }
 
+.loading-state .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #f0f0f0;
+  border-top-color: #FF9900;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .empty-state svg {
   width: 60px;
   height: 60px;
   margin-bottom: 12px;
 }
 
-.tree-group-header,
-.tree-category-header {
+.tree-group-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
   color: #333;
+  background: #fafafa;
 }
 
-.tree-group-header:hover,
-.tree-category-header:hover { background: #f5f7fa; }
-
-.tree-category-header { padding-left: 32px; }
+.tree-group-header:hover { background: #f0f0f0; }
 
 .expand-icon {
   width: 16px;
@@ -497,18 +492,21 @@ const handleConfirm = () => {
 
 .expand-icon.expanded { transform: rotate(0deg); }
 
-.tree-items { padding-left: 52px; }
+.tree-items { padding: 4px 0; }
 
 .tree-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
+  padding: 8px 12px 8px 28px;
   font-size: 13px;
   color: #333;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
 .tree-item:hover { background: #f5f7fa; }
+.tree-item.selected { background: #e6f7ff; }
 
 .item-icon {
   width: 24px;
@@ -526,6 +524,11 @@ const handleConfirm = () => {
 .icon-ppt { background: #D04423; color: white; }
 .icon-pdf { background: #E53935; color: white; }
 .icon-ucd { background: #ff6b6b; color: white; }
+.icon-mc { background: #9c27b0; color: white; }
+.icon-excel { background: #217346; color: white; }
+.icon-image { background: #4caf50; color: white; }
+.icon-video { background: #ff9800; color: white; }
+.icon-default { background: #999; color: white; }
 
 .item-name {
   flex: 1;
@@ -562,10 +565,9 @@ const handleConfirm = () => {
   align-items: center;
   gap: 12px;
   padding: 12px 16px;
-  border-bottom: 1px solid #f5f5f5;
+  background: #f9f9f9;
+  border-radius: 6px;
 }
-
-.selected-item:last-child { border-bottom: none; }
 
 .selected-item .item-name {
   flex: 1;
@@ -590,12 +592,6 @@ const handleConfirm = () => {
   border: 1px solid #b7eb8f;
 }
 
-.tag-outline {
-  background: white;
-  color: #52c41a;
-  border: 1px solid #b7eb8f;
-}
-
 .remove-btn {
   width: 24px;
   height: 24px;
@@ -609,6 +605,15 @@ const handleConfirm = () => {
 
 .remove-btn:hover { opacity: 0.8; }
 .remove-btn svg { width: 100%; height: 100%; }
+
+.empty-selected {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #999;
+  font-size: 14px;
+}
 
 .modal-footer {
   padding: 16px 32px;
@@ -629,11 +634,11 @@ const handleConfirm = () => {
   transition: all 0.2s;
 }
 
-.btn-cancel:hover { border-color: #2cb0ff; color: #2cb0ff; }
+.btn-cancel:hover { border-color: #FF9900; color: #FF9900; }
 
 .btn-confirm {
   padding: 10px 40px;
-  background: #2cb0ff;
+  background: #FF9900;
   border: none;
   border-radius: 20px;
   color: white;
@@ -642,34 +647,30 @@ const handleConfirm = () => {
   transition: all 0.2s;
 }
 
-.btn-confirm:hover { background: #1a9fe8; }
+.btn-confirm:hover { background: #E68A00; }
+.btn-confirm:disabled { background: #ccc; cursor: not-allowed; }
 
-input[type="checkbox"] {
+.item-checkbox {
   width: 16px;
   height: 16px;
-  cursor: pointer;
-  appearance: none;
-  -webkit-appearance: none;
   border: 2px solid #d9d9d9;
   border-radius: 3px;
   background: white;
-  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.2s;
 }
 
-input[type="checkbox"]:checked {
+.item-checkbox.checked {
   background: #FF9900;
   border-color: #FF9900;
 }
 
-input[type="checkbox"]:checked::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 5px;
-  height: 9px;
-  border: solid white;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
+.item-checkbox svg {
+  width: 12px;
+  height: 12px;
+  color: white;
 }
 </style>

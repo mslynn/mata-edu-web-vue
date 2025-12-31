@@ -1,28 +1,42 @@
 <template>
-  <div class="lang-switcher" ref="switcherRef">
-    <button class="lang-btn" @click="toggleDropdown">
-      <svg class="lang-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <div class="language-switcher" @click="toggleLang">
+    <div class="globe-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
         <circle cx="12" cy="12" r="10"/>
-        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        <path d="M2 12h20"/>
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
-      <span class="lang-text">{{ currentLangName }}</span>
-      <svg class="arrow-icon" :class="{ 'rotate': showDropdown }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M6 9l6 6 6-6"/>
+    </div>
+    <span class="lang-text">{{ locale === 'zh' ? 'Chinese' : 'English' }}</span>
+    <div class="arrow-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="6 9 12 15 18 9"/>
       </svg>
-    </button>
+    </div>
     
-    <Transition name="fade">
-      <div v-if="showDropdown" class="lang-dropdown">
+    <!-- 下拉菜单 -->
+    <Transition name="dropdown">
+      <div v-if="showDropdown" class="dropdown-menu" @click.stop>
         <div 
-          v-for="loc in availableLocales" 
-          :key="loc.code"
-          class="lang-option"
-          :class="{ 'active': loc.code === currentLocale }"
-          @click="selectLocale(loc.code)"
+          class="dropdown-item" 
+          :class="{ active: locale === 'zh' }"
+          @click="switchLang('zh')"
         >
-          <span class="option-text">{{ loc.name }}</span>
-          <svg v-if="loc.code === currentLocale" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-            <path d="M5 12l5 5L20 7"/>
+          <span class="flag">🇨🇳</span>
+          <span>Chinese</span>
+          <svg v-if="locale === 'zh'" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
+          </svg>
+        </div>
+        <div 
+          class="dropdown-item"
+          :class="{ active: locale === 'en' }"
+          @click="switchLang('en')"
+        >
+          <span class="flag">🇺🇸</span>
+          <span>English</span>
+          <svg v-if="locale === 'en'" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"/>
           </svg>
         </div>
       </div>
@@ -31,158 +45,159 @@
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-
-const { locale } = useI18n()
-
-const showDropdown = ref(false)
-const switcherRef = ref<HTMLElement | null>(null)
-
-const availableLocales = [
-  { code: 'zh', name: '中文' },
-  { code: 'en', name: 'English' }
-]
-
-const currentLocale = computed(() => locale.value)
-
-const currentLangName = computed(() => {
-  const current = availableLocales.find(l => l.code === locale.value)
-  return current?.name || locale.value
+const { $i18n } = useNuxtApp()
+const locale = computed({
+  get: () => $i18n.locale.value,
+  set: (val) => { $i18n.locale.value = val }
 })
 
-const toggleDropdown = () => {
+const showDropdown = ref(false)
+
+const toggleLang = () => {
   showDropdown.value = !showDropdown.value
 }
 
-const selectLocale = (code: string) => {
-  locale.value = code
-  // 保存到 localStorage，供 HTTP 请求使用
-  if (process.client) {
-    localStorage.setItem('app_locale', code)
-  }
+const switchLang = (lang: string) => {
+  locale.value = lang
   showDropdown.value = false
+  localStorage.setItem('locale', lang)
 }
 
-// 初始化时从 localStorage 读取
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-  // 恢复上次选择的语言
-  if (process.client) {
-    const savedLocale = localStorage.getItem('app_locale')
-    if (savedLocale && (savedLocale === 'zh' || savedLocale === 'en')) {
-      locale.value = savedLocale
-    }
-  }
-})
-
 // 点击外部关闭
-const handleClickOutside = (e: MouseEvent) => {
-  if (switcherRef.value && !switcherRef.value.contains(e.target as Node)) {
+const closeDropdown = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('.language-switcher')) {
     showDropdown.value = false
   }
 }
 
+onMounted(() => {
+  const savedLocale = localStorage.getItem('locale')
+  if (savedLocale && ['zh', 'en'].includes(savedLocale)) {
+    locale.value = savedLocale
+  }
+  document.addEventListener('click', closeDropdown)
+})
+
 onUnmounted(() => {
-  document.removeEventListener('click', handleClickOutside)
+  document.removeEventListener('click', closeDropdown)
 })
 </script>
 
 <style scoped>
-.lang-switcher {
+.language-switcher {
   position: relative;
-}
-
-.lang-btn {
   display: flex;
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: rgba(255, 255, 255, 0.15);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  color: #fff;
-  font-size: 14px;
+  background: #fff;
+  border-radius: 24px;
+  border: 1px solid #eee;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  user-select: none;
 }
 
-.lang-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.5);
+.language-switcher:hover {
+  border-color: #FF9900;
+  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.12);
 }
 
-.lang-icon {
+.globe-icon {
   width: 18px;
   height: 18px;
+  color: #FF9900;
+  flex-shrink: 0;
+}
+
+.globe-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
 .lang-text {
+  font-size: 13px;
   font-weight: 500;
+  color: #333;
+  white-space: nowrap;
 }
 
 .arrow-icon {
   width: 14px;
   height: 14px;
+  color: #999;
   transition: transform 0.2s ease;
+  flex-shrink: 0;
 }
 
-.arrow-icon.rotate {
-  transform: rotate(180deg);
+.arrow-icon svg {
+  width: 100%;
+  height: 100%;
 }
 
-.lang-dropdown {
+.language-switcher:hover .arrow-icon {
+  color: #FF9900;
+}
+
+/* 下拉菜单 */
+.dropdown-menu {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  min-width: 120px;
+  min-width: 160px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border: 1px solid #f0f0f0;
+  padding: 6px;
   z-index: 100;
+  overflow: hidden;
 }
 
-.lang-option {
+.dropdown-item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 12px 16px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.lang-option:hover {
-  background: #FFF7E6;
-}
-
-.lang-option.active {
-  background: #FFF7E6;
-}
-
-.option-text {
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
   font-size: 14px;
   color: #333;
+  cursor: pointer;
+  transition: all 0.15s ease;
 }
 
-.lang-option.active .option-text {
+.dropdown-item:hover {
+  background: #FFF8F0;
+}
+
+.dropdown-item.active {
+  background: linear-gradient(135deg, #FFF4E6 0%, #FFECDA 100%);
   color: #FF9900;
   font-weight: 500;
+}
+
+.flag {
+  font-size: 18px;
+  line-height: 1;
 }
 
 .check-icon {
   width: 16px;
   height: 16px;
+  margin-left: auto;
   color: #FF9900;
 }
 
-/* 动画 */
-.fade-enter-active,
-.fade-leave-active {
+/* 下拉动画 */
+.dropdown-enter-active,
+.dropdown-leave-active {
   transition: all 0.2s ease;
 }
 
-.fade-enter-from,
-.fade-leave-to {
+.dropdown-enter-from,
+.dropdown-leave-to {
   opacity: 0;
   transform: translateY(-8px);
 }

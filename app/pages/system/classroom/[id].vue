@@ -267,6 +267,15 @@
             </div>
             <p class="share-text">正在分享屏幕</p>
             <p class="share-tip">学生端可以看到您分享的内容</p>
+            <div class="connected-count">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              <span>{{ connectedStudentCount }} 名学生已连接</span>
+            </div>
             <button class="stop-share-btn" @click="stopScreenShare">停止分享</button>
           </div>
           <!-- 黑板模式 -->
@@ -338,11 +347,19 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { useWebRTC } from '~/composables/useWebRTC'
 
 definePageMeta({ layout: 'blank' })
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const route = useRoute()
+const config = useRuntimeConfig()
+
+// WebRTC 屏幕分享
+const webRTC = useWebRTC()
+const connectedStudentCount = computed(() => webRTC.connectedPeers.value.size)
+
+// 信令服务器地址（从环境变量或使用默认值）
+const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.17:8001/resource/websocket'
 
 // 上课计时
 const classTime = ref(0)
@@ -358,9 +375,8 @@ const formatTime = (seconds: number) => {
 // 侧边栏折叠
 const leftCollapsed = ref(false)
 
-// 屏幕分享
-const isScreenSharing = ref(false)
-let screenStream: MediaStream | null = null
+// 屏幕分享状态（使用 WebRTC composable 的状态）
+const isScreenSharing = computed(() => webRTC.isScreenSharing.value)
 
 // 黑板模式
 const isBlackboardMode = ref(false)
@@ -423,38 +439,17 @@ const toggleScreenShare = async () => {
 }
 
 const startScreenShare = async () => {
-  try {
-    screenStream = await navigator.mediaDevices.getDisplayMedia({
-      video: true,
-      audio: false
-    })
-    
-    isScreenSharing.value = true
-    
-    // 监听用户停止分享（点击浏览器的停止分享按钮）
-    const videoTrack = screenStream.getVideoTracks()[0]
-    if (videoTrack) {
-      videoTrack.onended = () => {
-        stopScreenShare()
-      }
-    }
-    
-    // TODO: 这里应该通过 WebRTC 将 screenStream 推送给学生端
-    console.log('屏幕分享已开始，流:', screenStream)
-  } catch (error: any) {
-    console.error('屏幕分享失败:', error)
-    if (error.name !== 'NotAllowedError') {
-      alert('屏幕分享启动失败，请检查浏览器权限设置')
-    }
+  // 使用 WebRTC 开始屏幕分享
+  const success = await webRTC.startScreenShare()
+  if (success) {
+    console.log('屏幕分享已开始，等待学生连接...')
   }
 }
 
 const stopScreenShare = () => {
-  if (screenStream) {
-    screenStream.getTracks().forEach(track => track.stop())
-    screenStream = null
-  }
-  isScreenSharing.value = false
+  // 使用 WebRTC 停止屏幕分享
+  webRTC.stopScreenShare()
+  console.log('屏幕分享已停止')
 }
 
 // 资源列表（扁平列表）
@@ -537,12 +532,32 @@ onMounted(() => {
   timer = setInterval(() => {
     classTime.value++
   }, 1000)
+
+  // 初始化 WebRTC（教师端）
+  const classroomId = route.params.id as string
+  const teacherId = `teacher_${Date.now()}` // 实际应从用户信息获取
+  
+  webRTC.initialize({
+    signalingUrl: signalingUrl,
+    roomId: classroomId,
+    userId: teacherId,
+    role: 'teacher',
+    onPeerConnected: (peerId) => {
+      console.log('学生已连接:', peerId)
+    },
+    onPeerDisconnected: (peerId) => {
+      console.log('学生已断开:', peerId)
+    },
+    onError: (error) => {
+      console.error('WebRTC 错误:', error)
+    }
+  })
 })
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
-  // 停止屏幕分享
-  stopScreenShare()
+  // 销毁 WebRTC 连接
+  webRTC.destroy()
 })
 </script>
 
@@ -997,7 +1012,23 @@ onUnmounted(() => {
 .share-tip {
   font-size: 14px;
   color: #999;
+  margin-bottom: 16px;
+}
+
+.connected-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #E8F5E9;
+  border-radius: 20px;
+  color: #4CAF50;
+  font-size: 14px;
   margin-bottom: 24px;
+}
+
+.connected-count svg {
+  color: #4CAF50;
 }
 
 .stop-share-btn {

@@ -21,6 +21,10 @@
     </div>
     <!-- 右侧登录表单 -->
     <div class="flex-1 pt-[104px] px-10 flex flex-col relative">
+      <!-- 语言切换器 -->
+      <div class="absolute top-4 right-4 z-20">
+        <LanguageSwitcher />
+      </div>
       <!-- 返回按钮（班级码登录、体验账号、忘记密码） -->
       <button 
         v-if="
@@ -60,7 +64,7 @@
         v-if="loginType === 'classcode'"
         class="h-[72px] flex items-center justify-center mb-8"
       >
-        <p class="text-gray-500 text-sm">请输入班级码和密码</p>
+        <p class="text-gray-500 text-sm">{{ t('auth.classCodePasswordTip') }}</p>
       </div>
       <!-- 体验账号无需标题，直接显示表单 -->
       <!-- <div v-if="loginType === 'trial'" class="h-[20px]"></div> -->
@@ -110,7 +114,7 @@
           class="w-full py-3 mt-4 bg-[#FFA54D] border border-solid border-gray-300 rounded-[40px] text-white text-base font-medium cursor-pointer transition-colors"
           @click="handleLogin"
         >
-          {{ isTrialMode ? '提交' : '登录' }}
+          {{ isTrialMode ? t('auth.submit') : t('auth.login') }}
         </button>
       </client-only>
       <!-- 协议勾选（除了忘记密码和体验账号外都显示） -->
@@ -156,12 +160,12 @@
     <!-- 协议未勾选提示弹窗 -->
     <Modal 
       v-model="showAgreementRequiredModal"
-      title="提示"
+      :title="t('auth.tips')"
       @confirm="handleAgreementConfirm"
       @cancel="showAgreementRequiredModal = false"
     >
       <div class="text-center">
-        <p>我已阅读同意用户协议，隐私协议。</p>
+        <p>{{ t('auth.agreementTip') }}</p>
       </div>
     </Modal>
   </div>
@@ -177,6 +181,10 @@
 import { ref, watch, nextTick, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { useAuth } from '~/composables/api/useAuth'
+
+const { $i18n } = useNuxtApp()
+const t = (key: string) => $i18n.t(key)
+
 const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole, classCodeLogin, getClassCodeLoginList } = useAuth();
 // 登录页也阻止返回
 const { allowNavigation } = usePreventBack();

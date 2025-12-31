@@ -1,5 +1,25 @@
 <template>
   <div class="flex-1 overflow-auto py-4 w-full">
+    <!-- 上课通知弹窗 -->
+    <Teleport to="body">
+      <div v-if="showClassNotification" class="class-notification-overlay">
+        <div class="class-notification-modal">
+          <div class="notification-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </div>
+          <h2 class="notification-title">老师开始上课啦！</h2>
+          <p class="notification-desc">{{ classInfo.className || '课堂' }} 正在进行中</p>
+          <div class="notification-actions">
+            <button class="btn-later" @click="laterEnter">稍后进入</button>
+            <button class="btn-enter" @click="enterClassroom">立即进入</button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
+
     <!-- 两栏布局容器 -->
     <div class="main-content flex">
       
@@ -106,14 +126,90 @@
 
 <script setup lang="ts">
 import { useAuth } from '~/composables/api/useAuth'
+import { useSignaling } from '~/composables/useSignaling'
+import { ElMessage } from '~/components/ui'
 
 definePageMeta({
   layout: 'default'
 })
 
+const config = useRuntimeConfig()
 const { logout } = useAuth()
 
+// 上课通知弹窗
+const showClassNotification = ref(false)
+const classInfo = ref({
+  classId: '',
+  className: '',
+  teacherPeerId: ''  // 教师的 PeerJS ID
+})
+
+// WebSocket 信令连接
+const signaling = useSignaling()
+const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.17:8001/resource/websocket'
+
+// 连接 WebSocket 监听上课通知
+onMounted(() => {
+  const studentId = `student_${Date.now()}`
+  
+  signaling.connect({
+    url: signalingUrl,
+    roomId: 'student-notification', // 学生通知房间
+    userId: studentId,
+    role: 'student',
+    onMessage: (message) => {
+      console.log('[学生端] 收到消息:', message.type, message)
+      
+      // 处理上课通知
+      if (message.type === 'CLASS_BEGIN') {
+        console.log('[学生端] 收到上课通知！')
+        // 解析课堂信息
+        // 后端需要返回: { type: "CLASS_BEGIN", classId: "xxx", className: "xxx", teacherPeerId: "xxx" }
+        const data = typeof message.data === 'object' ? message.data : {}
+        classInfo.value = {
+          classId: data.classId || 'default',
+          className: data.className || '老师的课堂',
+          teacherPeerId: data.teacherPeerId || ''  // 重要：教师的 PeerJS ID
+        }
+        showClassNotification.value = true
+        console.log('[学生端] 教师 PeerId:', classInfo.value.teacherPeerId)
+      }
+      
+      // 处理下课通知
+      if (message.type === 'CLASS_END') {
+        console.log('[学生端] 收到下课通知')
+        ElMessage.info('老师已下课')
+      }
+    },
+    onConnected: () => {
+      console.log('[学生端] WebSocket 连接成功，等待上课通知...')
+    },
+    onDisconnected: () => {
+      console.log('[学生端] WebSocket 断开')
+    }
+  })
+})
+
+// 进入课堂
+const enterClassroom = () => {
+  showClassNotification.value = false
+  // 把 teacherPeerId 通过 query 传给课堂页面
+  navigateTo({
+    path: `/student/classroom/${classInfo.value.classId}`,
+    query: {
+      teacherPeerId: classInfo.value.teacherPeerId
+    }
+  })
+}
+
+// 稍后进入
+const laterEnter = () => {
+  showClassNotification.value = false
+  ElMessage.info('可以点击右上角通知图标进入课堂')
+}
+
 const handleLogout = () => {
+  signaling.disconnect()
   logout()
 }
 </script>
@@ -211,4 +307,101 @@ const handleLogout = () => {
   width: 60%;
   height: 60%;
 }
+
+/* 上课通知弹窗样式 */
+.class-notification-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.class-notification-modal {
+  background: white;
+  border-radius: 20px;
+  padding: 40px 50px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.notification-icon {
+  margin-bottom: 20px;
+  animation: ring 0.5s ease-in-out infinite alternate;
+}
+
+@keyframes ring {
+  from { transform: rotate(-10deg); }
+  to { transform: rotate(10deg); }
+}
+
+.notification-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.notification-desc {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.notification-actions {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+}
+
+.btn-later {
+  padding: 12px 30px;
+  border: 1px solid #ddd;
+  border-radius: 25px;
+  background: white;
+  color: #666;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-later:hover {
+  background: #f5f5f5;
+}
+
+.btn-enter {
+  padding: 12px 30px;
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #FF9900, #FFB347);
+  color: white;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(255, 153, 0, 0.4);
+}
+
+.btn-enter:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 153, 0, 0.5);
+}
 </style>
+

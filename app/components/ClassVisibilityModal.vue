@@ -8,11 +8,11 @@
         </svg>
       </button>
       
-      <h2 class="modal-title">设置可见班级</h2>
+      <h2 class="modal-title">{{ $t('course.setVisibleClassTitle') }}</h2>
       
       <div class="tab-section">
-        <span class="tab-label active">选择可见班级</span>
-        <span class="tab-hint">上过该课程的班级学生默认可见该课程</span>
+        <span class="tab-label active">{{ $t('course.selectVisibleClass') }}</span>
+        <span class="tab-hint">{{ $t('course.classTakenCourseHint') }}</span>
       </div>
       
       <div class="class-list">
@@ -25,14 +25,14 @@
           />
           <span class="class-name">
             {{ cls.name }}
-            <span v-if="cls.hasTakenCourse" class="taken-hint">（该班级已经上过当前课程）</span>
+            <span v-if="cls.hasTakenCourse" class="taken-hint">{{ $t('course.classTakenCourse') }}</span>
           </span>
         </label>
       </div>
       
       <div class="modal-footer">
-        <button class="btn-cancel" @click="handleClose">取 消</button>
-        <button class="btn-confirm" @click="handleConfirm">确 定</button>
+        <button class="btn-cancel" @click="handleClose">{{ $t('common.cancel') }}</button>
+        <button class="btn-confirm" @click="handleConfirm">{{ $t('common.confirm') }}</button>
       </div>
       </div>
     </div>

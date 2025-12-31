@@ -1,9 +1,9 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config
+// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.57:8001' 
 
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.78:8001'
+  :  'https://test-gateway.matatastudio.com'
 
 // 预览服务地址
 const previewBaseUrl = process.env.NUXT_PUBLIC_PREVIEW_BASE_URL || 'http://192.168.0.145:8012'
@@ -25,9 +25,11 @@ export default defineNuxtConfig({
     public: {
     //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
-      apiBaseUrl: apiBaseUrl || 'http://192.168.0.78:8001',
+      apiBaseUrl: apiBaseUrl || 'http://192.168.0.17:8001',
       // 预览服务地址
       previewBaseUrl: previewBaseUrl || 'http://192.168.0.145:8012',
+      // WebRTC 信令服务器地址
+      signalingUrl: process.env.NUXT_PUBLIC_SIGNALING_URL || 'ws://192.168.0.17:8001/resource/websocket',
     }
   },
 

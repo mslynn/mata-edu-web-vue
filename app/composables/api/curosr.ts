@@ -220,9 +220,17 @@ const getCursorTreeMenu = async () => {
 //     }
 //   }
   //开始备课
- const startPrepare = async (chapterId: string) => {
+ const startPrepare = async (chapterId: string,courseId: string) => {
     try {
-      const response = await http.get(`/system/course/chapter/prepare/${chapterId}`)
+
+      const queryParams: Record<string, any> = {}
+      if (chapterId) {
+        queryParams.chapterId = chapterId
+      }
+      if (courseId !== undefined) {
+        queryParams.courseId = courseId
+      }
+      const response = await http.post('/system/course/chapter/prepare',queryParams)
       if (response.code !== 200) {
         throw new Error(response.msg || '开始备课失败')
       }
@@ -318,7 +326,7 @@ const getCursorTreeMenu = async () => {
     resourceList: { resourceId: string; isVisible: number }[]
   }) => {
     try {
-      const response = await http.post('/system/course/resource/set/student/visible', data)
+      const response = await http.post('/system/course/resource/set', data)
       if (response.code !== 200) {
         throw new Error(response.msg || '设置课程章节资源可见学生失败')
       }

@@ -8,15 +8,15 @@
           </svg>
         </button>
         
-        <h2 class="modal-title">删除课程提醒</h2>
+        <h2 class="modal-title">{{ $t('course.deleteCourseReminder') }}</h2>
         
         <p class="modal-content">
-          删除后无法恢复，师生均无法再查看课程是否确认删除？
+          {{ $t('course.deleteCourseContent') }}
         </p>
         
         <div class="modal-footer">
-          <button class="btn-delete" @click="handleConfirm">删除课程</button>
-          <button class="btn-cancel" @click="handleCancel">再想想</button>
+          <button class="btn-delete" @click="handleConfirm">{{ $t('course.deleteCourse') }}</button>
+          <button class="btn-cancel" @click="handleCancel">{{ $t('course.thinkAgain') }}</button>
         </div>
       </div>
     </div>

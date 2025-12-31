@@ -187,12 +187,12 @@
 
 /* 发送验证码按钮 */
 .send-code-btn {
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   border-radius: 6px;
   padding: 4px 16px;
   font-size: 13px;
-  color: #CCCCCC;
-  background: transparent;
+  /* color: #CCCCCC;
+  background: transparent; */
   cursor: pointer;
   white-space: nowrap;
   transition: all 0.3s ease;
@@ -204,13 +204,13 @@
 }
 
 .send-code-btn:disabled {
-  border: 1px solid #ccc;
+  /* border: 1px solid #ccc; */
   box-shadow: none;
   cursor: not-allowed;
 }
 
 .send-code-btn.is-counting {
-  color: #999;
+  color: #fff;
 }
 
 /* 体验账号表单样式 */

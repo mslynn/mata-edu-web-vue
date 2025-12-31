@@ -7,7 +7,7 @@
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
           </svg>
-          课程资源
+          {{ $t('course.courseResource') }}
         </NuxtLink>
         <span class="breadcrumb-separator">&gt;</span>
         <span class="breadcrumb-current">{{ courseInfo.name }}</span>
@@ -17,19 +17,19 @@
         <div ref="courseRowRef" class="course-row">
           <div class="cover-box">
           
-            <img :src="courseInfo.courseCoverUrl" alt="封面" class="cover-img" />
+            <img :src="courseInfo.courseCoverUrl" :alt="$t('common.courseCover')" class="cover-img" />
           </div>
           <div class="info-box">
             <div class="title-line">
               <h1 class="title">{{ courseInfo.name }}</h1>
-              <button class="edit-btn" @click="showEvaluationModal = true">课程测评</button>
+              <button class="edit-btn" @click="showEvaluationModal = true">{{ $t('course.courseEvaluation') }}</button>
             </div>
             <div ref="extraInfoRef" class="extra-info">
               <!-- <span class="units">课程单元：{{ courseInfo.units }}单元</span> -->
               <p class="desc">{{ courseInfo.description }}</p>
             </div>
           </div>
-          <a href="javascript:;" class="settings-link" @click="showClassModal = true">设置课程可见班级</a>
+          <a href="javascript:;" class="settings-link" @click="showClassModal = true">{{ $t('course.setVisibleClass') }}</a>
         </div>
       </div>
     </div>
@@ -55,13 +55,13 @@
     <!-- 主体内容 -->
     <div ref="courseMainRef" class="course-main">
       <div class="chapter-sidebar">
-        <div class="sidebar-title">章节详情</div>
+        <div class="sidebar-title">{{ $t('course.chapterDetails') }}</div>
         <div class="chapter-list">
           <div v-for="chapter in chapters" :key="chapter.id" class="chapter-item" :class="{ active: activeChapter === chapter.id }" @click="activeChapter = chapter.id">
             <span class="chapter-name">{{ chapter.name }}</span>
             <div class="chapter-actions">
-              <button class="action-btn prepare-btn" @click.stop="handlePrepare(chapter)">{{ chapter.isPrepare === 1 ? '继续备课' : '开始备课' }}</button>
-              <button class="action-btn start-btn" @click.stop="handleStartClass(chapter)">开始上课</button>
+              <button class="action-btn prepare-btn" @click.stop="handlePrepare(chapter)">{{ chapter.isPrepare === 1 ? $t('course.continuePrepare') : $t('course.startPrepare') }}</button>
+              <button class="action-btn start-btn" @click.stop="handleStartClass(chapter)">{{ $t('course.startClass') }}</button>
             </div>
           </div>
         </div>
@@ -93,7 +93,7 @@
                 </div>
               </div>
             </template>
-            <div v-else class="empty-state">暂无数据</div>
+            <div v-else class="empty-state">{{ $t('common.noData') }}</div>
           </div>
           <div v-else-if="activeTab === 'task'" class="resource-panel">
             <template v-if="taskResources.length > 0">
@@ -117,7 +117,7 @@
                 </div>
               </div>
             </template>
-            <div v-else class="empty-state">暂无数据</div>
+            <div v-else class="empty-state">{{ $t('common.noData') }}</div>
           </div>
           <div v-else-if="activeTab === 'personal'" class="resource-panel">
             <!-- 个人资源 - 动态渲染分组 -->
@@ -141,9 +141,9 @@
                 </div>
               </div>
             </template>
-            <div v-else class="empty-state">暂无内容</div>
+            <div v-else class="empty-state">{{ $t('common.noData') }}</div>
           </div>
-          <div v-else class="empty-state">暂无内容</div>
+          <div v-else class="empty-state">{{ $t('common.noData') }}</div>
         </div>
       </div>
     </div>
@@ -152,9 +152,11 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import gsap from 'gsap'
 import { cursorAdmin } from '~/composables/api/curosr'
 
+const { t } = useI18n()
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
@@ -269,11 +271,11 @@ const courseInfo = ref({
 const chapters = ref<{ id: number; name: string; isPrepare: number }[]>([])
 const activeChapter = ref<number | null>(null)
 const chapterLoading = ref(false)
-const tabs = [
-  { label: '教学资源', value: 'resource', resourceType: 1 },
-  { label: '学习任务', value: 'task', resourceType: 2 },
-  { label: '个人资源', value: 'personal', resourceType: 3 }
-]
+const tabs = computed(() => [
+  { label: t('prepare.teachingResource'), value: 'resource', resourceType: 1 },
+  { label: t('prepare.learningTask'), value: 'task', resourceType: 2 },
+  { label: t('prepare.personalResource'), value: 'personal', resourceType: 3 }
+])
 const activeTab = ref('resource')
 
 // 资源项接口定义
@@ -356,7 +358,7 @@ const openPersonalResource = (item: ResourceItem) => {
 
 // 获取当前 tab 对应的 resourceType
 const getCurrentResourceType = () => {
-  const currentTab = tabs.find(t => t.value === activeTab.value)
+  const currentTab = tabs.value.find(t => t.value === activeTab.value)
   return currentTab?.resourceType || 1
 }
 
@@ -489,7 +491,7 @@ const handlePrepare = async (chapter: { id: number; name: string; isPrepare: num
   // 如果是开始备课（isPrepare === 0），先调用接口
   if (chapter.isPrepare === 0) {
     try {
-      await startPrepare(String(chapter.id))
+      await startPrepare(String(chapter.id), String(route.params.id))
       // 更新本地状态
       chapter.isPrepare = 1
     } catch (error) {

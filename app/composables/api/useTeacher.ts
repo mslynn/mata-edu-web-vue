@@ -111,7 +111,7 @@ export const useTeacher = () => {
   }
 
   // 更新班级
-  const updateClass = async (data: { id: string; className: string; grade: number; gradeName: string }) => {
+  const updateClass = async (data: { id: string; className: string; grade: number; gradeName: string; schoolId?: string }) => {
     try {
       const response = await http.put('/system/class', data)
       if (response.code !== 200) {
@@ -350,7 +350,7 @@ export const useTeacher = () => {
   // 获取学生统一密码
   const getStudentPassword = async () => {
     try {
-      const response = await http.get('/system/student/getSchoolPwd')
+      const response = await http.get('/system/org/getPwd')
       if (response.code !== 200) {
         throw new Error(response.msg || '获取学生统一密码失败')
       }

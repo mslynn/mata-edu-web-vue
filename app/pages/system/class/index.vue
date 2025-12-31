@@ -1,9 +1,17 @@
 <template>
   <div class="class-page flex-1 flex">
+    <!-- 页面初始化加载状态 -->
+    <div v-if="!pageInitialized" class="flex-1 flex items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <div class="w-8 h-8 border-3 border-[#FF9900] border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-gray-400 text-sm">{{ $t('common.loading') || '加载中...' }}</span>
+      </div>
+    </div>
+
     <!-- 中间内容：年级树 + 主内容 -->
-    <div class="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
+    <div v-else class="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
       <!-- 年级/班级树 -->
-      <section class="grade-panel w-full lg:w-[280px] xl:w-[309px] flex-shrink-0 p-3 flex flex-col">
+      <section class="grade-panel w-full lg:w-[240px] xl:w-[280px] flex-shrink-0 p-3 flex flex-col">
         <MButton type="primary" class="mb-3 w-[142px] h-[50px] flex-shrink-0" size="small" @click="handleSelectAll"
           style="
             border-radius: 10px;
@@ -54,7 +62,7 @@
         <!-- <MTabs v-model="activeTab" :tabs="tabList" class="mb-4 flex-shrink-0" /> -->
 
              <div class="mb-4 flex-shrink-0 relative">
-            <MTabs v-model="activeTab" :tabs="tabList" />
+            <MTabs v-model="activeTab" :tabs="tabList" @change="handleTabChange" />
             <span class="absolute top-1/2 -translate-y-1/2 right-[3%] text-xs sm:text-sm text-gray-500 whitespace-nowrap">{{
               $t('user.studentCount') }}<span class="text-[#FF9900] font-medium ml-1">{{ studentList.length
                 }}人</span></span>
@@ -80,9 +88,9 @@
                 '-' }}</span>
             </div>
             <!-- 右侧：按钮组 -->
-            <div class="flex items-center gap-2 xl:gap-3">
+            <div class="flex items-center gap-1.5 xl:gap-3">
               <button :class="[
-                'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
+                'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
                 activeAction === 'batch' || isCurrentClassQuickLogin
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-[#FF9900] text-white',
@@ -91,7 +99,7 @@
               </button>
               <div class="relative group">
                 <button :class="[
-                  'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
+                  'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
                   activeAction === 'batch' || isOtherClassQuickLogin
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     : isCurrentClassQuickLogin
@@ -110,7 +118,7 @@
                 </div>
               </div>
               <button :class="[
-                'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
+                'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
                 activeAction === 'batch'
                   ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   : 'bg-[#E5E5E5] text-[#4D4D4D]',
@@ -118,7 +126,7 @@
                 {{ $t('class.exportStudentInfo') }}
               </button>
               <button :class="[
-                'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
+                'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
                 activeAction === 'batch'
                   ? 'bg-[#FF9900] text-white'
                   : isCurrentClassQuickLogin
@@ -189,10 +197,10 @@
                 </div>
               </template>
               <template #action="{ row }">
-                <div class="flex items-center justify-center gap-2 whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1 whitespace-nowrap">
                   <button
                     :class="[
-                      'px-3 py-1 text-sm border rounded-[7px] transition-colors',
+                      'px-2 py-1 text-xs border rounded-[7px] transition-colors',
                       activeAction === 'batch' || isCurrentClassQuickLogin
                         ? 'text-gray-400 border-gray-200 cursor-not-allowed'
                         : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]'
@@ -203,7 +211,7 @@
                   </button>
                   <button
                     :class="[
-                      'px-3 py-1 text-sm border rounded-[7px] transition-colors',
+                      'px-2 py-1 text-xs border rounded-[7px] transition-colors',
                       activeAction === 'batch' || isCurrentClassQuickLogin
                         ? 'text-gray-400 border-gray-200 cursor-not-allowed'
                         : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]'
@@ -214,7 +222,7 @@
                   </button>
                   <button
                     :class="[
-                      'px-3 py-1 text-sm border rounded-[7px] transition-colors',
+                      'px-2 py-1 text-xs border rounded-[7px] transition-colors',
                       activeAction === 'batch' || isCurrentClassQuickLogin
                         ? 'text-gray-400 border-gray-200 cursor-not-allowed'
                         : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]'
@@ -1093,7 +1101,7 @@
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
-import { MMessage } from "~/components/ui";
+import { ElMessage } from "~/components/ui";
 import { useTeacher } from "@/composables/api/useTeacher";
 import { useAuth } from "@/composables/api/useAuth";
 import { title } from "process";
@@ -1151,6 +1159,8 @@ const studentPassword = ref("");
 
 // 加载状态
 const loading = ref(false);
+// 页面初始化状态（用于防止闪烁）
+const pageInitialized = ref(false);
 
 // 当前选中的班级
 const selectedClass = ref<any>(null);
@@ -1174,10 +1184,10 @@ const classOptions = computed(() => {
 
 // 表格列配置
 const tableColumns = computed(() => [
-  { key: "studentName", title: t('class.studentName'), minWidth: "120px" },
-  { key: "studentNumber", title: t('class.studentAccount'), minWidth: "150px" },
-  { key: "createTime", title: t('class.createTime'), minWidth: "150px" },
-  { key: "action", title: t('common.operation'), width: "220px", align: "center" as const },
+  { key: "studentName", title: t('class.studentName'), minWidth: "100px" },
+  { key: "studentNumber", title: t('class.studentAccount'), minWidth: "120px" },
+  { key: "createTime", title: t('class.createTime'), minWidth: "130px" },
+  { key: "action", title: t('common.operation'), width: "200px", align: "center" as const },
 ]);
 
 // 学生列表
@@ -1409,7 +1419,7 @@ const activeAction = ref<ActionType>(null);
 // 选择全部班级
 const handleSelectAll = () => {
   selectedClass.value = null;
-  MMessage.info(t('class.selectedAllClass'));
+  ElMessage.info(t('class.selectedAllClass'));
 };
 // 加载年级字典
 const loadGradeOptions = async () => {
@@ -1490,11 +1500,14 @@ const loadStudentList = async (classId?: string) => {
 };
 
 // 初始化
-onMounted(() => {
-  loadGradeOptions();
-  loadClassList();
-  loadQuickLoginStatus();
-  loadStudentPassword();
+onMounted(async () => {
+  await Promise.all([
+    loadGradeOptions(),
+    loadClassList(),
+    loadQuickLoginStatus(),
+    loadStudentPassword(),
+  ]);
+  pageInitialized.value = true;
 });
 
 // 加载学生统一密码
@@ -1527,8 +1540,12 @@ const handleTreeSelect = (node: any) => {
   if (!node.children) {
     // 只有班级（叶子节点）才能选中
     selectedClass.value = node;
-    // 加载该班级的学生列表
-    loadStudentList(node.id);
+    // 根据当前 Tab 加载对应数据
+    if (activeTab.value === 'group') {
+      loadGroupList();
+    } else {
+      loadStudentList(node.id);
+    }
     // 不在切换班级时检查快捷登录状态，保持之前的状态
   }
 };
@@ -1570,7 +1587,7 @@ const handleConfirmDeleteClass = async () => {
   try {
     let res = await deleteClass(deletingClass.value.id);
     if (res.code == 200) {
-      MMessage.success(`已删除班级：${deletingClass.value.name}`);
+      ElMessage.success(`已删除班级：${deletingClass.value.name}`);
       // 刷新班级列表
       loadClassList();
     } else {
@@ -1600,11 +1617,11 @@ const handleCreateNewClass = (gradeNode: any) => {
 // 确认创建/编辑班级
 const handleConfirmCreateClass = async () => {
   if (!createClassForm.gradeId) {
-    MMessage.error(t('class.pleaseSelectGrade'));
+    ElMessage.error(t('class.pleaseSelectGrade'));
     return;
   }
   if (!createClassForm.className) {
-    MMessage.error(t('class.pleaseInputClassName'));
+    ElMessage.error(t('class.pleaseInputClassName'));
     return;
   }
 
@@ -1622,7 +1639,7 @@ const handleConfirmCreateClass = async () => {
         grade: Number(createClassForm.gradeId),
         gradeName: selectedGrade?.label || "",
       });
-      MMessage.success(t('common.editSuccess'));
+      ElMessage.success(t('common.editSuccess'));
     } else {
       // 创建班级
       await createClass({
@@ -1630,7 +1647,7 @@ const handleConfirmCreateClass = async () => {
         grade: Number(createClassForm.gradeId),
         gradeName: selectedGrade?.label || "",
       });
-      MMessage.success(t('common.createSuccess'));
+      ElMessage.success(t('common.createSuccess'));
     }
     // 刷新班级列表
     loadClassList();
@@ -1665,7 +1682,7 @@ const handleQuickLogin = async () => {
       isQuickLoginEnabled.value = false;
       quickLoginClassId.value = null;
       quickLoginData.value = {};
-      MMessage.info(t('class.quickLoginDisabled'));
+      ElMessage.info(t('class.quickLoginDisabled'));
     } catch (error) {
       console.error("停用快捷登录失败:", error);
     }
@@ -1678,7 +1695,7 @@ const handleQuickLogin = async () => {
 // 确认创建快捷登录
 const handleConfirmQuickLogin = async () => {
   if (!selectedClass.value?.id) {
-    MMessage.error(t('class.pleaseSelectClassFirst'));
+    ElMessage.error(t('class.pleaseSelectClassFirst'));
     return;
   }
   try {
@@ -1686,7 +1703,7 @@ const handleConfirmQuickLogin = async () => {
     console.log('快捷登录数据:', data);
     quickLoginData.value = data || {};
     quickLoginClassId.value = selectedClass.value.id;
-    MMessage.success(t('class.quickLoginEnabled'));
+    ElMessage.success(t('class.quickLoginEnabled'));
     isQuickLoginEnabled.value = true;
     showQuickLoginModal.value = false;
   } catch (error) {
@@ -1725,9 +1742,9 @@ const copyToClipboard = async (text?: string) => {
   if (!text) return;
   try {
     await navigator.clipboard.writeText(text);
-    MMessage.success(t('common.copySuccess'));
+    ElMessage.success(t('common.copySuccess'));
   } catch (error) {
-    MMessage.error(t('common.copyFailed'));
+    ElMessage.error(t('common.copyFailed'));
   }
 };
 
@@ -1745,7 +1762,7 @@ const handleRefreshQuickLogin = async () => {
   try {
     const data = await createQuickLogin(selectedClass.value.id);
     quickLoginData.value = data || {};
-    MMessage.success(t('common.refreshed'));
+    ElMessage.success(t('common.refreshed'));
   } catch (error) {
     console.error("刷新快捷登录失败:", error);
   }
@@ -1754,12 +1771,12 @@ const handleRefreshQuickLogin = async () => {
 // 导出
 const handleExport = async () => {
   try {
-    MMessage.info(t('common.exporting'));
+    ElMessage.info(t('common.exporting'));
     await exportStudentInfo();
-    MMessage.success(t('common.exportSuccess'));
+    ElMessage.success(t('common.exportSuccess'));
   } catch (error) {
     console.error("导出失败:", error);
-    MMessage.error(t('common.exportFailed'));
+    ElMessage.error(t('common.exportFailed'));
   }
 };
 
@@ -1768,10 +1785,10 @@ const handleBatchAction = () => {
   if (activeAction.value === "batch") {
     activeAction.value = null;
     selectedStudentIds.value = [];
-    MMessage.info(t('class.exitBatchMode'));
+    ElMessage.info(t('class.exitBatchMode'));
   } else {
     activeAction.value = "batch";
-    MMessage.info(t('class.enterBatchMode'));
+    ElMessage.info(t('class.enterBatchMode'));
   }
 };
 
@@ -1803,7 +1820,7 @@ const handleClearSelection = () => {
 // 批量删除
 const handleBatchDelete = () => {
   if (selectedStudentIds.value.length === 0) {
-    MMessage.warning(t('class.noStudentSelected'));
+    ElMessage.warning(t('class.noStudentSelected'));
     return;
   }
   showBatchDeleteModal.value = true;
@@ -1813,7 +1830,7 @@ const handleBatchDelete = () => {
 const handleConfirmBatchDelete = async () => {
   try {
     await removeStudent(selectedStudentIds.value.map(String));
-    MMessage.success(t('class.deletedStudents', { count: selectedStudentIds.value.length }));
+    ElMessage.success(t('class.deletedStudents', { count: selectedStudentIds.value.length }));
     selectedStudentIds.value = [];
     // 刷新学生列表
     loadStudentList();
@@ -1827,7 +1844,7 @@ const handleConfirmBatchDelete = async () => {
 // 批量移班
 const handleBatchTransfer = () => {
   if (selectedStudentIds.value.length === 0) {
-    MMessage.warning(t('class.noStudentSelected'));
+    ElMessage.warning(t('class.noStudentSelected'));
     return;
   }
   batchTransferForm.gradeId = null;
@@ -1839,11 +1856,11 @@ const handleBatchTransfer = () => {
 const handleConfirmBatchTransfer = async () => {
   console.log("batchTransferForm:", batchTransferForm);
   if (!batchTransferForm.gradeId) {
-    MMessage.error(t('class.pleaseSelectGrade'));
+    ElMessage.error(t('class.pleaseSelectGrade'));
     return;
   }
   if (!batchTransferForm.classId) {
-    MMessage.error(t('class.pleaseSelectClass'));
+    ElMessage.error(t('class.pleaseSelectClass'));
     return;
   }
 
@@ -1858,7 +1875,7 @@ const handleConfirmBatchTransfer = async () => {
       classId: batchTransferForm.classId as string,
       teacherId: targetClass?.teacherId || "",
     });
-    MMessage.success(t('class.transferredStudents', { count: selectedStudentIds.value.length }));
+    ElMessage.success(t('class.transferredStudents', { count: selectedStudentIds.value.length }));
     // 刷新学生列表
     loadStudentList();
   } catch (error) {
@@ -1879,7 +1896,7 @@ const batchTransferClassOptions = computed(() => {
 // 批量重置密码
 const handleBatchResetPassword = () => {
   if (selectedStudentIds.value.length === 0) {
-    MMessage.warning(t('class.noStudentSelected'));
+    ElMessage.warning(t('class.noStudentSelected'));
     return;
   }
   showBatchResetPasswordModal.value = true;
@@ -1988,11 +2005,11 @@ const handleBatchTransferGradeChange = (grade: string | number | null) => {
 const handleConfirmTransfer = async () => {
   console.log("transferForm:", transferForm);
   if (!transferForm.gradeId) {
-    MMessage.error("请选择年级");
+    ElMessage.error("请选择年级");
     return;
   }
   if (!transferForm.classId) {
-    MMessage.error("请选择班级");
+    ElMessage.error("请选择班级");
     return;
   }
   if (!transferringStudent.value) {
@@ -2006,7 +2023,7 @@ const handleConfirmTransfer = async () => {
       classId: transferForm.id as string,
       teacherId: transferForm.teacherId || "",
     });
-    MMessage.success(
+    ElMessage.success(
       `已将 ${transferringStudent.value.studentName} 移至新班级`
     );
     // 刷新学生列表
@@ -2068,7 +2085,7 @@ const handleConfirmDeleteStudent = async () => {
 
   try {
     await removeStudent([deletingStudent.value.id]);
-    MMessage.success(`已删除学生：${deletingStudent.value.studentName}`);
+    ElMessage.success(`已删除学生：${deletingStudent.value.studentName}`);
     // 刷新学生列表
     loadStudentList();
   } catch (error) {
@@ -2088,7 +2105,7 @@ const handlePageChange = (page: number, pageSize: number) => {
 // 导入学生信息
 const handleImportStudents = () => {
   if (!selectedClass.value?.id) {
-    MMessage.error("请先选择班级");
+    ElMessage.error("请先选择班级");
     return;
   }
   // 创建隐藏的文件输入框
@@ -2100,15 +2117,15 @@ const handleImportStudents = () => {
     if (!file) return;
 
     try {
-      MMessage.info("正在导入学生信息...");
+      ElMessage.info("正在导入学生信息...");
       await importStudent(file, selectedClass.value.id);
-      MMessage.success("导入成功");
+      ElMessage.success("导入成功");
       // 刷新学生列表
       loadStudentList();
       showCreateModal.value = false;
     } catch (error: any) {
       console.error("导入失败:", error);
-      MMessage.error(error.message || "导入失败");
+      ElMessage.error(error.message || "导入失败");
     }
   };
   input.click();
@@ -2117,12 +2134,12 @@ const handleImportStudents = () => {
 // 下载导入模板
 const handleDownloadTemplate = async () => {
   try {
-    MMessage.info("正在下载导入模板...");
+    ElMessage.info("正在下载导入模板...");
     await downloadTemplate();
-    MMessage.success("下载成功");
+    ElMessage.success("下载成功");
   } catch (error) {
     console.error("下载失败:", error);
-    MMessage.error("下载失败");
+    ElMessage.error("下载失败");
   }
 };
 
@@ -2130,11 +2147,11 @@ const handleDownloadTemplate = async () => {
 const handleCreateStudent = async () => {
   if (addStudentMode.value === "manual") {
     if (!selectedClass.value?.id) {
-      MMessage.error("请先选择班级");
+      ElMessage.error("请先选择班级");
       return;
     }
     if (!createForm.name) {
-      MMessage.error("请填写学生姓名");
+      ElMessage.error("请填写学生姓名");
       return;
     }
     try {
@@ -2142,7 +2159,7 @@ const handleCreateStudent = async () => {
         classId: selectedClass.value.id,
         studentName: createForm.name,
       });
-      MMessage.success("创建学生成功");
+      ElMessage.success("创建学生成功");
       // 刷新学生列表
       loadStudentList();
     } catch (error) {
@@ -2150,7 +2167,7 @@ const handleCreateStudent = async () => {
       return;
     }
   } else {
-    MMessage.success("批量导入成功");
+    ElMessage.success("批量导入成功");
   }
   showCreateModal.value = false;
   // 重置表单
@@ -2193,7 +2210,7 @@ const handleGroupSearch = () => {
 // 创建小组
 const handleCreateGroup = () => {
   if (!selectedClass.value?.id) {
-    MMessage.warning("请先选择班级");
+    ElMessage.warning("请先选择班级");
     return;
   }
   isEditGroupMode.value = false;
@@ -2229,14 +2246,14 @@ const handleEditGroup = async (row: any) => {
     showGroupModal.value = true;
   } catch (error) {
     console.error("获取小组成员失败:", error);
-    MMessage.error("获取小组成员失败");
+    ElMessage.error("获取小组成员失败");
   }
 };
 
 // 确认创建/编辑小组
 const handleConfirmGroup = async () => {
   if (!groupForm.name.trim()) {
-    MMessage.warning("请输入小组名称");
+    ElMessage.warning("请输入小组名称");
     return;
   }
 
@@ -2268,7 +2285,7 @@ const handleConfirmGroup = async () => {
         studentList: [...currentMembers, ...deletedMembers],
       };
       await updateGroup(editData);
-      MMessage.success("编辑成功");
+      ElMessage.success("编辑成功");
     } else {
       // 新增时不需要 delFlag
       const addData = {
@@ -2282,7 +2299,7 @@ const handleConfirmGroup = async () => {
         })) as { studentNumber: string; studentName: string; isLeader: 0 | 1 }[],
       };
       await addGroup(addData);
-      MMessage.success("创建成功");
+      ElMessage.success("创建成功");
     }
     showGroupModal.value = false;
     loadGroupList();
@@ -2346,13 +2363,13 @@ const handleConfirmDeleteGroup = async () => {
     if (isBatchDeleteGroup.value) {
       // 批量删除
       await deleteGroup(selectedGroupIds.value);
-      MMessage.success("批量删除成功");
+      ElMessage.success("批量删除成功");
       selectedGroupIds.value = [];
     } else {
       // 单个删除
       if (deletingGroup.value?.id) {
         await deleteGroup([deletingGroup.value.id]);
-        MMessage.success("删除成功");
+        ElMessage.success("删除成功");
       }
     }
     showDeleteGroupModal.value = false;
@@ -2375,7 +2392,7 @@ const handleGroupBatchAction = () => {
 // 批量删除小组
 const handleBatchDeleteGroup = () => {
   if (!selectedGroupIds.value.length) {
-    MMessage.warning("请先选择要删除的小组");
+    ElMessage.warning(t('class.noGroupSelected'));
     return;
   }
   isBatchDeleteGroup.value = true;
@@ -2408,12 +2425,16 @@ const handleClearGroupSelection = () => {
   selectedGroupIds.value = [];
 };
 
-// 监听Tab切换，加载对应数据
-watch(activeTab, (newTab) => {
-  if (newTab === "group" && selectedClass.value?.id) {
+// Tab 切换处理
+const handleTabChange = (newTab: string) => {
+  // alert('9')
+  if (!selectedClass.value?.id) return;
+  if (newTab === "group") {
     loadGroupList();
+  } else {
+    loadStudentList(selectedClass.value.id);
   }
-});
+};
 </script>
 
 <style scoped>

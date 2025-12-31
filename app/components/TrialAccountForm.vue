@@ -1,16 +1,16 @@
 <template>
   <div class="trial-account-form">
     <!-- 标题 -->
-    <h2 class="text-center text-base text-[#808080] mb-2">欢迎申请开通玛塔智慧教育平台</h2>
+    <h2 class="text-center text-base text-[#808080] mb-2">{{ t('auth.welcomeApplyTrial') }}</h2>
 
     <!-- 姓名 -->
     <div class="form-item">
       <div :class="['form-input-wrap', errors.name && 'has-error']">
-        <img src="~/assets/images/account.png" alt="姓名" class="form-icon" />
+        <img src="~/assets/images/account.png" alt="name" class="form-icon" />
         <input 
           v-model="formData.name"
           type="text" 
-          placeholder="姓名"
+          :placeholder="t('auth.name')"
           class="form-input"
           @input="clearError('name')"
         />
@@ -21,12 +21,12 @@
     <!-- 手机号 -->
     <div class="form-item">
       <div :class="['form-input-wrap', errors.phonenumber && 'has-error']">
-        <img src="~/assets/images/tel.png" alt="手机" class="form-icon" />
+        <img src="~/assets/images/tel.png" alt="phone" class="form-icon" />
         <CountryCodeSelector v-model="countryCode" class="mr-3" />
         <input 
           v-model="formData.phonenumber"
           type="tel" 
-          placeholder="请输入手机号"
+          :placeholder="t('auth.pleaseInputPhone')"
           class="form-input"
           @input="clearError('phonenumber')"
         />
@@ -37,11 +37,11 @@
     <!-- 验证码 -->
     <div class="form-item">
       <div :class="['form-input-wrap', errors.smsCode && 'has-error']">
-        <img src="~/assets/images/code.png" alt="验证码" class="form-icon" />
+        <img src="~/assets/images/code.png" alt="code" class="form-icon" />
         <input 
           v-model="formData.smsCode"
           type="text" 
-          placeholder="请输入验证码"
+          :placeholder="t('auth.pleaseInputCode')"
           class="form-input"
           @input="clearError('smsCode')"
         />
@@ -51,7 +51,7 @@
           :disabled="countdown > 0" 
           @click="handleSendCode"
         >
-          {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+          {{ countdown > 0 ? `${countdown}s` : t('auth.sendCode') }}
         </button>
       </div>
       <p v-if="errors.smsCode" class="error-msg">{{ errors.smsCode }}</p>
@@ -60,11 +60,11 @@
     <!-- 企业/学校名称 -->
     <div class="form-item">
       <div :class="['form-input-wrap', errors.organizationName && 'has-error']">
-        <img src="~/assets/images/apply.png" alt="企业" class="form-icon" />
+        <img src="~/assets/images/apply.png" alt="organization" class="form-icon" />
         <input 
           v-model="formData.organizationName"
           type="text" 
-          placeholder="企业/学校名称"
+          :placeholder="t('auth.organizationName')"
           class="form-input"
           @input="clearError('organizationName')"
         />
@@ -75,22 +75,22 @@
     <!-- 体验目的（多选） -->
     <div class="form-item">
       <div :class="['form-select-wrap', errors.purposes && 'has-error']">
-        <span class="select-label">体验目的</span>
+        <span class="select-label">{{ t('auth.purpose') }}</span>
         <el-select
           v-model="formData.purposes"
           multiple
           collapse-tags
           collapse-tags-tooltip
-          placeholder="请选择"
+          :placeholder="t('auth.pleaseSelect')"
           class="el-select-custom"
           :class="{ 'is-error': errors.purposes }"
           @change="clearError('purposes')"
         >
           <el-option
             v-for="item in purposeOptions"
-            :key="item"
-            :label="item"
-            :value="item"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
         </el-select>
       </div>
@@ -100,22 +100,22 @@
     <!-- 感兴趣产品（多选） -->
     <div class="form-item">
       <div :class="['form-select-wrap', errors.products && 'has-error']">
-        <span class="select-label">感兴趣产品</span>
+        <span class="select-label">{{ t('auth.interestedProducts') }}</span>
         <el-select
           v-model="formData.products"
           multiple
           collapse-tags
           collapse-tags-tooltip
-          placeholder="请选择"
+          :placeholder="t('auth.pleaseSelect')"
           class="el-select-custom"
           :class="{ 'is-error': errors.products }"
           @change="clearError('products')"
         >
           <el-option
             v-for="item in productOptions"
-            :key="item"
-            :label="item"
-            :value="item"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
           />
         </el-select>
       </div>
@@ -126,8 +126,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
+
+const { $i18n } = useNuxtApp()
+const t = (key: string) => $i18n.t(key)
 
 const { getSmsCode } = useAuth()
 
@@ -157,10 +160,24 @@ const errors = reactive({
 })
 
 // 体验目的选项
-const purposeOptions = ['教学', '科研', '个人学习', '企业培训', '其他']
+const purposeOptions = computed(() => [
+  { value: '校企合作', label: t('auth.purposeTeaching') },
+  { value: '企业合作', label: t('auth.purposeResearch') },
+  { value: '机构采购', label: t('auth.purposePersonalStudy') },
+  { value: '个人学习', label: t('auth.purposeEnterpriseTrain') },
+  { value: '其他', label: t('auth.purposeOther') }
+])
 
 // 感兴趣产品选项
-const productOptions = ['nous', 'matatalab', '编程机器人', '智慧课堂', '其他']
+const productOptions = computed(() => [
+  { value: 'Coding Set', label: t('auth.productNous') },
+  { value: 'Talebot Pro', label: t('auth.productMatatalab') },
+  { value: 'VinciBot', label: t('auth.productRobot') },
+  { value: 'Nous AI Set', label: t('auth.productSmartClass') },
+  { value: '显微镜系列', label: t('auth.productMicroscope') },
+  { value: '望远镜系列', label: t('auth.productTelescope') },
+  { value: '其他', label: t('auth.productOther') }
+])
 
 const clearError = (field: keyof typeof errors) => {
   errors[field] = ''
@@ -182,15 +199,15 @@ const handleSendCode = async () => {
   const phonenumber = formData.phonenumber.trim()
   
   if (!phonenumber) {
-    errors.phonenumber = '请输入手机号'
+    errors.phonenumber = t('auth.pleaseInputPhone')
     return
   }
   
   if (!validatePhone(phonenumber)) {
     if (countryCode.value === '86') {
-      errors.phonenumber = '请输入正确的11位手机号'
+      errors.phonenumber = t('auth.phoneError11')
     } else if (countryCode.value === '852') {
-      errors.phonenumber = '请输入正确的8位香港手机号'
+      errors.phonenumber = t('auth.phoneError8')
     }
     return
   }
@@ -204,16 +221,16 @@ const handleSendCode = async () => {
     console.log('✅ 验证码发送成功')
     
     // 开始倒计时
-  countdown.value = 60
-  const timer = setInterval(() => {
-    countdown.value--
-    if (countdown.value <= 0) {
-      clearInterval(timer)
-    }
-  }, 1000)
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
   } catch (error: any) {
     console.error('❌ 验证码发送失败:', error)
-    errors.phonenumber = error?.data?.msg || error?.message || '验证码发送失败'
+    errors.phonenumber = error?.data?.msg || error?.message || t('auth.codeSendFailed')
   }
 }
 
@@ -222,39 +239,39 @@ const handleSubmit = () => {
   let hasError = false
   
   if (!formData.name.trim()) {
-    errors.name = '请输入姓名'
+    errors.name = t('auth.pleaseInputName')
     hasError = true
   }
   
   if (!formData.phonenumber.trim()) {
-    errors.phonenumber = '请输入手机号'
+    errors.phonenumber = t('auth.pleaseInputPhone')
     hasError = true
   } else if (!validatePhone(formData.phonenumber.trim())) {
     if (countryCode.value === '86') {
-      errors.phonenumber = '请输入正确的11位手机号'
+      errors.phonenumber = t('auth.phoneError11')
     } else {
-      errors.phonenumber = '请输入正确的8位香港手机号'
+      errors.phonenumber = t('auth.phoneError8')
     }
     hasError = true
   }
   
   if (!formData.smsCode.trim()) {
-    errors.smsCode = '请输入验证码'
+    errors.smsCode = t('auth.pleaseInputCode')
     hasError = true
   }
   
   if (!formData.organizationName.trim()) {
-    errors.organizationName = '请输入企业/学校名称'
+    errors.organizationName = t('auth.pleaseInputOrganization')
     hasError = true
   }
   
   if (formData.purposes.length === 0) {
-    errors.purposes = '请选择体验目的'
+    errors.purposes = t('auth.pleaseSelectPurpose')
     hasError = true
   }
   
   if (formData.products.length === 0) {
-    errors.products = '请选择感兴趣产品'
+    errors.products = t('auth.pleaseSelectProducts')
     hasError = true
   }
   

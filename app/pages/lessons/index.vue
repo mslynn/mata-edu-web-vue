@@ -485,7 +485,7 @@ const handlePrepare = async (chapter: ChapterItem) => {
   // 如果是开始备课（isPrepare === 0），先调用接口
   if (chapter.isPrepare === 0) {
     try {
-      await startPrepare(String(chapter.chapterId))
+      await startPrepare(String(chapter.chapterId), String(selectedCourse.value.courseId))
       // 更新本地状态
       chapter.isPrepare = 1
     } catch (error) {

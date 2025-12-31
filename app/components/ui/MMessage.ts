@@ -1,11 +1,11 @@
 /**
  * 消息提示组件（函数式调用）
  * 使用方式：
- * import { MMessage } from '~/components/ui/MMessage'
- * MMessage.success('操作成功')
- * MMessage.error('操作失败')
- * MMessage.warning('警告信息')
- * MMessage.info('提示信息')
+ * import { ElMessage } from '~/components/ui/ElMessage'
+ * ElMessage.success('操作成功')
+ * ElMessage.error('操作失败')
+ * ElMessage.warning('警告信息')
+ * ElMessage.info('提示信息')
  */
 
 import { h, render, ref } from 'vue'
@@ -28,34 +28,58 @@ interface MessageInstance {
 let messageContainer: HTMLDivElement | null = null
 const messages = ref<MessageInstance[]>([])
 
-// 获取图标
+// 获取图标（圆形背景 21x21）
 const getIcon = (type: MessageType) => {
   const icons = {
-    success: `<svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-    </svg>`,
-    error: `<svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-    </svg>`,
-    warning: `<svg class="w-5 h-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>`,
-    info: `<svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>`
+    success: `<div class="flex-shrink-0 rounded-full border-2 flex items-center justify-center" style="width: 21px; height: 21px; border-color: #5EB26B">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px; color: #5EB26B">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>`,
+    error: `<div class="flex-shrink-0 rounded-full border-2 border-red-500 flex items-center justify-center" style="width: 21px; height: 21px;">
+      <svg class="text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </div>`,
+    warning: `<div class="flex-shrink-0 rounded-full border-2 border-yellow-500 flex items-center justify-center" style="width: 21px; height: 21px;">
+      <svg class="text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+    </div>`,
+    info: `<div class="flex-shrink-0 rounded-full border-2 border-blue-500 flex items-center justify-center" style="width: 21px; height: 21px;">
+      <svg class="text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 14px; height: 14px;">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>`
   }
   return icons[type]
 }
 
-// 获取背景色
-const getBgColor = (type: MessageType) => {
-  const colors = {
-    success: 'bg-green-50 border-green-200',
-    error: 'bg-red-50 border-red-200',
-    warning: 'bg-yellow-50 border-yellow-200',
-    info: 'bg-blue-50 border-blue-200'
+// 获取背景色和文字颜色
+const getStyles = (type: MessageType) => {
+  const styles = {
+    success: {
+      bg: 'bg-gray-100',
+      text: '', // 使用内联样式
+      textColor: '#5EB26B'
+    },
+    error: {
+      bg: 'bg-gray-100',
+      text: 'text-red-500',
+      textColor: ''
+    },
+    warning: {
+      bg: 'bg-gray-100',
+      text: 'text-yellow-500',
+      textColor: ''
+    },
+    info: {
+      bg: 'bg-gray-100',
+      text: 'text-blue-500',
+      textColor: ''
+    }
   }
-  return colors[type]
+  return styles[type]
 }
 
 // 创建消息
@@ -72,17 +96,14 @@ const createMessage = (options: MessageOptions): MessageInstance => {
   const id = `message-${Date.now()}-${Math.random().toString(36).slice(2)}`
   const messageEl = document.createElement('div')
   messageEl.id = id
-  messageEl.className = `flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg transition-all duration-300 ${getBgColor(type)}`
-  messageEl.style.cssText = 'animation: messageSlideIn 0.3s ease; min-width: 200px;'
+  const styles = getStyles(type)
+  messageEl.className = `flex items-center justify-center rounded-2xl ${styles.bg} transition-all duration-300`
+  messageEl.style.cssText = 'animation: messageSlideIn 0.3s ease; min-width: 210px; height: 60px; gap: 15px; padding: 0 24px; white-space: nowrap;'
   
+  const textColorStyle = type === 'success' ? `color: ${styles.textColor};` : ''
   messageEl.innerHTML = `
     ${getIcon(type)}
-    <span class="text-sm text-gray-700 flex-1">${message}</span>
-    ${showClose ? `<button class="text-gray-400 hover:text-gray-600 ml-2" onclick="this.parentElement.remove()">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>` : ''}
+    <span class="${styles.text}" style="font-size: 16px; font-weight: normal; ${textColorStyle}">${message}</span>
   `
   
   messageContainer.appendChild(messageEl)
@@ -140,7 +161,7 @@ if (typeof document !== 'undefined') {
 }
 
 // 导出方法
-export const MMessage = {
+export const ElMessage = {
   success: (message: string, options?: Partial<MessageOptions>) => 
     createMessage({ message, type: 'success', ...options }),
   error: (message: string, options?: Partial<MessageOptions>) => 
@@ -158,5 +179,5 @@ export const MMessage = {
   }
 }
 
-export default MMessage
+export default ElMessage
 
