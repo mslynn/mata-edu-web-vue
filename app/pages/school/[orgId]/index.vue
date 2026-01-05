@@ -163,8 +163,8 @@
           </svg>
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">{{ deleteTeacherConfirmText }}</p>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ deleteTeacherConfirmText }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
@@ -185,8 +185,8 @@
           </svg>
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">{{ resetTeacherConfirmText }}</p>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ resetTeacherConfirmText }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"

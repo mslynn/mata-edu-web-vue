@@ -518,7 +518,7 @@
                         ? 'text-gray-400 border-gray-200 cursor-not-allowed'
                         : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]'
                     ]" :disabled="groupActiveAction === 'batch'" @click="handleEditGroup(row)">
-                      编辑
+                      {{ $t('common.edit') }}
                     </button>
                     <button :class="[
                       'px-1.5 lg:px-2 xl:px-3 py-1 text-xs lg:text-sm border rounded-[7px] transition-colors',
@@ -526,7 +526,7 @@
                         ? 'text-gray-400 border-gray-200 cursor-not-allowed'
                         : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]'
                     ]" :disabled="groupActiveAction === 'batch'" @click="handleDeleteGroup(row)">
-                      删除
+                      {{ $t('common.delete') }}
                     </button>
                   </div>
                 </template>
@@ -540,18 +540,18 @@
                 <label class="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" :checked="isAllGroupSelected" class="w-4 h-4 accent-[#FF9900]"
                     @change="handleGroupSelectAllToggle" />
-                  <span class="text-xs lg:text-sm text-[#4D4D4D]">全选</span>
+                  <span class="text-xs lg:text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
                 </label>
                 <span class="text-xs lg:text-sm text-[#4D4D4D]">
-                  已选 <span class="text-[#FF9900]">{{ selectedGroupIds.length }}</span> 项
+                  {{ $t('class.selected') }} <span class="text-[#FF9900]">{{ selectedGroupIds.length }}</span> {{ $t('class.items') }}
                 </span>
               </div>
               <div class="flex items-center gap-2 lg:gap-4">
                 <button class="text-xs lg:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDeleteGroup">
-                  删除
+                  {{ $t('common.delete') }}
                 </button>
                 <button class="text-xs lg:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleGroupBatchAction">
-                  取消
+                  {{ $t('common.cancel') }}
                 </button>
               </div>
             </div>
@@ -574,7 +574,7 @@
 
         <!-- 标题 -->
         <h3 class="text-center text-[18px] font-medium text-[#333] mb-6">
-          {{ isEditTeacher ? '编辑教师' : '添加教师' }}
+          {{ isEditTeacher ? $t('user.editTeacher') : $t('user.addTeacher') }}
         </h3>
 
         <!-- Tab 切换（编辑时不显示） -->
@@ -585,7 +585,7 @@
               ? 'bg-[#FF9900] text-white' 
               : 'bg-[#FFF8F0] text-[#333] hover:bg-[#FFEDCC]'
           ]" @click="addTeacherTab = 'import'">
-            批量导入添加
+            {{ $t('user.batchImportAdd') }}
           </button>
           <button :class="[
             'flex-1 h-[50px] text-[15px] font-medium rounded-[10px] transition-all',
@@ -593,7 +593,7 @@
               ? 'bg-[#FF9900] text-white' 
               : 'bg-[#FFF8F0] text-[#333] hover:bg-[#FFEDCC]'
           ]" @click="addTeacherTab = 'manual'">
-            手动添加
+            {{ $t('user.manualAdd') }}
           </button>
         </div>
 
@@ -603,17 +603,17 @@
             <button
               class="flex-1 h-[50px] bg-[#F5F5F5] border border-[#E5E5E5] rounded-[8px] flex items-center justify-center text-[#333] hover:bg-[#EFEFEF] transition-all"
               @click="triggerTeacherFileInput">
-              <span class="text-[15px]">导入教师信息</span>
+              <span class="text-[15px]">{{ $t('user.importTeacherInfo') }}</span>
             </button>
             <button
               class="flex-1 h-[50px] bg-[#F5F5F5] border border-[#E5E5E5] rounded-[8px] flex items-center justify-center text-[#333] hover:bg-[#EFEFEF] transition-all"
               @click="handleDownloadTeacherTemplate">
-              <span class="text-[15px]">下载导入模版</span>
+              <span class="text-[15px]">{{ $t('user.downloadTemplate') }}</span>
             </button>
           </div>
           <input ref="teacherFileInputRef" type="file" accept=".xlsx,.xls" class="hidden"
             @change="handleTeacherFileChange" />
-          <p class="text-[13px] text-[#999] leading-relaxed">批量导入教师信息后，系统将自动创建教师账号，该学校教师默认密码统一为：</p>
+          <p class="text-[13px] text-[#999] leading-relaxed">{{ $t('user.batchImportTeacherTip') }}</p>
           <p class="text-[13px] text-[#999] mt-1">{{ teacherPassword || 'XXXXXXX' }}</p>
         </div>
 
@@ -638,7 +638,7 @@
               />
             </div>
           </div>
-          <p class="text-[13px] text-[#999] mt-5 leading-relaxed">输入教师信息后，系统将自动创建教师账号，该学校教师默认密码统一为：</p>
+          <p class="text-[13px] text-[#999] mt-5 leading-relaxed">{{ $t('user.manualAddTeacherTip') }}</p>
           <p class="text-[13px] text-[#999] mt-1">{{ teacherPassword || 'XXXXXXX' }}</p>
         </div>
 
@@ -668,7 +668,7 @@
           v-if="isBatchDeleteTeacher"
           v-model="deleteTeacherPassword"
           type="password"
-          placeholder="请输入教师帐号密码"
+          :placeholder="t('user.pleaseInputTeacherPassword')"
           class="w-full h-[50px] px-4 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors mb-6"
         />
         <div class="flex items-center justify-center gap-4">
@@ -689,20 +689,20 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-[15px] text-[#4D4D4D] leading-relaxed text-center" :class="isBatchResetTeacher ? 'mb-5 text-left' : 'mb-6'">{{ resetTeacherConfirmText }}</p>
         <input 
           v-if="isBatchResetTeacher"
           v-model="resetTeacherPassword"
           type="password"
-          placeholder="请输入教师帐号密码"
+          :placeholder="t('user.pleaseInputTeacherPassword')"
           class="w-full h-[50px] px-4 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors mb-6"
         />
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showResetTeacherModal = false">取消</button>
+            @click="showResetTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmResetTeacher">确定</button>
+            @click="handleConfirmResetTeacher">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -717,22 +717,22 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">导入教师信息</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.importTeacherInfo') }}</h3>
         <div class="flex justify-center gap-3 mb-6">
           <button class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500 hover:bg-gray-300"
-            @click="handleSelectTeacherFile">选择文件导入</button>
+            @click="handleSelectTeacherFile">{{ $t('user.selectFileImport') }}</button>
           <button class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500 hover:bg-gray-300"
-            @click="handleDownloadTeacherTemplate">下载导入模版</button>
+            @click="handleDownloadTeacherTemplate">{{ $t('user.downloadTemplate') }}</button>
         </div>
-        <p v-if="importTeacherFileName" class="text-sm text-[#4CB9CF] text-center mb-4">已选择：{{ importTeacherFileName }}
+        <p v-if="importTeacherFileName" class="text-sm text-[#4CB9CF] text-center mb-4">{{ $t('user.selectedFile', { name: importTeacherFileName }) }}
         </p>
-        <p class="text-sm text-gray-400 flex-1">批量导入教师信息后，系统将自动创建教师账号，教师默认密码统一为：{{ teacherPassword }}</p>
+        <p class="text-sm text-gray-400 flex-1">{{ $t('user.batchImportTeacherTip') }}{{ teacherPassword }}</p>
         <div class="flex items-center justify-center gap-4 mt-auto pt-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showImportTeacherModal = false">取消</button>
+            @click="showImportTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             :disabled="!importTeacherFile" :class="{ 'opacity-50 cursor-not-allowed': !importTeacherFile }"
-            @click="handleConfirmImportTeacher">确定导入</button>
+            @click="handleConfirmImportTeacher">{{ $t('user.confirmImport') }}</button>
         </div>
         <input ref="teacherFileInputRef" type="file" accept=".xlsx,.xls" class="hidden"
           @change="handleTeacherFileChange" />
@@ -749,11 +749,11 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">班级转让</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.classTransfer') }}</h3>
 
         <!-- 搜索框 -->
         <div class="mb-4">
-          <MInput v-model="transferTeacherSearch" placeholder="请输入可转让教师姓名" clearable
+          <MInput v-model="transferTeacherSearch" :placeholder="t('user.pleaseInputTransferTeacherName')" clearable
             @enter="handleTransferTeacherSearchChange" @clear="handleTransferTeacherSearchChange">
             <template #suffix>
               <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -770,9 +770,9 @@
             <thead class="bg-gray-50 sticky top-0">
               <tr>
                 <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('common.serialNumber') }}</th>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">姓名</th>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">账号</th>
-                <th class="px-3 py-2 text-center text-[#4D4D4D] font-medium">选择</th>
+                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('user.name') }}</th>
+                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('user.account') }}</th>
+                <th class="px-3 py-2 text-center text-[#4D4D4D] font-medium">{{ $t('user.select') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -803,20 +803,20 @@
 
         <!-- 选择班级 -->
         <div class="mb-4">
-          <p class="text-sm text-[#4D4D4D] mb-3">请选择要转让的班级</p>
+          <p class="text-sm text-[#4D4D4D] mb-3">{{ $t('user.selectTransferClass') }}</p>
           <div class="space-y-3">
-            <MSelect v-model="transferClassForm.gradeId" :options="transferGradeOptions" placeholder="年级"
+            <MSelect v-model="transferClassForm.gradeId" :options="transferGradeOptions" :placeholder="t('class.grade')"
               @change="handleTransferGradeChange" />
-            <MSelect v-model="transferClassForm.classId" :options="transferClassOptions" placeholder="班级" value-key="id"
+            <MSelect v-model="transferClassForm.classId" :options="transferClassOptions" :placeholder="t('class.className')" value-key="id"
               label-key="name" />
           </div>
         </div>
 
         <div class="flex items-center justify-center gap-4 mt-6">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showTransferTeacherModal = false">取消</button>
+            @click="showTransferTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmTransferTeacher">确定</button>
+            @click="handleConfirmTransferTeacher">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -831,35 +831,35 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">添加学生</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.addStudent') }}</h3>
         <div class="flex justify-center gap-3 mb-6">
           <button
             :class="['w-[136px] h-[40px] rounded-lg text-[14px] font-medium transition-colors', addStudentMode === 'batch' ? 'bg-[#FF9900] text-white' : 'border border-gray-300 text-[#FF9900]']"
-            @click="addStudentMode = 'batch'">批量导入添加</button>
+            @click="addStudentMode = 'batch'">{{ $t('user.batchImportAdd') }}</button>
           <button
             :class="['w-[136px] h-[40px] rounded-lg text-[14px] font-medium transition-colors', addStudentMode === 'manual' ? 'bg-[#FF9900] text-white' : 'border border-gray-300 text-[#FF9900]']"
-            @click="addStudentMode = 'manual'">手动添加</button>
+            @click="addStudentMode = 'manual'">{{ $t('user.manualAdd') }}</button>
         </div>
         <template v-if="addStudentMode === 'batch'">
           <div class="flex justify-center gap-3 mb-6">
             <button class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500"
-              @click="handleImportStudents">导入学生信息</button>
+              @click="handleImportStudents">{{ $t('user.importStudentInfo') }}</button>
             <button class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500"
-              @click="handleDownloadTemplate">下载导入模版</button>
+              @click="handleDownloadTemplate">{{ $t('user.downloadTemplate') }}</button>
           </div>
-          <p class="text-sm text-gray-400 flex-1">批量导入学生信息后，系统将自动创建学生账号，该班级学生默认密码统一为：{{ studentPassword }}</p>
+          <p class="text-sm text-gray-400 flex-1">{{ $t('user.batchImportStudentTip') }}{{ studentPassword }}</p>
         </template>
         <template v-else>
           <div class="flex flex-col items-center gap-3 flex-1">
-            <MInput v-model="createForm.name" placeholder="学生姓名" class="w-[275px]" />
-            <p class="text-sm text-gray-400">学生默认密码为: {{ studentPassword }}</p>
+            <MInput v-model="createForm.name" :placeholder="t('class.studentName')" class="w-[275px]" />
+            <p class="text-sm text-gray-400">{{ $t('user.studentDefaultPasswordIs') }}{{ studentPassword }}</p>
           </div>
         </template>
         <div class="flex items-center justify-center gap-4 mt-auto pt-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showCreateModal = false">取消</button>
+            @click="showCreateModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleCreateStudent">确定</button>
+            @click="handleCreateStudent">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -873,17 +873,17 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditClass ? "编辑班级" : "创建班级" }}</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditClass ? t('class.editClass') : t('class.createClass') }}</h3>
         <div class="space-y-4 px-2">
-          <MSelect v-model="createClassForm.gradeId" :options="gradeOptions" placeholder="年级" />
-          <MInput v-model="createClassForm.className" placeholder="班级" />
-          <MInput v-model="createClassForm.teacherName" placeholder="老师" disabled />
+          <MSelect v-model="createClassForm.gradeId" :options="gradeOptions" :placeholder="t('class.grade')" />
+          <MInput v-model="createClassForm.className" :placeholder="t('class.className')" />
+          <MInput v-model="createClassForm.teacherName" :placeholder="t('class.teacher')" disabled />
         </div>
         <div class="flex items-center justify-center gap-4 mt-8">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showCreateClassModal = false">取消</button>
+            @click="showCreateClassModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmCreateClass">确定</button>
+            @click="handleConfirmCreateClass">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -897,15 +897,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">确认要删除此班级吗？</p>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('user.confirmDeleteClass') }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showDeleteClassModal = false">取消</button>
+            @click="showDeleteClassModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmDeleteClass">确定</button>
+            @click="handleConfirmDeleteClass">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -920,15 +920,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">确认重置{{ resettingStudent?.studentName }}的密码吗？</p>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmResetPassword', { name: resettingStudent?.studentName }) }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showResetPasswordModal = false">取消</button>
+            @click="showResetPasswordModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmResetPassword">确定</button>
+            @click="handleConfirmResetPassword">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -942,18 +942,18 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">移班</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.transferStudent') }}</h3>
         <div class="space-y-4 px-2">
-          <MSelect v-model="transferForm.gradeId" :options="gradeOptions" placeholder="选择年级"
+          <MSelect v-model="transferForm.gradeId" :options="gradeOptions" :placeholder="t('class.selectGrade')"
             @update:model-value="handleTransferGradeChange" />
-          <MSelect v-model="transferForm.classId" :options="transferClassOptions" placeholder="选择班级"
+          <MSelect v-model="transferForm.classId" :options="transferClassOptions" :placeholder="t('class.selectClass')"
             :disabled="!transferForm.gradeId" @change="handleTransferClassChange" />
         </div>
         <div class="flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showTransferModal = false">取消</button>
+            @click="showTransferModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmTransfer">确定</button>
+            @click="handleConfirmTransfer">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -969,15 +969,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">确认要删除{{ deletingStudent?.name }}吗？</p>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmDeleteStudent', { name: deletingStudent?.name }) }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showDeleteStudentModal = false">取消</button>
+            @click="showDeleteStudentModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmDeleteStudent">确定</button>
+            @click="handleConfirmDeleteStudent">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -992,15 +992,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D] text-center px-4">确定将{{ selectedStudentNames }}学生的密码重置吗？</p>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmBatchResetPassword', { names: selectedStudentNames }) }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showBatchResetPasswordModal = false">取消</button>
+            @click="showBatchResetPasswordModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmBatchResetPassword">确定</button>
+            @click="handleConfirmBatchResetPassword">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -1014,15 +1014,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D] text-center px-4">确认删除选中的 {{ selectedStudentIds.length }} 名学生吗？</p>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmBatchDelete', { count: selectedStudentIds.length }) }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showBatchDeleteModal = false">取消</button>
+            @click="showBatchDeleteModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmBatchDelete">确定</button>
+            @click="handleConfirmBatchDelete">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -1037,19 +1037,19 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">批量移班</h3>
-        <p class="text-sm text-gray-500 text-center mb-4">已选中{{ selectedStudentIds.length }}位学生，请选择所要移至的班级，完成批量移班</p>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('class.batchTransfer') }}</h3>
+        <p class="text-sm text-gray-500 text-center mb-4">{{ $t('user.batchTransferTip', { count: selectedStudentIds.length }) }}</p>
         <div class="space-y-4 px-2">
-          <MSelect v-model="batchTransferForm.gradeId" :options="gradeOptions" placeholder="选择年级"
+          <MSelect v-model="batchTransferForm.gradeId" :options="gradeOptions" :placeholder="t('class.selectGrade')"
             @update:model-value="handleBatchTransferGradeChange" />
-          <MSelect v-model="batchTransferForm.classId" :options="batchTransferClassOptions" placeholder="选择班级"
+          <MSelect v-model="batchTransferForm.classId" :options="batchTransferClassOptions" :placeholder="t('class.selectClass')"
             :disabled="!batchTransferForm.gradeId" />
         </div>
         <div class="flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showBatchTransferModal = false">取消</button>
+            @click="showBatchTransferModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmBatchTransfer">确定</button>
+            @click="handleConfirmBatchTransfer">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -1063,14 +1063,14 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex flex-col items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D] mb-2">密码重置成功</p>
-          <p class="text-[18px] text-[#FF9900] font-medium">新密码：{{ newPassword }}</p>
+          <p class="text-[16px] text-[#4D4D4D] mb-2">{{ $t('class.passwordResetSuccess') }}</p>
+          <p class="text-[18px] text-[#FF9900] font-medium">{{ $t('class.newPassword') }}{{ newPassword }}</p>
         </div>
         <div class="flex items-center justify-center">
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="showNewPasswordModal = false">确定</button>
+            @click="showNewPasswordModal = false">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -1084,20 +1084,20 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#E5E5E5D] mb-6">启用快捷登录</h3>
-        <p class="text-center text-[#4D4D4D] mb-6">学生可通过「快捷登录链接」免账号登录，或者使用「班级码+密码」登录。</p>
+        <h3 class="text-center text-lg font-medium text-[#E5E5E5D] mb-6">{{ $t('class.enableQuickLogin') }}</h3>
+        <p class="text-center text-[#4D4D4D] mb-6">{{ $t('class.quickLoginDesc') }}</p>
         <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <span>班级码使用期间，无法调整当前班级学生账号</span>
+          <span>{{ $t('class.quickLoginWarning') }}</span>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showQuickLoginModal = false">取消</button>
+            @click="showQuickLoginModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmQuickLogin">创建</button>
+            @click="handleConfirmQuickLogin">{{ $t('common.create') }}</button>
         </div>
       </div>
     </MModal>
@@ -1110,28 +1110,28 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditGroupMode ? '编辑小组' : '创建小组' }}</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditGroupMode ? t('class.editGroup') : t('class.createGroup') }}</h3>
         <div class="mb-6">
-          <p class="text-[#4D4D4D] font-medium mb-4">第一步：填写小组信息：</p>
+          <p class="text-[#4D4D4D] font-medium mb-4">{{ $t('user.stepOneGroupInfo') }}</p>
           <div class="space-y-4 pl-4">
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="text-red-500">*</span>
-              <span class="text-[#4D4D4D]">小组名称：</span>
-              <MInput v-model="groupForm.name" placeholder="请输入" class="w-[280px]" />
+              <span class="text-[#4D4D4D]">{{ $t('user.groupName') }}：</span>
+              <MInput v-model="groupForm.name" :placeholder="t('class.pleaseInputGroupName')" class="w-[280px]" />
             </div>
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="text-transparent">*</span>
-              <span class="text-[#4D4D4D]">小组描述：</span>
-              <MInput v-model="groupForm.remarks" placeholder="请输入" class="w-[280px]" />
+              <span class="text-[#4D4D4D]">{{ $t('user.groupDesc') }}：</span>
+              <MInput v-model="groupForm.remarks" :placeholder="t('class.pleaseInputGroupName')" class="w-[280px]" />
             </div>
           </div>
         </div>
         <div class="mb-6">
           <div class="flex items-center justify-between mb-4">
-            <p class="text-[#4D4D4D] font-medium whitespace-nowrap">第二步：添加小组成员：<span
-                class="text-[#FF9900] text-sm font-normal">（请记得选择组长哦）</span></p>
+            <p class="text-[#4D4D4D] font-medium whitespace-nowrap">{{ $t('user.stepTwoAddMembers') }}<span
+                class="text-[#FF9900] text-sm font-normal">{{ $t('user.rememberSelectLeader') }}</span></p>
             <button class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap"
-              @click="handleAddGroupMember">+ 添加成员</button>
+              @click="handleAddGroupMember">+ {{ $t('user.addMember') }}</button>
           </div>
           <div class="border border-gray-200 rounded-lg overflow-hidden">
             <table class="w-full">
@@ -1139,10 +1139,10 @@
                 <tr>
                   <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('common.serialNumber') }}
                   </th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">账号</th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">姓名</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">是否为组长</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">操作</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.account') }}</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.name') }}</th>
+                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('user.isLeader') }}</th>
+                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('common.operation') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1156,7 +1156,7 @@
                   </td>
                   <td class="px-3 py-2 text-center">
                     <button class="text-red-500 text-sm hover:text-red-600"
-                      @click="handleRemoveGroupMember(index)">删除</button>
+                      @click="handleRemoveGroupMember(index)">{{ $t('common.delete') }}</button>
                   </td>
                 </tr>
                 <tr v-if="!groupForm.members.length">
@@ -1166,7 +1166,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
                           d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
-                      <span class="text-sm">暂无数据</span>
+                      <span class="text-sm">{{ $t('common.noData') }}</span>
                     </div>
                   </td>
                 </tr>
@@ -1176,9 +1176,9 @@
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showGroupModal = false">取消</button>
+            @click="showGroupModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmGroup">确定</button>
+            @click="handleConfirmGroup">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -1192,9 +1192,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">选择成员</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.selectMembers') }}</h3>
         <div class="mb-2">
-          <MInput v-model="memberSearchKeyword" placeholder="输入学生账号或姓名进行查找" clearable class="w-full"
+          <MInput v-model="memberSearchKeyword" :placeholder="t('class.searchStudentPlaceholder')" clearable class="w-full"
             @enter="handleMemberSearch" @clear="handleMemberSearch">
             <template #prefix>
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1215,8 +1215,8 @@
                 </th>
                 <th class="w-16 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('common.serialNumber') }}
                 </th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">账号</th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">姓名</th>
+                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.account') }}</th>
+                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.name') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -1233,7 +1233,7 @@
               </tr>
             </tbody>
           </table>
-          <div v-if="!filteredAvailableStudents.length" class="px-4 py-8 text-center text-gray-400">暂无可添加的学生</div>
+          <div v-if="!filteredAvailableStudents.length" class="px-4 py-8 text-center text-gray-400">{{ $t('user.noStudentsToAdd') }}</div>
         </div>
         <div v-if="selectedMemberIds.length" class="mt-3 p-3 bg-[#F5F5F5] rounded-lg">
           <div class="flex flex-wrap gap-2">
@@ -1252,9 +1252,9 @@
         </div>
         <div class="flex items-center justify-center gap-4 mt-6">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showAddMemberModal = false">取消</button>
+            @click="showAddMemberModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmAddMembers">确定</button>
+            @click="handleConfirmAddMembers">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -1268,16 +1268,16 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">{{ isBatchDeleteGroup ? `确认要删除选中的${selectedGroupIds.length}个小组吗？` :
-            `确认要删除"${deletingGroup?.name}"吗？` }}</p>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <div class="flex-1 flex items-center justify-center px-4">
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ isBatchDeleteGroup ? $t('class.confirmBatchDeleteGroup', { count: selectedGroupIds.length }) :
+            $t('class.confirmDeleteGroup', { name: deletingGroup?.teamName }) }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showDeleteGroupModal = false">取消</button>
+            @click="showDeleteGroupModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmDeleteGroup">确定</button>
+            @click="handleConfirmDeleteGroup">{{ $t('common.confirm') }}</button>
         </div>
       </div>
     </MModal>
@@ -1288,6 +1288,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch } from "vue";
 import { useRoute } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { ElMessage } from "~/components/ui";
 import { useTeacher } from "@/composables/api/useTeacher";
 import { useAuth } from "@/composables/api/useAuth";
@@ -1297,6 +1298,7 @@ definePageMeta({
   layout: "sidebar",
 });
 
+const { t } = useI18n();
 const route = useRoute();
 const { user } = useAuth();
 const schoolUserApi = useSchoolUser()
@@ -1333,10 +1335,10 @@ const {
 
 // ==================== 左侧面板 Tab 导航 ====================
 const activeNav = ref('teacher')
-const navTabs = [
-  { label: '教师管理', value: 'teacher' },
-  { label: '班级管理', value: 'class' }
-]
+const navTabs = computed(() => [
+  { label: t('user.teacherManagement'), value: 'teacher' },
+  { label: t('user.classManagement'), value: 'class' }
+])
 
 // Tab 切换处理 - 页面内切换，不跳转
 const handleNavChange = async (value: string) => {
@@ -1353,7 +1355,7 @@ const handleNavChange = async (value: string) => {
 }
 
 // ==================== 教师管理相关 ====================
-const teacherTabList = [{ label: '教师管理', value: 'teacher' }]
+const teacherTabList = computed(() => [{ label: t('user.teacherManagement'), value: 'teacher' }])
 const teacherActiveTab = ref('teacher')
 const teacherSearchKeyword = ref('')
 const teacherPassword = ref('')
@@ -1366,13 +1368,13 @@ const selectedTeacherIds = ref<string[]>([])
 const teacherPagination = reactive({ page: 1, pageSize: 10, total: 0 })
 
 
-const teacherTableColumns = [
-  { key: 'nickName', title: '教师姓名', minWidth: '70px' },
-  { key: 'userName', title: '教师账号', minWidth: '90px' },
-  { key: 'phonenumber', title: '手机号', minWidth: '90px' },
-  { key: 'createTime', title: '创建时间', minWidth: '100px' },
-  { key: 'action', title: '操作', minWidth: '180px', align: 'center' as const }
-]
+const teacherTableColumns = computed(() => [
+  { key: 'nickName', title: t('user.teacherName'), minWidth: '70px' },
+  { key: 'userName', title: t('user.teacherAccount'), minWidth: '90px' },
+  { key: 'phonenumber', title: t('user.phone'), minWidth: '90px' },
+  { key: 'createTime', title: t('class.createTime'), minWidth: '100px' },
+  { key: 'action', title: t('common.operation'), minWidth: '180px', align: 'center' as const }
+])
 
 // 教师弹窗
 const showTeacherModal = ref(false)
@@ -1563,44 +1565,44 @@ const triggerTeacherFileInput = () => {
 const handleConfirmTeacher = async () => {
   // 编辑模式或手动添加模式
   if (isEditTeacher.value || addTeacherTab.value === 'manual') {
-    if (!teacherForm.teacherName.trim()) { ElMessage.warning('请输入教师姓名'); return }
-    if (!teacherForm.phone.trim()) { ElMessage.warning('请输入手机号'); return }
+    if (!teacherForm.teacherName.trim()) { ElMessage.warning(t('user.pleaseInputTeacherName')); return }
+    if (!teacherForm.phone.trim()) { ElMessage.warning(t('user.pleaseInputPhone')); return }
     try {
       if (isEditTeacher.value) {
         await schoolUserApi.updateTeacher({ userId: teacherForm.id, nickName: teacherForm.teacherName, phonenumber: teacherForm.phone })
-        ElMessage.success('编辑成功')
+        ElMessage.success(t('common.editSuccess'))
       } else {
         // 获取第一个组织的 id 作为 orgId
         const orgId = schoolList.value?.[0]?.id || ''
         await schoolUserApi.createTeacher({ orgId, nickName: teacherForm.teacherName, phonenumber: teacherForm.phone })
-        ElMessage.success('创建成功')
+        ElMessage.success(t('common.createSuccess'))
       }
       showTeacherModal.value = false
       fetchTeacherList()
-    } catch (error: any) { ElMessage.error(error.message || '操作失败') }
+    } catch (error: any) { ElMessage.error(error.message || t('common.failed')) }
   } else {
     // 批量导入模式
-    if (!importTeacherFile.value) { ElMessage.warning('请选择要导入的文件'); return }
+    if (!importTeacherFile.value) { ElMessage.warning(t('user.pleaseSelectFile')); return }
     try {
       const orgId = schoolList.value?.[0]?.id || ''
       await schoolUserApi.importTeacher(importTeacherFile.value, orgId)
-      ElMessage.success('导入成功')
+      ElMessage.success(t('common.importSuccess'))
       showTeacherModal.value = false
       fetchTeacherList()
-    } catch (error: any) { ElMessage.error(error.message || '导入失败') }
+    } catch (error: any) { ElMessage.error(error.message || t('common.importFailed')) }
   }
 }
 
 const handleDeleteTeacher = (row: Teacher) => {
   deleteTeacherIds.value = [row.userId]
-  deleteTeacherConfirmText.value = `确认要删除教师"${row.nickName}"吗？`
+  deleteTeacherConfirmText.value = t('user.confirmDeleteTeacher', { name: row.nickName })
   isBatchDeleteTeacher.value = false
   showDeleteTeacherModal.value = true
 }
 const handleBatchDeleteTeacher = () => {
-  if (selectedTeacherIds.value.length === 0) { ElMessage.warning('请先选择要删除的教师'); return }
+  if (selectedTeacherIds.value.length === 0) { ElMessage.warning(t('user.noTeacherToDelete')); return }
   deleteTeacherIds.value = [...selectedTeacherIds.value]
-  deleteTeacherConfirmText.value = `已选择${selectedTeacherIds.value.length}位教师，请输入当前教师帐号密码确认身份，完成批量删除`
+  deleteTeacherConfirmText.value = t('user.batchDeleteConfirmText', { count: selectedTeacherIds.value.length })
   deleteTeacherPassword.value = ''
   isBatchDeleteTeacher.value = true
   showDeleteTeacherModal.value = true
@@ -1608,7 +1610,7 @@ const handleBatchDeleteTeacher = () => {
 const handleConfirmDeleteTeacher = async () => {
   // 批量删除需要验证密码
   if (isBatchDeleteTeacher.value && !deleteTeacherPassword.value.trim()) {
-    ElMessage.warning('请输入教师帐号密码')
+    ElMessage.warning(t('user.pleaseInputTeacherPassword'))
     return
   }
   try {
@@ -1617,24 +1619,24 @@ const handleConfirmDeleteTeacher = async () => {
     } else {
       await schoolUserApi.deleteTeacher(deleteTeacherIds.value)
     }
-    ElMessage.success('删除成功')
+    ElMessage.success(t('common.deleteSuccess'))
     showDeleteTeacherModal.value = false
     selectedTeacherIds.value = []
     deleteTeacherPassword.value = ''
     fetchTeacherList()
-  } catch (error: any) { ElMessage.error(error.message || '删除失败') }
+  } catch (error: any) { ElMessage.error(error.message || t('common.failed')) }
 }
 
 const handleResetTeacherPassword = (row: Teacher) => {
   resetTeacherIds.value = [row.userId]
-  resetTeacherConfirmText.value = `确认重置教师"${row.nickName}"的密码吗？`
+  resetTeacherConfirmText.value = t('user.confirmResetTeacherPassword', { name: row.nickName })
   isBatchResetTeacher.value = false
   showResetTeacherModal.value = true
 }
 const handleBatchResetTeacherPassword = () => {
-  if (selectedTeacherIds.value.length === 0) { ElMessage.warning('请先选择要重置密码的教师'); return }
+  if (selectedTeacherIds.value.length === 0) { ElMessage.warning(t('user.noTeacherToReset')); return }
   resetTeacherIds.value = [...selectedTeacherIds.value]
-  resetTeacherConfirmText.value = `已选择${selectedTeacherIds.value.length}位教师，请输入当前教师帐号密码确认身份，完成批量重置`
+  resetTeacherConfirmText.value = t('user.batchResetConfirmText', { count: selectedTeacherIds.value.length })
   resetTeacherPassword.value = ''
   isBatchResetTeacher.value = true
   showResetTeacherModal.value = true
@@ -1642,7 +1644,7 @@ const handleBatchResetTeacherPassword = () => {
 const handleConfirmResetTeacher = async () => {
   // 批量重置需要验证密码
   if (isBatchResetTeacher.value && !resetTeacherPassword.value.trim()) {
-    ElMessage.warning('请输入教师帐号密码')
+    ElMessage.warning(t('user.pleaseInputTeacherPassword'))
     return
   }
   try {
@@ -1651,39 +1653,54 @@ const handleConfirmResetTeacher = async () => {
     } else {
       await schoolUserApi.resetTeacherPassword(resetTeacherIds.value)
     }
-    ElMessage.success('重置密码成功')
+    ElMessage.success(t('user.resetPasswordSuccess'))
     showResetTeacherModal.value = false
     resetTeacherPassword.value = ''
-  } catch (error: any) { ElMessage.error(error.message || '重置密码失败') }
+  } catch (error: any) { ElMessage.error(error.message || t('user.resetPasswordFailed')) }
 }
 
 const handleImportTeacher = () => { importTeacherFile.value = null; importTeacherFileName.value = ''; showImportTeacherModal.value = true }
 const handleSelectTeacherFile = () => { teacherFileInputRef.value?.click() }
-const handleTeacherFileChange = (e: Event) => {
-  const target = e.target as HTMLInputElement; const file = target.files?.[0]
-  if (file) { importTeacherFile.value = file; importTeacherFileName.value = file.name }
+const handleTeacherFileChange = async (e: Event) => {
+  const target = e.target as HTMLInputElement
+  const file = target.files?.[0]
+  if (file) {
+    importTeacherFile.value = file
+    importTeacherFileName.value = file.name
+    // 选择文件后立即导入
+    try {
+      const orgId = schoolList.value?.[0]?.id || ''
+      ElMessage.info(t('user.importingTeacher'))
+      await schoolUserApi.importTeacher(file, orgId)
+
+      showTeacherModal.value = false
+      fetchTeacherList()
+    } catch (error: any) {
+     console.log(error)
+    }
+  }
   target.value = ''
 }
 const handleDownloadTeacherTemplate = async () => {
-  try { await schoolUserApi.downloadTeacherTemplate(); ElMessage.success('下载成功') }
-  catch (error: any) { ElMessage.error(error.message || '下载失败') }
+  try { await schoolUserApi.downloadTeacherTemplate(); ElMessage.success(t('common.downloadSuccess')) }
+  catch (error: any) { ElMessage.error(error.message || t('common.downloadFailed')) }
 }
 
 const handleExportTeacher = async () => {
   try {
-    await schoolUserApi.exportTeacherInfo()
-    ElMessage.success('导出成功')
+    await schoolUserApi.exportTeacherInfo('教师账号信息.xlsx')
+    ElMessage.success(t('common.exportSuccess'))
   } catch (error: any) {
-    ElMessage.error(error.message || '导出失败')
+    ElMessage.error(error.message || t('common.exportFailed'))
   }
 }
 const handleConfirmImportTeacher = async () => {
-  if (!importTeacherFile.value) { ElMessage.warning('请先选择文件'); return }
+  if (!importTeacherFile.value) { ElMessage.warning(t('user.pleaseSelectFileFirst')); return }
   try {
     const orgId = schoolList.value?.[0]?.id || ''
     await schoolUserApi.importTeacher(importTeacherFile.value, orgId)
-    ElMessage.success('导入成功'); showImportTeacherModal.value = false; fetchTeacherList()
-  } catch (error: any) { ElMessage.error(error.message || '导入失败') }
+    ElMessage.success(t('common.importSuccess')); showImportTeacherModal.value = false; fetchTeacherList()
+  } catch (error: any) { ElMessage.error(error.message || t('common.importFailed')) }
 }
 
 const handleTransferTeacherClass = async (row: Teacher) => {
@@ -1719,8 +1736,8 @@ const handleTransferTeacherClass = async (row: Teacher) => {
   showTransferTeacherModal.value = true
 }
 const handleConfirmTransferTeacher = async () => {
-  if (!transferTeacherForm.targetTeacherId) { ElMessage.warning('请选择要转让的教师'); return }
-  if (!transferClassForm.classId) { ElMessage.warning('请选择要转让的班级'); return }
+  if (!transferTeacherForm.targetTeacherId) { ElMessage.warning(t('user.pleaseSelectTeacher')); return }
+  if (!transferClassForm.classId) { ElMessage.warning(t('user.pleaseSelectClassToTransfer')); return }
   try {
     const selectedClass = transferClassOptions.value.find((c: any) => c.id === transferClassForm.classId)
     await schoolUserApi.transferClass({
@@ -1730,18 +1747,18 @@ const handleConfirmTransferTeacher = async () => {
       schoolId: schoolList.value?.[0]?.id || '',
       className: selectedClass?.name || ''
     })
-    ElMessage.success('班级转让成功')
+    ElMessage.success(t('user.classTransferSuccess'))
     showTransferTeacherModal.value = false
     fetchTeacherList()
-  } catch (error: any) { ElMessage.error(error.message || '班级转让失败') }
+  } catch (error: any) { ElMessage.error(error.message || t('user.classTransferFailed')) }
 }
 
 // ==================== 班级管理相关（从class页面复制） ====================
 // Tab 数据
-const tabList = [
-  { label: "学生管理", value: "student" },
-  { label: "小组管理", value: "group" },
-];
+const tabList = computed(() => [
+  { label: t('class.studentManagement'), value: "student" },
+  { label: t('class.groupManagement'), value: "group" },
+]);
 const activeTab = ref("student");
 
 // 搜索关键词
@@ -1763,12 +1780,12 @@ const expandedKeys = ref<(string | number)[]>([1]);
 const treeData = ref<any[]>([]);
 
 // 表格列配置
-const tableColumns = [
-  { key: "studentName", title: "学生姓名", minWidth: "120px" },
-  { key: "studentNumber", title: "学生账号", minWidth: "150px" },
-  { key: "createTime", title: "创建时间", minWidth: "150px" },
-  { key: "action", title: "操作", width: "220px", align: "center" as const },
-];
+const tableColumns = computed(() => [
+  { key: "studentName", title: t('class.studentName'), minWidth: "120px" },
+  { key: "studentNumber", title: t('class.studentAccount'), minWidth: "150px" },
+  { key: "createTime", title: t('class.createTime'), minWidth: "150px" },
+  { key: "action", title: t('common.operation'), width: "220px", align: "center" as const },
+]);
 
 // 学生列表
 const studentList = ref<any[]>([]);
@@ -1782,14 +1799,14 @@ type GroupActionType = "batch" | null;
 const groupActiveAction = ref<GroupActionType>(null);
 
 // 小组表格列配置
-const groupTableColumns = [
-  { key: "teamName", title: "小组名称", minWidth: "80px" },
-  { key: "leaderName", title: "组长", minWidth: "60px" },
-  { key: "members", title: "组内成员", minWidth: "100px" },
-  { key: "remarks", title: "描述", minWidth: "100px" },
-  { key: "createTime", title: "创建时间", minWidth: "120px" },
-  { key: "action", title: "操作", width: "100px", align: "center" as const },
-];
+const groupTableColumns = computed(() => [
+  { key: "teamName", title: t('class.groupName'), minWidth: "80px" },
+  { key: "leaderName", title: t('class.groupLeader'), minWidth: "60px" },
+  { key: "members", title: t('class.groupMembers'), minWidth: "100px" },
+  { key: "remarks", title: t('class.groupRemarks'), minWidth: "100px" },
+  { key: "createTime", title: t('class.createTime'), minWidth: "120px" },
+  { key: "action", title: t('common.operation'), width: "100px", align: "center" as const },
+]);
 
 // 小组弹窗
 const showGroupModal = ref(false);
@@ -2029,7 +2046,7 @@ const handleConfirmDeleteClass = async () => {
   try {
     let res = await deleteClass(deletingClass.value.id);
     if (res.code == 200) {
-      ElMessage.success(`已删除班级：${deletingClass.value.name}`);
+      ElMessage.success(t('class.deletedClass', { name: deletingClass.value.name }));
       loadClassList();
     }
   } catch (error) {
@@ -2051,17 +2068,17 @@ const handleCreateNewClass = (gradeNode: any) => {
 };
 
 const handleConfirmCreateClass = async () => {
-  if (!createClassForm.gradeId) { ElMessage.error("请选择年级"); return; }
-  if (!createClassForm.className) { ElMessage.error("请输入班级名称"); return; }
+  if (!createClassForm.gradeId) { ElMessage.error(t('user.pleaseSelectGrade')); return; }
+  if (!createClassForm.className) { ElMessage.error(t('user.pleaseInputClassName')); return; }
   const selectedGrade = gradeOptions.value.find((item) => item.value === createClassForm.gradeId);
   try {
     if (isEditClass.value && editingClassId.value) {
       const schoolId = schoolList.value?.[0]?.id || ''
       await updateClass({ id: editingClassId.value, className: createClassForm.className, grade: Number(createClassForm.gradeId), gradeName: selectedGrade?.label || "", schoolId });
-      ElMessage.success("编辑班级成功");
+      ElMessage.success(t('user.editClassSuccess'));
     } else {
       await createClass({ className: createClassForm.className, grade: Number(createClassForm.gradeId), gradeName: selectedGrade?.label || "" });
-      ElMessage.success("创建班级成功");
+      ElMessage.success(t('user.createClassSuccess'));
     }
     loadClassList();
     showCreateClassModal.value = false;
@@ -2086,7 +2103,7 @@ const handleQuickLogin = async () => {
       isQuickLoginEnabled.value = false;
       quickLoginClassId.value = null;
       quickLoginData.value = {};
-      ElMessage.info("快捷登录已停用");
+      ElMessage.info(t('user.quickLoginDisabled'));
     } catch (error) { console.error("停用快捷登录失败:", error); }
   } else if (!isOtherClassQuickLogin.value) {
     showQuickLoginModal.value = true;
@@ -2094,12 +2111,12 @@ const handleQuickLogin = async () => {
 };
 
 const handleConfirmQuickLogin = async () => {
-  if (!selectedClass.value?.id) { ElMessage.error("请先选择班级"); return; }
+  if (!selectedClass.value?.id) { ElMessage.error(t('user.pleaseSelectClass')); return; }
   try {
     const data = await createQuickLogin(selectedClass.value.id);
     quickLoginData.value = data || {};
     quickLoginClassId.value = selectedClass.value.id;
-    ElMessage.success("快捷登录已启用");
+    ElMessage.success(t('user.quickLoginEnabled'));
     isQuickLoginEnabled.value = true;
     showQuickLoginModal.value = false;
   } catch (error) { console.error("创建快捷登录失败:", error); }
@@ -2107,8 +2124,8 @@ const handleConfirmQuickLogin = async () => {
 
 const copyToClipboard = async (text?: string) => {
   if (!text) return;
-  try { await navigator.clipboard.writeText(text); ElMessage.success("复制成功"); }
-  catch (error) { ElMessage.error("复制失败"); }
+  try { await navigator.clipboard.writeText(text); ElMessage.success(t('common.copySuccess')); }
+  catch (error) { ElMessage.error(t('common.copyFailed')); }
 };
 
 const handleRefreshQuickLogin = async () => {
@@ -2116,21 +2133,25 @@ const handleRefreshQuickLogin = async () => {
   try {
     const data = await createQuickLogin(selectedClass.value.id);
     quickLoginData.value = data || {};
-    ElMessage.success("已刷新");
+    ElMessage.success(t('common.refreshed'));
   } catch (error) { console.error("刷新快捷登录失败:", error); }
 };
 
 const handleExport = async () => {
   try {
-    ElMessage.info("正在导出学生信息...");
-    await exportStudentInfo();
-    ElMessage.success("导出成功");
-  } catch (error) { console.error("导出失败:", error); ElMessage.error("导出失败"); }
+    ElMessage.info(t('user.exportingStudent'));
+    // 文件名格式：年级+班级+学生账号信息.xlsx
+    const gradeName = selectedClass.value?.gradeName || '';
+    const className = selectedClass.value?.name || '';
+    const filename = `${gradeName}${className}学生账号信息.xlsx`;
+    await exportStudentInfo(filename);
+    ElMessage.success(t('common.exportSuccess'));
+  } catch (error) { console.error("导出失败:", error); ElMessage.error(t('common.exportFailed')); }
 };
 
 const handleBatchAction = () => {
-  if (activeAction.value === "batch") { activeAction.value = null; selectedStudentIds.value = []; ElMessage.info("已退出批量操作模式"); }
-  else { activeAction.value = "batch"; ElMessage.info("已进入批量操作模式，请勾选学生"); }
+  if (activeAction.value === "batch") { activeAction.value = null; selectedStudentIds.value = []; ElMessage.info(t('user.exitBatchMode')); }
+  else { activeAction.value = "batch"; ElMessage.info(t('user.enterBatchMode')); }
 };
 
 const handleStudentSelect = (keys: (string | number)[], rows: any[]) => { selectedStudentIds.value = keys.map((k) => String(k)); };
@@ -2141,14 +2162,14 @@ const handleStudentSelectAll = (selected: boolean) => {
 const handleSelectAllToggle = (e: Event) => { handleStudentSelectAll((e.target as HTMLInputElement).checked); };
 
 const handleBatchDelete = () => {
-  if (selectedStudentIds.value.length === 0) { ElMessage.warning("暂未选择任何学生，请在列表左侧进行勾选"); return; }
+  if (selectedStudentIds.value.length === 0) { ElMessage.warning(t('user.noStudentSelected')); return; }
   showBatchDeleteModal.value = true;
 };
 
 const handleConfirmBatchDelete = async () => {
   try {
     await removeStudent(selectedStudentIds.value.map(String));
-    ElMessage.success(`已删除 ${selectedStudentIds.value.length} 名学生`);
+    ElMessage.success(t('class.deletedStudents', { count: selectedStudentIds.value.length }));
     selectedStudentIds.value = [];
     loadStudentList();
   } catch (error) { console.error("批量删除失败:", error); }
@@ -2156,19 +2177,19 @@ const handleConfirmBatchDelete = async () => {
 };
 
 const handleBatchTransfer = () => {
-  if (selectedStudentIds.value.length === 0) { ElMessage.warning("暂未选择任何学生，请在列表左侧进行勾选"); return; }
+  if (selectedStudentIds.value.length === 0) { ElMessage.warning(t('user.noStudentSelected')); return; }
   batchTransferForm.gradeId = null;
   batchTransferForm.classId = null;
   showBatchTransferModal.value = true;
 };
 
 const handleConfirmBatchTransfer = async () => {
-  if (!batchTransferForm.gradeId) { ElMessage.error("请选择年级"); return; }
-  if (!batchTransferForm.classId) { ElMessage.error("请选择班级"); return; }
+  if (!batchTransferForm.gradeId) { ElMessage.error(t('class.pleaseSelectGrade')); return; }
+  if (!batchTransferForm.classId) { ElMessage.error(t('class.pleaseSelectClass')); return; }
   const targetClass = batchTransferClassList.value.find((c: any) => c.id === batchTransferForm.classId);
   try {
     await transferClass({ ids: selectedStudentIds.value.map(String), classId: batchTransferForm.classId as string, teacherId: targetClass?.teacherId || "" });
-    ElMessage.success(`已将 ${selectedStudentIds.value.length} 名学生移至新班级`);
+    ElMessage.success(t('class.transferredStudents', { count: selectedStudentIds.value.length }));
     loadStudentList();
   } catch (error) { console.error("批量移班失败:", error); }
   finally { showBatchTransferModal.value = false; }
@@ -2177,7 +2198,7 @@ const handleConfirmBatchTransfer = async () => {
 const batchTransferClassOptions = computed(() => batchTransferClassList.value.map((cls: any) => ({ label: cls.className, value: cls.id })));
 
 const handleBatchResetPassword = () => {
-  if (selectedStudentIds.value.length === 0) { ElMessage.warning("暂未选择任何学生，请在列表左侧进行勾选"); return; }
+  if (selectedStudentIds.value.length === 0) { ElMessage.warning(t('user.noStudentSelected')); return; }
   showBatchResetPasswordModal.value = true;
 };
 
@@ -2233,12 +2254,12 @@ const handleBatchTransferGradeChange = (grade: string | number | null) => {
 };
 
 const handleConfirmTransfer = async () => {
-  if (!transferForm.gradeId) { ElMessage.error("请选择年级"); return; }
-  if (!transferForm.classId) { ElMessage.error("请选择班级"); return; }
+  if (!transferForm.gradeId) { ElMessage.error(t('class.pleaseSelectGrade')); return; }
+  if (!transferForm.classId) { ElMessage.error(t('class.pleaseSelectClass')); return; }
   if (!transferringStudent.value) { showTransferModal.value = false; return; }
   try {
     await transferClass({ ids: [transferringStudent.value.id], classId: transferForm.id as string, teacherId: transferForm.teacherId || "" });
-    ElMessage.success(`已将 ${transferringStudent.value.studentName} 移至新班级`);
+    ElMessage.success(t('class.transferredStudent', { name: transferringStudent.value.studentName }));
     loadStudentList();
   } catch (error) { console.error("移班失败:", error); }
   finally { showTransferModal.value = false; transferringStudent.value = null; }
@@ -2280,10 +2301,10 @@ const handleImportStudents = () => {
     try {
       ElMessage.info("正在导入学生信息...");
       await importStudent(file, selectedClass.value.id);
-      ElMessage.success("导入成功");
+    
       loadStudentList();
       showCreateModal.value = false;
-    } catch (error: any) { console.error("导入失败:", error); ElMessage.error(error.message || "导入失败"); }
+    } catch (error: any) { console.error("导入失败:", error) }
   };
   input.click();
 };
@@ -2366,9 +2387,14 @@ const handleConfirmGroup = async () => {
       await updateGroup(editData);
       ElMessage.success("编辑成功");
     } else {
+      // 如果只有一个成员，默认设置为组长（isLeader: 1）
       const addData = {
         classId: selectedClass.value?.id || "", teamName: groupForm.name, remarks: groupForm.remarks || undefined,
-        studentList: groupForm.members.map((m) => ({ studentNumber: m.studentNumber, studentName: m.studentName, isLeader: m.id === groupForm.leaderId ? 0 : 1 })) as { studentNumber: string; studentName: string; isLeader: 0 | 1 }[],
+        studentList: groupForm.members.map((m, index) => ({ 
+          studentNumber: m.studentNumber, 
+          studentName: m.studentName, 
+          isLeader: (groupForm.members.length === 1 || m.id === groupForm.leaderId) ? 1 : 0 
+        })) as { studentNumber: string; studentName: string; isLeader: 0 | 1 }[],
       };
       await addGroup(addData);
       ElMessage.success("创建成功");
@@ -2477,7 +2503,7 @@ const handleGroupBatchAction = () => {
 };
 
 const handleBatchDeleteGroup = () => {
-  if (!selectedGroupIds.value.length) { ElMessage.warning(t('user.noGroupSelected')); return; }
+  if (!selectedGroupIds.value.length) { ElMessage.warning(t('class.noGroupSelected')); return; }
   isBatchDeleteGroup.value = true;
   showDeleteGroupModal.value = true;
 };

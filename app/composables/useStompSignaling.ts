@@ -5,7 +5,7 @@
 import { ref, onUnmounted } from 'vue'
 import { Client, type Message } from '@stomp/stompjs'
 
-export interface SignalingMessage {
+export interface StompSignalingMessage {
   type: 'offer' | 'answer' | 'ice-candidate' | 'join-room' | 'leave-room' | 'screen-share-start' | 'screen-share-stop' | 'user-joined' | 'user-left'
   roomId?: string
   userId?: string
@@ -18,7 +18,7 @@ export interface StompSignalingOptions {
   roomId: string
   userId: string
   role: 'teacher' | 'student'
-  onMessage?: (message: SignalingMessage) => void
+  onMessage?: (message: StompSignalingMessage) => void
   onConnected?: () => void
   onDisconnected?: () => void
   onError?: (error: string) => void
@@ -31,7 +31,7 @@ export function useStompSignaling() {
   const userId = ref('')
   const role = ref<'teacher' | 'student'>('student')
   
-  let messageHandler: ((message: SignalingMessage) => void) | null = null
+  let messageHandler: ((message: StompSignalingMessage) => void) | null = null
   let connectedHandler: (() => void) | null = null
   let disconnectedHandler: (() => void) | null = null
   let errorHandler: ((error: string) => void) | null = null
@@ -91,7 +91,7 @@ export function useStompSignaling() {
         client.value?.subscribe(subscriptionPath, (message: Message) => {
           try {
             console.log('[STOMP] 收到原始消息:', message.body)
-            const parsedMessage: SignalingMessage = JSON.parse(message.body)
+            const parsedMessage: StompSignalingMessage = JSON.parse(message.body)
             console.log('[STOMP] 解析后消息:', parsedMessage)
             messageHandler?.(parsedMessage)
           } catch (error) {
@@ -141,7 +141,7 @@ export function useStompSignaling() {
   }
 
   // 发送消息（根据后端的发送路径调整）
-  const send = (message: SignalingMessage) => {
+  const send = (message: StompSignalingMessage) => {
     if (client.value && client.value.connected) {
       // 常见的发送路径格式：
       // /app/room/{roomId}

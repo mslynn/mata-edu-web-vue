@@ -2,6 +2,7 @@
  * 学校用户（教师）管理 API
  */
 import { useHttp } from "./useHttp";
+import { ElMessage } from '~/components/ui'
 
 export interface Teacher {
   userId: string;
@@ -158,18 +159,7 @@ export const useSchoolUser = () => {
     }
   };
 
-  //班级转让教师列表
-  const getUserlist = async () => {
-    try {
-      const response = await http.get("/system/user/list");
-      if (response.code !== 200) {
-        throw new Error(response.msg || "获取班级转让老师列表失败");
-      }
-      return response.data;
-    } catch (error: any) {
-      throw error;
-    }
-  };
+
   //班级转让对应老师年级列表
   const transferGrade = async (userId: string, orgId?: string) => {
     try {
@@ -248,7 +238,7 @@ export const useSchoolUser = () => {
   };
 
   //导出教师信息（文件流下载）
-  const exportTeacherInfo = async () => {
+  const exportTeacherInfo = async (filename: string = "教师账号信息.xlsx") => {
     try {
       const config = useRuntimeConfig();
       const token = http.getToken();
@@ -267,9 +257,6 @@ export const useSchoolUser = () => {
       if (!response.ok) {
         throw new Error("导出失败");
       }
-
-      // 使用自定义文件名
-      const filename = "校管理员信息.xlsx";
 
       // 下载文件
       const blob = await response.blob();
@@ -310,6 +297,13 @@ export const useSchoolUser = () => {
       );
 
       const result = await response.json();
+      if (result.msg) {
+        if (result.code === 200) {
+          ElMessage.success(result.msg)
+        } else {
+          ElMessage.error(result.msg)
+        }
+      }
       if (result.code !== 200) {
         throw new Error(result.msg || "导入失败");
       }
@@ -340,23 +334,7 @@ export const useSchoolUser = () => {
         throw new Error("下载失败");
       }
 
-      const contentDisposition = response.headers.get("content-disposition");
-      let filename = "教师导入模板.xlsx";
-      if (contentDisposition) {
-        let match = contentDisposition.match(/filename\*=utf-8''([^;\s]+)/i);
-        if (match && match[1]) {
-          filename = decodeURIComponent(match[1]);
-        } else {
-          match = contentDisposition.match(/filename=([^;\s]+)/i);
-          if (match && match[1]) {
-            filename = decodeURIComponent(match[1].replace(/['"]/g, ""));
-          }
-        }
-        const underscoreIndex = filename.indexOf("_");
-        if (underscoreIndex !== -1) {
-          filename = filename.substring(underscoreIndex + 1);
-        }
-      }
+      const filename = "教师账号批量导入模板.xlsx";
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);

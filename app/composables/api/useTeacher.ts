@@ -2,6 +2,7 @@
  * 教师相关 API
  */
 import { useHttp } from './useHttp'
+import { ElMessage } from '~/components/ui'
 
 export const useTeacher = () => {
   const http = useHttp()
@@ -206,7 +207,7 @@ export const useTeacher = () => {
   
 
   //导出学生信息（文件流下载）
-  const exportStudentInfo = async () => {
+  const exportStudentInfo = async (filename: string = '学生账号信息.xlsx') => {
     try {
       const config = useRuntimeConfig()
       const token = http.getToken()
@@ -221,29 +222,6 @@ export const useTeacher = () => {
       
       if (!response.ok) {
         throw new Error('导出失败')
-      }
-      
-      // 获取文件名
-      const contentDisposition = response.headers.get('content-disposition')
-      let filename = '学生管理列表.xlsx'
-      if (contentDisposition) {
-        // 优先匹配 filename*=utf-8''xxx 格式（URL编码的中文）
-        let match = contentDisposition.match(/filename\*=utf-8''([^;\s]+)/i)
-        if (match) {
-          filename = decodeURIComponent(match[1])
-        } else {
-          // 尝试匹配 filename=xxx 格式
-          match = contentDisposition.match(/filename=([^;\s]+)/i)
-          if (match) {
-            // 去掉可能的引号，然后解码
-            filename = decodeURIComponent(match[1].replace(/['"]/g, ''))
-          }
-        }
-        // 截取 _ 后面的部分作为文件名
-        const underscoreIndex = filename.indexOf('_')
-        if (underscoreIndex !== -1) {
-          filename = filename.substring(underscoreIndex + 1)
-        }
       }
       
       // 下载文件
@@ -281,27 +259,7 @@ export const useTeacher = () => {
         throw new Error('下载失败')
       }
       
-      // 获取文件名
-      const contentDisposition = response.headers.get('content-disposition')
-      let filename = '学生导入模板.xlsx'
-      if (contentDisposition) {
-        // 优先匹配 filename*=utf-8''xxx 格式
-        let match = contentDisposition.match(/filename\*=utf-8''([^;\s]+)/i)
-        if (match) {
-          filename = decodeURIComponent(match[1])
-        } else {
-          // 尝试匹配 filename=xxx 格式
-          match = contentDisposition.match(/filename=([^;\s]+)/i)
-          if (match) {
-            filename = decodeURIComponent(match[1].replace(/['"]/g, ''))
-          }
-        }
-        // 截取 _ 后面的部分作为文件名
-        const underscoreIndex = filename.indexOf('_')
-        if (underscoreIndex !== -1) {
-          filename = filename.substring(underscoreIndex + 1)
-        }
-      }
+      const filename = '学生账号批量导入模板.xlsx'
       
       // 下载文件
       const blob = await response.blob()
@@ -338,6 +296,14 @@ export const useTeacher = () => {
       })
       
       const result = await response.json()
+      // 不管成功失败都提示接口返回的msg
+      if (result.msg) {
+        if (result.code === 200) {
+          ElMessage.success(result.msg)
+        } else {
+          ElMessage.error(result.msg)
+        }
+      }
       if (result.code !== 200) {
         throw new Error(result.msg || '导入失败')
       }

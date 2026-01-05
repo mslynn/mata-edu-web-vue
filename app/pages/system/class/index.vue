@@ -1078,7 +1078,7 @@
 
         <div class="flex-1 flex items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D]">
-            {{ isBatchDeleteGroup ? $t('class.confirmBatchDeleteGroup', { count: selectedGroupIds.length }) : $t('class.confirmDeleteGroup', { name: deletingGroup?.name }) }}
+            {{ isBatchDeleteGroup ? $t('class.confirmBatchDeleteGroup', { count: selectedGroupIds.length }) : $t('class.confirmDeleteGroup', { name: deletingGroup?.teamName }) }}
           </p>
         </div>
 
@@ -1772,7 +1772,11 @@ const handleRefreshQuickLogin = async () => {
 const handleExport = async () => {
   try {
     ElMessage.info(t('common.exporting'));
-    await exportStudentInfo();
+    // 文件名格式：年级+班级+学生账号信息.xlsx
+    const gradeName = selectedClass.value?.gradeName || '';
+    const className = selectedClass.value?.name || '';
+    const filename = `${gradeName}${className}学生账号信息.xlsx`;
+    await exportStudentInfo(filename);
     ElMessage.success(t('common.exportSuccess'));
   } catch (error) {
     console.error("导出失败:", error);
@@ -2363,13 +2367,13 @@ const handleConfirmDeleteGroup = async () => {
     if (isBatchDeleteGroup.value) {
       // 批量删除
       await deleteGroup(selectedGroupIds.value);
-      ElMessage.success("批量删除成功");
+    //  ElMessage.success(t('common.batchDeleteSuccess'));
       selectedGroupIds.value = [];
     } else {
       // 单个删除
       if (deletingGroup.value?.id) {
         await deleteGroup([deletingGroup.value.id]);
-        ElMessage.success("删除成功");
+      //  ElMessage.success(t('common.deleteSuccess'));
       }
     }
     showDeleteGroupModal.value = false;

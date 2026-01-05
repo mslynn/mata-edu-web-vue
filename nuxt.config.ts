@@ -1,9 +1,9 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.57:8001' 
+// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.47:8001' 
 
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  :  'https://test-gateway.matatastudio.com'
+  :  'http://192.168.0.59:8001'
 
 // 预览服务地址
 const previewBaseUrl = process.env.NUXT_PUBLIC_PREVIEW_BASE_URL || 'http://192.168.0.145:8012'

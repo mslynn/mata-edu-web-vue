@@ -100,28 +100,7 @@ const exportSchoolInfo = async () => {
       throw new Error('导出失败')
     }
     
-    // 获取文件名
-    const contentDisposition = response.headers.get('content-disposition')
-    let filename = '学校管理列表.xlsx'
-    if (contentDisposition) {
-      // 优先匹配 filename*=utf-8''xxx 格式（URL编码的中文）
-      let match = contentDisposition.match(/filename\*=utf-8''([^;\s]+)/i)
-      if (match) {
-        filename = decodeURIComponent(match[1])
-      } else {
-        // 尝试匹配 filename=xxx 格式
-        match = contentDisposition.match(/filename=([^;\s]+)/i)
-        if (match) {
-          // 去掉可能的引号，然后解码
-          filename = decodeURIComponent(match[1].replace(/['"]/g, ''))
-        }
-      }
-      // 截取 _ 后面的部分作为文件名
-      const underscoreIndex = filename.indexOf('_')
-      if (underscoreIndex !== -1) {
-        filename = filename.substring(underscoreIndex + 1)
-      }
-    }
+    const filename = '开课学校信息.xlsx'
     
     // 下载文件
     const blob = await response.blob()
