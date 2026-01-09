@@ -7,7 +7,11 @@ const apiBaseUrl = process.env.NODE_ENV === 'production'
 
 // 预览服务地址
 const previewBaseUrl = process.env.NUXT_PUBLIC_PREVIEW_BASE_URL || 'http://192.168.0.145:8012'
-const signalingUrl = process.env.NUXT_PUBLIC_SIGNALING_URL || 'ws://192.168.0.59:8001/resource/websocket'
+
+const signalingUrl = process.env.NODE_ENV === 'production' 
+  ? 'https://test-gateway.matatastudio.com/resource/websocket'
+  :  'http://192.168.0.59:8001/resource/websocket'
+// const signalingUrl = process.env.NUXT_PUBLIC_SIGNALING_URL || 'ws://192.168.0.59:8001/resource/websocket'
 
 console.log('NODE_ENV:', process.env.NODE_ENV)
 console.log('apiBaseUrl:', apiBaseUrl)
