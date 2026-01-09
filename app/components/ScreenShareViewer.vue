@@ -112,7 +112,7 @@ onMounted(() => {
   document.addEventListener('fullscreenchange', handleFullscreenChange)
 
   // 初始化 WebRTC（学生端）
-  const signalingUrl = props.signalingUrl || (config.public.signalingUrl as string) || 'ws://192.168.0.17:8001/resource/websocket'
+  const signalingUrl = props.signalingUrl || (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
 
   webRTC.initialize({
     signalingUrl,

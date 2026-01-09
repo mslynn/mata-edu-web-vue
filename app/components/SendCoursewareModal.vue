@@ -7,28 +7,36 @@
         </svg>
       </button>
       
-      <h2 class="modal-title">发送课件给学生</h2>
+      <h2 class="modal-title">{{ t('classroom.sendCoursewareTitle') }}</h2>
       
       <div class="tip-bar">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
           <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
         </svg>
-        <span>温馨提示:上课发送的课件,学生只能在上课过程中查看哦~</span>
+        <span>{{ t('classroom.sendCoursewareTip') }}</span>
       </div>
       
       <div class="content-area">
         <!-- 左侧：未发送课件 -->
         <div class="panel left-panel">
           <div class="panel-header">
-            <label class="checkbox-wrapper" :class="{ disabled: unsentList.length === 0 }">
-              <input type="checkbox" :checked="isAllUnsent" :disabled="unsentList.length === 0" @change="toggleAllUnsent" />
+            <label class="checkbox-wrapper" :class="{ disabled: localUnsentList.length === 0 }">
+              <input type="checkbox" :checked="isAllUnsent" :disabled="localUnsentList.length === 0" @change="toggleAllUnsent" />
               <span class="checkmark"></span>
             </label>
-            <span>未发送课件</span>
+            <span>{{ t('classroom.unsentCourseware') }}</span>
           </div>
           <div class="panel-list">
+            <div v-if="localUnsentList.length === 0" class="empty-state">
+              <svg class="empty-icon success" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#52C41A" stroke-width="1.5">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M8 12l3 3 5-6"/>
+              </svg>
+              <p class="empty-text success-text">{{ t('classroom.allCoursewareSent') }}</p>
+            </div>
             <div 
-              v-for="item in unsentList" 
+              v-else
+              v-for="item in localUnsentList" 
               :key="item.id" 
               class="list-item"
             >
@@ -36,32 +44,35 @@
                 <input type="checkbox" v-model="item.checked" />
                 <span class="checkmark"></span>
               </label>
-              <img :src="getFileIcon(item.type)" alt="" class="file-icon" />
+              <img :src="getFileIcon(item.name)" alt="" class="file-icon" />
               <span class="file-name" :title="item.name">{{ item.name }}</span>
             </div>
           </div>
           <div class="panel-footer">
-            <button class="send-btn" @click="sendSelected" :disabled="!hasSelectedUnsent">发送课件</button>
+            <button class="send-btn" @click="sendSelected" :disabled="!hasSelectedUnsent || sending">
+              {{ sending ? t('classroom.sending') : t('classroom.sendCourseware') }}
+            </button>
           </div>
         </div>
         
         <!-- 右侧：已发送课件 -->
         <div class="panel right-panel">
           <div class="panel-header">
-            <label class="checkbox-wrapper" :class="{ disabled: sentList.length === 0 }">
-              <input type="checkbox" :checked="isAllSent" :disabled="sentList.length === 0" @change="toggleAllSent" />
+            <label class="checkbox-wrapper" :class="{ disabled: localSentList.length === 0 }">
+              <input type="checkbox" :checked="isAllSent" :disabled="localSentList.length === 0" @change="toggleAllSent" />
               <span class="checkmark"></span>
             </label>
-            <span>已发送课件</span>
+            <span>{{ t('classroom.sentCourseware') }}</span>
           </div>
           <div class="panel-list">
-            <div v-if="sentList.length === 0" class="empty-state">
+            <div v-if="localSentList.length === 0" class="empty-state">
               <img src="~/assets/images/account.png" alt="" class="empty-img" />
-              <p class="empty-text">暂未发送课件给学生,快去</p>
-              <p class="empty-text">左侧选择课件吧!</p>
+              <p class="empty-text">{{ t('classroom.noSentCoursewareLine1') }}</p>
+              <p class="empty-text">{{ t('classroom.noSentCoursewareLine2') }}</p>
             </div>
             <div 
-              v-for="item in sentList" 
+              v-else
+              v-for="item in localSentList" 
               :key="item.id" 
               class="list-item"
             >
@@ -69,12 +80,14 @@
                 <input type="checkbox" v-model="item.checked" />
                 <span class="checkmark"></span>
               </label>
-              <img :src="getFileIcon(item.type)" alt="" class="file-icon" />
+              <img :src="getFileIcon(item.name)" alt="" class="file-icon" />
               <span class="file-name" :title="item.name">{{ item.name }}</span>
             </div>
           </div>
           <div class="panel-footer">
-            <button class="recall-btn" @click="recallSelected" :disabled="!hasSelectedSent">撤回课件</button>
+            <button class="recall-btn" @click="recallSelected" :disabled="!hasSelectedSent || recalling">
+              {{ recalling ? t('classroom.recalling') : t('classroom.recallCourseware') }}
+            </button>
           </div>
         </div>
       </div>
@@ -83,84 +96,148 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useTeacher } from '~/composables/api/useTeacher'
+
+const { t } = useI18n()
 
 interface CoursewareItem {
   id: string
   name: string
-  type: 'pptx' | 'ucd' | 'word' | 'pdf'
-  checked: boolean
+  resourceUrl?: string
+  checked?: boolean
 }
 
-defineProps<{
+const props = defineProps<{
   visible: boolean
+  classId: string
+  peerId: string
+  unsentList: CoursewareItem[]
+  sentList: CoursewareItem[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   close: []
+  send: [ids: string[]]
+  recall: [ids: string[]]
 }>()
 
-// 未发送课件列表
-const unsentList = ref<CoursewareItem[]>([
-  { id: '1', name: '主题01-"悟空"来了（课件）V1.5.pptx', type: 'pptx', checked: false },
-  { id: '2', name: '1-1参考程序.ucd', type: 'ucd', checked: false },
-  { id: '3', name: '1-2参考程序.ucd', type: 'ucd', checked: false },
-  { id: '4', name: '主题01-"悟空"来了（学生手册）V1...', type: 'word', checked: false },
-  { id: '5', name: '主题01-"悟空"来了（教师用书）V1...', type: 'word', checked: false },
-  { id: '6', name: '主题01-"悟空"来了（教师用书）V1...', type: 'word', checked: false },
-  { id: '7', name: '主题01-"悟空"来了（教师用书）V1...', type: 'word', checked: false },
-  { id: '8', name: '主题01-"悟空"来了（教师用书）V1...', type: 'word', checked: false }
-])
+const { sendCourseware, withdrawSend } = useTeacher()
 
-// 已发送课件列表
-const sentList = ref<CoursewareItem[]>([])
+// 状态
+const sending = ref(false)
+const recalling = ref(false)
+
+// 本地列表（带 checked 状态）
+const localUnsentList = ref<(CoursewareItem & { checked: boolean })[]>([])
+const localSentList = ref<(CoursewareItem & { checked: boolean })[]>([])
+
+// 监听弹窗打开，初始化本地列表
+watch(() => props.visible, (val) => {
+  if (val) {
+    localUnsentList.value = props.unsentList.map(item => ({ ...item, checked: false }))
+    localSentList.value = props.sentList.map(item => ({ ...item, checked: false }))
+  }
+})
 
 // 计算属性
-const isAllUnsent = computed(() => unsentList.value.length > 0 && unsentList.value.every(item => item.checked))
-const isAllSent = computed(() => sentList.value.length > 0 && sentList.value.every(item => item.checked))
-const hasSelectedUnsent = computed(() => unsentList.value.some(item => item.checked))
-const hasSelectedSent = computed(() => sentList.value.some(item => item.checked))
+const isAllUnsent = computed(() => localUnsentList.value.length > 0 && localUnsentList.value.every(item => item.checked))
+const isAllSent = computed(() => localSentList.value.length > 0 && localSentList.value.every(item => item.checked))
+const hasSelectedUnsent = computed(() => localUnsentList.value.some(item => item.checked))
+const hasSelectedSent = computed(() => localSentList.value.some(item => item.checked))
 
 // 全选/取消全选
 const toggleAllUnsent = () => {
   const newVal = !isAllUnsent.value
-  unsentList.value.forEach(item => item.checked = newVal)
+  localUnsentList.value.forEach(item => item.checked = newVal)
 }
 
 const toggleAllSent = () => {
   const newVal = !isAllSent.value
-  sentList.value.forEach(item => item.checked = newVal)
+  localSentList.value.forEach(item => item.checked = newVal)
 }
 
 // 发送选中的课件
-const sendSelected = () => {
-  const selected = unsentList.value.filter(item => item.checked)
-  selected.forEach(item => {
-    item.checked = false
-    sentList.value.push({ ...item })
-  })
-  unsentList.value = unsentList.value.filter(item => !selected.find(s => s.id === item.id))
+const sendSelected = async () => {
+  const selected = localUnsentList.value.filter(item => item.checked)
+  if (selected.length === 0) return
+  
+  sending.value = true
+  try {
+    await sendCourseware({
+      classId: props.classId,
+      peerId: props.peerId,
+      coursewareList: selected.map(item => ({
+        resourceId: item.id,
+        fileName: item.name,
+        resourceUrl: item.resourceUrl || ''
+      }))
+    })
+    
+    // 通知父组件更新状态
+    emit('send', selected.map(item => item.id))
+    
+    // 更新本地列表
+    selected.forEach(item => {
+      item.checked = false
+      localSentList.value.push({ ...item, checked: false })
+    })
+    localUnsentList.value = localUnsentList.value.filter(item => !selected.find(s => s.id === item.id))
+  } catch (error) {
+    console.error('发送课件失败:', error)
+  } finally {
+    sending.value = false
+  }
 }
 
 // 撤回选中的课件
-const recallSelected = () => {
-  const selected = sentList.value.filter(item => item.checked)
-  selected.forEach(item => {
-    item.checked = false
-    unsentList.value.push({ ...item })
-  })
-  sentList.value = sentList.value.filter(item => !selected.find(s => s.id === item.id))
+const recallSelected = async () => {
+  const selected = localSentList.value.filter(item => item.checked)
+  if (selected.length === 0) return
+  
+  recalling.value = true
+  try {
+    await withdrawSend({
+      classId: props.classId,
+      peerId: props.peerId,
+      coursewareList: selected.map(item => ({
+        resourceId: item.id,
+        fileName: item.name,
+        resourceUrl: item.resourceUrl || ''
+      }))
+    })
+    
+    // 通知父组件更新状态
+    emit('recall', selected.map(item => item.id))
+    
+    // 更新本地列表
+    selected.forEach(item => {
+      item.checked = false
+      localUnsentList.value.push({ ...item, checked: false })
+    })
+    localSentList.value = localSentList.value.filter(item => !selected.find(s => s.id === item.id))
+  } catch (error) {
+    console.error('撤回课件失败:', error)
+  } finally {
+    recalling.value = false
+  }
 }
 
 // 获取文件图标
-const getFileIcon = (type: string) => {
+const getFileIcon = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase() || ''
   const iconMap: Record<string, string> = {
     pptx: '/images/icon-ppt.png',
+    ppt: '/images/icon-ppt.png',
     ucd: '/images/icon-ucd.png',
-    word: '/images/icon-word.png',
-    pdf: '/images/icon-pdf.png'
+    doc: '/images/icon-word.png',
+    docx: '/images/icon-word.png',
+    pdf: '/images/icon-pdf.png',
+    xls: '/images/icon-excel.png',
+    xlsx: '/images/icon-excel.png'
   }
-  return iconMap[type] || '/images/icon-file.png'
+  return iconMap[ext] || '/images/icon-file.png'
 }
 </script>
 
@@ -351,11 +428,24 @@ const getFileIcon = (type: string) => {
   opacity: 0.8;
 }
 
+.empty-icon {
+  margin-bottom: 16px;
+}
+
+.empty-icon.success {
+  color: #52C41A;
+}
+
 .empty-text {
   font-size: 13px;
   color: #999;
   line-height: 1.6;
   margin: 0;
+}
+
+.empty-text.success-text {
+  color: #52C41A;
+  font-size: 14px;
 }
 
 /* 自定义复选框 */

@@ -12,7 +12,7 @@
           </button>
 
           <!-- 标题 -->
-          <h2 class="modal-title">开课设置</h2>
+          <h2 class="modal-title">{{ t('teacher.startClassSettings') }}</h2>
 
           <!-- 班级选择下拉框 -->
           <div class="class-select-wrapper">
@@ -23,7 +23,7 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
-              <span class="select-text">{{ selectedClass?.className || '请选择班级' }}</span>
+              <span class="select-text">{{ selectedClass?.className || t('teacher.pleaseSelectClass') }}</span>
               <svg class="arrow-icon" :class="{ expanded: showClassDropdown }" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2">
                 <path d="M6 9l6 6 6-6"/>
               </svg>
@@ -45,7 +45,7 @@
           <div class="selection-area">
             <!-- 左侧：课程列表 -->
             <div class="selection-column">
-              <div class="column-header">请选择课程</div>
+              <div class="column-header">{{ t('teacher.pleaseSelectCourse') }}</div>
               <div class="column-list">
                 <div 
                   v-for="course in courseList" 
@@ -61,7 +61,7 @@
 
             <!-- 右侧：章节列表 -->
             <div class="selection-column">
-              <div class="column-header">请选择章节</div>
+              <div class="column-header">{{ t('teacher.pleaseSelectChapter') }}</div>
               <div class="column-list">
                 <div 
                   v-for="chapter in chapterList" 
@@ -71,7 +71,7 @@
                   @click="selectChapter(chapter)"
                 >
                   <span class="item-text">{{ chapter.chapterName }}</span>
-                  <span v-if="chapter.isLastClass" class="last-class-tag">上次课</span>
+                  <span v-if="chapter.isLastClass" class="last-class-tag">{{ t('teacher.lastClassTag') }}</span>
                 </div>
               </div>
             </div>
@@ -79,8 +79,8 @@
 
           <!-- 底部按钮 -->
           <div class="modal-footer">
-            <button class="btn-cancel" @click="handleClose">取消</button>
-            <button class="btn-confirm" @click="handleConfirm">确定</button>
+            <button class="btn-cancel" @click="handleClose">{{ t('common.cancel') }}</button>
+            <button class="btn-confirm" @click="handleConfirm">{{ t('common.confirm') }}</button>
           </div>
         </div>
       </div>
@@ -97,16 +97,16 @@
             </svg>
           </button>
 
-          <h2 class="tip-title">提示</h2>
+          <h2 class="tip-title">{{ t('common.tips') }}</h2>
           
           <!-- 插图 -->
           <div class="tip-image">
             <img src="~/assets/images/kecheng.png" alt="开始上课" />
           </div>
 
-          <p class="tip-text">开始上课了，学生将会收到上课邀请进入教室</p>
+          <p class="tip-text">{{ t('teacher.classStartTip') }}</p>
 
-          <button class="btn-tip-confirm" @click="handleTipConfirm">确定</button>
+          <button class="btn-tip-confirm" @click="handleTipConfirm">{{ t('common.confirm') }}</button>
         </div>
       </div>
     </Transition>
@@ -115,6 +115,9 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 interface ClassItem {
   classId: string
@@ -148,7 +151,8 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:visible': [value: boolean]
   'confirm': [data: { classId: string; courseId: string; chapterId: string }]
-  'course-change': [courseId: string]
+  'course-change': [courseId: string, classId: string]
+  'class-change': [classId: string]
 }>()
 
 const showClassDropdown = ref(false)
@@ -166,12 +170,19 @@ const toggleClassDropdown = () => {
 const selectClass = (cls: ClassItem) => {
   selectedClass.value = cls
   showClassDropdown.value = false
+  // 清空已选课程和章节
+  selectedCourse.value = null
+  selectedChapter.value = null
+  chapterList.value = []
+  emit('class-change', cls.classId)
 }
 
 const selectCourse = (course: CourseItem) => {
   selectedCourse.value = course
   selectedChapter.value = null
-  emit('course-change', course.courseId)
+  if (selectedClass.value) {
+    emit('course-change', course.courseId, selectedClass.value.classId)
+  }
 }
 
 const selectChapter = (chapter: ChapterItem) => {
@@ -214,15 +225,48 @@ const setChapterList = (list: ChapterItem[]) => {
   chapterList.value = list
 }
 
+// 监听弹窗显示
 watch(() => props.visible, (val) => {
-  if (val) {
-    if (props.initialCourseId && props.courseList.length > 0) {
-      const course = props.courseList.find(c => c.courseId === props.initialCourseId)
-      if (course) {
-        selectedCourse.value = course
-        emit('course-change', course.courseId)
+  if (!val) {
+    // 弹窗关闭时重置状态
+    selectedClass.value = null
+    selectedCourse.value = null
+    selectedChapter.value = null
+    chapterList.value = []
+  }
+})
+
+// 监听班级列表变化，默认选中第一个
+watch(() => props.classList, (list) => {
+  if (props.visible && list.length > 0 && !selectedClass.value) {
+    selectedClass.value = list[0]
+    // 如果课程已选中，触发加载章节
+    if (selectedCourse.value) {
+      emit('course-change', selectedCourse.value.courseId, list[0].classId)
+    }
+  }
+}, { immediate: true })
+
+// 监听课程列表变化，默认选中第一个并加载章节
+watch(() => props.courseList, (list) => {
+  if (props.visible && list.length > 0 && !selectedCourse.value) {
+    const course = props.initialCourseId 
+      ? list.find(c => c.courseId === props.initialCourseId) || list[0]
+      : list[0]
+    if (course) {
+      selectedCourse.value = course
+      // 只有班级已选中时才触发加载章节
+      if (selectedClass.value) {
+        emit('course-change', course.courseId, selectedClass.value.classId)
       }
     }
+  }
+}, { immediate: true })
+
+// 监听章节列表变化，默认选中第一个
+watch(chapterList, (list) => {
+  if (props.visible && list.length > 0 && !selectedChapter.value) {
+    selectedChapter.value = list[0]
   }
 })
 

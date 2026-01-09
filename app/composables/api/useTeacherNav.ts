@@ -183,7 +183,25 @@ export const useTeacherNav = () => {
     if (routePath.endsWith('/index')) {
       routePath = routePath.replace(/\/index$/, '')
     }
-    return routePath.startsWith('/') ? routePath : `/${routePath}`
+    // 确保以 / 开头
+    if (!routePath.startsWith('/')) {
+      routePath = `/${routePath}`
+    }
+    return routePath
+  }
+
+  // 根据菜单名称获取对应的路由路径
+  const getRouteByLabel = (label: string, defaultPath: string) => {
+    const routeMap: Record<string, string> = {
+      '班级管理': '/system/class',
+      '课程中心': '/system/course',
+      '玛塔工具中心': '/system/tool',
+      'AI实践中心': '/system/ai',
+      '学情中心': '/system/study',
+      '教师成长中心': '/system/growth',
+      '赛事中心': '/system/event',
+    }
+    return routeMap[label] || defaultPath
   }
 
   const mapMenus = (data: any[]): TeacherMenuItem[] => {
@@ -192,22 +210,25 @@ export const useTeacherNav = () => {
       .map((item: any) => {
         const child = item.children?.[0]
         if (!child) return null
+        const label = child.meta?.title || child.name || ''
         // 优先使用 component 生成路由路径，否则用 path
-        const path = child.component 
+        let path = child.component 
           ? componentToRoute(child.component)
           : (child.path?.startsWith('/') ? child.path : `/${child.path || ''}`)
+        // 根据菜单名称修正路由路径
+        path = getRouteByLabel(label, path)
         const rawIcon = child.meta?.icon || child.meta?.iconUrl || child.icon
         const rawIconSelected = child.meta?.iconSelected || child.meta?.activeIcon
-        const icon = normalizeIcon(rawIcon, path, child.path || child.name, child.meta?.title || child.name)
+        const icon = normalizeIcon(rawIcon, path, child.path || child.name, label)
         const iconSelected = normalizeSelectedIcon(
           rawIconSelected,
           path,
           child.path || child.name,
-          child.meta?.title || child.name,
+          label,
           icon
         )
         return {
-          label: child.meta?.title || child.name || '',
+          label,
           path,
           component: child.component || '',
           activeMenu: child.path || '',

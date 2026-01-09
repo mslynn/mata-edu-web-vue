@@ -2,7 +2,12 @@
   <header class="header-wrapper bg-[#FF9900] h-[70px]">
     <div class="header-content">
       <div class="flex items-center">
-        <img src="~/assets/images/logo.png" alt="Logo" class="w-[220px] h-[37px] object-contain" />
+        <img 
+          src="~/assets/images/logo.png" 
+          alt="Logo" 
+          class="w-[220px] h-[37px] object-contain cursor-pointer" 
+          @click="handleLogoClick"
+        />
       </div>
       <nav class="flex-1 flex justify-center gap-8">
         <!-- 导航菜单占位 -->
@@ -83,6 +88,19 @@ const showModuleSwitch = computed(() => {
 
 const toggleDropdown = () => {
   showDropdown.value = !showDropdown.value
+}
+
+// 点击 Logo 跳转首页
+const handleLogoClick = () => {
+  const roleKey = user.value?.role_key
+  // 老师跳转到教师首页
+  if (roleKey === 'teacher') {
+    router.push('/teacher')
+  }
+  // 学生端先空着，后续补充
+  // else if (roleKey === 'student') {
+  //   router.push('/student')
+  // }
 }
 
 // 模块切换 - 跳转到模块选择页面

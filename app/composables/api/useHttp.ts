@@ -128,11 +128,11 @@ export const useHttp = () => {
           
           // Token 失效处理
           if (code === 401) {
-          //  removeToken()
+           removeToken()
             ElMessage.error('登录已过期，2秒后跳转到登录页')
             setTimeout(() => {
               if (process.client) {
-              //  window.location.href = '/'
+               window.location.href = '/'
               }
             }, 2000)
             return
@@ -144,7 +144,7 @@ export const useHttp = () => {
             ElMessage.error('无访问权限，2秒后跳转到登录页')
             setTimeout(() => {
               if (process.client) {
-              //  window.location.href = '/'
+               window.location.href = '/'
               }
             }, 2000)
             return

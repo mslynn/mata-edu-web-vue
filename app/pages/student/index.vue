@@ -126,7 +126,6 @@
 
 <script setup lang="ts">
 import { useAuth } from '~/composables/api/useAuth'
-import { useSignaling } from '~/composables/useSignaling'
 import { ElMessage } from '~/components/ui'
 
 definePageMeta({
@@ -144,35 +143,60 @@ const classInfo = ref({
   teacherPeerId: ''  // 教师的 PeerJS ID
 })
 
-// WebSocket 信令连接
-const signaling = useSignaling()
-const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.17:8001/resource/websocket'
+// WebSocket 连接
+let notifyWs: WebSocket | null = null
+const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
 
 // 连接 WebSocket 监听上课通知
 onMounted(() => {
-  const studentId = `student_${Date.now()}`
-  
-  signaling.connect({
-    url: signalingUrl,
-    roomId: 'student-notification', // 学生通知房间
-    userId: studentId,
-    role: 'student',
-    onMessage: (message) => {
-      console.log('[学生端] 收到消息:', message.type, message)
+  connectNotifyWebSocket()
+})
+
+onUnmounted(() => {
+  if (notifyWs) {
+    notifyWs.close()
+    notifyWs = null
+  }
+})
+
+// 连接通知 WebSocket
+const connectNotifyWebSocket = () => {
+  // 如果已经有连接，先关闭
+  if (notifyWs) {
+    console.log('[学生端] 关闭旧的 WebSocket 连接')
+    notifyWs.close()
+    notifyWs = null
+  }
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  let wsUrl = signalingUrl
+  if (token) {
+    const separator = signalingUrl.includes('?') ? '&' : '?'
+    wsUrl = `${signalingUrl}${separator}Authorization=${encodeURIComponent(`Bearer ${token}`)}`
+  }
+
+  console.log('[学生端] 连接通知 WebSocket')
+  notifyWs = new WebSocket(wsUrl)
+
+  notifyWs.onopen = () => {
+    console.log('[学生端] WebSocket 连接成功，等待上课通知...')
+    // 发送学生在线状态
+    const statusMsg = JSON.stringify({ type: 'STUDENT_STATUS', status: 'online' })
+    notifyWs?.send(statusMsg)
+    console.log('[学生端] 发送:', statusMsg)
+  }
+
+  notifyWs.onmessage = (event) => {
+    console.log('[学生端首页] 收到消息:', event.data)
+    try {
+      const message = JSON.parse(event.data)
       
-      // 处理上课通知
+      // 处理上课通知 - 直接跳转到课堂
       if (message.type === 'CLASS_BEGIN') {
-        console.log('[学生端] 收到上课通知！')
-        // 解析课堂信息
-        // 后端需要返回: { type: "CLASS_BEGIN", classId: "xxx", className: "xxx", teacherPeerId: "xxx" }
-        const data = typeof message.data === 'object' ? message.data : {}
-        classInfo.value = {
-          classId: data.classId || 'default',
-          className: data.className || '老师的课堂',
-          teacherPeerId: data.teacherPeerId || ''  // 重要：教师的 PeerJS ID
-        }
-        showClassNotification.value = true
-        console.log('[学生端] 教师 PeerId:', classInfo.value.teacherPeerId)
+        console.log('[学生端首页] 收到上课通知，直接进入课堂！')
+        
+        // 直接跳转到课堂页面，不带参数
+        navigateTo('/student/classroom')
       }
       
       // 处理下课通知
@@ -180,36 +204,25 @@ onMounted(() => {
         console.log('[学生端] 收到下课通知')
         ElMessage.info('老师已下课')
       }
-    },
-    onConnected: () => {
-      console.log('[学生端] WebSocket 连接成功，等待上课通知...')
-    },
-    onDisconnected: () => {
-      console.log('[学生端] WebSocket 断开')
+    } catch (e) {
+      console.log('[学生端] 非 JSON 消息:', event.data)
     }
-  })
-})
+  }
 
-// 进入课堂
-const enterClassroom = () => {
-  showClassNotification.value = false
-  // 把 teacherPeerId 通过 query 传给课堂页面
-  navigateTo({
-    path: `/student/classroom/${classInfo.value.classId}`,
-    query: {
-      teacherPeerId: classInfo.value.teacherPeerId
-    }
-  })
-}
+  notifyWs.onclose = () => {
+    console.log('[学生端] WebSocket 断开')
+  }
 
-// 稍后进入
-const laterEnter = () => {
-  showClassNotification.value = false
-  ElMessage.info('可以点击右上角通知图标进入课堂')
+  notifyWs.onerror = (error) => {
+    console.error('[学生端] WebSocket 错误:', error)
+  }
 }
 
 const handleLogout = () => {
-  signaling.disconnect()
+  if (notifyWs) {
+    notifyWs.close()
+    notifyWs = null
+  }
   logout()
 }
 </script>

@@ -212,6 +212,16 @@ export const useAuth = () => {
     }
   }
 
+  //peerjs token
+  const getPeerjsToken = async () => {
+    try {
+      const response = await http.get(`/auth/peer/token`)
+      return response
+    } catch (error: any) {
+      throw error
+    }
+  }
+
 
 
   return {
@@ -225,6 +235,7 @@ export const useAuth = () => {
     getSmsCode,
     applyTrialAccount,
     resetPassword,
-    getClassCodeLoginList
+    getClassCodeLoginList,
+    getPeerjsToken
   }
 }

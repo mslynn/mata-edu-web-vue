@@ -4,6 +4,9 @@
   <NuxtLayout>
     <NuxtPage />
   </NuxtLayout>
+  
+  <!-- 全局"回到课堂"悬浮按钮 -->
+  <BackToClassroom />
 </template>
 
 <script setup lang="ts">

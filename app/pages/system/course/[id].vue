@@ -48,6 +48,7 @@
       :initial-course-id="startClassData.initialCourseId"
       :initial-chapter-id="startClassData.initialChapterId"
       ref="startClassModalRef"
+      @class-change="handleClassChange"
       @course-change="handleCourseChange"
       @confirm="handleStartClassConfirm"
     />
@@ -155,12 +156,14 @@ import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import gsap from 'gsap'
 import { cursorAdmin } from '~/composables/api/curosr'
+import { useTeacher } from '~/composables/api/useTeacher'
 
 const { t } = useI18n()
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const { getCursorDetail, startPrepare, getChapterResourceList } = cursorAdmin()
+const { getTeachChapterList, getClassListNoPage, getCourseMenuTree } = useTeacher()
 const isCollapsed = ref(false)
 const courseRowRef = ref<HTMLElement | null>(null)
 const wrapperRef = ref<HTMLElement | null>(null)
@@ -462,13 +465,21 @@ const startClassData = reactive({
   initialChapterId: ''
 })
 
+// 班级切换时不再需要更新课程列表（班级和课程独立）
+const handleClassChange = (classId: string) => {
+  // 清空已选章节
+  if (startClassModalRef.value) {
+    startClassModalRef.value.setChapterList([])
+  }
+}
+
 // 课程切换时加载章节列表
-const handleCourseChange = async (courseId: string) => {
+const handleCourseChange = async (courseId: string,classId:string) => {
   try {
-    const data = await getCursorDetail(courseId)
-    if (data?.chapterList && startClassModalRef.value) {
-      const chapters = data.chapterList.map((c: any) => ({
-        chapterId: c.chapterId,
+    const data = await getTeachChapterList(courseId,classId)
+    if (data && startClassModalRef.value) {
+      const chapters = (Array.isArray(data) ? data : []).map((c: any) => ({
+        chapterId: String(c.chapterId),
         chapterName: c.chapterName,
         isLastClass: c.isLastClass || false
       }))
@@ -476,14 +487,34 @@ const handleCourseChange = async (courseId: string) => {
     }
   } catch (error) {
     console.error('加载章节列表失败:', error)
+    if (startClassModalRef.value) {
+      startClassModalRef.value.setChapterList([])
+    }
   }
 }
 
 // 确认开课
-const handleStartClassConfirm = (data: { classId: string; courseId: string; chapterId: string }) => {
+const handleStartClassConfirm = async (data: { classId: string; courseId: string; chapterId: string }) => {
   console.log('开课数据:', data)
-  // 跳转到上课页面
-  navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}`)
+  
+  // 先调用开始上课接口
+  const { beginClass } = useTeacher()
+  const peerId = data.classId
+  
+  try {
+    await beginClass({ 
+      classId: data.classId, 
+      courseId: data.courseId, 
+      chapterId: data.chapterId, 
+      peerId 
+    })
+    console.log('开始上课成功')
+    // 接口成功，跳转到上课页面
+    navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}`)
+  } catch (error: any) {
+    console.error('开始上课失败:', error)
+    // ElMessage.error(error.message || '开始上课失败')
+  }
 }
 
 // 章节操作
@@ -505,28 +536,55 @@ const handlePrepare = async (chapter: { id: number; name: string; isPrepare: num
 
 const handleStartClass = async (chapter: { id: number; name: string }) => {
   console.log('开始上课:', chapter)
-  
-  // 设置初始数据
+
+  // 设置初始数据 
   startClassData.initialCourseId = String(route.params.id)
-  startClassData.initialChapterId = String(chapter.id)
-  
-  // TODO: 加载班级列表和课程列表
-  // 这里需要调用接口获取数据，暂时用模拟数据
-  startClassData.classList = [
-    { classId: '1', className: '1年级1111111' }
-  ]
-  startClassData.courseList = [
-    { courseId: String(route.params.id), courseName: courseInfo.value.name }
-  ]
-  
+  startClassData.initialChapterId = String(chapter.id) 
+
+  // 并行调用两个独立的接口
+  try { 
+    const [classListRes, courseTreeRes] = await Promise.all([
+      getClassListNoPage(),
+      getCourseMenuTree()
+    ])
+
+    // 设置班级列表
+    if (classListRes && Array.isArray(classListRes)) {
+      startClassData.classList = classListRes.map((item: any) => ({
+        classId: String(item.classId || item.id),
+        className: item.className
+      }))
+    } else {
+      startClassData.classList = []
+    }
+
+    // 设置课程列表（从分组结构中提取所有课程）
+    if (courseTreeRes && Array.isArray(courseTreeRes)) {
+      const allCourses: { courseId: string; courseName: string }[] = []
+      courseTreeRes.forEach((group: any) => {
+        if (group.courseList && Array.isArray(group.courseList)) {
+          group.courseList.forEach((course: any) => {
+            allCourses.push({
+              courseId: String(course.courseId),
+              courseName: course.courseName
+            })
+          })
+        }
+      })
+      startClassData.courseList = allCourses
+    } else {
+      startClassData.courseList = []
+    }
+  } catch (error) {
+    console.error('获取开课设置失败:', error)
+    startClassData.classList = []
+    startClassData.courseList = [
+      { courseId: String(route.params.id), courseName: courseInfo.value.name }
+    ]
+  }
+
   // 打开弹窗
   showStartClassModal.value = true
-}
-
-// 打开资源 - 跳转到备课页面
-const openDocument = (item: { id: number; name: string; type: string; url?: string }) => {
-  // 跳转到备课页面，带上资源信息
-  navigateTo(`/system/course/prepare/${route.params.id}?resourceId=${item.id}&resourceUrl=${encodeURIComponent(item.url || '')}&resourceName=${encodeURIComponent(item.name)}&resourceType=${item.type}`)
 }
 </script>
 
@@ -615,8 +673,8 @@ const openDocument = (item: { id: number; name: string; type: string; url?: stri
   border-left: 3px solid transparent; 
   transition: all 0.2s; 
 }
-.chapter-item:hover { background: #E6F4FF; color: #1890FF; }
-.chapter-item.active { background: #E6F4FF; color: #1890FF; border-left-color: #1890FF; }
+.chapter-item:hover { background: #FFF8F0; color: #FF9900; }
+.chapter-item.active { background: #FFF8F0; color: #FF9900; border-left-color: #FF9900; }
 .chapter-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chapter-actions { 
   display: flex; 
@@ -635,16 +693,16 @@ const openDocument = (item: { id: number; name: string; type: string; url?: stri
 }
 .prepare-btn { 
   background: white; 
-  border: 1px solid #1890FF; 
-  color: #1890FF; 
+  border: 1px solid #FF9900; 
+  color: #FF9900; 
 }
-.prepare-btn:hover { background: #E6F4FF; }
+.prepare-btn:hover { background: #FFF8F0; }
 .start-btn { 
-  background: #1890FF; 
-  border: 1px solid #1890FF; 
+  background: #FF9900; 
+  border: 1px solid #FF9900; 
   color: white; 
 }
-.start-btn:hover { background: #40A9FF; border-color: #40A9FF; }
+.start-btn:hover { background: #E68A00; border-color: #E68A00; }
 
 .content-area { flex: 1; padding: 20px; }
 .tab-header { display: flex; gap: 8px; margin-bottom: 20px; }
@@ -655,7 +713,7 @@ const openDocument = (item: { id: number; name: string; type: string; url?: stri
 .tab-content { min-height: 300px; }
 .resource-section { margin-bottom: 16px; }
 .section-header { display: flex; align-items: center; gap: 8px; padding: 10px 0; font-size: 14px; color: #333; cursor: pointer; }
-.section-header:hover { color: #1890FF; }
+.section-header:hover { color: #FF9900; }
 .arrow-icon { width: 16px; height: 16px; transition: transform 0.2s; }
 .arrow-icon.expanded { transform: rotate(180deg); }
 .section-content { padding-left: 24px; }
@@ -672,7 +730,7 @@ const openDocument = (item: { id: number; name: string; type: string; url?: stri
   cursor: pointer;
   transition: all 0.2s;
 }
-.resource-item:hover { background: #E6F4FF; }
+.resource-item:hover { background: #FFF8F0; }
 .resource-icon { 
   width: 40px; 
   height: 40px; 

@@ -1,5 +1,8 @@
 <template>
   <div class="prepare-page">
+    <!-- 公共头部 -->
+    <AppHeader />
+    
     <!-- 顶部导航 -->
     <div class="prepare-header">
       <div class="header-left">
@@ -250,23 +253,9 @@
           <p class="empty-text-large">{{ t('prepare.selectResourceToPreview') }}</p>
         </div>
         <div v-else class="preview-content">
-          <div v-if="getFileType(selectedResource.fileName) === 'word'" class="ppt-preview-wrapper">
+          <!-- Word/PPT/PDF/图片 使用 iframe 预览 -->
+          <div v-if="['word', 'ppt', 'pdf', 'image', 'excel'].includes(getFileType(selectedResource.fileName))" class="ppt-preview-wrapper">
             <iframe :src="pptPreviewUrl" class="ppt-iframe" frameborder="0" allowfullscreen></iframe>
-          </div>
-          <div v-else-if="getFileType(selectedResource.fileName) === 'pdf'" class="pdf-preview-wrapper"
-            @wheel="handleWheel">
-            <div class="pdf-page-container" :style="{ visibility: pdfReady ? 'visible' : 'hidden' }">
-              <canvas ref="pdfCanvasRef" class="pdf-canvas"></canvas>
-              <canvas ref="annotationCanvasRef" class="annotation-canvas" @mousedown="startDrawing" @mousemove="draw"
-                @mouseup="stopDrawing" @mouseleave="stopDrawing"></canvas>
-              <div v-if="currentTool === 'laser'" class="laser-pointer" :style="laserStyle"></div>
-            </div>
-          </div>
-          <div v-else-if="getFileType(selectedResource.fileName) === 'ppt'" class="ppt-preview-wrapper">
-            <iframe :src="pptPreviewUrl" class="ppt-iframe" frameborder="0" allowfullscreen></iframe>
-          </div>
-          <div v-else-if="getFileType(selectedResource.fileName) === 'image'" class="image-preview-wrapper">
-            <img :src="selectedResource.resourceUrl" :alt="selectedResource.fileName" class="preview-image" />
           </div>
           <div v-else-if="getFileType(selectedResource.fileName) === 'ucd'" class="ucd-preview-wrapper">
             <div class="ucd-preview-card">
@@ -309,47 +298,6 @@
       </div>
     </div>
 
-    <!-- 底部工具栏 - 仅在 PDF 预览时显示 -->
-    <div class="toolbar" v-if="selectedResource && getFileType(selectedResource.fileName) === 'pdf' && pdfReady">
-      <div class="toolbar-left">
-        <button class="tool-btn" @click="prevPage" :disabled="pdfCurrentPage <= 1">‹</button>
-        <span class="page-info">{{ pdfCurrentPage }} / {{ pdfTotalPages || 1 }}</span>
-        <button class="tool-btn" @click="nextPage" :disabled="pdfCurrentPage >= pdfTotalPages">›</button>
-        <span class="divider"></span>
-        <span class="tool-label">{{ t('prepare.jumpToPage') }}</span>
-        <input type="number" v-model.number="jumpPage" class="page-input" min="1" :max="pdfTotalPages"
-          @keyup.enter="goToPage" />
-        <span class="tool-label">{{ t('prepare.page') }}</span>
-        <button class="tool-btn small" @click="goToPage">{{ t('prepare.jump') }}</button>
-      </div>
-      <div class="toolbar-center">
-        <button class="tool-btn icon" :class="{ active: currentTool === 'pencil' }" @click="setTool('pencil')"
-          :title="t('prepare.pencil')">✏️</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'brush' }" @click="setTool('brush')"
-          :title="t('prepare.brush')">🖌️</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'highlighter' }" @click="setTool('highlighter')"
-          :title="t('prepare.highlighter')">🖍️</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'eraser' }" @click="setTool('eraser')"
-          :title="t('prepare.eraser')">🧹</button>
-        <button class="tool-btn icon" :class="{ active: currentTool === 'laser' }" @click="setTool('laser')"
-          :title="t('prepare.laser')">🔴</button>
-        <span class="divider"></span>
-        <input type="color" v-model="penColor" class="color-picker" :title="t('prepare.penColor')" />
-        <select v-model="penWidth" class="width-select" :title="t('prepare.lineWidth')">
-          <option :value="2">{{ t('prepare.thin') }}</option>
-          <option :value="4">{{ t('prepare.medium') }}</option>
-          <option :value="8">{{ t('prepare.thick') }}</option>
-        </select>
-        <span class="divider"></span>
-        <button class="tool-btn" @click="clearAnnotations">{{ t('prepare.clearAnnotations') }}</button>
-      </div>
-      <div class="toolbar-right">
-        <button class="tool-btn" @click="zoomOut">−</button>
-        <span class="zoom-value">{{ Math.round(previewScale * 100) }}%</span>
-        <button class="tool-btn" @click="zoomIn">+</button>
-      </div>
-    </div>
-
     <!-- 上传个人资源弹窗 -->
     <UploadPersonalResourceModal v-model:visible="showUploadModal" :chapter-id="String(currentChapterId)"
       @uploaded="handleResourceUploaded" />
@@ -363,7 +311,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, nextTick, computed, onUnmounted, watch } from 'vue'
+import { ref, reactive, onMounted, computed, onUnmounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { cursorAdmin } from '~/composables/api/curosr'
@@ -494,7 +442,6 @@ watch(activeTab, async () => {
   
   // 切换 tab 时清空右侧预览
   selectedResource.value = null
-  pdfReady.value = false
   pptPreviewUrl.value = ''
   
   if (currentChapterId.value) {
@@ -523,7 +470,6 @@ const selectChapter = async (chapter: { id: string; name: string }) => {
   
   // 切换章节时清空右侧预览
   selectedResource.value = null
-  pdfReady.value = false
   pptPreviewUrl.value = ''
   
   // 切换章节时加载对应章节的资源
@@ -649,25 +595,6 @@ const toggleSection = (name: string) => {
 
 const selectedResource = ref<ResourceItem | null>(null)
 const previewLoading = ref(false)
-const previewScale = ref(1)
-const wordError = ref('')
-const pdfReady = ref(false)
-
-const pdfCanvasRef = ref<HTMLCanvasElement | null>(null)
-const annotationCanvasRef = ref<HTMLCanvasElement | null>(null)
-const docxContainerRef = ref<HTMLElement | null>(null)
-let pdfDoc: any = null
-const pdfCurrentPage = ref(1)
-const pdfTotalPages = ref(0)
-const jumpPage = ref(1)
-
-const currentTool = ref<string>('')
-const penColor = ref('#FF0000')
-const penWidth = ref(4)
-const isDrawing = ref(false)
-let lastX = 0, lastY = 0
-const laserStyle = ref({ left: '0px', top: '0px', display: 'none' })
-const pageAnnotations = ref<Map<number, ImageData>>(new Map())
 
 const getIconClass = (type: string) => ({ word: 'icon-word', ppt: 'icon-ppt', pdf: 'icon-pdf', ucd: 'icon-ucd' }[type] || 'icon-default')
 const getIconText = (type: string) => ({ word: 'W', ppt: 'P', pdf: 'PDF', ucd: 'ucd' }[type] || '?')
@@ -797,25 +724,15 @@ const getPptPreviewUrl = (url: string): string => {
 const selectResource = async (item: ResourceItem) => {
   console.log(item)
   if (selectedResource.value?.resourceId === item.resourceId) return
-  pdfReady.value = false
   pptPreviewUrl.value = ''
   selectedResource.value = item
   previewLoading.value = true
   const fileType = getFileType(item.fileName)
   console.log(fileType, '类型')
   try {
-    if (fileType === 'word' && item.resourceUrl) {
-      // word 文件在右侧 iframe 预览
+    if (['word', 'ppt', 'pdf', 'image', 'excel'].includes(fileType) && item.resourceUrl) {
+      // Word/PPT/PDF/图片/Excel 使用 iframe 预览
       pptPreviewUrl.value = getPptPreviewUrl(item.resourceUrl)
-      previewLoading.value = false
-    } else if (fileType === 'pdf' && item.resourceUrl) {
-      await loadPdf(item.resourceUrl)
-    } else if (fileType === 'ppt' && item.resourceUrl) {
-      // PPT 文件在右侧 iframe 预览
-      pptPreviewUrl.value = getPptPreviewUrl(item.resourceUrl)
-      previewLoading.value = false
-    } else if (fileType === 'image' && item.resourceUrl) {
-      // 图片直接展示
       previewLoading.value = false
     } else if (fileType === 'ucd') {
       // UCD 文件显示预览卡片
@@ -826,8 +743,6 @@ const selectResource = async (item: ResourceItem) => {
     } else if (fileType === 'video') {
       // 视频文件直接播放
       previewLoading.value = false
-    } else if (fileType === 'default' && item.resourceUrl) {
-      await loadWord(item.resourceUrl)
     } else {
       previewLoading.value = false
     }
@@ -835,159 +750,5 @@ const selectResource = async (item: ResourceItem) => {
     console.error(t('prepare.loadFailed'), error)
     previewLoading.value = false
   }
-}
-
-const loadWord = async (url: string) => {
-  wordError.value = ''
-  try {
-    // 检查文件扩展名
-    if (url.toLowerCase().endsWith('.doc') && !url.toLowerCase().endsWith('.docx')) {
-      wordError.value = t('prepare.docNotSupported')
-      return
-    }
-    const { renderAsync } = await import('docx-preview')
-    const response = await fetch(url)
-    const arrayBuffer = await response.arrayBuffer()
-    if (docxContainerRef.value) {
-      docxContainerRef.value.innerHTML = ''
-      await renderAsync(arrayBuffer, docxContainerRef.value, undefined, {
-        className: 'docx-wrapper',
-        inWrapper: true,
-        breakPages: true,
-        useBase64URL: true,
-        ignoreWidth: false,
-        ignoreHeight: false,
-        renderHeaders: true,
-        renderFooters: true,
-        renderFootnotes: true,
-        renderEndnotes: true
-      })
-    }
-  } catch (error: any) {
-    console.error(t('prepare.fileLoadFailed'), error)
-    if (error.message?.includes('zip') || error.message?.includes('central directory')) {
-      wordError.value = t('prepare.fileFormatError')
-    } else {
-      wordError.value = t('prepare.fileLoadFailed')
-    }
-  }
-}
-
-const loadPdf = async (url: string) => {
-  pdfReady.value = false
-  const pdfjsLib = await import('pdfjs-dist')
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString()
-  const response = await fetch(url)
-  const arrayBuffer = await response.arrayBuffer()
-  pdfDoc = await pdfjsLib.getDocument({ data: arrayBuffer }).promise
-  pdfTotalPages.value = pdfDoc.numPages
-  pdfCurrentPage.value = 1
-  jumpPage.value = 1
-  pageAnnotations.value.clear()
-
-  // 先关闭 loading 让 canvas 渲染出来
-  previewLoading.value = false
-  await nextTick()
-  // 然后渲染 PDF 内容
-  await renderCurrentPage()
-  pdfReady.value = true
-}
-
-const renderCurrentPage = async () => {
-  if (!pdfDoc || !pdfCanvasRef.value || !annotationCanvasRef.value) return
-  const page = await pdfDoc.getPage(pdfCurrentPage.value)
-
-  // 获取预览区域的可用尺寸
-  const previewArea = pdfCanvasRef.value.closest('.preview-area')
-  const containerWidth = previewArea ? previewArea.clientWidth - 40 : 800 // 减去 padding
-  const containerHeight = previewArea ? previewArea.clientHeight - 40 : 600
-
-  // 计算适合容器的基础缩放比例，让 PDF 完整显示在容器内
-  const defaultViewport = page.getViewport({ scale: 1 })
-  const scaleX = containerWidth / defaultViewport.width
-  const scaleY = containerHeight / defaultViewport.height
-  const fitScale = Math.min(scaleX, scaleY)
-
-  // 应用用户缩放
-  const displayScale = fitScale * previewScale.value
-  // 使用 2 倍渲染提高清晰度，但 canvas 尺寸保持适应容器
-  const renderScale = displayScale * 2
-  const viewport = page.getViewport({ scale: renderScale })
-
-  const canvas = pdfCanvasRef.value
-  canvas.width = viewport.width
-  canvas.height = viewport.height
-  // 通过 CSS 缩放到实际显示尺寸，保持清晰度
-  canvas.style.width = `${viewport.width / 2}px`
-  canvas.style.height = `${viewport.height / 2}px`
-  await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise
-  
-  const annoCanvas = annotationCanvasRef.value
-  annoCanvas.width = viewport.width
-  annoCanvas.height = viewport.height
-  annoCanvas.style.width = `${viewport.width / 2}px`
-  annoCanvas.style.height = `${viewport.height / 2}px`
-  const savedAnnotation = pageAnnotations.value.get(pdfCurrentPage.value)
-  if (savedAnnotation) annoCanvas.getContext('2d')?.putImageData(savedAnnotation, 0, 0)
-}
-
-const saveCurrentAnnotation = () => {
-  if (!annotationCanvasRef.value) return
-  const ctx = annotationCanvasRef.value.getContext('2d')
-  if (ctx) pageAnnotations.value.set(pdfCurrentPage.value, ctx.getImageData(0, 0, annotationCanvasRef.value.width, annotationCanvasRef.value.height))
-}
-
-const prevPage = async () => { if (pdfCurrentPage.value > 1) { saveCurrentAnnotation(); pdfCurrentPage.value--; jumpPage.value = pdfCurrentPage.value; await renderCurrentPage() } }
-const nextPage = async () => { if (pdfCurrentPage.value < pdfTotalPages.value) { saveCurrentAnnotation(); pdfCurrentPage.value++; jumpPage.value = pdfCurrentPage.value; await renderCurrentPage() } }
-const goToPage = async () => { if (jumpPage.value >= 1 && jumpPage.value <= pdfTotalPages.value && jumpPage.value !== pdfCurrentPage.value) { saveCurrentAnnotation(); pdfCurrentPage.value = jumpPage.value; await renderCurrentPage() } }
-
-const setTool = (tool: string) => { currentTool.value = currentTool.value === tool ? '' : tool }
-
-const startDrawing = (e: MouseEvent) => {
-  if (!currentTool.value || currentTool.value === 'laser') return
-  isDrawing.value = true
-  const rect = annotationCanvasRef.value!.getBoundingClientRect()
-  // 乘以 2 修正高清渲染的坐标偏移
-  lastX = (e.clientX - rect.left) * 2
-  lastY = (e.clientY - rect.top) * 2
-}
-
-const draw = (e: MouseEvent) => {
-  if (!annotationCanvasRef.value) return
-  const rect = annotationCanvasRef.value.getBoundingClientRect()
-  // 乘以 2 修正高清渲染的坐标偏移
-  const x = (e.clientX - rect.left) * 2
-  const y = (e.clientY - rect.top) * 2
-  if (currentTool.value === 'laser') { laserStyle.value = { left: `${x / 2 - 8}px`, top: `${y / 2 - 8}px`, display: 'block' }; return }
-  if (!isDrawing.value || !currentTool.value) return
-  const ctx = annotationCanvasRef.value.getContext('2d')!
-  ctx.lineCap = 'round'
-  ctx.lineJoin = 'round'
-  // 线宽也要乘以 2
-  if (currentTool.value === 'eraser') { ctx.globalCompositeOperation = 'destination-out'; ctx.lineWidth = penWidth.value * 3 * 2 }
-  else { ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = penColor.value; ctx.lineWidth = (currentTool.value === 'pencil' ? 2 : currentTool.value === 'highlighter' ? penWidth.value * 2 : penWidth.value) * 2; ctx.globalAlpha = currentTool.value === 'highlighter' ? 0.3 : 1 }
-  ctx.beginPath(); ctx.moveTo(lastX, lastY); ctx.lineTo(x, y); ctx.stroke()
-  lastX = x; lastY = y
-}
-
-const stopDrawing = () => { isDrawing.value = false; if (currentTool.value === 'laser') laserStyle.value.display = 'none' }
-
-const clearAnnotations = () => {
-  if (!annotationCanvasRef.value) return
-  annotationCanvasRef.value.getContext('2d')?.clearRect(0, 0, annotationCanvasRef.value.width, annotationCanvasRef.value.height)
-  pageAnnotations.value.delete(pdfCurrentPage.value)
-}
-
-const zoomIn = async () => { if (previewScale.value < 2) { saveCurrentAnnotation(); previewScale.value = Math.min(2, previewScale.value + 0.1); await renderCurrentPage() } }
-const zoomOut = async () => { if (previewScale.value > 0.5) { saveCurrentAnnotation(); previewScale.value = Math.max(0.5, previewScale.value - 0.1); await renderCurrentPage() } }
-
-// 鼠标滚轮翻页
-let wheelTimeout: any = null
-const handleWheel = (e: WheelEvent) => {
-  e.preventDefault()
-  if (wheelTimeout) return // 防抖，避免翻太快
-  wheelTimeout = setTimeout(() => { wheelTimeout = null }, 300)
-  if (e.deltaY > 0) nextPage()
-  else if (e.deltaY < 0) prevPage()
 }
 </script>

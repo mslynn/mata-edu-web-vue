@@ -1,4 +1,4 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.47:8001' 
+// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.55:8001' 
 
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
@@ -7,6 +7,7 @@ const apiBaseUrl = process.env.NODE_ENV === 'production'
 
 // 预览服务地址
 const previewBaseUrl = process.env.NUXT_PUBLIC_PREVIEW_BASE_URL || 'http://192.168.0.145:8012'
+const signalingUrl = process.env.NUXT_PUBLIC_SIGNALING_URL || 'ws://192.168.0.59:8001/resource/websocket'
 
 console.log('NODE_ENV:', process.env.NODE_ENV)
 console.log('apiBaseUrl:', apiBaseUrl)
@@ -16,7 +17,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   devServer: {
-    host: '0.0.0.0',
+    host: '127.0.0.1',
     port: 3001,
   },
 
@@ -25,11 +26,11 @@ export default defineNuxtConfig({
     public: {
     //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
-      apiBaseUrl: apiBaseUrl || 'http://192.168.0.17:8001',
+      apiBaseUrl: apiBaseUrl || 'http://192.168.0.55:8001',
       // 预览服务地址
       previewBaseUrl: previewBaseUrl || 'http://192.168.0.145:8012',
       // WebRTC 信令服务器地址
-      signalingUrl: process.env.NUXT_PUBLIC_SIGNALING_URL || 'ws://192.168.0.17:8001/resource/websocket',
+      signalingUrl:signalingUrl || 'ws://192.168.0.13:8001/resource/websocket',
     }
   },
 

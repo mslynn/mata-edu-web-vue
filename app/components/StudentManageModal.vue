@@ -7,7 +7,7 @@
         </svg>
       </button>
       
-      <h2 class="modal-title">学生管理</h2>
+      <h2 class="modal-title">{{ t('studentManage.title') }}</h2>
       
       <div class="modal-header">
         <MTabs v-model="activeTab" :tabs="tabList">
@@ -15,14 +15,14 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
             </svg>
-            <span>学生管理</span>
+            <span>{{ t('studentManage.title') }}</span>
           </template>
           <template #tab-group>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
-            <span>小组管理</span>
+            <span>{{ t('studentManage.groupManage') }}</span>
           </template>
         </MTabs>
         
@@ -30,7 +30,7 @@
           <MInput 
             v-if="activeTab === 'student'"
             v-model="searchKeyword" 
-            placeholder="请输入学生账号及学生姓名"
+            :placeholder="t('studentManage.searchStudentPlaceholder')"
             clearable
             class="search-input"
           >
@@ -43,7 +43,7 @@
           <MInput 
             v-else
             v-model="groupSearchKeyword" 
-            placeholder="请输入小组名称及学生姓名"
+            :placeholder="t('studentManage.searchGroupPlaceholder')"
             clearable
             class="search-input"
           >
@@ -54,43 +54,35 @@
             </template>
           </MInput>
           <MButton v-if="activeTab === 'student'" type="text" class="quick-login-btn" @click="toggleQuickLogin">
-            {{ quickLoginEnabled ? '停用快捷登录' : '启用快捷登录' }}
+            {{ quickLoginEnabled ? t('studentManage.disableQuickLogin') : t('studentManage.enableQuickLogin') }}
           </MButton>
         </div>
       </div>
       
       <!-- 学生管理内容 -->
       <template v-if="activeTab === 'student'">
-        <div class="quick-login-bar">
-          <span class="bar-label">学生快捷登录方式：</span>
+        <div v-if="quickLoginEnabled" class="quick-login-bar">
           <span class="new-tag">NEW</span>
-          <span class="bar-item">快捷登录链接：</span>
-          <MButton type="text" size="small" class="copy-btn" @click="copyLoginLink">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-            <span>复制</span>
-          </MButton>
-          <span class="bar-item">班级码：<strong>{{ classCode }}</strong></span>
-          <span class="bar-item">统一登录密码：<strong>{{ loginPassword }}</strong></span>
+          <span class="bar-item">{{ t('studentManage.classCode') }}<strong>{{ classCode }}</strong></span>
+          <span class="bar-item">{{ t('studentManage.loginPassword') }}<strong>{{ loginPassword }}</strong></span>
           <MButton type="text" size="small" class="copy-btn" @click="copyClassInfo">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            <span>复制</span>
+            <span>{{ t('studentManage.copy') }}</span>
           </MButton>
           <span class="bar-item expire-info">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
             </svg>
-            （有效时长为2小时，{{ expireTime }}过期）
+            {{ t('studentManage.validFor2Hours') }}{{ expireTime }}{{ t('studentManage.expire') }}
           </span>
         </div>
         
         <div class="stats-bar-wrapper">
           <div class="stats-bar">
-            <span>已登录：<span class="count logged">{{ loggedCount }}</span> 人</span>
-            <span>未登录：<span class="count not-logged">{{ notLoggedCount }}</span> 人</span>
+            <span>{{ t('studentManage.loggedInCount') }}<span class="count logged">{{ loggedCount }}</span> {{ t('studentManage.person') }}</span>
+            <span>{{ t('studentManage.notLoggedInCount') }}<span class="count not-logged">{{ notLoggedCount }}</span> {{ t('studentManage.person') }}</span>
           </div>
           <MButton type="default" size="small" @click="refreshList">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -103,9 +95,14 @@
         <div class="table-wrapper">
           <MTable :columns="studentColumns" :data="filteredStudents" row-key="id" show-index>
             <template #loginStatus="{ row }">
-              <span :class="['status', row.loginStatus === 1 ? 'logged' : 'not-logged']">
-                {{ row.loginStatus === 1 ? '已登录' : '未登录' }}
-              </span>
+              <div class="status-cell">
+                <span :class="['status', row.loginStatus === 1 ? 'logged' : 'not-logged']">
+                  {{ row.loginStatus === 1 ? t('studentManage.loggedIn') : t('studentManage.notLoggedIn') }}
+                </span>
+                <button v-if="row.loginStatus === 1" class="kick-btn" @click="handleKickStudent(row)">
+                  {{ t('studentManage.kickOut') }}
+                </button>
+              </div>
             </template>
           </MTable>
         </div>
@@ -113,36 +110,21 @@
       
       <!-- 小组管理内容 -->
       <template v-else>
-        <div class="group-action-bar">
-          <div class="stats-bar">
-            <span>小组数量：<span class="count primary">{{ groups.length }}</span> 组</span>
-          </div>
-          <div class="action-btns">
+        <!-- 搜索 + 操作按钮 -->
+        <div class="group-header-bar">
+          <div class="group-btn-right">
             <button 
-              :class="[
-                'h-[36px] px-4 flex items-center justify-center gap-1 rounded-[20px] text-sm whitespace-nowrap transition-colors',
-                groupActiveAction === 'batch'
-                  ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  : 'bg-[#FF9900] text-white hover:bg-[#E68A00]'
-              ]"
+              :class="['group-action-btn', groupActiveAction === 'batch' ? 'disabled' : 'primary']"
               :disabled="groupActiveAction === 'batch'"
               @click="handleCreateGroup"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
-              </svg>
-              <span>创建小组</span>
+              {{ t('studentManage.createGroup') }}
             </button>
             <button 
-              :class="[
-                'h-[36px] px-4 flex items-center justify-center rounded-[20px] text-sm whitespace-nowrap transition-colors',
-                groupActiveAction === 'batch'
-                  ? 'bg-[#FF9900] text-white'
-                  : 'bg-[#FFF1DD] text-[#4D4D4D] hover:bg-[#FFE4B8]'
-              ]"
+              :class="['group-action-btn', groupActiveAction === 'batch' ? 'primary' : 'default']"
               @click="handleGroupBatchAction"
             >
-              {{ groupActiveAction === 'batch' ? '取消批量' : '批量操作' }}
+              {{ groupActiveAction === 'batch' ? t('studentManage.cancelBatch') : t('studentManage.batchOperation') }}
             </button>
           </div>
         </div>
@@ -158,125 +140,56 @@
             @select="handleGroupSelect"
             @select-all="handleGroupSelectAll"
           >
-            <template #description="{ row }">
+            <template #teamName="{ row }">
+              {{ row.name || '-' }}
+            </template>
+            <template #leaderName="{ row }">
+              {{ row.leaderName || '-' }}
+            </template>
+            <template #members="{ row }">
+              {{ row.members || '-' }}
+            </template>
+            <template #remarks="{ row }">
               {{ row.description || '-' }}
             </template>
             <template #action="{ row }">
-              <div class="action-cell whitespace-nowrap">
+              <div class="action-btns">
                 <button 
-                  :class="[
-                    'px-3 py-1 text-sm border rounded-[7px] transition-colors',
-                    groupActiveAction === 'batch'
-                      ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                      : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]'
-                  ]"
+                  :class="['table-action-btn', groupActiveAction === 'batch' ? 'disabled' : '']"
                   :disabled="groupActiveAction === 'batch'"
                   @click="handleEditGroup(row)"
-                >编辑</button>
+                >
+                  {{ t('studentManage.edit') }}
+                </button>
                 <button 
-                  :class="[
-                    'ml-2 px-3 py-1 text-sm border rounded-[7px] transition-colors',
-                    groupActiveAction === 'batch'
-                      ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                      : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]'
-                  ]"
+                  :class="['table-action-btn delete', groupActiveAction === 'batch' ? 'disabled' : '']"
                   :disabled="groupActiveAction === 'batch'"
                   @click="handleDeleteGroup(row)"
-                >删除</button>
+                >
+                  {{ t('studentManage.delete') }}
+                </button>
               </div>
             </template>
           </MTable>
         </div>
 
         <!-- 批量操作栏 -->
-        <div v-if="groupActiveAction === 'batch'"
-          class="flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] rounded-lg">
-          <div class="flex items-center gap-4">
-            <label class="flex items-center gap-2 cursor-pointer">
-              <input type="checkbox" :checked="isAllGroupSelected" class="w-4 h-4 accent-[#FF9900]"
-                @change="handleGroupSelectAllToggle" />
-              <span class="text-sm text-[#4D4D4D]">全选</span>
+        <div v-if="groupActiveAction === 'batch'" class="batch-action-bar">
+          <div class="batch-left">
+            <label class="select-all-label">
+              <input type="checkbox" :checked="isAllGroupSelected" class="checkbox" @change="handleGroupSelectAllToggle" />
+              <span>{{ t('studentManage.selectAll') }}</span>
             </label>
-            <span class="text-sm text-[#4D4D4D]">
-              已选择 <span class="text-[#FF9900]">{{ selectedGroupIds.length }}</span> 项
-            </span>
+            <span class="selected-count">{{ t('studentManage.selected') }} <span class="count-num">{{ selectedGroupIds.length }}</span> {{ t('studentManage.items') }}</span>
           </div>
-          <div class="flex items-center gap-4">
-            <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDeleteGroup">
-              批量删除
-            </button>
-            <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleGroupBatchAction">
-              取消批量
-            </button>
+          <div class="batch-right">
+            <button class="batch-btn" @click="handleBatchDeleteGroup">{{ t('studentManage.batchDelete') }}</button>
+            <button class="batch-btn" @click="handleGroupBatchAction">{{ t('studentManage.cancelBatch') }}</button>
           </div>
         </div>
       </template>
     </div>
   </div>
-
-  <!-- 删除小组确认弹窗 -->
-  <MModal v-model="showDeleteGroupModal" custom-width="381px" :show-footer="false" :show-close="false" content-class="!p-0">
-    <div class="h-[249px] p-6 relative flex flex-col">
-      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showDeleteGroupModal = false">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
-      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">提示</h3>
-
-      <div class="flex-1 flex items-center justify-center">
-        <p class="text-[16px] text-[#4D4D4D]">
-          {{ isBatchDeleteGroup ? `确定要删除选中的 ${selectedGroupIds.length} 个小组吗？` : `确定要删除小组"${deletingGroup?.name}"吗？` }}
-        </p>
-      </div>
-
-      <div class="flex items-center justify-center gap-4">
-        <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-          @click="showDeleteGroupModal = false">
-          取消
-        </button>
-        <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-          @click="handleConfirmDeleteGroup">
-          确定
-        </button>
-      </div>
-    </div>
-  </MModal>
-
-  <!-- 启用快捷登录弹窗 -->
-  <MModal v-model="showQuickLoginModal" custom-width="420px" :show-footer="false" :show-close="false" content-class="!p-0">
-    <div class="p-6 relative">
-      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showQuickLoginModal = false">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-        启用学生快捷登录
-      </h3>
-      <p class="text-center text-[#4D4D4D] mb-6">
-        启用后，学生可通过班级码和统一密码快速登录，无需单独注册账号。
-      </p>
-      <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <span>快捷登录有效期为2小时，过期后需重新启用</span>
-      </div>
-      <div class="flex items-center justify-center gap-4">
-        <button class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-          @click="showQuickLoginModal = false">
-          取消
-        </button>
-        <button class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-          @click="handleConfirmQuickLogin">
-          创建
-        </button>
-      </div>
-    </div>
-  </MModal>
 
   <!-- 停用快捷登录弹窗 -->
   <MModal v-model="showDisableQuickLoginModal" custom-width="420px" :show-footer="false" :show-close="false" content-class="!p-0">
@@ -286,28 +199,46 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-        停用快捷登录
-      </h3>
-      <p class="text-center text-[#4D4D4D] mb-6">
-        停用后，快捷登录方式失效，是否确定停用？
-      </p>
+      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ t('studentManage.disableQuickLoginTitle') }}</h3>
+      <p class="text-center text-[#4D4D4D] mb-6">{{ t('studentManage.disableQuickLoginContent') }}</p>
       <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <span>已经登录的学生不会退出登录</span>
+        <span>{{ t('studentManage.disableQuickLoginTip') }}</span>
       </div>
       <div class="flex items-center justify-center gap-4">
         <button class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-          @click="showDisableQuickLoginModal = false">
-          取消
-        </button>
+          @click="showDisableQuickLoginModal = false">{{ t('common.cancel') }}</button>
         <button class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-          @click="handleConfirmDisableQuickLogin">
-          确定
-        </button>
+          @click="handleConfirmDisableQuickLogin">{{ t('common.confirm') }}</button>
+      </div>
+    </div>
+  </MModal>
+
+  <!-- 启用快捷登录弹窗 -->
+  <MModal v-model="showEnableQuickLoginModal" custom-width="420px" :show-footer="false" :show-close="false" content-class="!p-0">
+    <div class="p-6 relative">
+      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showEnableQuickLoginModal = false">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ t('studentManage.enableQuickLoginTitle') }}</h3>
+      <p class="text-center text-[#4D4D4D] mb-6">{{ t('studentManage.enableQuickLoginContent') }}</p>
+      <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>{{ t('studentManage.enableQuickLoginTip') }}</span>
+      </div>
+      <div class="flex items-center justify-center gap-4">
+        <button class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+          @click="showEnableQuickLoginModal = false">{{ t('common.cancel') }}</button>
+        <button class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+          @click="handleConfirmEnableQuickLogin">{{ t('studentManage.create') }}</button>
       </div>
     </div>
   </MModal>
@@ -322,22 +253,22 @@
       </button>
 
       <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-        {{ isEditGroupMode ? '编辑小组' : '创建小组' }}
+        {{ isEditGroupMode ? t('studentManage.editGroupTitle') : t('studentManage.createGroupTitle') }}
       </h3>
 
       <!-- 第一步：填写小组信息 -->
       <div class="mb-6">
-        <p class="text-[#4D4D4D] font-medium mb-4">第一步：填写小组信息：</p>
+        <p class="text-[#4D4D4D] font-medium mb-4">{{ t('studentManage.step1') }}</p>
         <div class="space-y-4 pl-4">
           <div class="flex items-center gap-2 whitespace-nowrap">
             <span class="text-red-500">*</span>
-            <span class="text-[#4D4D4D]">小组名称：</span>
-            <MInput v-model="groupForm.name" placeholder="请输入小组名称" class="w-[280px]" />
+            <span class="text-[#4D4D4D]">{{ t('studentManage.groupName') }}</span>
+            <MInput v-model="groupForm.name" :placeholder="t('studentManage.groupNamePlaceholder')" class="w-[280px]" />
           </div>
           <div class="flex items-center gap-2 whitespace-nowrap">
             <span class="text-transparent">*</span>
-            <span class="text-[#4D4D4D]">小组描述：</span>
-            <MInput v-model="groupForm.remarks" placeholder="请输入小组描述" class="w-[280px]" />
+            <span class="text-[#4D4D4D]">{{ t('studentManage.groupDesc') }}</span>
+            <MInput v-model="groupForm.remarks" :placeholder="t('studentManage.groupDescPlaceholder')" class="w-[280px]" />
           </div>
         </div>
       </div>
@@ -346,13 +277,13 @@
       <div class="mb-6">
         <div class="flex items-center justify-between mb-4">
           <p class="text-[#4D4D4D] font-medium whitespace-nowrap">
-            第二步：添加小组成员<span class="text-[#FF9900] text-sm font-normal">（记得选择组长哦）</span>
+            {{ t('studentManage.step2') }}<span class="text-[#FF9900] text-sm font-normal">{{ t('studentManage.rememberLeader') }}</span>
           </p>
           <button
             class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap"
             @click="handleAddGroupMember"
           >
-            + 添加成员
+            {{ t('studentManage.addMember') }}
           </button>
         </div>
         
@@ -361,11 +292,11 @@
           <table class="w-full">
             <thead class="bg-[#FFF1DD]">
               <tr>
-                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">序号</th>
-                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">账号</th>
-                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">姓名</th>
-                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">是否组长</th>
-                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">操作</th>
+                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.serialNumber') }}</th>
+                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.account') }}</th>
+                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.name') }}</th>
+                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.isLeader') }}</th>
+                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.operation') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -376,7 +307,7 @@
                 <td class="px-3 py-2 text-center">
                   <input
                     type="radio"
-                    name="group-leader"
+                    :name="'group-leader'"
                     :checked="groupForm.leaderId === member.id"
                     class="w-4 h-4 accent-[#FF9900]"
                     @change="groupForm.leaderId = member.id"
@@ -384,7 +315,7 @@
                 </td>
                 <td class="px-3 py-2 text-center">
                   <button class="text-red-500 text-sm hover:text-red-600" @click="handleRemoveGroupMember(index)">
-                    删除
+                    {{ t('studentManage.delete') }}
                   </button>
                 </td>
               </tr>
@@ -395,7 +326,7 @@
                     <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
-                    <span class="text-sm">暂无数据</span>
+                    <span class="text-sm">{{ t('studentManage.noData') }}</span>
                   </div>
                 </td>
               </tr>
@@ -407,11 +338,11 @@
       <div class="flex items-center justify-center gap-4">
         <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
           @click="showGroupModal = false">
-          取消
+          {{ t('common.cancel') }}
         </button>
         <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
           @click="handleConfirmGroup">
-          确定
+          {{ t('common.confirm') }}
         </button>
       </div>
     </div>
@@ -426,13 +357,13 @@
         </svg>
       </button>
 
-      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">选择成员</h3>
+      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ t('studentManage.selectMember') }}</h3>
 
       <!-- 搜索栏 -->
       <div class="mb-2">
         <MInput
           v-model="memberSearchKeyword"
-          placeholder="请输入学生账号或姓名搜索"
+          :placeholder="t('studentManage.searchStudentPlaceholder')"
           clearable
           class="w-full"
         >
@@ -446,7 +377,7 @@
 
       <!-- 学生统计 -->
       <div class="mb-2 text-sm text-[#4D4D4D]">
-        共 {{ filteredAvailableStudents.length }} 名学生
+        {{ t('studentManage.totalStudents', { count: filteredAvailableStudents.length }) }}
       </div>
 
       <!-- 学生列表表格 -->
@@ -462,9 +393,9 @@
                   @change="toggleAllMemberSelection"
                 />
               </th>
-              <th class="w-16 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">序号</th>
-              <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">账号</th>
-              <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">姓名</th>
+              <th class="w-16 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.serialNumber') }}</th>
+              <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.account') }}</th>
+              <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.name') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -484,13 +415,13 @@
                 />
               </td>
               <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ index + 1 }}</td>
-              <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ student.account || '-' }}</td>
-              <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ student.name || '-' }}</td>
+              <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ student.studentNumber || '-' }}</td>
+              <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ student.studentName || '-' }}</td>
             </tr>
           </tbody>
         </table>
         <div v-if="!filteredAvailableStudents.length" class="px-4 py-8 text-center text-gray-400">
-          暂无可添加的学生
+          {{ t('studentManage.noStudentsToAdd') }}
         </div>
       </div>
 
@@ -505,7 +436,7 @@
             <span>{{ getStudentNameById(id) }}</span>
             <button
               class="w-4 h-4 items-center justify-center text-gray-400 hover:text-[#FF0000] transition-colors hidden group-hover:flex"
-              @click.stop="removeSelectedMember(id)"
+              @click="removeSelectedMember(id)"
             >
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -518,11 +449,41 @@
       <div class="flex items-center justify-center gap-4 mt-6">
         <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
           @click="showAddMemberModal = false">
-          取消
+          {{ t('common.cancel') }}
         </button>
         <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
           @click="handleConfirmAddMembers">
-          确定
+          {{ t('common.confirm') }}
+        </button>
+      </div>
+    </div>
+  </MModal>
+
+  <!-- 删除小组确认弹窗 -->
+  <MModal v-model="showDeleteGroupModal" custom-width="381px" :show-footer="false" :show-close="false" content-class="!p-0">
+    <div class="h-[249px] p-6 relative flex flex-col">
+      <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showDeleteGroupModal = false">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ t('common.tips') }}</h3>
+
+      <div class="flex-1 flex items-center justify-center">
+        <p class="text-[16px] text-[#4D4D4D]">
+          {{ isBatchDeleteGroup ? t('studentManage.batchDeleteGroupConfirm', { count: selectedGroupIds.length }) : t('studentManage.deleteGroupConfirm', { name: deletingGroup?.name }) }}
+        </p>
+      </div>
+
+      <div class="flex items-center justify-center gap-4">
+        <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+          @click="showDeleteGroupModal = false">
+          {{ t('common.cancel') }}
+        </button>
+        <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+          @click="handleConfirmDeleteGroup">
+          {{ t('common.confirm') }}
         </button>
       </div>
     </div>
@@ -531,8 +492,12 @@
 
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useTeacher } from '~/composables/api/useTeacher'
 import { ElMessage } from '~/components/ui'
+
+const { t } = useI18n()
 
 interface Student {
   id: string
@@ -551,87 +516,75 @@ interface Group {
   createTime: string
 }
 
-interface GroupMember {
-  id: string
-  studentNumber: string
-  studentName: string
-}
-
-defineProps<{
+const props = defineProps<{
   visible: boolean
+  classId?: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   close: []
+  quickLoginChange: []
 }>()
+
+const { getStudentList, getGroupList, stopQuickLogin, getQuickLoginInfo, createQuickLogin, kickoutStudent, addGroup, updateGroup, deleteGroup, getAddStudentList, getGroupMemberList } = useTeacher()
 
 const activeTab = ref('student')
 const searchKeyword = ref('')
 const groupSearchKeyword = ref('')
-const quickLoginEnabled = ref(true)
-const showQuickLoginModal = ref(false)
+const quickLoginEnabled = ref(false)
 const showDisableQuickLoginModal = ref(false)
-const classCode = ref('75688')
-const loginPassword = ref('518222')
-const expireTime = ref('19:41')
+const showEnableQuickLoginModal = ref(false)
+const classCode = ref('')
+const loginPassword = ref('')
+const expireTime = ref('')
+const loading = ref(false)
 
-// 小组弹窗相关
-const showGroupModal = ref(false)
-const showAddMemberModal = ref(false)
-const showDeleteGroupModal = ref(false)
-const isEditGroupMode = ref(false)
-const isBatchDeleteGroup = ref(false)
-const memberSearchKeyword = ref('')
-const selectedMemberIds = ref<string[]>([])
-const selectedGroupIds = ref<string[]>([])
-const deletingGroup = ref<Group | null>(null)
+const tabList = computed(() => [
+  { label: t('studentManage.title'), value: 'student' },
+  { label: t('studentManage.groupManage'), value: 'group' }
+])
+
+const studentColumns = computed(() => [
+  { key: 'name', title: t('studentManage.studentName') },
+  { key: 'account', title: t('studentManage.studentAccount') },
+  { key: 'createTime', title: t('studentManage.createTime') },
+  { key: 'loginStatus', title: t('studentManage.loginStatus') }
+])
+
+const groupColumns = computed(() => [
+  { key: 'teamName', title: t('studentManage.groupNameCol'), minWidth: '80px' },
+  { key: 'leaderName', title: t('studentManage.leader'), minWidth: '60px' },
+  { key: 'members', title: t('studentManage.members'), minWidth: '100px' },
+  { key: 'remarks', title: t('studentManage.remarks'), minWidth: '100px' },
+  { key: 'createTime', title: t('studentManage.createTime'), minWidth: '120px' },
+  { key: 'action', title: t('studentManage.operation'), width: '160px', align: 'center' as const }
+])
+
+const students = ref<Student[]>([])
+const groups = ref<Group[]>([])
+
+// ===== 小组管理相关 =====
 type GroupActionType = 'batch' | null
 const groupActiveAction = ref<GroupActionType>(null)
+const selectedGroupIds = ref<string[]>([])
+const showGroupModal = ref(false)
+const showDeleteGroupModal = ref(false)
+const showAddMemberModal = ref(false)
+const isEditGroupMode = ref(false)
+const isBatchDeleteGroup = ref(false)
+const deletingGroup = ref<Group | null>(null)
+const originalMembers = ref<any[]>([])
+const memberSearchKeyword = ref('')
+const selectedMemberIds = ref<string[]>([])
+const availableStudents = ref<any[]>([])
 
 const groupForm = reactive({
   id: '',
   name: '',
   remarks: '',
-  leaderId: '',
-  members: [] as GroupMember[]
+  leaderId: '' as string,
+  members: [] as any[]
 })
-
-const tabList = [
-  { label: '学生管理', value: 'student' },
-  { label: '小组管理', value: 'group' }
-]
-
-const studentColumns = [
-  { key: 'name', title: '学生姓名' },
-  { key: 'account', title: '学生账号' },
-  { key: 'createTime', title: '创建时间' },
-  { key: 'loginStatus', title: '班级码登录状态' }
-]
-
-const groupColumns = [
-  { key: 'name', title: '小组名称' },
-  { key: 'leaderName', title: '组长姓名' },
-  { key: 'members', title: '组内成员' },
-  { key: 'description', title: '描述' },
-  { key: 'createTime', title: '创建时间' },
-  { key: 'action', title: '操作', width: '140px' }
-]
-
-const students = ref<Student[]>([
-  { id: '1', name: '1', account: '4285154', createTime: '2025-12-11 09:28:25', loginStatus: 0 },
-  { id: '2', name: '34', account: '42853415', createTime: '2025-12-09 11:26:25', loginStatus: 0 },
-  { id: '3', name: '12', account: '42851233', createTime: '2025-12-09 11:26:20', loginStatus: 0 },
-  { id: '4', name: '11', account: '42851137', createTime: '2025-12-09 11:26:15', loginStatus: 0 },
-  { id: '5', name: '9', account: '4285931', createTime: '2025-12-09 11:26:12', loginStatus: 0 },
-  { id: '6', name: '7', account: '4285731', createTime: '2025-12-09 11:26:08', loginStatus: 0 },
-  { id: '7', name: '4', account: '4285432', createTime: '2025-12-09 11:14:55', loginStatus: 0 },
-  { id: '8', name: '2', account: '4285236', createTime: '2025-12-09 11:14:51', loginStatus: 0 },
-  { id: '9', name: '1', account: '4285153', createTime: '2025-12-09 11:14:47', loginStatus: 0 }
-])
-
-const groups = ref<Group[]>([
-  { id: '1', name: '1', leaderName: '1', members: '1,2', description: '', createTime: '2025-12-11 15:01' }
-])
 
 const filteredStudents = computed(() => {
   if (!searchKeyword.value) return students.value
@@ -651,72 +604,165 @@ const filteredGroups = computed(() => {
   )
 })
 
-// 可添加的学生（排除已添加的成员）
+// 过滤后的可添加学生（根据搜索关键词，排除已添加的成员）
 const filteredAvailableStudents = computed(() => {
-  const addedIds = groupForm.members.map(m => m.id)
-  const filtered = students.value.filter(s => !addedIds.includes(s.id))
+  const addedIds = groupForm.members.map((m) => m.id)
+  const filtered = availableStudents.value.filter((s) => !addedIds.includes(s.id))
   const keyword = memberSearchKeyword.value.trim().toLowerCase()
   if (!keyword) return filtered
-  return filtered.filter(s => 
-    s.name.toLowerCase().includes(keyword) || 
-    s.account.toLowerCase().includes(keyword)
+  return filtered.filter(
+    (s) =>
+      s.studentName?.toLowerCase().includes(keyword) ||
+      s.studentNumber?.toLowerCase().includes(keyword)
   )
 })
 
-// 是否全选
+// 添加成员全选
 const isAllMemberSelected = computed(() => {
-  return filteredAvailableStudents.value.length > 0 && 
-    filteredAvailableStudents.value.every(s => selectedMemberIds.value.includes(s.id))
+  if (!filteredAvailableStudents.value.length) return false
+  return filteredAvailableStudents.value.every((s) => selectedMemberIds.value.includes(s.id))
 })
 
-// 小组是否全选
+// 小组全选
 const isAllGroupSelected = computed(() => {
-  return filteredGroups.value.length > 0 && 
-    filteredGroups.value.every(g => selectedGroupIds.value.includes(g.id))
+  if (!groups.value.length) return false
+  return groups.value.every((item) => selectedGroupIds.value.includes(item.id))
 })
 
 const loggedCount = computed(() => students.value.filter(s => s.loginStatus === 1).length)
 const notLoggedCount = computed(() => students.value.filter(s => s.loginStatus !== 1).length)
 
+// 加载学生列表
+const loadStudents = async () => {
+  if (!props.classId) return
+  loading.value = true
+  try {
+    const data = await getStudentList({ classId: props.classId })
+    if (data && Array.isArray(data)) {
+      students.value = data.map((item: any) => ({
+        id: String(item.id || item.studentId),
+        name: item.studentName || item.name || '',
+        account: item.studentNumber || item.account || '',
+        createTime: item.createTime || '',
+        loginStatus: item.loginStatus || 0
+      }))
+    }
+  } catch (error) {
+    console.error('加载学生列表失败:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+// 加载小组列表
+const loadGroups = async () => {
+  if (!props.classId) return
+  try {
+    const data = await getGroupList({ classId: props.classId })
+    if (data && Array.isArray(data)) {
+      groups.value = data.map((item: any) => ({
+        id: String(item.id),
+        name: item.teamName || '',
+        leaderName: item.teamLeader || '',
+        members: item.studentNames || '',
+        description: item.remarks || '',
+        createTime: item.createTime || ''
+      }))
+    }
+  } catch (error) {
+    console.error('加载小组列表失败:', error)
+  }
+}
+
+// 加载可添加的学生列表
+const loadAvailableStudents = async () => {
+  if (!props.classId) return
+  try {
+    const data = await getAddStudentList(props.classId)
+    availableStudents.value = data || []
+  } catch (error) {
+    console.error('获取可添加学生列表失败:', error)
+    availableStudents.value = []
+  }
+}
+
+// 加载快捷登录信息
+const loadQuickLoginInfo = async () => {
+  try {
+    const data = await getQuickLoginInfo()
+    if (data) {
+      classCode.value = data.classCode || ''
+      loginPassword.value = data.classCodePwd || ''
+      expireTime.value = data.expirationDate || ''
+      quickLoginEnabled.value = !!data.classCode
+    }
+  } catch (error) {
+    console.error('加载快捷登录信息失败:', error)
+  }
+}
+
 const toggleQuickLogin = () => {
   if (quickLoginEnabled.value) {
-    // 停用快捷登录 - 显示确认弹窗
     showDisableQuickLoginModal.value = true
   } else {
-    // 启用快捷登录 - 显示弹窗
-    showQuickLoginModal.value = true
+    showEnableQuickLoginModal.value = true
+  }
+}
+
+const handleConfirmDisableQuickLogin = async () => {
+  if (!props.classId) return
+  try {
+    await stopQuickLogin(props.classId)
+    quickLoginEnabled.value = false
+    classCode.value = ''
+    loginPassword.value = ''
+    expireTime.value = ''
+    showDisableQuickLoginModal.value = false
+    ElMessage.success('已停用快捷登录')
+    emit('quickLoginChange')
+  } catch (error: any) {
+    ElMessage.error(error.message || '停用失败')
   }
 }
 
 // 确认启用快捷登录
-const handleConfirmQuickLogin = () => {
-  quickLoginEnabled.value = true
-  showQuickLoginModal.value = false
-  // TODO: 调用接口启用快捷登录
-}
-
-// 确认停用快捷登录
-const handleConfirmDisableQuickLogin = () => {
-  quickLoginEnabled.value = false
-  showDisableQuickLoginModal.value = false
-  // TODO: 调用接口停用快捷登录
-}
-
-const copyLoginLink = () => {
-  const link = `${window.location.origin}/login?classCode=${classCode.value}`
-  navigator.clipboard.writeText(link)
-  alert('登录链接已复制')
+const handleConfirmEnableQuickLogin = async () => {
+  if (!props.classId) return
+  try {
+    await createQuickLogin(props.classId)
+    showEnableQuickLoginModal.value = false
+    ElMessage.success('已启用快捷登录')
+    // 重新加载快捷登录信息
+    await loadQuickLoginInfo()
+    emit('quickLoginChange')
+  } catch (error: any) {
+    ElMessage.error(error.message || '启用失败')
+  }
 }
 
 const copyClassInfo = () => {
   const text = `班级码：${classCode.value}\n统一登录密码：${loginPassword.value}`
   navigator.clipboard.writeText(text)
-  alert('班级信息已复制')
+  ElMessage.success('班级信息已复制')
 }
 
 const refreshList = () => {
-  console.log('刷新学生列表')
+  loadStudents()
 }
+
+// 踢出登录
+const handleKickStudent = async (student: Student) => {
+  try {
+    await kickoutStudent(student.id)
+    ElMessage.success(`已踢出 ${student.name}`)
+    // 刷新列表
+    loadStudents()
+  } catch (error: any) {
+    ElMessage.error(error.message || '踢出失败')
+  }
+}
+
+// ===== 小组管理方法 =====
 
 // 创建小组
 const handleCreateGroup = () => {
@@ -730,45 +776,99 @@ const handleCreateGroup = () => {
 }
 
 // 编辑小组
-const handleEditGroup = (row: Group) => {
-  isEditGroupMode.value = true
-  groupForm.id = row.id
-  groupForm.name = row.name
-  groupForm.remarks = row.description || ''
-  groupForm.leaderId = ''
-  groupForm.members = []
-  // TODO: 从接口获取小组成员详情
-  showGroupModal.value = true
+const handleEditGroup = async (row: Group) => {
+  try {
+    // 通过接口获取小组详情（包含成员列表）
+    const detail = await getGroupMemberList(row.id)
+    const memberList = Array.isArray(detail?.studentList) ? detail.studentList : []
+    
+    isEditGroupMode.value = true
+    groupForm.id = detail?.id || row.id
+    groupForm.name = detail?.teamName || row.name
+    groupForm.remarks = detail?.remarks || row.description || ''
+    // 从成员列表中找组长
+    const leader = memberList.find((m: any) => m.isLeader === 1)
+    groupForm.leaderId = leader?.studentNumber || ''
+    // 深拷贝成员列表，添加 id 字段用于标识
+    groupForm.members = memberList.map((m: any) => ({
+      ...m,
+      id: m.studentNumber
+    }))
+    originalMembers.value = JSON.parse(JSON.stringify(groupForm.members))
+    showGroupModal.value = true
+  } catch (error) {
+    console.error('获取小组成员失败:', error)
+    ElMessage.error('获取小组成员失败')
+  }
 }
 
 // 确认创建/编辑小组
-const handleConfirmGroup = () => {
+const handleConfirmGroup = async () => {
   if (!groupForm.name.trim()) {
-    alert('请输入小组名称')
+    ElMessage.warning('请输入小组名称')
     return
   }
-  console.log('保存小组', groupForm)
-  showGroupModal.value = false
-  // TODO: 调用接口保存
+
+  try {
+    if (isEditGroupMode.value) {
+      // 编辑时需要 delFlag
+      const currentMemberIds = groupForm.members.map((m) => m.id)
+      const currentMembers = groupForm.members.map((m) => ({
+        studentNumber: m.studentNumber,
+        studentName: m.studentName,
+        isLeader: (m.id === groupForm.leaderId ? 1 : 0) as 0 | 1,
+        delFlag: 0 as 0 | 1
+      }))
+      // 被删除的成员
+      const deletedMembers = originalMembers.value
+        .filter((m) => !currentMemberIds.includes(m.id))
+        .map((m) => ({
+          studentNumber: m.studentNumber,
+          studentName: m.studentName,
+          isLeader: 0 as 0 | 1,
+          delFlag: 1 as 0 | 1
+        }))
+      const editData = {
+        id: groupForm.id,
+        classId: props.classId || '',
+        teamName: groupForm.name,
+        remarks: groupForm.remarks || undefined,
+        studentList: [...currentMembers, ...deletedMembers]
+      }
+      await updateGroup(editData)
+      ElMessage.success('编辑成功')
+    } else {
+      // 新增
+      const addData = {
+        classId: props.classId || '',
+        teamName: groupForm.name,
+        remarks: groupForm.remarks || undefined,
+        studentList: groupForm.members.map((m) => ({
+          studentNumber: m.studentNumber,
+          studentName: m.studentName,
+          isLeader: m.id === groupForm.leaderId ? 1 : 0
+        })) as { studentNumber: string; studentName: string; isLeader: 0 | 1 }[]
+      }
+      await addGroup(addData)
+      ElMessage.success('创建成功')
+    }
+    showGroupModal.value = false
+    loadGroups()
+  } catch (error) {
+    console.error('操作失败:', error)
+  }
 }
 
-// 添加成员
-const handleAddGroupMember = () => {
-  memberSearchKeyword.value = ''
+// 添加成员按钮点击
+const handleAddGroupMember = async () => {
   selectedMemberIds.value = []
+  memberSearchKeyword.value = ''
+  await loadAvailableStudents()
   showAddMemberModal.value = true
 }
 
-// 移除成员
-const handleRemoveGroupMember = (index: number) => {
-  const removed = groupForm.members.splice(index, 1)[0]
-  if (removed && groupForm.leaderId === removed.id) {
-    groupForm.leaderId = groupForm.members.length > 0 ? groupForm.members[0]?.id || '' : ''
-  }
-}
-
-// 切换学生选择
-const toggleStudentSelection = (student: Student) => {
+// 切换学生选择状态
+const toggleStudentSelection = (student: any) => {
   const index = selectedMemberIds.value.indexOf(student.id)
   if (index > -1) {
     selectedMemberIds.value.splice(index, 1)
@@ -777,16 +877,25 @@ const toggleStudentSelection = (student: Student) => {
   }
 }
 
-// 全选/取消全选
+// 切换全选
 const toggleAllMemberSelection = () => {
   if (isAllMemberSelected.value) {
-    selectedMemberIds.value = []
+    const filteredIds = filteredAvailableStudents.value.map((s) => s.id)
+    selectedMemberIds.value = selectedMemberIds.value.filter((id) => !filteredIds.includes(id))
   } else {
-    selectedMemberIds.value = filteredAvailableStudents.value.map(s => s.id)
+    const filteredIds = filteredAvailableStudents.value.map((s) => s.id)
+    const newIds = filteredIds.filter((id) => !selectedMemberIds.value.includes(id))
+    selectedMemberIds.value.push(...newIds)
   }
 }
 
-// 移除已选成员
+// 根据ID获取学生姓名
+const getStudentNameById = (id: string) => {
+  const student = availableStudents.value.find((s) => s.id === id)
+  return student?.studentName || student?.name || id
+}
+
+// 移除已选学生
 const removeSelectedMember = (id: string) => {
   const index = selectedMemberIds.value.indexOf(id)
   if (index > -1) {
@@ -794,28 +903,52 @@ const removeSelectedMember = (id: string) => {
   }
 }
 
-// 根据ID获取学生姓名
-const getStudentNameById = (id: string) => {
-  const student = students.value.find(s => s.id === id)
-  return student?.name || id
-}
-
 // 确认添加成员
 const handleConfirmAddMembers = () => {
-  const newMembers = students.value
-    .filter(s => selectedMemberIds.value.includes(s.id))
-    .map(s => ({
-      id: s.id,
-      studentNumber: s.account,
-      studentName: s.name
-    }))
+  const newMembers = availableStudents.value.filter((s) =>
+    selectedMemberIds.value.includes(s.id)
+  )
   groupForm.members.push(...newMembers)
-  
   // 如果没有组长且有成员，默认第一个为组长
   if (!groupForm.leaderId && groupForm.members.length > 0) {
-    groupForm.leaderId = groupForm.members[0]?.id || ''
+    groupForm.leaderId = groupForm.members[0].id
   }
   showAddMemberModal.value = false
+}
+
+// 移除成员
+const handleRemoveGroupMember = (index: number) => {
+  const removed = groupForm.members.splice(index, 1)[0]
+  // 如果移除的是组长，自动将第一个成员设为新组长
+  if (removed && groupForm.leaderId === removed.id) {
+    groupForm.leaderId = groupForm.members.length > 0 ? groupForm.members[0].id : ''
+  }
+}
+
+// 删除小组
+const handleDeleteGroup = (row: Group) => {
+  isBatchDeleteGroup.value = false
+  deletingGroup.value = row
+  showDeleteGroupModal.value = true
+}
+
+// 确认删除小组
+const handleConfirmDeleteGroup = async () => {
+  try {
+    if (isBatchDeleteGroup.value) {
+      await deleteGroup(selectedGroupIds.value)
+      selectedGroupIds.value = []
+    } else {
+      if (deletingGroup.value?.id) {
+        await deleteGroup([deletingGroup.value.id])
+      }
+    }
+    showDeleteGroupModal.value = false
+    ElMessage.success('删除成功')
+    loadGroups()
+  } catch (error) {
+    console.error('删除失败:', error)
+  }
 }
 
 // 小组批量操作
@@ -828,65 +961,61 @@ const handleGroupBatchAction = () => {
   }
 }
 
-// 小组选择
-const handleGroupSelect = (keys: (string | number)[]) => {
-  selectedGroupIds.value = keys.map(k => String(k))
-}
-
-// 小组全选
-const handleGroupSelectAll = (checked: boolean) => {
-  if (checked) {
-    selectedGroupIds.value = filteredGroups.value.map(g => g.id)
-  } else {
-    selectedGroupIds.value = []
-  }
-}
-
-// 小组全选切换
-const handleGroupSelectAllToggle = () => {
-  if (isAllGroupSelected.value) {
-    selectedGroupIds.value = []
-  } else {
-    selectedGroupIds.value = filteredGroups.value.map(g => g.id)
-  }
-}
-
-// 删除小组
-const handleDeleteGroup = (row: Group) => {
-  isBatchDeleteGroup.value = false
-  deletingGroup.value = row
-  showDeleteGroupModal.value = true
-}
-
 // 批量删除小组
 const handleBatchDeleteGroup = () => {
-  if (selectedGroupIds.value.length === 0) {
-    ElMessage.warning(t('class.noGroupSelected'))
+  if (!selectedGroupIds.value.length) {
+    ElMessage.warning('请先选择小组')
     return
   }
   isBatchDeleteGroup.value = true
   showDeleteGroupModal.value = true
 }
 
-// 确认删除小组
-const handleConfirmDeleteGroup = () => {
-  if (isBatchDeleteGroup.value) {
-    groups.value = groups.value.filter(g => !selectedGroupIds.value.includes(g.id))
-    selectedGroupIds.value = []
-    groupActiveAction.value = null
-  } else if (deletingGroup.value) {
-    groups.value = groups.value.filter(g => g.id !== deletingGroup.value?.id)
-  }
-  showDeleteGroupModal.value = false
-  // TODO: 调用接口删除
+// 选择小组
+const handleGroupSelect = (keys: (string | number)[]) => {
+  selectedGroupIds.value = keys.map((k) => String(k))
 }
+
+// 小组全选
+const handleGroupSelectAll = (selected: boolean) => {
+  if (selected) {
+    selectedGroupIds.value = groups.value.map((item) => item.id)
+  } else {
+    selectedGroupIds.value = []
+  }
+}
+
+// 小组全选切换
+const handleGroupSelectAllToggle = (e: Event) => {
+  const checked = (e.target as HTMLInputElement).checked
+  handleGroupSelectAll(checked)
+}
+
+// 监听弹窗显示
+watch(() => props.visible, (val) => {
+  if (val) {
+    loadStudents()
+    loadGroups()
+    loadQuickLoginInfo()
+  }
+})
+
+// 监听 Tab 切换
+watch(activeTab, (val) => {
+  if (val === 'group') {
+    loadGroups()
+  } else {
+    loadStudents()
+  }
+})
 </script>
+
 
 <style scoped>
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -894,12 +1023,12 @@ const handleConfirmDeleteGroup = () => {
 }
 
 .modal-container {
-  width: 1200px;
-  height: 700px;
+  position: relative;
+  width: 900px;
+  max-height: 80vh;
   background: white;
   border-radius: 12px;
   padding: 24px;
-  position: relative;
   display: flex;
   flex-direction: column;
 }
@@ -910,26 +1039,24 @@ const handleConfirmDeleteGroup = () => {
   right: 16px;
   width: 32px;
   height: 32px;
-  background: transparent;
   border: none;
+  background: transparent;
   cursor: pointer;
-  color: #999;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  color: #999;
 }
 
 .close-btn:hover {
-  background: #F5F5F5;
   color: #666;
 }
 
 .modal-title {
+  text-align: center;
   font-size: 18px;
   font-weight: 600;
   color: #333;
-  text-align: center;
   margin-bottom: 20px;
 }
 
@@ -951,47 +1078,46 @@ const handleConfirmDeleteGroup = () => {
 }
 
 .quick-login-btn {
-  color: #FF9900 !important;
+  color: #FF9900;
+  white-space: nowrap;
 }
 
 .quick-login-bar {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 8px;
   padding: 12px 16px;
-  background: #FFF7E6;
+  background: #FFF8E6;
   border-radius: 8px;
   margin-bottom: 16px;
-  flex-wrap: wrap;
+  font-size: 13px;
 }
 
 .bar-label {
-  font-size: 14px;
   color: #333;
-  font-weight: 500;
 }
 
 .new-tag {
   padding: 2px 8px;
   background: #FF9900;
+  color: white;
   border-radius: 4px;
   font-size: 11px;
-  color: white;
-  font-weight: 600;
+  font-weight: 500;
 }
 
 .bar-item {
-  font-size: 13px;
   color: #666;
 }
 
 .bar-item strong {
   color: #333;
-  font-weight: 600;
 }
 
 .copy-btn {
-  color: #3EAEFF !important;
+  color: #FF9900;
+  padding: 0 4px;
 }
 
 .expire-info {
@@ -1001,19 +1127,16 @@ const handleConfirmDeleteGroup = () => {
   color: #999;
 }
 
-.expire-info svg {
-  stroke: #999;
-}
-
 .stats-bar-wrapper {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .stats-bar {
   display: flex;
+  align-items: center;
   gap: 24px;
   font-size: 14px;
   color: #666;
@@ -1021,41 +1144,31 @@ const handleConfirmDeleteGroup = () => {
 
 .count {
   font-weight: 600;
-  padding: 2px 8px;
-  border-radius: 4px;
 }
 
 .count.logged {
-  color: #3EAEFF;
-  background: #E6F7FF;
+  color: #FF9900;
 }
 
 .count.not-logged {
   color: #999;
-  background: #F5F5F5;
 }
 
 .count.primary {
-  color: #3EAEFF;
-  background: #E6F7FF;
+  color: #FF9900;
 }
 
-.group-action-bar {
+.group-stats-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 16px;
-}
-
-.action-btns {
-  display: flex;
-  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: #666;
 }
 
 .table-wrapper {
   flex: 1;
-  overflow: hidden;
-  border-radius: 8px;
+  overflow: auto;
 }
 
 .status {
@@ -1070,8 +1183,175 @@ const handleConfirmDeleteGroup = () => {
   color: #999;
 }
 
-.action-cell {
+.status-cell {
   display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.kick-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #FF6B6B;
+  background: transparent;
+  border: 1px solid #FF6B6B;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.kick-btn:hover {
+  background: #FFF0F0;
+}
+
+/* 小组管理样式 */
+.group-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-bottom: 16px;
+}
+
+.group-btn-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.group-action-btn {
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+  white-space: nowrap;
+}
+
+.group-action-btn.primary {
+  background: #FF9900;
+  color: white;
+}
+
+.group-action-btn.primary:hover {
+  background: #E68A00;
+}
+
+.group-action-btn.default {
+  background: #FFF1DD;
+  color: #4D4D4D;
+}
+
+.group-action-btn.default:hover {
+  background: #FFE4C4;
+}
+
+.group-action-btn.disabled {
+  background: #E5E5E5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.action-btns {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
+  white-space: nowrap;
+}
+
+.table-action-btn {
+  padding: 4px 12px;
+  font-size: 13px;
+  border: 1px solid #CBCBCB;
+  border-radius: 7px;
+  background: transparent;
+  color: #4D4D4D;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.table-action-btn:hover {
+  border-color: #FF9900;
+}
+
+.table-action-btn.delete {
+  color: #FF0000;
+}
+
+.table-action-btn.delete:hover {
+  border-color: #FF0000;
+}
+
+.table-action-btn.disabled {
+  color: #999;
+  border-color: #E5E5E5;
+  cursor: not-allowed;
+}
+
+.table-action-btn.disabled:hover {
+  border-color: #E5E5E5;
+}
+
+/* 批量操作栏 */
+.batch-action-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #FFF2DD;
+  border-top: 1px solid #E5E5E5;
+  margin-top: 12px;
+}
+
+.batch-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.select-all-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #4D4D4D;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: #FF9900;
+}
+
+.selected-count {
+  font-size: 14px;
+  color: #4D4D4D;
+}
+
+.count-num {
+  color: #FF9900;
+  font-weight: 600;
+}
+
+.batch-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.batch-btn {
+  font-size: 14px;
+  color: #4D4D4D;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.batch-btn:hover {
+  color: #FF9900;
 }
 </style>

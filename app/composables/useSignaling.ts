@@ -5,7 +5,7 @@
 import { ref, onUnmounted } from 'vue'
 
 export interface SignalingMessage {
-  type: 'offer' | 'answer' | 'ice-candidate' | 'join-room' | 'leave-room' | 'screen-share-start' | 'screen-share-stop' | 'user-joined' | 'user-left' | 'request-offer' | 'CLASS_BEGIN' | 'CLASS_END'
+  type: 'offer' | 'answer' | 'ice-candidate' | 'join-room' | 'leave-room' | 'screen-share-start' | 'screen-share-stop' | 'user-joined' | 'user-left' | 'request-offer' | 'CLASS_BEGIN' | 'CLASS_END' | 'STUDENT_JOIN'
   roomId?: string
   userId?: string
   role?: 'teacher' | 'student'
@@ -148,7 +148,7 @@ export function useSignaling() {
         console.error('[Signaling] 连接错误:', error)
         console.error('[Signaling] 请检查：')
         console.error('  1. 后端 WebSocket 服务是否启动')
-        console.error('  2. 地址是否正确: ws://192.168.0.17:8001/resource/websocket')
+        console.error('  2. 地址是否正确: ws://192.168.0.55:8001/resource/websocket')
         console.error('  3. 是否有跨域限制')
         console.error('  4. token 格式是否正确')
         errorHandler?.(error)

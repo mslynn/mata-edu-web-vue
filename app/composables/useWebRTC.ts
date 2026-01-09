@@ -66,6 +66,16 @@ export function useWebRTC() {
     console.log('[WebRTC] 处理消息:', message.type, '| 我是:', options?.role, '| 消息详情:', message)
     
     switch (message.type) {
+      case 'STUDENT_JOIN':
+        // 后端推送的学生加入消息
+        console.log('[WebRTC] 学生加入课堂')
+        if (options?.role === 'teacher' && isScreenSharing.value) {
+          console.log('[WebRTC] 教师端检测到学生加入，准备发送 offer')
+          // 使用一个默认的学生ID，因为后端没有提供具体的studentId
+          await createOfferForPeer('student')
+        }
+        break
+
       case 'user-joined':
         console.log('[WebRTC] 用户加入:', message.userId, '角色:', message.role)
         // 如果是教师端且正在分享屏幕，向新加入的学生发送 offer

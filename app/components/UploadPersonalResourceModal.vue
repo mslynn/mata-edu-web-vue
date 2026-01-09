@@ -82,15 +82,15 @@
             <div v-else class="table-empty">
               <div class="empty-icon">
                 <svg viewBox="0 0 120 120" fill="none">
-                  <circle cx="60" cy="60" r="50" fill="#e6f4ff"/>
-                  <rect x="30" y="35" width="60" height="50" rx="6" fill="white" stroke="#91caff" stroke-width="2"/>
-                  <circle cx="45" cy="50" r="4" fill="#91caff"/>
-                  <circle cx="55" cy="50" r="4" fill="#91caff"/>
-                  <circle cx="65" cy="50" r="4" fill="#91caff"/>
-                  <rect x="38" y="60" width="44" height="4" rx="2" fill="#bae0ff"/>
-                  <rect x="38" y="68" width="30" height="4" rx="2" fill="#bae0ff"/>
-                  <circle cx="95" cy="75" r="18" fill="#e6f4ff" stroke="#91caff" stroke-width="2"/>
-                  <text x="95" y="80" text-anchor="middle" font-size="20" fill="#91caff">?</text>
+                  <circle cx="60" cy="60" r="50" fill="#FFF8F0"/>
+                  <rect x="30" y="35" width="60" height="50" rx="6" fill="white" stroke="#FFB84D" stroke-width="2"/>
+                  <circle cx="45" cy="50" r="4" fill="#FFB84D"/>
+                  <circle cx="55" cy="50" r="4" fill="#FFB84D"/>
+                  <circle cx="65" cy="50" r="4" fill="#FFB84D"/>
+                  <rect x="38" y="60" width="44" height="4" rx="2" fill="#FFD699"/>
+                  <rect x="38" y="68" width="30" height="4" rx="2" fill="#FFD699"/>
+                  <circle cx="95" cy="75" r="18" fill="#FFF8F0" stroke="#FFB84D" stroke-width="2"/>
+                  <text x="95" y="80" text-anchor="middle" font-size="20" fill="#FFB84D">?</text>
                 </svg>
               </div>
               <p class="empty-text">暂无资源</p>
@@ -559,16 +559,16 @@ const removeFile = (index: number) => {
   align-items: center;
   padding: 8px 20px;
   background: white;
-  border: 1px solid #2cb0ff;
+  border: 1px solid #FF9900;
   border-radius: 4px;
-  color: #2cb0ff;
+  color: #FF9900;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .upload-btn:hover {
-  background: #f0f9ff;
+  background: #fff8f0;
 }
 
 .warning-box {
@@ -596,7 +596,7 @@ const removeFile = (index: number) => {
 
 .link {
   font-size: 13px;
-  color: #2cb0ff;
+  color: #FF9900;
   text-decoration: none;
 }
 
@@ -737,7 +737,7 @@ const removeFile = (index: number) => {
 
 .type-select:focus {
   outline: none;
-  border-color: #2cb0ff;
+  border-color: #FF9900;
 }
 
 /* 操作按钮通用样式 */

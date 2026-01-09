@@ -1,8 +1,8 @@
 .prepare-page { height: 100vh; display: flex; flex-direction: column; background: #f0f0f0; }
-.prepare-header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 50px; background: #FF9900; color: white; flex-shrink: 0; }
+.prepare-header { display: flex; align-items: center; justify-content: space-between; padding: 0 20px; height: 50px; background: white; color: #333; flex-shrink: 0; border-bottom: 1px solid #e8e8e8; }
 .header-left { display: flex; align-items: center; gap: 8px; }
-.back-link { display: flex; align-items: center; color: white; text-decoration: none; }
-.back-link:hover { opacity: 0.8; }
+.back-link { display: flex; align-items: center; color: #666; text-decoration: none; }
+.back-link:hover { color: #FF9900; }
 .back-icon { width: 22px; height: 22px; }
 
 /* 自定义下拉框 */
@@ -13,15 +13,15 @@
   gap: 8px;
   background: transparent;
   border: none;
-  color: white;
+  color: #333;
   padding: 8px 4px;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s;
 }
-.dropdown-trigger:hover { opacity: 0.9; }
+.dropdown-trigger:hover { color: #FF9900; }
 .dropdown-text { max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.dropdown-arrow { width: 18px; height: 18px; transition: transform 0.3s ease; stroke: white; }
+.dropdown-arrow { width: 18px; height: 18px; transition: transform 0.3s ease; stroke: #666; }
 .chapter-dropdown.open .dropdown-arrow { transform: rotate(180deg); }
 .dropdown-menu {
   position: absolute;
@@ -60,7 +60,7 @@
   transform: scaleY(1) translateY(0);
 }
 
-.status-tag { font-size: 14px; letter-spacing: 1px; }
+.status-tag { font-size: 14px; letter-spacing: 1px; color: #FF9900; font-weight: 500; }
 .header-right { display: flex; gap: 12px; }
 .btn-outline {
   padding: 8px 16px;
@@ -68,23 +68,23 @@
   font-size: 13px;
   cursor: pointer;
   background: transparent;
-  color: white;
-  border: 1px solid rgba(255,255,255,0.5);
+  color: #FF9900;
+  border: 1px solid #FF9900;
   transition: all 0.2s;
 }
-.btn-outline:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.8); }
+.btn-outline:hover { background: #fff8f0; }
 .btn-white {
   padding: 8px 16px;
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
-  background: white;
-  color: #FF9900;
+  background: #FF9900;
+  color: white;
   border: none;
   font-weight: 500;
   transition: all 0.2s;
 }
-.btn-white:hover { background: #f0f0f0; }
+.btn-white:hover { background: #E68A00; }
 .prepare-body { flex: 1; display: flex; overflow: hidden; }
 
 /* 左侧整体容器 */

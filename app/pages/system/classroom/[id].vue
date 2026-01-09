@@ -9,7 +9,7 @@
           </svg>
         </button>
         <span class="class-time">
-          <span class="time-label">已上课</span>
+          <span class="time-label">{{ t('classroom.classTime') }}</span>
           <span class="time-value">{{ formatTime(classTime) }}</span>
         </span>
       </div>
@@ -21,7 +21,7 @@
             <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
-          <span>学生管理</span>
+          <span>{{ t('classroom.studentManage') }}</span>
         </button>
         <button class="header-btn" :class="{ active: isScreenSharing }" @click="toggleScreenShare">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -29,13 +29,13 @@
             <line x1="8" y1="21" x2="16" y2="21"/>
             <line x1="12" y1="17" x2="12" y2="21"/>
           </svg>
-          <span>{{ isScreenSharing ? '停止分享' : '屏幕分享' }}</span>
+          <span>{{ isScreenSharing ? t('classroom.stopShare') : t('classroom.screenShare') }}</span>
         </button>
         <button class="header-btn" :class="{ active: isFullscreenControl }" @click="toggleFullscreenControl">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
           </svg>
-          <span>全屏管控</span>
+          <span>{{ t('classroom.fullscreenControl') }}</span>
         </button>
         <span class="divider"></span>
         <button class="header-btn" :class="{ active: isBlackboardMode }" @click="toggleBlackboard">
@@ -44,7 +44,7 @@
             <path d="M8 21h8"/>
             <path d="M12 17v4"/>
           </svg>
-          <span>{{ isBlackboardMode ? '退出黑板' : '切至黑板' }}</span>
+          <span>{{ isBlackboardMode ? t('classroom.exitBlackboard') : t('classroom.switchToBlackboard') }}</span>
         </button>
         <span class="divider"></span>
         <button class="end-class-btn" @click="handleEndClass">
@@ -52,7 +52,7 @@
             <circle cx="12" cy="12" r="10"/>
             <path d="M12 6v6l4 2"/>
           </svg>
-          <span>下课</span>
+          <span>{{ t('classroom.endClass') }}</span>
         </button>
       </div>
     </header>
@@ -63,8 +63,8 @@
       <div v-if="showLoginTip" class="login-tip-panel" :class="{ collapsed: loginTipCollapsed }">
         <div class="tip-header">
           <div class="tip-header-left">
-            <span class="tip-title">学生快捷登录</span>
-            <span class="tip-expire-inline">有效时长为2小时，{{ expireTime }}过期</span>
+            <span class="tip-title">{{ t('classroom.studentQuickLogin') }}</span>
+            <span class="tip-expire-inline">{{ t('classroom.validFor2Hours') }}{{ expireTime }}{{ t('classroom.expire') }}</span>
           </div>
           <div class="tip-actions">
             <button class="tip-action-btn" @click="loginTipCollapsed = !loginTipCollapsed">
@@ -80,32 +80,23 @@
           </div>
         </div>
         <div v-show="!loginTipCollapsed" class="tip-body">
-          <div class="info-card link-card">
-            <span class="info-label">快捷登录链接</span>
-            <button class="copy-btn" @click="copyLoginLink">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-              <span>复制</span>
-            </button>
-          </div>
           <div class="info-card code-card">
             <div class="code-row">
-              <span class="code-label">班级码：</span>
+              <span class="code-label">{{ t('classroom.classCode') }}</span>
               <span class="code-value">{{ classCode }}</span>
             </div>
             <div class="code-row">
-              <span class="code-label">登录密码：</span>
+              <span class="code-label">{{ t('classroom.loginPassword') }}</span>
               <span class="code-value">{{ loginPassword }}</span>
             </div>
             <button class="copy-btn card-copy" @click="copyClassInfo">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
               </svg>
-              <span>复制</span>
+              <span>{{ t('classroom.copy') }}</span>
             </button>
           </div>
-          <p class="tip-footer">点击顶部「学生管理」可查看登录情况</p>
+          <p class="tip-footer">{{ t('classroom.viewLoginStatusTip') }}</p>
         </div>
       </div>
 
@@ -119,11 +110,14 @@
                 <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                 <polyline points="14 2 14 8 20 8"/>
               </svg>
-              <span>课件</span>
-              <button class="send-btn" @click="showSendCoursewareModal = true">发送课件给学生</button>
+              <span>{{ t('classroom.courseware') }}</span>
+              <button class="send-btn" @click="showSendCoursewareModal = true">{{ t('classroom.sendCoursewareToStudent') }}</button>
             </div>
             <div class="resource-list">
+              <div v-if="resourceLoading" class="resource-loading">{{ t('classroom.loading') }}</div>
+              <div v-else-if="resourceList.length === 0" class="resource-empty">{{ t('classroom.noCourseware') }}</div>
               <div 
+                v-else
                 v-for="item in resourceList" 
                 :key="item.id" 
                 class="resource-item"
@@ -142,7 +136,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
               </svg>
-              <span>任务</span>
+              <span>{{ t('classroom.task') }}</span>
             </div>
             <div class="task-list">
               <!-- 1. AI实践任务 -->
@@ -151,15 +145,15 @@
                   <svg class="expand-icon" :class="{ expanded: expandedGroups.aiPractice }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
-                  <span>AI实践任务</span>
-                  <span class="group-desc">关联玛塔AI实践中心</span>
+                  <span>{{ t('classroom.aiPracticeTask') }}</span>
+                  <span class="group-desc">{{ t('classroom.aiPracticeTaskDesc') }}</span>
                 </div>
                 <div v-if="expandedGroups.aiPractice" class="group-content">
                   <div class="task-item" @click="selectTask('ai-dialog')">
-                    <span>AI对话大模型</span>
+                    <span>{{ t('classroom.aiDialogModel') }}</span>
                   </div>
                   <div class="task-item" @click="selectTask('cluster')">
-                    <span>聚类分析</span>
+                    <span>{{ t('classroom.clusterAnalysis') }}</span>
                   </div>
                 </div>
               </div>
@@ -169,8 +163,8 @@
                   <svg class="expand-icon" :class="{ expanded: expandedGroups.customExercise }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
-                  <span>自定义练习题</span>
-                  <span class="group-desc">教师个人自定义出题</span>
+                  <span>{{ t('classroom.customExercise') }}</span>
+                  <span class="group-desc">{{ t('classroom.customExerciseDesc') }}</span>
                 </div>
                 <div v-if="expandedGroups.customExercise" class="group-content">
                   <div class="task-item">
@@ -184,11 +178,11 @@
                   <svg class="expand-icon" :class="{ expanded: expandedGroups.classExercise }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
-                  <span>随堂练习</span>
-                  <span class="group-desc">后台配置的习题，题库中的</span>
+                  <span>{{ t('classroom.classExercise') }}</span>
+                  <span class="group-desc">{{ t('classroom.classExerciseDesc') }}</span>
                 </div>
                 <div v-if="expandedGroups.classExercise" class="group-content">
-                  <div class="empty-tip">暂无随堂练习</div>
+                  <div class="empty-tip">{{ t('classroom.noClassExercise') }}</div>
                 </div>
               </div>
               <!-- 4. 自由编程 -->
@@ -197,12 +191,12 @@
                   <svg class="expand-icon" :class="{ expanded: expandedGroups.freeCoding }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
-                  <span>自由编程</span>
-                  <span class="group-desc">平台推送自由编程类任务</span>
+                  <span>{{ t('classroom.freeCoding') }}</span>
+                  <span class="group-desc">{{ t('classroom.freeCodingDesc') }}</span>
                 </div>
                 <div v-if="expandedGroups.freeCoding" class="group-content">
                   <div class="task-item">
-                    <span>自由创作任务</span>
+                    <span>{{ t('classroom.freeCreationTask') }}</span>
                   </div>
                 </div>
               </div>
@@ -212,11 +206,11 @@
                   <svg class="expand-icon" :class="{ expanded: expandedGroups.studentCoding }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
-                  <span>学生编程任务</span>
-                  <span class="group-desc">后台配置的编程任务</span>
+                  <span>{{ t('classroom.studentCodingTask') }}</span>
+                  <span class="group-desc">{{ t('classroom.studentCodingTaskDesc') }}</span>
                 </div>
                 <div v-if="expandedGroups.studentCoding" class="group-content">
-                  <div class="empty-tip">暂无学生编程任务</div>
+                  <div class="empty-tip">{{ t('classroom.noStudentCodingTask') }}</div>
                 </div>
               </div>
               <!-- 6. 个人上传任务 -->
@@ -225,11 +219,11 @@
                   <svg class="expand-icon" :class="{ expanded: expandedGroups.personalUpload }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
-                  <span>个人上传任务</span>
-                  <span class="group-desc">教师个人上传的编程任务</span>
+                  <span>{{ t('classroom.personalUploadTask') }}</span>
+                  <span class="group-desc">{{ t('classroom.personalUploadTaskDesc') }}</span>
                 </div>
                 <div v-if="expandedGroups.personalUpload" class="group-content">
-                  <div class="empty-tip">暂无个人上传任务</div>
+                  <div class="empty-tip">{{ t('classroom.noPersonalUploadTask') }}</div>
                 </div>
               </div>
             </div>
@@ -255,8 +249,17 @@
           </button>
         </div>
         <div class="preview-content">
-          <!-- 屏幕分享状态提示 -->
-          <div v-if="isScreenSharing" class="screen-share-status">
+          <!-- 黑板模式（优先显示，即使在屏幕分享时也显示） -->
+          <div v-if="isBlackboardMode" class="blackboard-wrapper">
+            <FabricBoard />
+            <!-- 屏幕分享状态小提示 -->
+            <div v-if="isScreenSharing" class="share-indicator">
+              <span class="indicator-dot"></span>
+              <span>{{ t('classroom.sharing') }} · {{ connectedStudentCount }} {{ t('classroom.students') }}</span>
+            </div>
+          </div>
+          <!-- 屏幕分享状态提示（非黑板模式时显示） -->
+          <div v-else-if="isScreenSharing" class="screen-share-status">
             <div class="share-icon">
               <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3EAEFF" stroke-width="1.5">
                 <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
@@ -265,8 +268,8 @@
               </svg>
               <span class="status-dot"></span>
             </div>
-            <p class="share-text">正在分享屏幕</p>
-            <p class="share-tip">学生端可以看到您分享的内容</p>
+            <p class="share-text">{{ t('classroom.sharingScreen') }}</p>
+            <p class="share-tip">{{ t('classroom.studentCanSeeContent') }}</p>
             <div class="connected-count">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -274,49 +277,73 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
-              <span>{{ connectedStudentCount }} 名学生已连接</span>
+              <span>{{ connectedStudentCount }} {{ t('classroom.studentsConnected') }}</span>
             </div>
-            <button class="stop-share-btn" @click="stopScreenShare">停止分享</button>
-          </div>
-          <!-- 黑板模式 -->
-          <div v-else-if="isBlackboardMode" class="blackboard-wrapper">
-            <FabricBoard />
+            <button class="stop-share-btn" @click="stopScreenShare">{{ t('classroom.stopShare') }}</button>
           </div>
           <!-- 文档预览区域 -->
           <div v-else class="document-viewer">
-            <iframe v-if="previewUrl" :src="previewUrl" class="preview-iframe"></iframe>
+            <!-- 加载中 -->
+            <div v-if="previewLoading" class="preview-loading">
+              <div class="spinner"></div>
+              <span>{{ t('classroom.loading') }}</span>
+            </div>
+            <!-- 未选择资源 -->
+            <div v-else-if="!selectedResource" class="empty-preview">
+              <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+              <p>{{ t('classroom.selectCoursewareToPreview') }}</p>
+            </div>
+            <!-- PPT/Word/PDF/图片 预览 -->
+            <div v-else-if="previewType === 'iframe' && iframePreviewUrl" class="iframe-preview-wrapper">
+              <iframe :src="iframePreviewUrl" class="preview-iframe" frameborder="0" allowfullscreen></iframe>
+            </div>
+            <!-- 视频预览 -->
+            <div v-else-if="previewType === 'video'" class="video-preview-wrapper">
+              <video :src="selectedResource.resourceUrl" controls class="preview-video" preload="metadata"></video>
+            </div>
+            <!-- UCD 文件 -->
+            <div v-else-if="previewType === 'ucd'" class="ucd-preview-wrapper">
+              <div class="ucd-preview-card">
+                <div class="ucd-icon"><span>ucd</span></div>
+                <p class="ucd-filename">{{ selectedResource.name }}</p>
+                <button class="ucd-btn" @click="downloadResource(selectedResource)">{{ t('classroom.download') }}</button>
+              </div>
+            </div>
+            <!-- MC 文件 -->
+            <div v-else-if="previewType === 'mc'" class="ucd-preview-wrapper">
+              <div class="ucd-preview-card">
+                <div class="ucd-icon mc-icon"><span>mc</span></div>
+                <p class="ucd-filename">{{ selectedResource.name }}</p>
+                <button class="ucd-btn" @click="downloadResource(selectedResource)">{{ t('classroom.download') }}</button>
+              </div>
+            </div>
+            <!-- 不支持预览 -->
             <div v-else class="empty-preview">
-              <p>请选择要预览的课件</p>
+              <p>{{ t('classroom.previewNotSupported') }}</p>
+              <button class="download-btn" @click="downloadResource(selectedResource)">{{ t('classroom.downloadFile') }}</button>
             </div>
           </div>
-        </div>
-        <!-- 底部分页栏 (黑板模式隐藏) -->
-        <div v-if="!isBlackboardMode" class="preview-pagination">
-          <button class="page-btn" :disabled="currentPage <= 1" @click="prevPage">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M15 18l-6-6 6-6"/>
-            </svg>
-          </button>
-          <span class="page-info">{{ currentPage }}/{{ totalPages }}</span>
-          <button class="page-btn" :disabled="currentPage >= totalPages" @click="nextPage">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
-          </button>
-          <button class="page-btn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
-            </svg>
-          </button>
         </div>
       </main>
     </div>
 
     <!-- 发送课件弹窗 -->
-    <SendCoursewareModal :visible="showSendCoursewareModal" @close="showSendCoursewareModal = false" />
+    <SendCoursewareModal 
+      :visible="showSendCoursewareModal" 
+      :class-id="route.query.classId as string"
+      :peer-id="teacherPeerId"
+      :unsent-list="unsentCoursewareList"
+      :sent-list="sentCoursewareList"
+      @close="showSendCoursewareModal = false"
+      @send="(ids) => updateCoursewareSentStatus(ids, true)"
+      @recall="(ids) => updateCoursewareSentStatus(ids, false)"
+    />
     
     <!-- 学生管理弹窗 -->
-    <StudentManageModal :visible="showStudentManageModal" @close="showStudentManageModal = false" />
+    <StudentManageModal :visible="showStudentManageModal" :class-id="route.query.classId as string" @close="showStudentManageModal = false" @quick-login-change="loadQuickLoginInfo" />
 
     <!-- 下课确认弹窗 -->
     <MModal v-model="showEndClassModal" custom-width="420px" :show-footer="false" :show-close="false" content-class="!p-0">
@@ -326,18 +353,43 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">提示</h3>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ t('classroom.endClassConfirmTitle') }}</h3>
         <p class="text-[#4D4D4D] mb-8 px-4">
-          确定结束本节课教学吗？学生端将会收到下课通知。快捷登录方式将自动停用，已登录学生不受影响。
+          {{ t('classroom.endClassConfirmContent') }}
         </p>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showEndClassModal = false">
-            取消
+            {{ t('common.cancel') }}
           </button>
           <button class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="confirmEndClass">
-            确定
+            {{ t('common.confirm') }}
+          </button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 返回确认弹窗（从教师首页进入时显示） -->
+    <MModal v-model="showBackConfirmModal" custom-width="420px" :show-footer="false" :show-close="false" content-class="!p-0">
+      <div class="p-6 relative">
+        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showBackConfirmModal = false">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ t('common.tips') }}</h3>
+        <p class="text-[#4D4D4D] text-center mb-8 px-4">
+          {{ t('classroom.backConfirmContent') }}
+        </p>
+        <div class="flex items-center justify-center gap-4">
+          <button class="w-[136px] h-[44px] border border-[#3EAEFF] rounded-lg text-[#3EAEFF] hover:bg-blue-50"
+            @click="showBackConfirmModal = false">
+            {{ t('common.cancel') }}
+          </button>
+          <button class="w-[136px] h-[44px] bg-[#3EAEFF] text-white rounded-lg hover:bg-[#2E9EEF]"
+            @click="confirmBack">
+            {{ t('classroom.leaveClassroom') }}
           </button>
         </div>
       </div>
@@ -346,20 +398,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted } from 'vue'
-import { useWebRTC } from '~/composables/useWebRTC'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { usePeerJS } from '~/composables/usePeerJS'
+import { useTeacher } from '~/composables/api/useTeacher'
+import { ElMessage } from '~/components/ui'
+import { useI18n } from 'vue-i18n'
 
 definePageMeta({ layout: 'blank' })
 
+const { t } = useI18n()
 const route = useRoute()
 const config = useRuntimeConfig()
+const { endClass } = useTeacher()
+const { getQuickLoginInfo } = useTeacher()
 
-// WebRTC 屏幕分享
-const webRTC = useWebRTC()
-const connectedStudentCount = computed(() => webRTC.connectedPeers.value.size)
+// PeerJS 屏幕分享
+const peerJS = usePeerJS()
+const connectedStudentCount = computed(() => peerJS.connectedPeers.value.size)
 
-// 信令服务器地址（从环境变量或使用默认值）
-const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.17:8001/resource/websocket'
+// 信令服务器地址（用于接收学生加入通知）
+const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
+
+// WebSocket 连接（用于接收 STUDENT_JOIN 消息）
+let notifyWs: WebSocket | null = null
+
+// 老师的 PeerId（用于学生连接）
+const teacherPeerId = ref('')
 
 // 上课计时
 const classTime = ref(0)
@@ -375,8 +439,8 @@ const formatTime = (seconds: number) => {
 // 侧边栏折叠
 const leftCollapsed = ref(false)
 
-// 屏幕分享状态（使用 WebRTC composable 的状态）
-const isScreenSharing = computed(() => webRTC.isScreenSharing.value)
+// 屏幕分享状态（使用 PeerJS composable 的状态）
+const isScreenSharing = computed(() => peerJS.isScreenSharing.value)
 
 // 黑板模式
 const isBlackboardMode = ref(false)
@@ -396,14 +460,30 @@ const showEndClassModal = ref(false)
 // 学生快捷登录提示
 const showLoginTip = ref(true)
 const loginTipCollapsed = ref(false)
-const classCode = ref('75688')
-const loginPassword = ref('388363')
-const expireTime = ref('18:08')
+const classCode = ref('')
+const loginPassword = ref('')
+const expireTime = ref('')
 
-const copyLoginLink = () => {
-  const link = `${window.location.origin}/login?classCode=${classCode.value}`
-  navigator.clipboard.writeText(link)
-  alert('登录链接已复制')
+// 加载快捷登录信息
+const loadQuickLoginInfo = async () => {
+  try {
+    const data = await getQuickLoginInfo()
+    if (data && data.classCode) {
+      classCode.value = data.classCode || ''
+      loginPassword.value = data.classCodePwd || ''
+      expireTime.value = data.expirationDate || ''
+      showLoginTip.value = true
+    } else {
+      // 没有班级码，隐藏快捷登录提示
+      classCode.value = ''
+      loginPassword.value = ''
+      expireTime.value = ''
+      showLoginTip.value = false
+    }
+  } catch (error) {
+    console.error('加载快捷登录信息失败:', error)
+    showLoginTip.value = false
+  }
 }
 
 const copyClassInfo = () => {
@@ -419,14 +499,22 @@ const toggleBlackboard = () => {
 // 全屏管控 - 向学生端发送全屏指令
 const toggleFullscreenControl = () => {
   isFullscreenControl.value = !isFullscreenControl.value
+  const classId = route.query.classId as string
+  
+  if (notifyWs && notifyWs.readyState === WebSocket.OPEN) {
+    const msg = JSON.stringify({
+      type: 'CLASS_INTERACTION',
+      peerId: classId,
+      action: isFullscreenControl.value ? 'fullscreen_enter' : 'fullscreen_exit'
+    })
+    notifyWs.send(msg)
+    console.log('[教师课堂] 发送全屏管控指令:', msg)
+  }
+  
   if (isFullscreenControl.value) {
-    // TODO: 通过 WebSocket 向所有学生端发送全屏指令
     console.log('开启全屏管控，学生端将进入全屏模式')
-    alert('已开启全屏管控，学生端将进入全屏模式')
   } else {
-    // TODO: 通过 WebSocket 向所有学生端发送退出全屏指令
     console.log('关闭全屏管控，学生端将退出全屏模式')
-    alert('已关闭全屏管控')
   }
 }
 
@@ -439,39 +527,172 @@ const toggleScreenShare = async () => {
 }
 
 const startScreenShare = async () => {
-  // 使用 WebRTC 开始屏幕分享
-  const success = await webRTC.startScreenShare()
+  // 使用 PeerJS 开始屏幕分享
+  const success = await peerJS.startScreenShare()
   if (success) {
     console.log('屏幕分享已开始，等待学生连接...')
+    console.log('老师 PeerId:', teacherPeerId.value)
+    
+    // 屏幕分享开始后，通过 WebSocket 通知所有学生
+    // 这样已经在课堂中的学生可以收到通知并请求连接
+    const classId = route.query.classId as string
+    if (notifyWs && notifyWs.readyState === WebSocket.OPEN) {
+      const msg = JSON.stringify({ 
+        type: 'SCREEN_SHARE_START', 
+        peerId: classId,
+        teacherPeerId: teacherPeerId.value 
+      })
+      notifyWs.send(msg)
+      console.log('[教师课堂] 发送屏幕分享开始通知:', msg)
+    }
   }
 }
 
 const stopScreenShare = () => {
-  // 使用 WebRTC 停止屏幕分享
-  webRTC.stopScreenShare()
+  // 使用 PeerJS 停止屏幕分享
+  peerJS.stopScreenShare()
   console.log('屏幕分享已停止')
 }
 
-// 资源列表（扁平列表）
-const resourceList = ref([
-  { id: '1', name: '主题01-"悟空"来了（课件...）', type: 'ucd' },
-  { id: '2', name: '1-1多变悟空.ucd', type: 'ucd' },
-  { id: '3', name: '1-2孝顺悟空.ucd', type: 'ucd' },
-  { id: '4', name: '主题01-"悟空"来了（学生...）', type: 'ucd' },
-  { id: '5', name: '主题01-"悟空"来了（教师...）', type: 'ucd' },
-  { id: '6', name: '主题01-"悟空"来了（课件...）', type: 'ucd' },
-  { id: '7', name: '主题02-"工程狮"来了', type: 'ucd' },
-  { id: '8', name: '主题03-人脸解锁', type: 'ucd' },
-  { id: '9', name: '主题04-"悟空"听我的', type: 'ucd' },
-  { id: '10', name: '主题05-生日快乐', type: 'ucd' },
-  { id: '11', name: '主题06-垃圾分类', type: 'ucd' },
-  { id: '12', name: '主题07-活动课：小小编剧', type: 'ucd' }
-])
+// 资源列表（从接口获取）
+interface ResourceItem {
+  id: string
+  name: string
+  type: string
+  resourceUrl?: string
+  isSent?: boolean
+}
+const resourceList = ref<ResourceItem[]>([])
+const resourceLoading = ref(false)
+
+// 未发送和已发送的课件列表（供弹窗使用）
+const unsentCoursewareList = computed(() => resourceList.value.filter(item => !item.isSent))
+const sentCoursewareList = computed(() => resourceList.value.filter(item => item.isSent))
+
+// 加载课件列表
+const { getCoursewareList } = useTeacher()
+const loadResourceList = async () => {
+  const chapterId = route.params.id as string
+  const classId = route.query.classId as string
+  if (!chapterId) return
+  
+  resourceLoading.value = true
+  try {
+    const data = await getCoursewareList({ chapterId })
+    if (data && Array.isArray(data)) {
+      resourceList.value = data.map((item: any) => ({
+        id: String(item.resourceId),
+        name: item.fileName || item.resourceName || '未命名文件',
+        type: getFileExtension(item.fileName || ''),
+        resourceUrl: item.resourceUrl || '',
+        isSent: item.isSent || false
+      }))
+      
+      // 自动选中课件：优先选中上次选中的，否则选中第一个
+      if (resourceList.value.length > 0) {
+        const storageKey = `classroom_selected_resource_${classId}_${chapterId}`
+        const lastSelectedId = localStorage.getItem(storageKey)
+        
+        let targetResource = null
+        if (lastSelectedId) {
+          // 尝试找到上次选中的课件
+          targetResource = resourceList.value.find(item => item.id === lastSelectedId)
+        }
+        
+        // 如果没有上次选中的，或者上次选中的已不存在，选中第一个
+        if (!targetResource) {
+          targetResource = resourceList.value[0]
+        }
+        
+        if (targetResource) {
+          await selectResource(targetResource)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('加载课件列表失败:', error)
+  } finally {
+    resourceLoading.value = false
+  }
+}
+
+// 更新课件发送状态
+const updateCoursewareSentStatus = (ids: string[], isSent: boolean) => {
+  resourceList.value.forEach(item => {
+    if (ids.includes(item.id)) {
+      item.isSent = isSent
+    }
+  })
+}
+
+// 获取文件扩展名
+const getFileExtension = (fileName: string) => {
+  return fileName.split('.').pop()?.toLowerCase() || ''
+}
 
 const activeResource = ref('')
-const previewUrl = ref('')
-const currentPage = ref(1)
-const totalPages = ref(3)
+
+// 预览相关
+interface SelectedResourceItem {
+  id: string
+  name: string
+  type: string
+  resourceUrl?: string
+  isSent?: boolean
+}
+const selectedResource = ref<SelectedResourceItem | null>(null)
+const previewLoading = ref(false)
+const previewType = ref<'iframe' | 'video' | 'ucd' | 'mc' | 'unsupported' | ''>('')
+const iframePreviewUrl = ref('')
+
+// 根据文件名获取文件类型
+const getFileType = (fileName: string) => {
+  const ext = fileName?.split('.').pop()?.toLowerCase() || ''
+  const typeMap: Record<string, string> = {
+    doc: 'word',
+    docx: 'word',
+    ppt: 'ppt',
+    pptx: 'ppt',
+    xls: 'excel',
+    xlsx: 'excel',
+    pdf: 'pdf',
+    ucd: 'ucd',
+    mc: 'mc',
+    jpg: 'image',
+    jpeg: 'image',
+    png: 'image',
+    gif: 'image',
+    bmp: 'image',
+    webp: 'image',
+    svg: 'image',
+    mp4: 'video',
+    mov: 'video',
+    webm: 'video'
+  }
+  return typeMap[ext] || 'default'
+}
+
+// Base64 编码函数
+const base64Encode = (str: string): string => {
+  return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))))
+}
+
+// 生成 PPT/Word/PDF 预览地址
+const getPptPreviewUrl = (url: string): string => {
+  const previewBaseUrl = (config.public.previewBaseUrl as string)?.trim() || 'http://192.168.0.145:8012'
+  return `${previewBaseUrl}/onlinePreview?url=${encodeURIComponent(base64Encode(url))}`
+}
+
+// 下载资源
+const downloadResource = (item: SelectedResourceItem) => {
+  if (item.resourceUrl) {
+    const link = document.createElement('a')
+    link.href = item.resourceUrl
+    link.download = item.name
+    link.target = '_blank'
+    link.click()
+  }
+}
 
 // 任务分组展开状态
 const expandedGroups = reactive({
@@ -487,9 +708,58 @@ const toggleTaskGroup = (group: string) => {
   expandedGroups[group as keyof typeof expandedGroups] = !expandedGroups[group as keyof typeof expandedGroups]
 }
 
-const selectResource = (item: any) => {
+const selectResource = async (item: ResourceItem) => {
   activeResource.value = item.id
-  // TODO: 加载预览
+  
+  // 保存选中的课件到 localStorage
+  const chapterId = route.params.id as string
+  const classId = route.query.classId as string
+  const storageKey = `classroom_selected_resource_${classId}_${chapterId}`
+  localStorage.setItem(storageKey, item.id)
+  
+  // 设置选中的资源
+  selectedResource.value = {
+    id: item.id,
+    name: item.name,
+    type: item.type,
+    resourceUrl: item.resourceUrl,
+    isSent: item.isSent
+  }
+  
+  previewLoading.value = true
+  previewType.value = ''
+  iframePreviewUrl.value = ''
+  
+  const fileType = getFileType(item.name)
+  
+  try {
+    if ((fileType === 'word' || fileType === 'ppt' || fileType === 'excel' || fileType === 'pdf' || fileType === 'image') && item.resourceUrl) {
+      // Word/PPT/Excel/PDF/图片 使用 iframe 预览
+      previewType.value = 'iframe'
+      iframePreviewUrl.value = getPptPreviewUrl(item.resourceUrl)
+      previewLoading.value = false
+    } else if (fileType === 'video' && item.resourceUrl) {
+      // 视频直接播放
+      previewType.value = 'video'
+      previewLoading.value = false
+    } else if (fileType === 'ucd') {
+      // UCD 文件显示预览卡片
+      previewType.value = 'ucd'
+      previewLoading.value = false
+    } else if (fileType === 'mc') {
+      // MC 文件显示预览卡片
+      previewType.value = 'mc'
+      previewLoading.value = false
+    } else {
+      // 不支持预览
+      previewType.value = 'unsupported'
+      previewLoading.value = false
+    }
+  } catch (error) {
+    console.error('加载预览失败:', error)
+    previewType.value = 'unsupported'
+    previewLoading.value = false
+  }
 }
 
 const getResourceIcon = (type: string) => {
@@ -505,59 +775,175 @@ const selectTask = (taskId: string) => {
   console.log('选择任务:', taskId)
 }
 
-const prevPage = () => {
-  if (currentPage.value > 1) currentPage.value--
-}
-
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) currentPage.value++
-}
-
 const handleEndClass = () => {
   showEndClassModal.value = true
 }
 
-const confirmEndClass = () => {
-  showEndClassModal.value = false
-  // TODO: 调用接口结束课程
-  navigateTo('/system/course')
+const confirmEndClass = async () => {
+  const chapterId = route.params.id as string
+  const classId = route.query.classId as string
+  const courseId = route.query.courseId as string
+  
+  try {
+    await endClass({ classId, courseId, chapterId, peerId: teacherPeerId.value })
+    console.log('下课成功')
+    // 清除课堂开始时间
+    const classKey = `class_start_${classId}_${chapterId}`
+    localStorage.removeItem(classKey)
+    // 清除正在进行的课堂信息
+    localStorage.removeItem('ongoing_classroom')
+    showEndClassModal.value = false
+    navigateTo(`/system/course/${courseId}`)
+  } catch (error: any) {
+    console.error('下课失败:', error)
+    ElMessage.error(error.message || '下课失败')
+  }
 }
 
 const handleBack = () => {
-  navigateTo('/system/course')
+  const from = route.query.from as string
+  // 如果是从教师首页进入，显示确认弹窗
+  if (from === 'teacher') {
+    showBackConfirmModal.value = true
+  } else {
+    const courseId = route.query.courseId as string
+    navigateTo(`/system/course/${courseId}`)
+  }
 }
 
-onMounted(() => {
+// 返回确认弹窗
+const showBackConfirmModal = ref(false)
+
+const confirmBack = () => {
+  showBackConfirmModal.value = false
+  navigateTo('/teacher')
+}
+
+onMounted(async () => {
+  // 获取路由参数
+  const chapterId = route.params.id as string
+  const classId = route.query.classId as string
+  const courseId = route.query.courseId as string
+  // 初始化 PeerJS（教师端）
+  // 使用 classId 作为 PeerId 的一部分，方便学生连接
+  const peerId = classId
+
+  // 课堂计时 - 使用 localStorage 存储开课时间，支持续上
+  const classKey = `class_start_${classId}_${chapterId}`
+  let startTime = localStorage.getItem(classKey)
+  if (!startTime) {
+    // 首次开课，记录开始时间
+    startTime = Date.now().toString()
+    localStorage.setItem(classKey, startTime)
+  }
+  // 计算已上课时间
+  const elapsed = Math.floor((Date.now() - parseInt(startTime)) / 1000)
+  classTime.value = elapsed
+
+  // 存储正在进行的课堂信息（供全局"回到课堂"按钮使用）
+  // 有效时间为2小时
+  const expireAt = Date.now() + 2 * 60 * 60 * 1000
+  localStorage.setItem('ongoing_classroom', JSON.stringify({
+    classId,
+    courseId,
+    chapterId,
+    expireAt
+  }))
+  console.log('[课堂] 已存储 ongoing_classroom:', { classId, courseId, chapterId, expireAt })
+
   // 开始计时
   timer = setInterval(() => {
     classTime.value++
   }, 1000)
 
-  // 初始化 WebRTC（教师端）
-  const classroomId = route.params.id as string
-  const teacherId = `teacher_${Date.now()}` // 实际应从用户信息获取
+  // 加载快捷登录信息
+  loadQuickLoginInfo()
   
-  webRTC.initialize({
-    signalingUrl: signalingUrl,
-    roomId: classroomId,
-    userId: teacherId,
-    role: 'teacher',
-    onPeerConnected: (peerId) => {
-      console.log('学生已连接:', peerId)
-    },
-    onPeerDisconnected: (peerId) => {
-      console.log('学生已断开:', peerId)
-    },
-    onError: (error) => {
-      console.error('WebRTC 错误:', error)
-    }
-  })
+  // 加载课件列表
+  loadResourceList()
+  
+  try {
+    await peerJS.initialize(peerId)
+    teacherPeerId.value = peerJS.myPeerId.value
+    console.log('[教师课堂] PeerJS 初始化成功, PeerId:', teacherPeerId.value)
+  } catch (error) {
+    console.error('[教师课堂] PeerJS 初始化失败:', error)
+  }
+
+  // 连接 WebSocket 监听学生加入
+  connectNotifyWebSocket(classId)
 })
+
+// 连接通知 WebSocket（监听 STUDENT_JOIN）
+const connectNotifyWebSocket = (classId: string) => {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
+  let wsUrl = signalingUrl
+  if (token) {
+    const separator = signalingUrl.includes('?') ? '&' : '?'
+    wsUrl = `${signalingUrl}${separator}Authorization=${encodeURIComponent(`Bearer ${token}`)}`
+  }
+
+  console.log('[教师课堂] 连接通知 WebSocket')
+  notifyWs = new WebSocket(wsUrl)
+
+  notifyWs.onopen = () => {
+    console.log('[教师课堂] 通知 WebSocket 已连接')
+  }
+
+  notifyWs.onmessage = async (event) => {
+    console.log('[教师课堂] 收到消息:', event.data)
+    try {
+      const message = JSON.parse(event.data)
+      
+      // 学生加入课堂
+      if (message.type === 'STUDENT_JOIN') {
+        console.log('[教师课堂] 学生加入课堂, classId:', message.classId)
+        // 如果正在分享屏幕，呼叫学生
+        if (peerJS.isScreenSharing.value) {
+          const studentPeerId = `student_${message.classId || classId}`
+          console.log('[教师课堂] 正在分享屏幕，呼叫学生:', studentPeerId)
+          try {
+            await peerJS.callPeer(studentPeerId)
+            console.log('[教师课堂] 呼叫学生成功')
+          } catch (err) {
+            console.error('[教师课堂] 呼叫学生失败:', err)
+          }
+        } else {
+          console.log('[教师课堂] 当前未分享屏幕，不呼叫学生')
+        }
+      }
+
+      // 学生准备好接收屏幕分享
+      if (message.type === 'STUDENT_READY') {
+        console.log('[教师课堂] 学生准备好了, studentPeerId:', message.studentPeerId)
+        if (peerJS.isScreenSharing.value && message.studentPeerId) {
+          console.log('[教师课堂] 呼叫学生:', message.studentPeerId)
+          try {
+            await peerJS.callPeer(message.studentPeerId)
+            console.log('[教师课堂] 呼叫学生成功')
+          } catch (err) {
+            console.error('[教师课堂] 呼叫学生失败:', err)
+          }
+        }
+      }
+    } catch (e) {
+      console.log('[教师课堂] 非 JSON 消息:', event.data)
+    }
+  }
+
+  notifyWs.onclose = () => {
+    console.log('[教师课堂] 通知 WebSocket 已断开')
+  }
+}
 
 onUnmounted(() => {
   if (timer) clearInterval(timer)
-  // 销毁 WebRTC 连接
-  webRTC.destroy()
+  if (notifyWs) {
+    notifyWs.close()
+    notifyWs = null
+  }
+  // 销毁 PeerJS 连接
+  peerJS.destroy()
 })
 </script>
 
@@ -572,7 +958,7 @@ onUnmounted(() => {
 /* 顶部导航栏 */
 .classroom-header {
   height: 50px;
-  background: #3EAEFF;
+  background: #FF9900;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -945,16 +1331,18 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  /* padding: 20px; */
 }
 
 .document-viewer {
   width: 100%;
   height: 100%;
-  background: white;
+  background: #e8e8e8;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .preview-iframe {
@@ -967,9 +1355,143 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   color: #999;
+  gap: 16px;
+}
+
+.empty-preview p {
+  margin: 0;
+}
+
+/* 预览加载中 */
+.preview-loading {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #666;
+}
+
+.preview-loading .spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #E5E5E5;
+  border-top-color: #FF9900;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* iframe 预览 */
+.iframe-preview-wrapper {
+  width: 100%;
+  height: 100%;
+}
+
+.iframe-preview-wrapper .preview-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* 视频预览 */
+.video-preview-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-video {
+  max-width: 100%;
+  max-height: 100%;
+}
+
+/* UCD/MC 文件预览卡片 */
+.ucd-preview-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ucd-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 40px;
+  background: #FAFAFA;
+  border-radius: 12px;
+}
+
+.ucd-icon {
+  width: 80px;
+  height: 80px;
+  background: linear-gradient(135deg, #FF9900 0%, #FFB84D 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.ucd-icon.mc-icon {
+  background: linear-gradient(135deg, #3EAEFF 0%, #6BC5FF 100%);
+}
+
+.ucd-filename {
+  font-size: 14px;
+  color: #333;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+}
+
+.ucd-btn {
+  padding: 8px 24px;
+  background: #FF9900;
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ucd-btn:hover {
+  background: #E68A00;
+}
+
+/* 下载按钮 */
+.download-btn {
+  padding: 8px 24px;
+  background: #FF9900;
+  border: none;
+  border-radius: 20px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.download-btn:hover {
+  background: #E68A00;
 }
 
 /* 屏幕分享状态 */
@@ -1057,16 +1579,210 @@ onUnmounted(() => {
   height: 100%;
   border-radius: 4px;
   overflow: hidden;
+  position: relative;
+}
+
+/* 屏幕分享时黑板上的小提示 */
+.share-indicator {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(62, 174, 255, 0.9);
+  border-radius: 20px;
+  color: white;
+  font-size: 13px;
+  z-index: 100;
+}
+
+.indicator-dot {
+  width: 8px;
+  height: 8px;
+  background: #FF6B6B;
+  border-radius: 50%;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* PDF 工具栏 */
+.pdf-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: white;
+  border-top: 1px solid #E5E5E5;
+}
+
+.pdf-toolbar .toolbar-left,
+.pdf-toolbar .toolbar-center,
+.pdf-toolbar .toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.pdf-toolbar .divider {
+  width: 1px;
+  height: 20px;
+  background: #E5E5E5;
+  margin: 0 4px;
+}
+
+.pdf-toolbar .tool-label {
+  font-size: 13px;
+  color: #666;
+}
+
+.pdf-toolbar .page-info {
+  font-size: 13px;
+  color: #666;
+  min-width: 60px;
+  text-align: center;
+}
+
+.pdf-toolbar .page-input {
+  width: 50px;
+  height: 28px;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 13px;
+  outline: none;
+}
+
+.pdf-toolbar .page-input:focus {
+  border-color: #FF9900;
+}
+
+.pdf-toolbar .tool-btn {
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: #F5F5F5;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-toolbar .tool-btn:hover:not(:disabled) {
+  background: #E5E5E5;
+}
+
+.pdf-toolbar .tool-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pdf-toolbar .tool-btn.icon {
+  font-size: 16px;
+  padding: 0;
+  width: 32px;
+}
+
+.pdf-toolbar .tool-btn.icon.active {
+  background: #FF9900;
+  border-color: #FF9900;
+}
+
+.pdf-toolbar .tool-btn.small {
+  padding: 0 10px;
+}
+
+.pdf-toolbar .color-picker {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.pdf-toolbar .width-select {
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  font-size: 13px;
+  outline: none;
+  cursor: pointer;
+}
+
+.pdf-toolbar .zoom-value {
+  font-size: 13px;
+  color: #666;
+  min-width: 45px;
+  text-align: center;
 }
 
 .preview-pagination {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 12px;
-  padding: 12px;
+  justify-content: space-between;
+  padding: 12px 20px;
   background: white;
   border-top: 1px solid #E5E5E5;
+}
+
+.toolbar-left,
+.toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: #E5E5E5;
+  margin: 0 8px;
+}
+
+.tool-label {
+  font-size: 13px;
+  color: #666;
+}
+
+.page-input {
+  width: 50px;
+  height: 28px;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  text-align: center;
+  font-size: 13px;
+  outline: none;
+}
+
+.page-input:focus {
+  border-color: #FF9900;
+}
+
+.jump-btn {
+  padding: 4px 12px;
+  background: #F5F5F5;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #333;
+  cursor: pointer;
+}
+
+.jump-btn:hover {
+  background: #E5E5E5;
+}
+
+.zoom-value {
+  font-size: 13px;
+  color: #666;
+  min-width: 45px;
+  text-align: center;
 }
 
 .page-btn {
