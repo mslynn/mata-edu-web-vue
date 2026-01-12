@@ -43,19 +43,48 @@
 
           <!-- 课程和章节选择 -->
           <div class="selection-area">
-            <!-- 左侧：课程列表 -->
+            <!-- 左侧：课程树形列表 -->
             <div class="selection-column">
               <div class="column-header">{{ t('teacher.pleaseSelectCourse') }}</div>
               <div class="column-list">
-                <div 
-                  v-for="course in courseList" 
-                  :key="course.courseId" 
-                  class="list-item"
-                  :class="{ active: selectedCourse?.courseId === course.courseId }"
-                  @click="selectCourse(course)"
-                >
-                  {{ course.courseName }}
-                </div>
+                <!-- 如果有树形数据，显示树形结构 -->
+                <template v-if="courseTree.length > 0">
+                  <div v-for="menu in courseTree" :key="menu.menuName" class="menu-group">
+                    <!-- 分组标题 -->
+                    <div class="menu-header" @click="toggleMenu(menu.menuName)">
+                      <svg class="expand-icon" :class="{ expanded: expandedMenus.has(menu.menuName) }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M9 18l6-6-6-6"/>
+                      </svg>
+                      <span class="menu-name">{{ menu.menuName }}</span>
+                    </div>
+                    <!-- 课程列表 -->
+                    <Transition name="slide">
+                      <div v-if="expandedMenus.has(menu.menuName)" class="course-list">
+                        <div 
+                          v-for="course in menu.courseList" 
+                          :key="course.courseId" 
+                          class="list-item course-item"
+                          :class="{ active: selectedCourse?.courseId === course.courseId }"
+                          @click="selectCourse(course)"
+                        >
+                          {{ course.courseName }}
+                        </div>
+                      </div>
+                    </Transition>
+                  </div>
+                </template>
+                <!-- 兼容旧的扁平列表 -->
+                <template v-else>
+                  <div 
+                    v-for="course in courseList" 
+                    :key="course.courseId" 
+                    class="list-item"
+                    :class="{ active: selectedCourse?.courseId === course.courseId }"
+                    @click="selectCourse(course)"
+                  >
+                    {{ course.courseName }}
+                  </div>
+                </template>
               </div>
             </div>
 
@@ -129,6 +158,12 @@ interface CourseItem {
   courseName: string
 }
 
+interface MenuGroup {
+  menuId: string | null
+  menuName: string
+  courseList: CourseItem[]
+}
+
 interface ChapterItem {
   chapterId: string
   chapterName: string
@@ -139,13 +174,15 @@ interface Props {
   visible: boolean
   classList?: ClassItem[]
   courseList?: CourseItem[]
+  courseTree?: MenuGroup[]  // 新增：树形课程数据
   initialCourseId?: string
   initialChapterId?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   classList: () => [],
-  courseList: () => []
+  courseList: () => [],
+  courseTree: () => []
 })
 
 const emit = defineEmits<{
@@ -162,9 +199,19 @@ const selectedCourse = ref<CourseItem | null>(null)
 const selectedChapter = ref<ChapterItem | null>(null)
 const chapterList = ref<ChapterItem[]>([])
 const confirmData = ref<{ classId: string; courseId: string; chapterId: string } | null>(null)
+// 分组展开状态
+const expandedMenus = ref<Set<string>>(new Set())
 
 const toggleClassDropdown = () => {
   showClassDropdown.value = !showClassDropdown.value
+}
+
+const toggleMenu = (menuName: string) => {
+  if (expandedMenus.value.has(menuName)) {
+    expandedMenus.value.delete(menuName)
+  } else {
+    expandedMenus.value.add(menuName)
+  }
 }
 
 const selectClass = (cls: ClassItem) => {
@@ -233,15 +280,21 @@ watch(() => props.visible, (val) => {
     selectedCourse.value = null
     selectedChapter.value = null
     chapterList.value = []
+    expandedMenus.value.clear()
+  } else {
+    // 弹窗打开时，默认展开第一个分组
+    if (props.courseTree.length > 0 && props.courseTree[0]) {
+      expandedMenus.value.add(props.courseTree[0].menuName)
+    }
   }
 })
 
 // 监听班级列表变化，默认选中第一个
 watch(() => props.classList, (list) => {
   if (props.visible && list.length > 0 && !selectedClass.value) {
-    selectedClass.value = list[0]
+    selectedClass.value = list[0] || null
     // 如果课程已选中，触发加载章节
-    if (selectedCourse.value) {
+    if (selectedCourse.value && list[0]) {
       emit('course-change', selectedCourse.value.courseId, list[0].classId)
     }
   }
@@ -266,7 +319,7 @@ watch(() => props.courseList, (list) => {
 // 监听章节列表变化，默认选中第一个
 watch(chapterList, (list) => {
   if (props.visible && list.length > 0 && !selectedChapter.value) {
-    selectedChapter.value = list[0]
+    selectedChapter.value = list[0] || null
   }
 })
 
@@ -388,12 +441,14 @@ defineExpose({ setChapterList })
   display: flex;
   gap: 12px;
   margin-bottom: 24px;
+  height: 300px;
 }
 
 .selection-column {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 }
 
 .column-header {
@@ -406,7 +461,6 @@ defineExpose({ setChapterList })
 
 .column-list {
   flex: 1;
-  height: 240px;
   overflow-y: auto;
   background: #FAFAFA;
   border-radius: 0 0 6px 6px;
@@ -428,6 +482,66 @@ defineExpose({ setChapterList })
 
 .list-item.active {
   color: #FF9900;
+}
+
+/* 树形菜单样式 */
+.menu-group {
+  border-bottom: 1px solid #EFEFEF;
+}
+
+.menu-group:last-child {
+  border-bottom: none;
+}
+
+.menu-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  cursor: pointer;
+  background: #FAFAFA;
+}
+
+.menu-header:hover {
+  background: #F5F5F5;
+}
+
+.expand-icon {
+  transition: transform 0.2s;
+  color: #999;
+}
+
+.expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+.menu-name {
+  flex: 1;
+}
+
+.course-list {
+  background: #FFFFFF;
+  overflow: hidden;
+}
+
+.course-item {
+  padding-left: 36px !important;
+}
+
+/* 展开/收起动画 */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.25s ease;
+  max-height: 500px;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  max-height: 0;
+  opacity: 0;
 }
 
 .item-text {

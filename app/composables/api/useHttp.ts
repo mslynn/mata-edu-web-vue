@@ -22,17 +22,10 @@ interface RequestOptions {
   headers?: Record<string, string>
 }
 
-// 响应类型
-interface ApiResponse<T = any> {
-  code: number
-  message: string
-  data: T
-}
-
 export const useHttp = () => {
   // 获取 token
   const getToken = () => {
-    if (process.client) {
+    if (import.meta.client) {
       return localStorage.getItem('token')
     }
     return null
@@ -40,16 +33,43 @@ export const useHttp = () => {
 
   // 设置 token
   const setToken = (token: string) => {
-    if (process.client) {
+    if (import.meta.client) {
       localStorage.setItem('token', token)
     }
   }
 
   // 清除 token
   const removeToken = () => {
-    if (process.client) {
+    if (import.meta.client) {
       localStorage.removeItem('token')
     }
+  }
+
+  // 统一处理 401/403 认证错误
+  const handleAuthError = (code: number, message?: string) => {
+    if (code === 401) {
+      removeToken()
+      ElMessage.error(message || '登录已过期，2秒后跳转到登录页')
+      setTimeout(() => {
+        if (import.meta.client) {
+          window.location.href = '/'
+        }
+      }, 2000)
+      return true
+    }
+    
+    if (code === 403) {
+      removeToken()
+      ElMessage.error(message || '无访问权限，2秒后跳转到登录页')
+      setTimeout(() => {
+        if (import.meta.client) {
+          window.location.href = '/'
+        }
+      }, 2000)
+      return true
+    }
+    
+    return false
   }
 
   // 通用请求方法
@@ -66,8 +86,7 @@ export const useHttp = () => {
     }
     
     // 添加语言标识到请求头
-    const locale = process.client ? (localStorage.getItem('app_locale') || 'zh') : 'zh'
-    console.log(locale,'语言包')
+    const locale = import.meta.client ? (localStorage.getItem('locale') || 'zh') : 'zh'
     headers['Content-Language'] = locale === 'en' ? 'en_US' : 'zh_CN'
     
     // 检查是否需要加密
@@ -106,8 +125,6 @@ export const useHttp = () => {
     const shouldShowSuccess = showSuccessMsg && method !== 'GET'
     
     try {
-      console.log('🚀 发起请求:', method, url, { body, params })
-      
       const response = await $fetch<T>(url, {
         baseURL: BASE_URL,
         method,
@@ -117,44 +134,17 @@ export const useHttp = () => {
           'Content-Type': 'application/json',
           ...headers
         },
-        // 请求拦截
-        onRequest({ options }) {
-          console.log('📤 请求已发送:', method, url)
-        },
         // 响应拦截
         onResponse({ response }) {
-          console.log('📥 [onResponse] 状态码:', response.status, '数据:', response._data)
           const { code, msg } = response._data || {}
           
-          // Token 失效处理
-          if (code === 401) {
-           removeToken()
-            ElMessage.error('登录已过期，2秒后跳转到登录页')
-            setTimeout(() => {
-              if (process.client) {
-               window.location.href = '/'
-              }
-            }, 2000)
-            return
-          }
-          
-          // 无权限处理
-          if (code === 403) {
-            removeToken()
-            ElMessage.error('无访问权限，2秒后跳转到登录页')
-            setTimeout(() => {
-              if (process.client) {
-               window.location.href = '/'
-              }
-            }, 2000)
-            return
-          }
+          // 统一处理认证错误
+          if (handleAuthError(code)) return
           
           if (code === 200) {
-            // GET 请求（查询类）默认不显示成功提示，避免列表查询时出现大量提示
-            // POST/PUT/DELETE 等操作类请求，如果 shouldShowSuccess 为 true 且有 msg 才显示成功提示
+            // GET 请求默认不显示成功提示
             if (msg && shouldShowSuccess) {
-            //  ElMessage.success(msg)
+              // ElMessage.success(msg)
             }
           } else if (code) {
             // 业务错误
@@ -163,40 +153,16 @@ export const useHttp = () => {
         },
         // 错误处理
         onResponseError({ response }) {
+          // 统一处理认证错误（HTTP 状态码）
+          if (handleAuthError(response.status)) return
+          
           const errorMsg = response._data?.msg || '请求失败'
-          
-          // 401 未授权，登录过期
-          if (response.status === 401) {
-            removeToken()
-            ElMessage.error('登录已过期，2秒后跳转到登录页')
-            setTimeout(() => {
-              if (process.client) {
-                window.location.href = '/'
-              }
-            }, 2000)
-            return
-          }
-          
-          // 403 禁止访问，无权限
-          if (response.status === 403) {
-            removeToken()
-            ElMessage.error('无访问权限，2秒后跳转到登录页')
-            setTimeout(() => {
-              if (process.client) {
-                window.location.href = '/'
-              }
-            }, 2000)
-            return
-          }
-          
           ElMessage.error(errorMsg)
         }
       })
 
-      console.log('✅ 请求完成:', method, url, '响应:', response)
       return response
     } catch (error: any) {
-      console.error('❌ 请求失败:', method, url, '错误:', error)
       // 网络错误等异常
       if (!error?.response) {
         ElMessage.error('网络连接失败，请检查网络')

@@ -408,7 +408,7 @@ const connectNotifyWebSocket = () => {
 
         // 如果 PeerJS 还没初始化，现在初始化
         if (!peerJS.isConnected.value) {
-          const studentPeerId = `student_${classId}`
+          const studentPeerId = `student_${classId}`  // 加 student_ 前缀，避免和老师端冲突
           try {
             await peerJS.initialize(studentPeerId)
             console.log('[学生课堂] PeerJS 初始化成功, PeerId:', peerJS.myPeerId.value)
@@ -446,14 +446,19 @@ const connectNotifyWebSocket = () => {
       if (message.type === 'SCREEN_SHARE_START') {
         console.log('[学生课堂] 收到屏幕分享开始通知!')
         const teacherPeerId = message.teacherPeerId || currentTeacherPeerId.value
-        if (teacherPeerId && peerJS.isConnected.value) {
-          console.log('[学生课堂] 老师 PeerId:', teacherPeerId)
+        if (teacherPeerId) {
           currentTeacherPeerId.value = teacherPeerId
-          
-          // 连接老师请求屏幕分享（带重试）
-          console.log('[学生课堂] 尝试连接老师请求屏幕分享:', teacherPeerId)
-          await connectToTeacherWithRetry(teacherPeerId)
         }
+        // 清除之前的远程流，准备接收新的呼叫
+        peerJS.remoteStream.value = null
+        console.log('[学生课堂] 等待老师呼叫...')
+      }
+
+      // 处理 SCREEN_SHARE_STOP 消息 - 老师停止屏幕分享
+      if (message.type === 'SCREEN_SHARE_STOP') {
+        console.log('[学生课堂] 收到屏幕分享停止通知!')
+        // 清除远程流，UI 会自动切换到等待状态
+        peerJS.remoteStream.value = null
       }
 
       // 处理 CLASS_INTERACTION 消息 - 课堂互动（全屏管控等）
@@ -640,7 +645,7 @@ onMounted(async () => {
 
   // 如果有 classId，初始化 PeerJS 并开始计时
   if (currentClassId.value) {
-    const studentPeerId = `student_${currentClassId.value}`
+    const studentPeerId = `student_${currentClassId.value}`  // 加 student_ 前缀，避免和老师端冲突
     try {
       await peerJS.initialize(studentPeerId)
       console.log('[学生课堂] PeerJS 初始化成功, PeerId:', peerJS.myPeerId.value)

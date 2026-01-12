@@ -334,6 +334,9 @@ const uploadWithProgress = (
     if (token) {
       xhr.setRequestHeader('Authorization', `Bearer ${token}`)
     }
+    // 添加语言标识
+    const locale = localStorage.getItem('locale') || 'zh'
+    xhr.setRequestHeader('content-language', locale === 'en' ? 'en_US' : 'zh_CN')
     xhr.send(formData)
   })
 }

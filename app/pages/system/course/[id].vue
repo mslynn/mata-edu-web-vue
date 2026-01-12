@@ -45,6 +45,7 @@
       v-model:visible="showStartClassModal"
       :class-list="startClassData.classList"
       :course-list="startClassData.courseList"
+      :course-tree="startClassData.courseTree"
       :initial-course-id="startClassData.initialCourseId"
       :initial-chapter-id="startClassData.initialChapterId"
       ref="startClassModalRef"
@@ -461,6 +462,7 @@ const startClassModalRef = ref<any>(null)
 const startClassData = reactive({
   classList: [] as { classId: string; className: string }[],
   courseList: [] as { courseId: string; courseName: string }[],
+  courseTree: [] as { menuId: string | null; menuName: string; courseList: { courseId: string; courseName: string }[] }[],
   initialCourseId: '',
   initialChapterId: ''
 })
@@ -560,6 +562,17 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
 
     // 设置课程列表（从分组结构中提取所有课程）
     if (courseTreeRes && Array.isArray(courseTreeRes)) {
+      // 设置树形结构
+      startClassData.courseTree = courseTreeRes.map((group: any) => ({
+        menuId: group.menuId,
+        menuName: group.menuName || '未分组',
+        courseList: (group.courseList || []).map((course: any) => ({
+          courseId: String(course.courseId),
+          courseName: course.courseName
+        }))
+      }))
+      
+      // 同时设置扁平列表（兼容）
       const allCourses: { courseId: string; courseName: string }[] = []
       courseTreeRes.forEach((group: any) => {
         if (group.courseList && Array.isArray(group.courseList)) {
@@ -573,11 +586,13 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
       })
       startClassData.courseList = allCourses
     } else {
+      startClassData.courseTree = []
       startClassData.courseList = []
     }
   } catch (error) {
     console.error('获取开课设置失败:', error)
     startClassData.classList = []
+    startClassData.courseTree = []
     startClassData.courseList = [
       { courseId: String(route.params.id), courseName: courseInfo.value.name }
     ]

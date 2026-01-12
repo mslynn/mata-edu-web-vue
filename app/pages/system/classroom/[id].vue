@@ -398,7 +398,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { usePeerJS } from '~/composables/usePeerJS'
 import { useTeacher } from '~/composables/api/useTeacher'
 import { ElMessage } from '~/components/ui'
@@ -530,12 +530,11 @@ const startScreenShare = async () => {
   // 使用 PeerJS 开始屏幕分享
   const success = await peerJS.startScreenShare()
   if (success) {
-    console.log('屏幕分享已开始，等待学生连接...')
+    const classId = route.query.classId as string
+    console.log('屏幕分享已开始')
     console.log('老师 PeerId:', teacherPeerId.value)
     
     // 屏幕分享开始后，通过 WebSocket 通知所有学生
-    // 这样已经在课堂中的学生可以收到通知并请求连接
-    const classId = route.query.classId as string
     if (notifyWs && notifyWs.readyState === WebSocket.OPEN) {
       const msg = JSON.stringify({ 
         type: 'SCREEN_SHARE_START', 
@@ -545,6 +544,26 @@ const startScreenShare = async () => {
       notifyWs.send(msg)
       console.log('[教师课堂] 发送屏幕分享开始通知:', msg)
     }
+    
+    // 延迟后直接呼叫学生
+    const studentPeerId = `student_${classId}`
+    const callStudent = async () => {
+      // 检查是否还在分享状态
+      if (!peerJS.isScreenSharing.value || !peerJS.localStream.value) {
+        console.log('[教师课堂] 分享已停止，取消呼叫')
+        return
+      }
+      console.log('[教师课堂] 呼叫学生:', studentPeerId)
+      try {
+        await peerJS.callPeer(studentPeerId)
+        console.log('[教师课堂] 呼叫学生成功')
+      } catch (err) {
+        console.error('[教师课堂] 呼叫学生失败:', err)
+      }
+    }
+    
+    // 延迟 1.5 秒呼叫
+    setTimeout(callStudent, 1500)
   }
 }
 
@@ -552,6 +571,17 @@ const stopScreenShare = () => {
   // 使用 PeerJS 停止屏幕分享
   peerJS.stopScreenShare()
   console.log('屏幕分享已停止')
+  
+  // 通知学生端屏幕分享已停止
+  const classId = route.query.classId as string
+  if (notifyWs && notifyWs.readyState === WebSocket.OPEN) {
+    const msg = JSON.stringify({ 
+      type: 'SCREEN_SHARE_STOP', 
+      peerId: classId 
+    })
+    notifyWs.send(msg)
+    console.log('[教师课堂] 发送屏幕分享停止通知:', msg)
+  }
 }
 
 // 资源列表（从接口获取）
@@ -900,7 +930,7 @@ const connectNotifyWebSocket = (classId: string) => {
         console.log('[教师课堂] 学生加入课堂, classId:', message.classId)
         // 如果正在分享屏幕，呼叫学生
         if (peerJS.isScreenSharing.value) {
-          const studentPeerId = `student_${message.classId || classId}`
+          const studentPeerId = `student_${message.classId || classId}`  // 加 student_ 前缀
           console.log('[教师课堂] 正在分享屏幕，呼叫学生:', studentPeerId)
           try {
             await peerJS.callPeer(studentPeerId)

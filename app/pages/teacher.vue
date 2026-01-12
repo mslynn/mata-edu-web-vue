@@ -121,10 +121,10 @@
                     <span class="chapter-name">{{ chapter.chapterName }}</span>
                     <div class="chapter-actions">
                       <button class="action-btn teach-btn" @click.stop="goToTeach(chapter)">
-                        {{ chapter.teachStatus === 2 ? $t('teacher.classAgain') : $t('teacher.goToClass') }}
+                        {{ chapter.teachStatus === 1 ? $t('teacher.backToClassroom') : (chapter.teachStatus === 2 ? $t('teacher.classAgain') : $t('teacher.goToClass')) }}
                       </button>
-                      <button class="action-btn prepare-btn" @click.stop="goToPrepare(chapter)">
-                        {{ chapter.teachStatus === 0 ? $t('teacher.continuePrepare') : $t('teacher.goToPrepare') }}
+                      <button v-if="chapter.teachStatus !== 1" class="action-btn prepare-btn" @click.stop="goToPrepare(chapter)">
+                        {{ chapter.teachStatus === 2 ? $t('teacher.continuePrepare') : $t('teacher.goToPrepare') }}
                       </button>
                     </div>
                   </div>
@@ -203,6 +203,7 @@
       v-model:visible="showStartClassModal"
       :class-list="startClassData.classList"
       :course-list="startClassData.courseList"
+      :course-tree="startClassData.courseTree"
       :initial-course-id="startClassData.initialCourseId"
       :initial-chapter-id="startClassData.initialChapterId"
       ref="startClassModalRef"
@@ -634,13 +635,33 @@ watch(selectedCourseId, () => {
   loadChapterList()
 })
 
-// 去上课
-const goToTeach = (chapter: ChapterItem) => {
+// 去上课 - 从授课记录直接进入课堂
+const goToTeach = async (chapter: ChapterItem) => {
   if (!selectedClassId.value || !selectedCourseId.value) return
-  // 打开开课弹窗，预填数据
-  startClassData.initialCourseId = selectedCourseId.value
-  startClassData.initialChapterId = chapter.chapterId
-  handleGoToClass()
+  
+  const classId = selectedClassId.value
+  const courseId = selectedCourseId.value
+  const chapterId = chapter.chapterId
+  
+  // 如果是开课中状态，直接跳转，不调用 beginClass 接口
+  if (chapter.teachStatus === 1) {
+    navigateTo(`/system/classroom/${chapterId}?classId=${classId}&courseId=${courseId}&from=teacher`)
+    return
+  }
+  
+  // 未开课或已结束，调用接口开课
+  try {
+    await beginClass({ 
+      classId, 
+      courseId, 
+      chapterId, 
+      peerId: classId 
+    })
+    console.log('开始上课成功')
+    navigateTo(`/system/classroom/${chapterId}?classId=${classId}&courseId=${courseId}&from=teacher`)
+  } catch (error: any) {
+    console.error('开始上课失败:', error)
+  }
 }
 
 // 去备课
@@ -686,6 +707,7 @@ const startClassModalRef = ref<any>(null)
 const startClassData = reactive({
   classList: [] as { classId: string; className: string }[],
   courseList: [] as { courseId: string; courseName: string }[],
+  courseTree: [] as { menuId: string | null; menuName: string; courseList: { courseId: string; courseName: string }[] }[],
   initialCourseId: '',
   initialChapterId: ''
 })
@@ -715,6 +737,17 @@ const handleGoToClass = async () => {
 
     // 设置课程列表（从分组结构中提取所有课程）
     if (courseTreeRes && Array.isArray(courseTreeRes)) {
+      // 设置树形结构
+      startClassData.courseTree = courseTreeRes.map((group: any) => ({
+        menuId: group.menuId,
+        menuName: group.menuName || '未分组',
+        courseList: (group.courseList || []).map((course: any) => ({
+          courseId: String(course.courseId),
+          courseName: course.courseName
+        }))
+      }))
+      
+      // 同时设置扁平列表（兼容）
       const allCourses: { courseId: string; courseName: string }[] = []
       courseTreeRes.forEach((group: any) => {
         if (group.courseList && Array.isArray(group.courseList)) {
@@ -728,11 +761,13 @@ const handleGoToClass = async () => {
       })
       startClassData.courseList = allCourses
     } else {
+      startClassData.courseTree = []
       startClassData.courseList = []
     }
   } catch (error) {
     console.error('获取开课设置失败:', error)
     startClassData.classList = []
+    startClassData.courseTree = []
     startClassData.courseList = []
   }
 
@@ -1026,18 +1061,21 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   min-width: 0;
   display: flex;
   flex-direction: column;
+  max-height: 400px;
 }
 
 .chapter-grid-wrapper {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
 }
 
 .chapter-grid {
   display: grid;
-  grid-template-columns: repeat(4, 120px);
-  gap: 40px;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 24px;
+  padding-bottom: 16px;
 }
 
 .chapter-item {

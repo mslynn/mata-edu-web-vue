@@ -44,7 +44,6 @@ const ongoingClass = ref<{
   classId: string
   courseId: string
   chapterId: string
-  expireAt?: number
 } | null>(null)
 
 // 用户角色
@@ -68,15 +67,6 @@ const showButton = computed(() => {
 const goToClassroom = () => {
   if (!ongoingClass.value) return
   
-  // 检查是否过期
-  if (ongoingClass.value.expireAt && Date.now() > ongoingClass.value.expireAt) {
-    // 已过期，显示弹窗并清除缓存
-    showExpiredModal.value = true
-    localStorage.removeItem('ongoing_classroom')
-    ongoingClass.value = null
-    return
-  }
-  
   router.push({
     path: `/system/classroom/${ongoingClass.value.chapterId}`,
     query: {
@@ -92,29 +82,85 @@ const closeExpiredModal = () => {
   showExpiredModal.value = false
 }
 
-// 从 localStorage 读取正在进行的课堂信息
-const checkOngoingClass = () => {
+// 从接口获取开课中的课堂
+const fetchOngoingClass = async () => {
   if (userRole.value !== 'teacher') {
     ongoingClass.value = null
     return
   }
   
   try {
+    // 先检查 localStorage 缓存
     const stored = localStorage.getItem('ongoing_classroom')
     if (stored) {
       const data = JSON.parse(stored)
-      // 检查是否已过期，过期则清除
-      if (data.expireAt && Date.now() > data.expireAt) {
-        localStorage.removeItem('ongoing_classroom')
-        ongoingClass.value = null
-      } else {
+      if (!data.expireAt || Date.now() <= data.expireAt) {
         ongoingClass.value = data
+        return
       }
-    } else {
-      ongoingClass.value = null
+      // 已过期，清除缓存
+      localStorage.removeItem('ongoing_classroom')
     }
+    
+    // 直接用 $fetch 调用接口，避免 composable 问题
+    const config = useRuntimeConfig()
+    const token = localStorage.getItem('token')
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json'
+    }
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`
+    }
+    
+    // 获取授课列表
+    const teachListRes = await $fetch<any>('/system/teach/list', {
+      baseURL: config.public.apiBaseUrl as string,
+      headers
+    })
+    
+    const teachList = teachListRes?.data
+    if (!teachList || !Array.isArray(teachList)) {
+      ongoingClass.value = null
+      return
+    }
+    
+    // 遍历所有班级和课程，查找开课中的章节
+    for (const classItem of teachList) {
+      if (!classItem.courseList || !Array.isArray(classItem.courseList)) continue
+      
+      for (const course of classItem.courseList) {
+        try {
+          // 获取该课程的章节列表
+          const chapterRes = await $fetch<any>('/system/teach/chapter/list', {
+            baseURL: config.public.apiBaseUrl as string,
+            headers,
+            params: {
+              courseId: course.courseId,
+              classId: classItem.classId
+            }
+          })
+          
+          const chapters = chapterRes?.data
+          if (!chapters || !Array.isArray(chapters)) continue
+          
+          // 查找 teachStatus === 1 的章节
+          const ongoingChapter = chapters.find((c: any) => c.teachStatus === 1)
+          if (ongoingChapter) {
+            ongoingClass.value = {
+              classId: String(classItem.classId),
+              courseId: String(course.courseId),
+              chapterId: String(ongoingChapter.chapterId),
+            }
+            return
+          }
+        } catch (e) {
+          continue
+        }
+      }
+    }
+    
+    ongoingClass.value = null
   } catch (error) {
-    console.error('读取课堂信息失败:', error)
     ongoingClass.value = null
   }
 }
@@ -123,35 +169,29 @@ const checkOngoingClass = () => {
 const getUserRole = () => {
   try {
     const userStr = localStorage.getItem('user_info')
-    console.log('[BackToClassroom] user_info from localStorage:', userStr)
     if (userStr) {
       const user = JSON.parse(userStr)
       userRole.value = user?.role_key || user?.roleKey || null
-      console.log('[BackToClassroom] userRole:', userRole.value)
     }
   } catch (error) {
-    console.error('[BackToClassroom] getUserRole error:', error)
     userRole.value = null
   }
 }
 
 // 监听路由变化，刷新状态
 watch(() => route.fullPath, () => {
-  console.log('[BackToClassroom] route changed:', route.fullPath)
   getUserRole()
-  checkOngoingClass()
-}, { immediate: true })
+  fetchOngoingClass()
+})
 
 onMounted(() => {
-  console.log('[BackToClassroom] mounted')
   getUserRole()
-  checkOngoingClass()
-  console.log('[BackToClassroom] showButton:', showButton.value, 'ongoingClass:', ongoingClass.value)
+  fetchOngoingClass()
   
   // 监听 storage 事件，其他标签页更新时同步
   window.addEventListener('storage', (e) => {
     if (e.key === 'ongoing_classroom') {
-      checkOngoingClass()
+      fetchOngoingClass()
     }
     if (e.key === 'user_info') {
       getUserRole()
@@ -161,7 +201,7 @@ onMounted(() => {
 
 // 暴露刷新方法，供外部调用
 defineExpose({
-  refresh: checkOngoingClass
+  refresh: fetchOngoingClass
 })
 </script>
 

@@ -42,38 +42,40 @@
 
       <!-- 课程树 -->
       <div class="flex-1 overflow-y-auto px-2">
-        <template v-for="item in flattenedTree" :key="item.key">
-          <!-- 菜单节点 -->
+        <div v-for="menu in menuTree" :key="menu.menuName" class="menu-group">
+          <!-- 分组标题 -->
           <div 
-            v-if="item.isMenu && item.node"
             class="flex items-center gap-2 px-2 py-2 cursor-pointer hover:bg-gray-50 rounded"
-            :style="{ paddingLeft: `${item.level * 16}px` }"
-            @click="toggleNode(item.node)"
+            @click="toggleMenu(menu.menuName)"
           >
-            <!-- 有子级才显示箭头，否则显示占位 -->
             <svg 
-              v-if="item.hasChildren"
               class="w-4 h-4 text-gray-400 transition-transform" 
-              :class="{ 'rotate-90': expandedNodes.has(item.key) }"
+              :class="{ 'rotate-90': expandedMenus.has(menu.menuName) }"
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
             >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
-            <span v-else class="w-4 h-4"></span>
-            <span class="text-sm text-gray-700">{{ item.menuName }}</span>
+            <span class="text-sm text-gray-700 font-medium">{{ menu.menuName }}</span>
           </div>
           
-          <!-- 课程节点 -->
-          <div 
-            v-else-if="!item.isMenu && item.course"
-            class="px-3 py-2 text-sm cursor-pointer rounded transition-colors"
-            :class="selectedCourse?.courseId === item.course.courseId ? 'bg-[#FFF1DD] text-[#FF9900]' : 'text-gray-600 hover:bg-gray-50'"
-            :style="{ paddingLeft: `${item.level * 16 + 8}px` }"
-            @click="selectCourse(item.course)"
-          >
-            {{ item.menuName }}
-          </div>
-        </template>
+          <!-- 课程列表 -->
+          <Transition name="slide">
+            <div v-if="expandedMenus.has(menu.menuName)" class="course-list">
+              <div 
+                v-for="course in menu.courseList" 
+                :key="course.courseId"
+                class="pl-8 pr-3 py-2 text-sm cursor-pointer rounded transition-colors"
+                :class="selectedCourse?.courseId === course.courseId ? 'bg-[#FFF1DD] text-[#FF9900]' : 'text-gray-600 hover:bg-gray-50'"
+                @click="selectCourse(course)"
+              >
+                {{ course.courseName }}
+              </div>
+              <div v-if="menu.courseList.length === 0" class="pl-8 py-2 text-sm text-gray-400">
+                暂无课程
+              </div>
+            </div>
+          </Transition>
+        </div>
       </div>
 
       <!-- 创建课程按钮 -->
@@ -160,6 +162,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n'
 import { cursorAdmin } from '~/composables/api/curosr'
+import { useTeacher } from '~/composables/api/useTeacher'
 
 definePageMeta({
   layout: 'default'
@@ -167,7 +170,8 @@ definePageMeta({
 
 useI18n()
 const router = useRouter()
-const { getCursorTreeMenu, getCursorList, getCursorDetail, createCursor, startPrepare } = cursorAdmin()
+const { getCursorDetail, createCursor, startPrepare } = cursorAdmin()
+const { getCourseMenuTree } = useTeacher()
 
 // 创建课程弹窗
 const showCreateModal = ref(false)
@@ -185,23 +189,18 @@ const tabs = [
   { label: '课程测评', value: 'resources' }
 ]
 
-// 菜单树节点类型
-interface MenuNode {
-  menuId: number | null
+// 菜单树节点类型（简化版，直接用 course/tree 接口）
+interface MenuGroup {
+  menuId: string | null
   menuName: string
-  parentId: number | null
-  menuLevel: number | null
-  isVisible: number | null
-  children?: MenuNode[]
-  courses?: CourseItem[]
-  courseType?: number
+  courseList: CourseItem[]
+  expanded?: boolean
 }
 
 // 课程类型
 interface CourseItem {
-  courseId: number
+  courseId: string
   courseName: string
-  courseHours?: number
 }
 
 // 章节类型
@@ -211,25 +210,22 @@ interface ChapterItem {
   isPrepare?: number  // 0=未备课, 1=已备课
 }
 
-// 扁平化的树节点（用于渲染）
-interface FlatNode {
-  key: string
-  menuName: string
-  level: number
-  isMenu: boolean
-  hasChildren: boolean
-  node?: MenuNode
-  course?: CourseItem
-}
-
 // 菜单树数据
-const menuTree = ref<MenuNode[]>([])
-const expandedNodes = ref<Set<string>>(new Set())
+const menuTree = ref<MenuGroup[]>([])
+const expandedMenus = ref<Set<string>>(new Set())
 const selectedCourse = ref<CourseItem | null>(null)
 const chapterList = ref<ChapterItem[]>([])
 
-// 所有已加载的课程（用于前端搜索）
-const allCourses = ref<CourseItem[]>([])
+// 所有课程（用于前端搜索）
+const allCourses = computed(() => {
+  const courses: CourseItem[] = []
+  menuTree.value.forEach(menu => {
+    if (menu.courseList) {
+      courses.push(...menu.courseList)
+    }
+  })
+  return courses
+})
 
 // 前端搜索过滤的课程列表
 const filteredCourses = computed(() => {
@@ -242,195 +238,36 @@ const filteredCourses = computed(() => {
   )
 })
 
-// 生成节点唯一key
-const getNodeKey = (node: MenuNode): string => {
-  if (node.menuId !== null) {
-    return `menu_${node.menuId}`
+// 切换菜单展开/收起
+const toggleMenu = (menuName: string) => {
+  if (expandedMenus.value.has(menuName)) {
+    expandedMenus.value.delete(menuName)
+  } else {
+    expandedMenus.value.add(menuName)
   }
-  return `special_${node.menuName}`
 }
-
-// 扁平化树结构用于渲染
-const flattenedTree = computed(() => {
-  const result: FlatNode[] = []
-  
-  const flatten = (nodes: MenuNode[], level: number) => {
-    for (const node of nodes) {
-      const key = getNodeKey(node)
-      const hasChildrenMenu = !!(node.children && node.children.length > 0)
-      const isLeaf = !hasChildrenMenu
-      const hasCourses = !!(node.courses && node.courses.length > 0)
-      // 有子菜单或者有课程（或者是叶子节点可以加载课程）都显示箭头
-      const hasChildren = hasChildrenMenu || hasCourses || isLeaf
-      
-      // 添加菜单节点
-      result.push({
-        key,
-        menuName: node.menuName,
-        level,
-        isMenu: true,
-        hasChildren,
-        node
-      })
-      
-      // 如果展开了
-      if (expandedNodes.value.has(key)) {
-        // 有子菜单则递归
-        if (hasChildrenMenu && node.children) {
-          flatten(node.children, level + 1)
-        }
-        // 叶子节点显示课程
-        if (isLeaf && node.courses) {
-          for (const course of node.courses) {
-            result.push({
-              key: `course_${course.courseId}`,
-              menuName: course.courseName,
-              level: level + 1,
-              isMenu: false,
-              hasChildren: false,
-              course
-            })
-          }
-        }
-      }
-    }
-  }
-  
-  flatten(menuTree.value, 0)
-  return result
-})
 
 // 加载菜单树
 const loadMenuData = async () => {
   try {
-    const data = await getCursorTreeMenu()
+    const data = await getCourseMenuTree()
     if (data && Array.isArray(data)) {
-      // 处理数据，过滤共享课程，给自定义课程添加子级
-      const processedData = data
-        .filter((item: MenuNode) => item.menuName !== '共享课程')
-        .map((item: MenuNode) => {
-          // 自定义课程：手动添加"个人可见"和"学校可见"两个子级
-          if (item.menuId === null && item.menuName === '自定义课程') {
-            return {
-              ...item,
-              children: [
-                {
-                  menuId: null,
-                  menuName: '个人可见',
-                  parentId: null,
-                  menuLevel: 2,
-                  isVisible: 1,
-                  courseType: 1  // 自定义课程 - 个人可见
-                },
-                {
-                  menuId: null,
-                  menuName: '学校可见',
-                  parentId: null,
-                  menuLevel: 2,
-                  isVisible: 1,
-                  courseType: 2  // 自定义课程 - 学校可见
-                }
-              ]
-            }
-          }
-          return item
-        })
+      menuTree.value = data.map((item: any) => ({
+        menuId: item.menuId,
+        menuName: item.menuName || '未分组',
+        courseList: (item.courseList || []).map((course: any) => ({
+          courseId: String(course.courseId),
+          courseName: course.courseName
+        }))
+      }))
       
-      menuTree.value = processedData
-      
-      // 默认展开第一个节点
+      // 默认展开第一个分组
       if (menuTree.value.length > 0 && menuTree.value[0]) {
-        const firstKey = getNodeKey(menuTree.value[0])
-        expandedNodes.value.add(firstKey)
+        expandedMenus.value.add(menuTree.value[0].menuName)
       }
-      
-      // 预加载所有叶子节点的课程（用于搜索）
-      await preloadAllCourses(menuTree.value)
     }
   } catch (error) {
     console.error('获取课程菜单失败:', error)
-  }
-}
-
-// 预加载所有叶子节点的课程
-const preloadAllCourses = async (nodes: MenuNode[]) => {
-  for (const node of nodes) {
-    if (node.children && node.children.length > 0) {
-      // 有子菜单，递归
-      await preloadAllCourses(node.children)
-    } else {
-      // 叶子节点，加载课程
-      await loadCoursesForNode(node)
-    }
-  }
-}
-
-// 判断节点是否是叶子节点
-const isLeafMenu = (node: MenuNode): boolean => {
-  return !node.children || node.children.length === 0
-}
-
-// 切换节点展开/收起
-const toggleNode = async (node: MenuNode) => {
-  const key = getNodeKey(node)
-  const isLeaf = isLeafMenu(node)
-  
-  // 切换展开/收起
-  if (expandedNodes.value.has(key)) {
-    expandedNodes.value.delete(key)
-  } else {
-    expandedNodes.value.add(key)
-    // 叶子节点展开时加载课程
-    if (isLeaf && (!node.courses || node.courses.length === 0)) {
-      await loadCoursesForNode(node)
-    }
-  }
-  // 触发响应式更新
-  expandedNodes.value = new Set(expandedNodes.value)
-}
-
-// 为节点加载课程列表
-const loadCoursesForNode = async (node: MenuNode) => {
-  try {
-    const params: any = {}
-    
-    // 自定义课程 - 个人可见
-    if (node.courseType === 1) {
-      params.courseType = 1
-      params.coursePermission = 0
-    }
-    // 自定义课程 - 学校可见
-    else if (node.courseType === 2) {
-      params.courseType = 1
-      params.coursePermission = 1
-    }
-    // 常规课程
-    else if (node.menuId !== null) {
-      params.menuId = node.menuId
-    }
-    
-    if (searchKeyword.value) {
-      params.name = searchKeyword.value
-    }
-    
-    const data = await getCursorList(params)
-    if (data && Array.isArray(data)) {
-      const courses = data.map((item: any) => ({
-        courseId: item.courseId,
-        courseName: item.courseName,
-        courseHours: item.courseHours || item.chapterCount || 0
-      }))
-      node.courses = courses
-      
-      // 添加到全局课程列表（用于搜索），去重
-      for (const course of courses) {
-        if (!allCourses.value.find(c => c.courseId === course.courseId)) {
-          allCourses.value.push(course)
-        }
-      }
-    }
-  } catch (error) {
-    console.error('获取课程列表失败:', error)
   }
 }
 
@@ -453,9 +290,9 @@ const selectCourse = async (course: CourseItem) => {
 }
 
 // 加载章节
-const loadChapters = async (courseId: number) => {
+const loadChapters = async (courseId: string) => {
   try {
-    const data = await getCursorDetail(String(courseId))
+    const data = await getCursorDetail(courseId)
     if (data && data.chapterList) {
       chapterList.value = data.chapterList.map((item: any) => ({
         chapterId: item.chapterId,
@@ -468,13 +305,6 @@ const loadChapters = async (courseId: number) => {
   } catch (error) {
     console.error('获取章节列表失败:', error)
     chapterList.value = []
-  }
-}
-
-// 跳转到章节
-const goToChapter = (chapter: ChapterItem) => {
-  if (selectedCourse.value) {
-    router.push(`/system/course/prepare/${selectedCourse.value.courseId}?chapterId=${chapter.chapterId}`)
   }
 }
 
@@ -568,5 +398,19 @@ onMounted(() => {
 
 .prepare-btn:hover {
   background: #E6F4FF;
+}
+
+/* 展开/收起动画 */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.25s ease;
+  max-height: 500px;
+}
+
+.slide-enter-from,
+.slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
 }
 </style>
