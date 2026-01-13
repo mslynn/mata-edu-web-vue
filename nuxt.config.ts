@@ -13,7 +13,7 @@ const previewBaseUrl = process.env.NODE_ENV === 'production'
 
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production' 
-  ? 'ws://test-gateway.matatastudio.com/resource/websocket'
+  ? 'wss://test-gateway.matatastudio.com/resource/websocket'
   : 'ws://192.168.0.59:8001/resource/websocket'
 
 
