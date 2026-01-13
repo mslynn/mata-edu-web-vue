@@ -98,9 +98,9 @@ const handleLogoClick = () => {
     router.push('/teacher')
   }
   // 学生端先空着，后续补充
-  // else if (roleKey === 'student') {
-  //   router.push('/student')
-  // }
+  else if (roleKey === 'student') {
+    router.push('/student')
+  }
 }
 
 // 模块切换 - 跳转到模块选择页面

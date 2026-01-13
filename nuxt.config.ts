@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  :  'http://192.168.0.60:8001'
+  :  'http://192.168.0.59:8001'
 
 // 预览服务地址
   
@@ -13,8 +13,8 @@ const previewBaseUrl = process.env.NODE_ENV === 'production'
 
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production' 
-  ? 'https://test-gateway.matatastudio.com/resource/websocket'
-  :  'http://192.168.0.60:8001/resource/websocket'
+  ? 'ws://test-gateway.matatastudio.com/resource/websocket'
+  : 'ws://192.168.0.59:8001/resource/websocket'
 
 
 
@@ -37,11 +37,11 @@ export default defineNuxtConfig({
     public: {
     //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
-      apiBaseUrl: apiBaseUrl || 'http://192.168.0.55:8001',
+      apiBaseUrl: apiBaseUrl || 'http://192.168.0.59:8001',
       // 预览服务地址
       previewBaseUrl:  previewBaseUrl || 'https://edu-view.matatastudio.com',
       // WebRTC 信令服务器地址
-      signalingUrl:signalingUrl || 'ws://192.168.0.13:8001/resource/websocket',
+      signalingUrl:signalingUrl || 'ws://192.168.0.59:8001/resource/websocket',
     }
   },
 

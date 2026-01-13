@@ -290,7 +290,7 @@ const uploadWithProgress = (
   onProgress: (percent: number) => void
 ): Promise<{ ossId: string; url: string; fileName: string }> => {
   return new Promise((resolve, reject) => {
-    if (!process.client) {
+    if (!import.meta.client) {
       reject(new Error('仅支持客户端上传'))
       return
     }
@@ -334,9 +334,6 @@ const uploadWithProgress = (
     if (token) {
       xhr.setRequestHeader('Authorization', `Bearer ${token}`)
     }
-    // 添加语言标识
-    const locale = localStorage.getItem('locale') || 'zh'
-    xhr.setRequestHeader('content-language', locale === 'en' ? 'en_US' : 'zh_CN')
     xhr.send(formData)
   })
 }

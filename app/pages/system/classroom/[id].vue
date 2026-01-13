@@ -255,31 +255,8 @@
             <!-- 屏幕分享状态小提示 -->
             <div v-if="isScreenSharing" class="share-indicator">
               <span class="indicator-dot"></span>
-              <span>{{ t('classroom.sharing') }} · {{ connectedStudentCount }} {{ t('classroom.students') }}</span>
+              <span>{{ t('classroom.sharing') }}</span>
             </div>
-          </div>
-          <!-- 屏幕分享状态提示（非黑板模式时显示） -->
-          <div v-else-if="isScreenSharing" class="screen-share-status">
-            <div class="share-icon">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#3EAEFF" stroke-width="1.5">
-                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-                <line x1="8" y1="21" x2="16" y2="21"/>
-                <line x1="12" y1="17" x2="12" y2="21"/>
-              </svg>
-              <span class="status-dot"></span>
-            </div>
-            <p class="share-text">{{ t('classroom.sharingScreen') }}</p>
-            <p class="share-tip">{{ t('classroom.studentCanSeeContent') }}</p>
-            <div class="connected-count">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              <span>{{ connectedStudentCount }} {{ t('classroom.studentsConnected') }}</span>
-            </div>
-            <button class="stop-share-btn" @click="stopScreenShare">{{ t('classroom.stopShare') }}</button>
           </div>
           <!-- 文档预览区域 -->
           <div v-else class="document-viewer">
@@ -414,7 +391,6 @@ const { getQuickLoginInfo } = useTeacher()
 
 // PeerJS 屏幕分享
 const peerJS = usePeerJS()
-const connectedStudentCount = computed(() => peerJS.connectedPeers.value.size)
 
 // 信令服务器地址（用于接收学生加入通知）
 const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
@@ -545,25 +521,9 @@ const startScreenShare = async () => {
       console.log('[教师课堂] 发送屏幕分享开始通知:', msg)
     }
     
-    // 延迟后直接呼叫学生
-    const studentPeerId = `student_${classId}`
-    const callStudent = async () => {
-      // 检查是否还在分享状态
-      if (!peerJS.isScreenSharing.value || !peerJS.localStream.value) {
-        console.log('[教师课堂] 分享已停止，取消呼叫')
-        return
-      }
-      console.log('[教师课堂] 呼叫学生:', studentPeerId)
-      try {
-        await peerJS.callPeer(studentPeerId)
-        console.log('[教师课堂] 呼叫学生成功')
-      } catch (err) {
-        console.error('[教师课堂] 呼叫学生失败:', err)
-      }
-    }
-    
-    // 延迟 1.5 秒呼叫
-    setTimeout(callStudent, 1500)
+    // 学生收到通知后会主动连接老师请求屏幕分享
+    // 老师在 usePeerJS 的 connection 事件中处理学生请求并呼叫学生
+    console.log('[教师课堂] 等待学生连接请求...')
   }
 }
 
@@ -1626,6 +1586,55 @@ onUnmounted(() => {
   color: white;
   font-size: 13px;
   z-index: 100;
+}
+
+/* 屏幕分享状态提示条 */
+.share-status-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+  border-bottom: 1px solid #A5D6A7;
+}
+
+.share-status-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #2E7D32;
+}
+
+.stop-share-btn-small {
+  padding: 6px 16px;
+  background: #FF6B6B;
+  border: none;
+  border-radius: 16px;
+  color: white;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.stop-share-btn-small:hover {
+  background: #FF5252;
+}
+
+/* 连接学生数量徽章 */
+.connected-badge {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 6px;
+  background: #FF6B6B;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 500;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
 }
 
 .indicator-dot {

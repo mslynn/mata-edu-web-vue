@@ -5,15 +5,6 @@
 import { ref, onUnmounted } from 'vue'
 import Peer, { type MediaConnection, type DataConnection } from 'peerjs'
 
-export interface PeerJSOptions {
-  host?: string
-  port?: number
-  path?: string
-  key?: string
-  secure?: boolean
-  authorization?: string
-}
-
 export function usePeerJS() {
   const peer = ref<Peer | null>(null)
   const myPeerId = ref('')
@@ -21,47 +12,35 @@ export function usePeerJS() {
   const localStream = ref<MediaStream | null>(null)
   const remoteStream = ref<MediaStream | null>(null)
   const isScreenSharing = ref(false)
-  const currentCall = ref<MediaConnection | null>(null)
   const connectedPeers = ref<Set<string>>(new Set())
-  // 等待屏幕分享的学生列表
-  const pendingStudents = ref<Set<string>>(new Set())
-  // 保存所有活跃的呼叫连接
+  
+  // 老师端：保存所有活跃的呼叫连接
   const activeCalls = new Map<string, MediaConnection>()
-  // 保存所有已知的学生（用于第二次分享时主动呼叫）
-  const knownStudents = ref<Set<string>>(new Set())
-  // 保存学生端的数据连接（用于重连）
+  // 老师端：等待屏幕分享的学生列表
+  const pendingStudents = new Set<string>()
+  
+  // 学生端：当前呼叫
+  let currentCall: MediaConnection | null = null
+  // 学生端：与老师的数据连接
   let teacherDataConnection: DataConnection | null = null
 
   // 初始化 PeerJS
-  const initialize = async (peerId: string, options?: any): Promise<string> => {
-    const defaultOptions = {
-      host: 'peerjs.matatastudio.com',
-      port: 443,
-      path: '/peerjs',
-      key: 'KDlNH3JzGu6Ybk9iVjGhHe8Xb4zsxOeqNW31pQY4dG6gfZcMvg9k0EQP4hCiOWu',
-      secure: true,
-      // ICE 服务器配置，改善 NAT 穿透
-      config: {
-        iceServers: [
-          { urls: 'stun:stun.l.google.com:19302' },
-          { urls: 'stun:stun1.l.google.com:19302' },
-          { urls: 'stun:stun2.l.google.com:19302' }
-        ]
-      }
-    }
-
+  const initialize = async (peerId: string): Promise<string> => {
     return new Promise((resolve, reject) => {
-      const opts = { ...defaultOptions, ...options }
-
       console.log('[PeerJS] 初始化, peerId:', peerId)
 
       peer.value = new Peer(peerId, {
-        host: opts.host,
-        port: opts.port,
-        path: opts.path,
-        key: opts.key,
-        secure: opts.secure,
-        config: opts.config,
+        host: 'peerjs.matatastudio.com',
+        port: 443,
+        path: '/peerjs',
+        key: 'KDlNH3JzGu6Ybk9iVjGhHe8Xb4zsxOeqNW31pQY4dG6gfZcMvg9k0EQP4hCiOWu',
+        secure: true,
+        config: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' }
+          ]
+        },
         debug: 2
       } as any)
 
@@ -86,89 +65,59 @@ export function usePeerJS() {
       // 学生端：接收老师的呼叫
       peer.value.on('call', (call) => {
         console.log('[PeerJS] 收到呼叫，来自:', call.peer)
-
-        // 如果有旧的呼叫，先关闭它
-        if (currentCall.value && currentCall.value !== call) {
-          console.log('[PeerJS] 关闭旧的呼叫')
-          try {
-            currentCall.value.close()
-          } catch (e) {
-            // 忽略关闭错误
-          }
-        }
         
-        // 清除旧的远程流
-        remoteStream.value = null
-        currentCall.value = call
+        // 保存当前呼叫
+        currentCall = call
 
         // 应答呼叫（不发送流，只接收）
         call.answer()
 
         call.on('stream', (stream) => {
-          console.log('[PeerJS] 收到远程流')
+          console.log('[PeerJS] 收到远程流, tracks:', stream.getTracks().length)
           remoteStream.value = stream
           connectedPeers.value.add(call.peer)
         })
 
         call.on('close', () => {
           console.log('[PeerJS] 呼叫关闭')
-          remoteStream.value = null
-          currentCall.value = null
+          // 只有当前呼叫关闭时才清除远程流
+          if (currentCall === call) {
+            remoteStream.value = null
+            currentCall = null
+          }
           connectedPeers.value.delete(call.peer)
         })
 
         call.on('error', (err) => {
           console.error('[PeerJS] 呼叫错误:', err)
         })
-
-        currentCall.value = call
       })
 
-      // 老师端：接收学生的数据连接（学生请求屏幕分享）
+      // 老师端：接收学生的数据连接
       peer.value.on('connection', (conn) => {
         console.log('[PeerJS] 收到数据连接，来自:', conn.peer)
 
-        conn.on('open', () => {
-          console.log('[PeerJS] 数据连接已打开')
-        })
-
         conn.on('data', (data: any) => {
           console.log('[PeerJS] 收到数据:', data)
-          // 如果是学生请求屏幕分享
+          
           if (data.type === 'REQUEST_SCREEN') {
             const studentPeerId = data.studentPeerId || conn.peer
-            console.log('[PeerJS] 学生请求屏幕分享:', studentPeerId, '当前分享状态:', isScreenSharing.value, '活跃连接:', Array.from(activeCalls.keys()))
-
-            // 记录已知学生
-            knownStudents.value.add(studentPeerId)
+            console.log('[PeerJS] 学生请求屏幕分享:', studentPeerId)
 
             if (isScreenSharing.value && localStream.value) {
-              // 如果已有活跃连接，先关闭它
+              // 检查是否已有活跃连接
               if (activeCalls.has(studentPeerId)) {
-                console.log('[PeerJS] 关闭旧的活跃连接:', studentPeerId)
-                const oldCall = activeCalls.get(studentPeerId)
-                if (oldCall) {
-                  try {
-                    oldCall.close()
-                  } catch (e) {
-                    // 忽略
-                  }
-                }
-                activeCalls.delete(studentPeerId)
+                console.log('[PeerJS] 已有连接，跳过:', studentPeerId)
+                return
               }
-              // 老师正在分享，呼叫学生
-              console.log('[PeerJS] 呼叫学生:', studentPeerId)
+              // 呼叫学生
               callPeer(studentPeerId)
             } else {
-              // 老师还没开始分享，先记录下来
-              console.log('[PeerJS] 老师还没开始分享，将学生加入等待列表:', studentPeerId)
-              pendingStudents.value.add(studentPeerId)
+              // 加入等待列表
+              console.log('[PeerJS] 加入等待列表:', studentPeerId)
+              pendingStudents.add(studentPeerId)
             }
           }
-        })
-
-        conn.on('close', () => {
-          console.log('[PeerJS] 数据连接已关闭')
         })
       })
     })
@@ -176,14 +125,8 @@ export function usePeerJS() {
 
   // 老师端：开始屏幕分享
   const startScreenShare = async (): Promise<boolean> => {
-    if (typeof window === 'undefined') {
-      console.error('[PeerJS] 不在浏览器环境中')
-      return false
-    }
-
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getDisplayMedia) {
+    if (!navigator.mediaDevices?.getDisplayMedia) {
       console.error('[PeerJS] 浏览器不支持屏幕分享')
-      alert('屏幕分享需要 HTTPS 环境，请使用 https:// 或 localhost 访问')
       return false
     }
 
@@ -197,76 +140,56 @@ export function usePeerJS() {
       isScreenSharing.value = true
 
       // 监听用户停止分享
-      const videoTrack = stream.getVideoTracks()[0]
-      if (videoTrack) {
-        videoTrack.onended = () => {
-          stopScreenShare()
-        }
-      }
+      stream.getVideoTracks()[0]?.addEventListener('ended', () => {
+        stopScreenShare()
+      })
 
       console.log('[PeerJS] 屏幕分享已开始')
 
-      // 呼叫所有等待中的学生（这些是在分享开始前就发送了请求的学生）
-      if (pendingStudents.value.size > 0) {
-        console.log('[PeerJS] 呼叫等待中的学生:', Array.from(pendingStudents.value))
-        for (const studentPeerId of pendingStudents.value) {
-          try {
-            await callPeer(studentPeerId)
-            console.log('[PeerJS] 已呼叫学生:', studentPeerId)
-          } catch (err) {
-            console.error('[PeerJS] 呼叫学生失败:', studentPeerId, err)
-          }
+      // 呼叫所有等待中的学生
+      if (pendingStudents.size > 0) {
+        console.log('[PeerJS] 呼叫等待中的学生:', Array.from(pendingStudents))
+        for (const studentPeerId of pendingStudents) {
+          callPeer(studentPeerId)
         }
-        pendingStudents.value.clear()
+        pendingStudents.clear()
       }
 
-      // 注意：不主动呼叫 knownStudents，等学生收到 WebSocket 通知后主动请求连接
-      // 这样可以避免学生刷新后 peerId 变化导致的问题
-
       return true
-    } catch (error: any) {
+    } catch (error) {
       console.error('[PeerJS] 获取屏幕流失败:', error)
       return false
     }
   }
 
-  // 老师端：呼叫学生（发送屏幕流）
-  const callPeer = (remotePeerId: string): Promise<void> => {
-    return new Promise((resolve, reject) => {
-      if (!peer.value || !localStream.value) {
-        reject(new Error('PeerJS 未初始化或没有本地流'))
-        return
-      }
+  // 老师端：呼叫学生
+  const callPeer = (remotePeerId: string) => {
+    if (!peer.value || !localStream.value) {
+      console.error('[PeerJS] 无法呼叫：未初始化或没有本地流')
+      return
+    }
 
-      console.log('[PeerJS] 呼叫学生:', remotePeerId)
+    console.log('[PeerJS] 呼叫学生:', remotePeerId)
+    const call = peer.value.call(remotePeerId, localStream.value)
 
-      const call = peer.value.call(remotePeerId, localStream.value)
-
-      call.on('stream', () => {
-        console.log('[PeerJS] 收到对方流（学生端通常不发送）')
-      })
-
-      call.on('close', () => {
-        console.log('[PeerJS] 呼叫关闭:', remotePeerId)
-        connectedPeers.value.delete(remotePeerId)
-        activeCalls.delete(remotePeerId)
-      })
-
-      call.on('error', (err) => {
-        console.error('[PeerJS] 呼叫错误:', err)
-        activeCalls.delete(remotePeerId)
-        reject(err)
-      })
-
-      connectedPeers.value.add(remotePeerId)
-      activeCalls.set(remotePeerId, call)
-      currentCall.value = call
-      resolve()
+    call.on('close', () => {
+      console.log('[PeerJS] 与学生的呼叫关闭:', remotePeerId)
+      connectedPeers.value.delete(remotePeerId)
+      activeCalls.delete(remotePeerId)
     })
+
+    call.on('error', (err) => {
+      console.error('[PeerJS] 呼叫错误:', remotePeerId, err)
+      connectedPeers.value.delete(remotePeerId)
+      activeCalls.delete(remotePeerId)
+    })
+
+    connectedPeers.value.add(remotePeerId)
+    activeCalls.set(remotePeerId, call)
   }
 
   // 学生端：连接老师并请求屏幕分享
-  const connectToTeacher = (teacherPeerId: string, timeout = 5000): Promise<void> => {
+  const connectToTeacher = (teacherPeerId: string): Promise<void> => {
     return new Promise((resolve, reject) => {
       if (!peer.value) {
         reject(new Error('PeerJS 未初始化'))
@@ -275,20 +198,12 @@ export function usePeerJS() {
 
       console.log('[PeerJS] 连接老师:', teacherPeerId)
 
-      // 如果已有数据连接且仍然打开，先关闭它
-      if (teacherDataConnection && teacherDataConnection.open) {
-        console.log('[PeerJS] 关闭旧的数据连接')
-        teacherDataConnection.close()
-        teacherDataConnection = null
-      }
-
-      // 设置超时
-      const timeoutId = setTimeout(() => {
-        reject(new Error('连接超时'))
-      }, timeout)
-
       const conn = peer.value.connect(teacherPeerId, { reliable: true })
       teacherDataConnection = conn
+
+      const timeoutId = setTimeout(() => {
+        reject(new Error('连接超时'))
+      }, 5000)
 
       conn.on('open', () => {
         clearTimeout(timeoutId)
@@ -299,64 +214,47 @@ export function usePeerJS() {
 
       conn.on('error', (err) => {
         clearTimeout(timeoutId)
-        teacherDataConnection = null
-        // 不打印错误日志，静默处理
         reject(err)
-      })
-
-      conn.on('close', () => {
-        console.log('[PeerJS] 与老师的数据连接已关闭')
-        teacherDataConnection = null
       })
     })
   }
 
   // 停止屏幕分享
   const stopScreenShare = () => {
-    if (localStream.value) {
-      localStream.value.getTracks().forEach(track => track.stop())
-      localStream.value = null
+    localStream.value?.getTracks().forEach(track => track.stop())
+    localStream.value = null
+
+    // 把当前连接的学生加回等待列表，以便下次分享时主动呼叫
+    for (const [peerId] of activeCalls) {
+      console.log('[PeerJS] 将学生加入等待列表:', peerId)
+      pendingStudents.add(peerId)
     }
 
-    // 关闭所有活跃的呼叫
+    // 关闭所有呼叫
     for (const [peerId, call] of activeCalls) {
-      console.log('[PeerJS] 关闭与学生的呼叫:', peerId)
-      try {
-        call.close()
-      } catch (e) {
-        // 忽略关闭错误
-      }
+      console.log('[PeerJS] 关闭呼叫:', peerId)
+      call.close()
     }
     activeCalls.clear()
-
-    if (currentCall.value) {
-      currentCall.value.close()
-      currentCall.value = null
-    }
-
+    
     isScreenSharing.value = false
     connectedPeers.value.clear()
-    // 注意：不清除 knownStudents，以便下次分享时可以主动呼叫
-    console.log('[PeerJS] 屏幕分享已停止，已知学生:', Array.from(knownStudents.value))
+    console.log('[PeerJS] 屏幕分享已停止，等待列表:', Array.from(pendingStudents))
   }
 
   // 销毁
   const destroy = () => {
     stopScreenShare()
-
-    // 清除已知学生列表
-    knownStudents.value.clear()
+    pendingStudents.clear()
     
-    // 关闭学生端的数据连接
-    if (teacherDataConnection) {
-      teacherDataConnection.close()
-      teacherDataConnection = null
-    }
+    teacherDataConnection?.close()
+    teacherDataConnection = null
+    
+    currentCall?.close()
+    currentCall = null
 
-    if (peer.value) {
-      peer.value.destroy()
-      peer.value = null
-    }
+    peer.value?.destroy()
+    peer.value = null
 
     myPeerId.value = ''
     isConnected.value = false
@@ -375,7 +273,6 @@ export function usePeerJS() {
     remoteStream,
     isScreenSharing,
     connectedPeers,
-    knownStudents,
     initialize,
     startScreenShare,
     callPeer,

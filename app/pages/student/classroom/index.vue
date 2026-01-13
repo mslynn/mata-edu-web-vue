@@ -94,6 +94,25 @@
       </Transition>
     </Teleport>
 
+    <!-- 被踢出弹窗 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="showKickoutModal" class="modal-overlay">
+          <div class="modal-container">
+            <div class="modal-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M15 9l-6 6M9 9l6 6"/>
+              </svg>
+            </div>
+            <h3 class="modal-title">已被移出课堂</h3>
+            <p class="modal-text">老师已将你移出课堂，请联系老师了解原因</p>
+            <button class="modal-btn modal-btn-red" @click="handleKickoutConfirm">确定</button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <!-- 全屏管控弹窗 -->
     <Teleport to="body">
       <Transition name="modal-fade">
@@ -206,6 +225,44 @@ const classStarted = ref(false)
 const showClassEndModal = ref(false) // 下课弹窗
 const showFullscreenModal = ref(false) // 全屏管控弹窗
 const showResourceModal = ref(false) // 课程资源弹窗
+const showKickoutModal = ref(false) // 被踢出弹窗
+
+// 生成固定的学生 peerId（使用用户ID区分不同学生）
+const getStudentPeerId = (classId: string) => {
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}')
+    const userId = userInfo.id || userInfo.user_id || 'unknown'
+    return `student_${classId}_${userId}`
+  } catch {
+    return `student_${classId}_unknown`
+  }
+}
+
+// 初始化 PeerJS（带重试，处理 ID taken 的情况）
+const initializePeerJS = async (classId: string, maxRetries = 3) => {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      // 先销毁旧的连接
+      if (peerJS.peer.value) {
+        peerJS.destroy()
+        // 等待一下让服务器释放 ID
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+      
+      const studentPeerId = getStudentPeerId(classId)
+      await peerJS.initialize(studentPeerId)
+      console.log('[学生课堂] PeerJS 初始化成功, PeerId:', peerJS.myPeerId.value)
+      return true
+    } catch (error: any) {
+      console.error(`[学生课堂] PeerJS 初始化失败 (${i + 1}/${maxRetries}):`, error?.message || error)
+      if (i < maxRetries - 1) {
+        // ID taken 时等待久一点再重试
+        await new Promise(resolve => setTimeout(resolve, 2000))
+      }
+    }
+  }
+  return false
+}
 
 // 课程资源相关
 interface CoursewareItem {
@@ -280,22 +337,26 @@ const formatTime = (seconds: number) => {
   return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
 }
 
-// 连接老师（带重试机制）
-const connectToTeacherWithRetry = async (teacherPeerId: string, maxRetries = 3) => {
-  for (let i = 0; i < maxRetries; i++) {
+// 连接老师（简单重试）
+const connectToTeacherWithRetry = async (teacherPeerId: string) => {
+  // 如果已经有远程流了，不需要再连接
+  if (peerJS.remoteStream.value) {
+    console.log('[学生课堂] 已有远程流，跳过连接')
+    return true
+  }
+  
+  for (let i = 0; i < 3; i++) {
     try {
       await peerJS.connectToTeacher(teacherPeerId)
       console.log('[学生课堂] 已向老师发送屏幕分享请求')
       return true
     } catch (err) {
-      console.error(`[学生课堂] 连接老师失败 (尝试 ${i + 1}/${maxRetries}):`, err)
-      if (i < maxRetries - 1) {
-        // 等待后重试
+      console.error(`[学生课堂] 连接老师失败 (${i + 1}/3):`, err)
+      if (i < 2) {
         await new Promise(resolve => setTimeout(resolve, 2000))
       }
     }
   }
-  console.error('[学生课堂] 连接老师失败，已达到最大重试次数')
   return false
 }
 
@@ -324,36 +385,51 @@ const connectionStatusText = computed(() => {
 // 监听远程流变化，绑定到 video 元素
 watch(
   () => peerJS.remoteStream.value,
-  async (stream) => {
+  async (stream, oldStream) => {
     console.log('[学生课堂] remoteStream 变化:', stream)
+    
+    // 如果有旧流，先停止
+    if (oldStream && remoteVideoRef.value) {
+      remoteVideoRef.value.srcObject = null
+    }
+    
     if (stream) {
       // 等待 DOM 更新（v-if 条件变化后 video 元素才会渲染）
       await nextTick()
-      if (remoteVideoRef.value) {
+      
+      // 延迟一点确保 DOM 完全渲染
+      await new Promise(resolve => setTimeout(resolve, 50))
+      
+      if (remoteVideoRef.value && peerJS.remoteStream.value === stream) {
         remoteVideoRef.value.srcObject = stream
         console.log('[学生课堂] 视频流已绑定到 video 元素')
         // 尝试播放
         try {
           await remoteVideoRef.value.play()
           console.log('[学生课堂] 视频开始播放')
-        } catch (err) {
-          console.error('[学生课堂] 视频播放失败:', err)
+        } catch (err: any) {
+          // 忽略 AbortError（用户交互导致的中断）
+          if (err.name !== 'AbortError') {
+            console.error('[学生课堂] 视频播放失败:', err)
+          }
         }
-      } else {
+      } else if (!remoteVideoRef.value) {
         console.warn('[学生课堂] video 元素未找到，稍后重试')
         // 再等一下
         setTimeout(async () => {
-          if (remoteVideoRef.value && stream) {
+          if (remoteVideoRef.value && peerJS.remoteStream.value === stream) {
             remoteVideoRef.value.srcObject = stream
             console.log('[学生课堂] 视频流已绑定到 video 元素（重试）')
             try {
               await remoteVideoRef.value.play()
               console.log('[学生课堂] 视频开始播放（重试）')
-            } catch (err) {
-              console.error('[学生课堂] 视频播放失败（重试）:', err)
+            } catch (err: any) {
+              if (err.name !== 'AbortError') {
+                console.error('[学生课堂] 视频播放失败（重试）:', err)
+              }
             }
           }
-        }, 100)
+        }, 200)
       }
     }
   }
@@ -406,23 +482,17 @@ const connectNotifyWebSocket = () => {
           currentTeacherPeerId.value = teacherPeerId
         }
 
-        // 如果 PeerJS 还没初始化，现在初始化
-        if (!peerJS.isConnected.value) {
-          const studentPeerId = `student_${classId}`  // 加 student_ 前缀，避免和老师端冲突
-          try {
-            await peerJS.initialize(studentPeerId)
-            console.log('[学生课堂] PeerJS 初始化成功, PeerId:', peerJS.myPeerId.value)
-
-            // 如果有老师的 PeerId，连接老师请求屏幕分享
-            if (teacherPeerId) {
-              console.log('[学生课堂] 尝试连接老师请求屏幕分享:', teacherPeerId)
-              await connectToTeacherWithRetry(teacherPeerId)
-            }
-          } catch (error) {
-            console.error('[学生课堂] PeerJS 初始化失败:', error)
+        // 如果 PeerJS 还没初始化或没连接，现在初始化
+        if (!peerJS.isConnected.value || !peerJS.peer.value) {
+          const success = await initializePeerJS(classId)
+          if (!success) {
+            console.error('[学生课堂] PeerJS 初始化失败')
+            return
           }
-        } else if (teacherPeerId) {
-          // PeerJS 已初始化，直接连接老师
+        }
+        
+        // PeerJS 已连接，连接老师请求屏幕分享
+        if (teacherPeerId && peerJS.isConnected.value) {
           console.log('[学生课堂] 尝试连接老师请求屏幕分享:', teacherPeerId)
           await connectToTeacherWithRetry(teacherPeerId)
         }
@@ -449,9 +519,26 @@ const connectNotifyWebSocket = () => {
         if (teacherPeerId) {
           currentTeacherPeerId.value = teacherPeerId
         }
-        // 清除之前的远程流，准备接收新的呼叫
-        peerJS.remoteStream.value = null
-        console.log('[学生课堂] 等待老师呼叫...')
+        
+        // 如果已经有远程流了，说明已经连接成功，不需要再处理
+        if (peerJS.remoteStream.value) {
+          console.log('[学生课堂] 已有远程流，跳过')
+          return
+        }
+        
+        // 主动连接老师请求屏幕分享
+        if (teacherPeerId && peerJS.isConnected.value) {
+          console.log('[学生课堂] 主动连接老师请求屏幕分享:', teacherPeerId)
+          await connectToTeacherWithRetry(teacherPeerId)
+        } else if (!peerJS.isConnected.value) {
+          // PeerJS 还没连接，先初始化
+          console.log('[学生课堂] PeerJS 未连接，先初始化')
+          const classId = currentClassId.value || '1996788444002480128'
+          const success = await initializePeerJS(classId)
+          if (success && teacherPeerId) {
+            await connectToTeacherWithRetry(teacherPeerId)
+          }
+        }
       }
 
       // 处理 SCREEN_SHARE_STOP 消息 - 老师停止屏幕分享
@@ -560,6 +647,19 @@ const connectNotifyWebSocket = () => {
         
         console.log('[学生课堂] 撤回后课件列表:', receivedCoursewareList.value)
       }
+
+      // 处理 KICKOUT 消息 - 被老师踢出课堂
+      if (message.type === 'KICKOUT') {
+        console.log('[学生课堂] 被老师踢出课堂!')
+        // 清理资源
+        if (classTimer) {
+          clearInterval(classTimer)
+          classTimer = null
+        }
+        peerJS.destroy()
+        // 显示踢出弹窗
+        showKickoutModal.value = true
+      }
     } catch (e) {
       console.log('[学生课堂] 非 JSON 消息:', event.data)
     }
@@ -621,6 +721,20 @@ const handleClassEndConfirm = () => {
   navigateTo('/student')
 }
 
+// 被踢出确认
+const handleKickoutConfirm = () => {
+  showKickoutModal.value = false
+  if (notifyWs) {
+    notifyWs.close()
+    notifyWs = null
+  }
+  peerJS.destroy()
+  // 清除 token
+  localStorage.removeItem('token')
+  localStorage.removeItem('user')
+  navigateTo('/')
+}
+
 // 全屏确认
 const handleFullscreenConfirm = async () => {
   showFullscreenModal.value = false
@@ -645,10 +759,8 @@ onMounted(async () => {
 
   // 如果有 classId，初始化 PeerJS 并开始计时
   if (currentClassId.value) {
-    const studentPeerId = `student_${currentClassId.value}`  // 加 student_ 前缀，避免和老师端冲突
-    try {
-      await peerJS.initialize(studentPeerId)
-      console.log('[学生课堂] PeerJS 初始化成功, PeerId:', peerJS.myPeerId.value)
+    const success = await initializePeerJS(currentClassId.value)
+    if (success) {
       classStarted.value = true
       
       // 开始计时
@@ -665,8 +777,6 @@ onMounted(async () => {
           await connectToTeacherWithRetry(currentTeacherPeerId.value)
         }, 2000)
       }
-    } catch (error) {
-      console.error('[学生课堂] PeerJS 初始化失败:', error)
     }
   }
 })
@@ -1005,6 +1115,14 @@ onUnmounted(() => {
 
 .modal-btn-blue:hover {
   background: #2196F3;
+}
+
+.modal-btn-red {
+  background: #FF6B6B;
+}
+
+.modal-btn-red:hover {
+  background: #FF5252;
 }
 
 /* 弹窗动画 */

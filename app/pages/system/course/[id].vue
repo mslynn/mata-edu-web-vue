@@ -16,8 +16,7 @@
       <div ref="wrapperRef" class="course-row-wrapper" :class="{ collapsed: isCollapsed }">
         <div ref="courseRowRef" class="course-row">
           <div class="cover-box">
-          
-            <img :src="courseInfo.courseCoverUrl" :alt="$t('common.courseCover')" class="cover-img" />
+            <img v-if="courseInfo.courseCoverUrl" :src="courseInfo.courseCoverUrl" :alt="$t('common.courseCover')" class="cover-img" />
           </div>
           <div class="info-box">
             <div class="title-line">

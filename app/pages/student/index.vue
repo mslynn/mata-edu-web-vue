@@ -12,10 +12,10 @@
           </div>
           <h2 class="notification-title">老师开始上课啦！</h2>
           <p class="notification-desc">{{ classInfo.className || '课堂' }} 正在进行中</p>
-          <div class="notification-actions">
+          <!-- <div class="notification-actions">
             <button class="btn-later" @click="laterEnter">稍后进入</button>
             <button class="btn-enter" @click="enterClassroom">立即进入</button>
-          </div>
+          </div> -->
         </div>
       </div>
     </Teleport>
@@ -87,12 +87,12 @@
 
         <!-- 下半部分：4个功能中心 -->
         <div class="center-cards mb-6">
-          <div class="center-card border-2 border-dashed border-[#B8D4E8] rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-white/50 transition-colors">
+          <NuxtLink to="/student/course" class="center-card border-2 border-dashed border-[#B8D4E8] rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-white/50 transition-colors">
             <div class="text-gray-600 text-sm mb-4">课程中心</div>
             <div class="center-icon flex items-center justify-center">
               <img src="~/assets/images/kecheng.png" alt="课程中心" class="w-full h-full object-contain" />
             </div>
-          </div>
+          </NuxtLink>
           <div class="center-card border-2 border-dashed border-[#B8D4E8] rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:bg-white/50 transition-colors">
             <div class="text-gray-600 text-sm mb-4">测评中心</div>
             <div class="center-icon flex items-center justify-center">
