@@ -25,4 +25,5 @@ logs
 output/
 .nuxt/
 .cursor/
+package-lock.json
 yarn.lock
