@@ -89,20 +89,26 @@ const fetchOngoingClass = async () => {
     return
   }
   
+  // 先检查 localStorage 缓存，没有缓存就不调接口
+  const stored = localStorage.getItem('ongoing_classroom')
+  if (!stored) {
+    ongoingClass.value = null
+    return
+  }
+  
   try {
-    // 先检查 localStorage 缓存
-    const stored = localStorage.getItem('ongoing_classroom')
-    if (stored) {
-      const data = JSON.parse(stored)
-      if (!data.expireAt || Date.now() <= data.expireAt) {
-        ongoingClass.value = data
-        return
-      }
-      // 已过期，清除缓存
+    const data = JSON.parse(stored)
+    // 检查是否过期
+    if (data.expireAt && Date.now() > data.expireAt) {
       localStorage.removeItem('ongoing_classroom')
+      ongoingClass.value = null
+      return
     }
     
-    // 直接用 $fetch 调用接口，避免 composable 问题
+    // 有缓存，先显示按钮
+    ongoingClass.value = data
+    
+    // 调接口验证课堂是否还在进行中
     const config = useRuntimeConfig()
     const token = localStorage.getItem('token')
     const headers: Record<string, string> = {
@@ -112,56 +118,36 @@ const fetchOngoingClass = async () => {
       headers['Authorization'] = `Bearer ${token}`
     }
     
-    // 获取授课列表
-    const teachListRes = await $fetch<any>('/system/teach/list', {
+    // 获取该章节的状态
+    const chapterRes = await $fetch<any>('/system/teach/chapter/list', {
       baseURL: config.public.apiBaseUrl as string,
-      headers
+      headers,
+      params: {
+        courseId: data.courseId,
+        classId: data.classId
+      }
     })
     
-    const teachList = teachListRes?.data
-    if (!teachList || !Array.isArray(teachList)) {
-      ongoingClass.value = null
+    const chapters = chapterRes?.data
+    if (!chapters || !Array.isArray(chapters)) {
+      // 接口异常，保持当前状态
       return
     }
     
-    // 遍历所有班级和课程，查找开课中的章节
-    for (const classItem of teachList) {
-      if (!classItem.courseList || !Array.isArray(classItem.courseList)) continue
-      
-      for (const course of classItem.courseList) {
-        try {
-          // 获取该课程的章节列表
-          const chapterRes = await $fetch<any>('/system/teach/chapter/list', {
-            baseURL: config.public.apiBaseUrl as string,
-            headers,
-            params: {
-              courseId: course.courseId,
-              classId: classItem.classId
-            }
-          })
-          
-          const chapters = chapterRes?.data
-          if (!chapters || !Array.isArray(chapters)) continue
-          
-          // 查找 teachStatus === 1 的章节
-          const ongoingChapter = chapters.find((c: any) => c.teachStatus === 1)
-          if (ongoingChapter) {
-            ongoingClass.value = {
-              classId: String(classItem.classId),
-              courseId: String(course.courseId),
-              chapterId: String(ongoingChapter.chapterId),
-            }
-            return
-          }
-        } catch (e) {
-          continue
-        }
-      }
-    }
+    // 检查该章节是否还在上课中
+    const ongoingChapter = chapters.find((c: any) => 
+      String(c.chapterId) === String(data.chapterId) && c.teachStatus === 1
+    )
     
-    ongoingClass.value = null
+    if (!ongoingChapter) {
+      // 课堂已结束，清除缓存
+      localStorage.removeItem('ongoing_classroom')
+      ongoingClass.value = null
+      showExpiredModal.value = true
+    }
   } catch (error) {
-    ongoingClass.value = null
+    // 接口异常，保持当前状态
+    console.error('验证课堂状态失败:', error)
   }
 }
 

@@ -29,36 +29,46 @@
         <div class="bottom-section">
           <!-- 左侧：授课记录 -->
           <div class="lesson-record">
-            <div class="section-header">
-              <span class="section-title">{{ $t('teacher.teachingRecord') }}</span>
+            <!-- 有授课记录时显示 -->
+            <template v-if="teachList.length > 0">
+              <div class="section-header">
+                <span class="section-title">{{ $t('teacher.teachingRecord') }}</span>
+                <MSelect 
+                  v-model="selectedClassId" 
+                  :options="classOptions" 
+                  value-key="value" 
+                  label-key="label"
+                  :placeholder="$t('teacher.selectClass')"
+                  class="class-select"
+                />
+              </div>
+              
               <MSelect 
-                v-model="selectedClassId" 
-                :options="classOptions" 
+                v-model="selectedCourseId" 
+                :options="courseOptions" 
                 value-key="value" 
                 label-key="label"
-                :placeholder="$t('teacher.selectClass')"
-                class="class-select"
+                :placeholder="$t('teacher.selectCourse')"
+                class="course-select"
               />
-            </div>
-            
-            <MSelect 
-              v-model="selectedCourseId" 
-              :options="courseOptions" 
-              value-key="value" 
-              label-key="label"
-              :placeholder="$t('teacher.selectCourse')"
-              class="course-select"
-            />
-            
-            <div class="lesson-card" @click="goToCourse">
-              <img 
-                v-if="selectedCourse?.courseCoverUrl" 
-                :src="selectedCourse.courseCoverUrl" 
-                :alt="$t('common.courseCover')" 
-                class="lesson-cover"
-              />
-              <div v-else class="lesson-cover lesson-cover-placeholder"></div>
-            </div>
+              
+              <div class="lesson-card" @click="goToCourse">
+                <img 
+                  v-if="selectedCourse?.courseCoverUrl" 
+                  :src="selectedCourse.courseCoverUrl" 
+                  :alt="$t('common.courseCover')" 
+                  class="lesson-cover"
+                />
+                <div v-else class="lesson-cover lesson-cover-placeholder"></div>
+              </div>
+            </template>
+            <!-- 无授课记录时显示 -->
+            <template v-else>
+              <div class="section-header">
+                <span class="section-title">{{ $t('teacher.teachingRecord') }}</span>
+              </div>
+              <div class="empty-record">{{ $t('teacher.noTeachingRecord') }}</div>
+            </template>
           </div>
           
           <!-- 中间：章节列表 -->
@@ -1024,6 +1034,18 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 /* 授课记录 */
 .lesson-record {
   flex-shrink: 0;
+}
+
+.empty-record {
+  width: 200px;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f5f5f5;
+  border-radius: 8px;
+  color: #999;
+  font-size: 14px;
 }
 
 .lesson-card {

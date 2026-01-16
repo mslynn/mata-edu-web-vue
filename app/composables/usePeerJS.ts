@@ -197,13 +197,16 @@ export function usePeerJS() {
       }
 
       console.log('[PeerJS] 连接老师:', teacherPeerId)
+      console.log('[PeerJS] 当前连接状态:', peer.value.open ? '已连接服务器' : '未连接服务器')
+      console.log('[PeerJS] 自己的 peerId:', myPeerId.value)
 
       const conn = peer.value.connect(teacherPeerId, { reliable: true })
       teacherDataConnection = conn
 
       const timeoutId = setTimeout(() => {
+        console.error('[PeerJS] 连接超时，可能原因：1.老师PeerJS未初始化 2.老师已离线 3.网络问题')
         reject(new Error('连接超时'))
-      }, 5000)
+      }, 10000)
 
       conn.on('open', () => {
         clearTimeout(timeoutId)
@@ -214,6 +217,7 @@ export function usePeerJS() {
 
       conn.on('error', (err) => {
         clearTimeout(timeoutId)
+        console.error('[PeerJS] 连接老师出错:', err)
         reject(err)
       })
     })

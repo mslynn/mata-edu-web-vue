@@ -100,6 +100,16 @@ import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTeacher } from '~/composables/api/useTeacher'
 
+// 导入文件类型图标
+import docIcon from '~/assets/images/doc.png'
+import pptIcon from '~/assets/images/ppt.png'
+import pdfIcon from '~/assets/images/pdf.png'
+import xlsIcon from '~/assets/images/xls.png'
+import mp4Icon from '~/assets/images/mp4.png'
+import pngIcon from '~/assets/images/png.png'
+import mcIcon from '~/assets/images/mc.png'
+import morenIcon from '~/assets/images/moren.png'
+
 const { t } = useI18n()
 
 interface CoursewareItem {
@@ -227,17 +237,30 @@ const recallSelected = async () => {
 // 获取文件图标
 const getFileIcon = (fileName: string) => {
   const ext = fileName.split('.').pop()?.toLowerCase() || ''
-  const iconMap: Record<string, string> = {
-    pptx: '/images/icon-ppt.png',
-    ppt: '/images/icon-ppt.png',
-    ucd: '/images/icon-ucd.png',
-    doc: '/images/icon-word.png',
-    docx: '/images/icon-word.png',
-    pdf: '/images/icon-pdf.png',
-    xls: '/images/icon-excel.png',
-    xlsx: '/images/icon-excel.png'
+  const typeMap: Record<string, string> = {
+    doc: 'word', docx: 'word',
+    ppt: 'ppt', pptx: 'ppt',
+    xls: 'excel', xlsx: 'excel',
+    pdf: 'pdf',
+    ucd: 'ucd',
+    mc: 'mc',
+    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', bmp: 'image', webp: 'image', svg: 'image',
+    mp4: 'video', mov: 'video', webm: 'video'
   }
-  return iconMap[ext] || '/images/icon-file.png'
+  const fileType = typeMap[ext] || 'default'
+  
+  const iconMap: Record<string, string> = {
+    word: docIcon,
+    ppt: pptIcon,
+    excel: xlsIcon,
+    pdf: pdfIcon,
+    image: pngIcon,
+    video: mp4Icon,
+    mc: mcIcon,
+    ucd: morenIcon,
+    default: morenIcon
+  }
+  return iconMap[fileType] || iconMap.default
 }
 </script>
 
@@ -346,8 +369,8 @@ const getFileIcon = (fileName: string) => {
 }
 
 .file-icon {
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
 }
 

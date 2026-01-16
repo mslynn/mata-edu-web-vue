@@ -7,25 +7,25 @@
         <DeleteCourseModal v-model:visible="showDeleteModal" @confirm="confirmDeleteCourse" />
 
         <!-- 右侧内容区 -->
-        <div class="flex-1 flex flex-col p-4 min-h-0 overflow-hidden">
+        <div class="flex-1 flex flex-col p-4 min-h-0 overflow-hidden w-[96.5%] mx-auto">
             <!-- 顶部分类标签 + 创建按钮 -->
             <div class="flex items-center justify-between mb-4 flex-shrink-0">
                 <!-- 一级分类标签 -->
                 <div class="flex items-center gap-2 flex-wrap">
                     <!-- 主分类 -->
                     <button v-for="cat in mainCategories" :key="cat.value" :class="[
-                        'px-4 py-2 rounded-full text-sm transition-colors',
+                        'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
                         activeCategory === cat.value
                             ? 'bg-[#FF9900] text-white'
                             : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
                     ]" @click="activeCategory = cat.value">
                         {{ cat.label }}
                     </button>
-                    <!-- 分隔线 -->
-                    <div class="w-px h-6 bg-gray-300 mx-2"></div>
+                    <!-- 分隔线（只有主分类存在时才显示） -->
+                    <div v-if="mainCategories.length > 0" class="w-px h-6 bg-gray-300 mx-2"></div>
                     <!-- 特殊分类 -->
                     <button v-for="cat in extraCategories" :key="cat.value" :class="[
-                        'px-4 py-2 rounded-full text-sm transition-colors',
+                        'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
                         activeCategory === cat.value
                             ? 'bg-[#FF9900] text-white'
                             : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
@@ -34,7 +34,7 @@
                     </button>
                 </div>
                 <!-- 创建课程按钮 -->
-                <button class="px-4 py-2 bg-[#FF9900] text-white rounded-lg flex items-center gap-1 text-sm"
+                <button class="w-[132px] h-[50px] bg-[#FF9900] text-white rounded-[10px] flex items-center justify-center gap-1 text-sm"
                     @click="openCreateModal">
                     <span class="text-lg">+</span>
                     <span>{{ $t('course.createCourse') }}</span>
@@ -46,7 +46,7 @@
                 <!-- 二级分类标签 -->
                 <div class="flex items-center gap-2 flex-wrap">
                     <button v-for="sub in subCategories" :key="sub.value" :class="[
-                        'px-4 py-2 rounded-full text-sm transition-colors',
+                        'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
                         activeSubCategory === sub.value
                             ? 'bg-[#FF9900] text-white'
                             : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
@@ -57,12 +57,12 @@
                 <!-- 右侧筛选 -->
                 <div class="flex items-center gap-3">
                     <!-- 开通状态筛选（自定义和共享课程不显示） -->
-                    <div v-if="activeCategory !== '自定义课程' && activeCategory !== '共享课程'" class="flex items-center gap-2">
-                        <span class="text-sm text-gray-500">{{ $t('common.openStatus') }}：</span>
+                    <div v-if="activeCategory !== 'custom' && activeCategory !== 'shared'" class="flex items-center gap-2">
+                        <span class="text-sm text-gray-500">{{ $t('common.openStatus') }}</span>
                         <!-- 自定义下拉框 -->
                         <div class="relative">
                             <button type="button"
-                                class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#FF9900] transition-colors min-w-[90px]"
+                                class="flex items-center justify-center gap-2 w-[108px] h-[50px] px-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-600 hover:border-[#FF9900] transition-colors"
                                 @click="showStatusDropdown = !showStatusDropdown">
                                 <span>{{statusOptions.find(o => o.value === courseStatus)?.label || $t('common.all')}}</span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform"
@@ -90,7 +90,7 @@
                     </div>
                     <div class="relative">
                         <input v-model="searchKeyword" type="text" :placeholder="$t('common.searchPlaceholder')"
-                            class="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-[200px] outline-none focus:border-[#FF9900]" />
+                            class="pl-9 pr-4 w-[267px] h-[50px] border border-gray-200 rounded-[10px] text-sm outline-none focus:border-[#FF9900]" />
                         <svg class="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -103,7 +103,7 @@
             <!-- 三级分类 -->
             <div v-if="thirdCategories.length > 0" class="flex items-center gap-2 flex-wrap mb-4 flex-shrink-0">
                 <button v-for="third in thirdCategories" :key="third.value" :class="[
-                    'px-4 py-2 rounded-full text-sm transition-colors',
+                    'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
                     activeThirdCategory === third.value
                         ? 'bg-[#FF9900] text-white'
                         : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
@@ -114,14 +114,14 @@
 
             <!-- 课程列表区域 -->
             <div class="flex-1 bg-white rounded-lg border border-dashed border-gray-300 p-6 overflow-auto">
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     <NuxtLink v-for="course in courseList" :key="course.id" :to="`/system/course/${course.id}`"
-                        class="course-card cursor-pointer group">
+                        class="course-card w-full aspect-[265/380] rounded-[20px] border border-gray-200 shadow-sm cursor-pointer group pt-[5%] px-[8%]">
                         <!-- 课程封面 -->
                         <div
-                            class="course-cover bg-gray-200 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+                            class="course-cover w-full aspect-[220/276] bg-gray-200 rounded-[5px] mb-3 flex items-center justify-center relative overflow-hidden">
                             <!-- 自定义课程：显示编辑和删除图标 -->
-                            <div v-if="course.category === '自定义课程'" class="absolute top-2 right-2 flex gap-1 z-10">
+                            <div v-if="course.category === 'custom'" class="absolute top-2 right-2 flex gap-1 z-10">
                                 <div class="tooltip-wrapper group relative">
                                     <button
                                         class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-gray-50"
@@ -148,35 +148,41 @@
                                     <div class="tooltip-content">{{ $t('common.delete') }}<span class="tooltip-arrow"></span></div>
                                 </div>
                             </div>
-                            <!-- 共享课程：编辑或添加按钮（二选一） -->
-                            <div v-else-if="course.category === '共享课程'" class="absolute top-2 right-2 z-10">
-                                <!-- 可添加的共享课程（别人分享的）只显示添加按钮 -->
-                                <div v-if="course.canAdd" class="tooltip-wrapper group relative">
-                                    <button
-                                        class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-[#FFF7E6]"
-                                        @click.prevent="handleAddToMyCourse(course)">
-                                        <svg class="w-4 h-4 text-[#FF9900]" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 4v16m8-8H4" />
-                                        </svg>
-                                    </button>
-                                    <div class="tooltip-content">{{ $t('common.add') }}<span class="tooltip-arrow"></span></div>
+                            <!-- 共享课程：编辑或添加按钮 + 创建者标签 -->
+                            <template v-else-if="course.category === 'shared'">
+                                <!-- 右上角：编辑或添加按钮 -->
+                                <div class="absolute top-2 right-2 z-10">
+                                    <!-- 可添加的共享课程（别人分享的）只显示添加按钮 -->
+                                    <div v-if="course.canAdd" class="tooltip-wrapper group relative">
+                                        <button
+                                            class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-[#FFF7E6]"
+                                            @click.prevent="handleAddToMyCourse(course)">
+                                            <svg class="w-4 h-4 text-[#FF9900]" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 4v16m8-8H4" />
+                                            </svg>
+                                        </button>
+                                        <div class="tooltip-content">{{ $t('common.add') }}<span class="tooltip-arrow"></span></div>
+                                    </div>
+                                    <!-- 自己的共享课程只显示编辑按钮 -->
+                                    <div v-else class="tooltip-wrapper group relative">
+                                        <button
+                                            class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-gray-50"
+                                            @click.prevent="handleEditCourse(course)">
+                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                        </button>
+                                        <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
+                                    </div>
                                 </div>
-                                <!-- 自己的共享课程只显示编辑按钮 -->
-                                <div v-else class="tooltip-wrapper group relative">
-                                    <button
-                                        class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-gray-50"
-                                        @click.prevent="handleEditCourse(course)">
-                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
-                                </div>
-                            </div>
+                                <!-- 右下角：我的/创建者标签（贴边） -->
+                                <span v-if="course.isOwner" class="absolute bottom-0 right-0 px-3 py-1 bg-[#FF9900] text-white text-xs rounded-tl z-10">我的</span>
+                                <span v-else-if="course.createByName" class="absolute bottom-0 right-0 px-3 py-1 bg-[#52C41A] text-white text-xs rounded-tl z-10">{{ course.createByName }}</span>
+                            </template>
                             <!-- 其他课程：显示状态标签 -->
                             <span v-else class="absolute top-2 right-2 px-2 py-0.5 rounded text-xs z-10"
                                 :class="[statusConfig[course.status]?.bg, statusConfig[course.status]?.color]">
@@ -197,9 +203,9 @@
                             </template>
                         </div>
                         <!-- 课程名称 -->
-                        <div class="text-sm font-medium text-gray-800 mb-1">{{ course.name }}</div>
+                        <div class="text-[18px] font-normal text-[#4D4D4D] leading-[24px] mb-[6px] text-center mt-[10px]">{{ course.name }}</div>
                         <!-- 课时数 -->
-                        <div class="text-xs text-gray-400">{{ course.hours }}{{ $t('common.hours') }}</div>
+                        <div class="text-[16px] font-normal text-[#ADADAD] leading-[24px] text-center">{{ course.hours }}{{ $t('common.hours') }}</div>
                     </NuxtLink>
                 </div>
 
@@ -272,7 +278,10 @@ const loadMenuData = async () => {
             const extraList: { label: string; value: string }[] = []
 
             data.forEach((item: MenuNode) => {
-                const menuValue = item.menuId !== null ? String(item.menuId) : item.menuName
+                // menuId 为 null 的是特殊分类（自定义/共享），使用固定标识符
+                const isCustomCourse = item.menuId === null && (item.menuName === '自定义课程' || item.menuName === 'Custom Course')
+                const isSharedCourse = item.menuId === null && (item.menuName === '共享课程' || item.menuName === 'Shared Course')
+                const menuValue = item.menuId !== null ? String(item.menuId) : (isCustomCourse ? 'custom' : (isSharedCourse ? 'shared' : item.menuName))
                 const menuItem = {
                     label: item.menuName,
                     value: menuValue,
@@ -282,12 +291,12 @@ const loadMenuData = async () => {
                 if (item.menuId === null) {
                     extraList.push(menuItem)
                     // 设置特殊分类的二级分类
-                    if (item.menuName === '自定义课程') {
+                    if (isCustomCourse) {
                         subCategoryMap.value[menuValue] = [
                             { label: t('common.privateVisible'), value: 'private' },
                             { label: t('common.schoolVisible'), value: 'public' },
                         ]
-                    } else if (item.menuName === '共享课程') {
+                    } else if (isSharedCourse) {
                         subCategoryMap.value[menuValue] = [
                             { label: t('common.all'), value: 'all' },
                         ]
@@ -388,7 +397,7 @@ const handleSubCategoryClick = (sub: { label: string; value: string; hasChildren
 // 监听一级分类变化，重置二级分类为第一个
 watch(activeCategory, (newVal) => {
     // 自定义课程默认选中"个人可见"
-    if (newVal === '自定义课程') {
+    if (newVal === 'custom') {
         activeSubCategory.value = 'private'
     } else {
         // 获取该分类的二级分类，默认选中第一个
@@ -555,6 +564,7 @@ interface Course {
     canAdd?: boolean // 共享课程是否可添加（别人创建的）
     isOwner?: boolean // 是否是自己创建的
     createBy?: string // 创建者ID
+    createByName?: string // 创建者名字
     category: string
     subCategory: string
     status: string
@@ -575,7 +585,7 @@ const loadCourseList = async () => {
         const params: any = {}
 
         // 自定义课程和共享课程使用 courseType
-        if (activeCategory.value === '自定义课程') {
+        if (activeCategory.value === 'custom') {
             params.courseType = 1
             // 自定义课程的二级分类：0仅自己可见（个人可见）/1全校老师可见（学校可见）
             if (activeSubCategory.value === 'public') {
@@ -583,16 +593,22 @@ const loadCourseList = async () => {
             } else {
                 params.coursePermission = 0 // 个人可见（默认）
             }
-        } else if (activeCategory.value === '共享课程') {
+        } else if (activeCategory.value === 'shared') {
             params.courseType = 2
         } else {
             // 普通课程使用 menuId，优先使用三级分类
             let menuId: number
             if (activeThirdCategory.value && activeThirdCategory.value !== 'all') {
+                // 选了具体的三级分类，用三级的menuId
                 menuId = Number(activeThirdCategory.value)
+            } else if (activeThirdCategory.value === 'all' && activeSubCategory.value && activeSubCategory.value !== 'all') {
+                // 三级选"全部"，用二级的menuId（父级）
+                menuId = Number(activeSubCategory.value)
             } else if (activeSubCategory.value && activeSubCategory.value !== 'all') {
+                // 选了具体的二级分类（没有三级），用二级的menuId
                 menuId = Number(activeSubCategory.value)
             } else {
+                // 二级选"全部"，用一级的menuId（父级）
                 menuId = Number(activeCategory.value)
             }
 
@@ -604,8 +620,8 @@ const loadCourseList = async () => {
             params.menuId = menuId
         }
 
-        // 开通状态筛选
-        if (courseStatus.value) {
+        // 开通状态筛选（自定义和共享课程不传此参数）
+        if (courseStatus.value && activeCategory.value !== 'custom' && activeCategory.value !== 'shared') {
             const statusMap: Record<string, number> = {
                 opened: 1,
                 not_opened: 0,
@@ -635,7 +651,8 @@ const loadCourseList = async () => {
                     description: item.courseDesc || item.courseDescription || '',
                     cover: item.courseCoverUrl || item.courseCover || '',
                     coverOssId: item.courseCoverOssId || '',
-                    coeateBy: item.createBy,
+                    createBy: item.createBy,
+                    createByName: item.createByName || item.nickName || '',
                     isOwner, // 是否是自己创建的
                     canAdd: !isOwner, // 不是自己创建的才能添加
                 }
@@ -670,8 +687,6 @@ watch([activeCategory, activeSubCategory, activeThirdCategory, courseStatus, sea
 }
 
 .course-cover {
-    width: 100%;
-    aspect-ratio: 3 / 4;
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 

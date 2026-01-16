@@ -1,29 +1,34 @@
 <template>
   <div class="tool-center-page">
+    <!-- 页面标题 -->
+    <h1 class="page-title">{{ t('tool.pageTitle') }}</h1>
+    
     <div class="tool-grid">
       <div v-for="tool in toolList" :key="tool.id" class="tool-card">
-        <div class="tool-header">
-          <div class="tool-icon">
-            <img :src="tool.icon" :alt="tool.name" />
+        <div class="tool-content">
+          <!-- 左侧图标和名称 -->
+          <div class="tool-left">
+            <div class="tool-icon">
+              <img :src="tool.icon" :alt="tool.name" />
+            </div>
+            <div class="tool-name" v-html="tool.name"></div>
           </div>
-          <div class="tool-info">
-            <h3 class="tool-title">{{ t(tool.titleKey) }}</h3>
+          <!-- 右侧描述 -->
+          <div class="tool-right">
             <p class="tool-desc">{{ t(tool.descKey) }}</p>
           </div>
         </div>
-        <div class="tool-footer">
-          <div class="tool-name" v-html="tool.name"></div>
-          <div class="tool-actions">
-            <MButton v-if="tool.hasCreate" size="small" class="primary-btn" @click="handleCreate(tool)">
-              {{ t('tool.startCreate') }}
-            </MButton>
-            <MButton v-if="tool.hasMobile" size="small" class="outline-btn" @click="handleDownloadMobile(tool)">
-              {{ t('tool.downloadMobile') }}
-            </MButton>
-            <MButton v-if="tool.hasDesktop" size="small" class="outline-btn" @click="handleDownloadDesktop(tool)">
-              {{ t('tool.downloadDesktop') }}
-            </MButton>
-          </div>
+        <!-- 底部按钮 -->
+        <div class="tool-actions">
+          <button v-if="tool.hasCreate" class="btn-primary" @click="handleCreate(tool)">
+            {{ t('tool.startCreate') }}
+          </button>
+          <button v-if="tool.hasMobile" class="btn-outline" @click="handleDownloadMobile(tool)">
+            {{ t('tool.downloadMobile') }}
+          </button>
+          <button v-if="tool.hasDesktop" class="btn-outline" @click="handleDownloadDesktop(tool)">
+            {{ t('tool.downloadDesktop') }}
+          </button>
         </div>
       </div>
     </div>
@@ -40,7 +45,6 @@
           </button>
         </div>
         <div class="iframe-modal-body">
-          <!-- Loading 状态 -->
           <div v-if="iframeLoading" class="iframe-loading">
             <div class="loading-spinner"></div>
             <span class="loading-text">{{ t('common.loading') }}</span>
@@ -63,6 +67,12 @@
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
+import tool1Icon from '~/assets/images/tool1.png'
+import tool2Icon from '~/assets/images/tool2.png'
+import tool3Icon from '~/assets/images/tool3.png'
+import tool4Icon from '~/assets/images/too4.png'
+import tool5Icon from '~/assets/images/tool5.png'
+
 definePageMeta({
   layout: 'sidebar'
 })
@@ -83,12 +93,11 @@ interface Tool {
   desktopUrl?: string
 }
 
-// Mock 数据
 const toolList: Tool[] = [
   {
     id: 'vincibot',
     name: 'MatataCode<br/>(VinciBot)',
-    icon: '/images/tool-vincibot.png',
+    icon: tool1Icon,
     titleKey: 'tool.vincibot.title',
     descKey: 'tool.vincibot.desc',
     hasCreate: true,
@@ -101,7 +110,7 @@ const toolList: Tool[] = [
   {
     id: 'nous',
     name: 'MatataCode<br/>(Nous)',
-    icon: '/images/tool-nous.png',
+    icon: tool2Icon,
     titleKey: 'tool.nous.title',
     descKey: 'tool.nous.desc',
     hasCreate: true,
@@ -114,7 +123,7 @@ const toolList: Tool[] = [
   {
     id: 'matatacode',
     name: 'MatataCode',
-    icon: '/images/tool-matatacode.png',
+    icon: tool3Icon,
     titleKey: 'tool.matatacode.title',
     descKey: 'tool.matatacode.desc',
     hasCreate: false,
@@ -125,7 +134,7 @@ const toolList: Tool[] = [
   {
     id: 'talemap',
     name: 'MatataCode<br/>(TaleMap)',
-    icon: '/images/tool-talemap.png',
+    icon: tool4Icon,
     titleKey: 'tool.talemap.title',
     descKey: 'tool.talemap.desc',
     hasCreate: false,
@@ -136,7 +145,7 @@ const toolList: Tool[] = [
   {
     id: 'matataxplore',
     name: 'MatataXplore',
-    icon: '/images/tool-matataxplore.png',
+    icon: tool5Icon,
     titleKey: 'tool.matataxplore.title',
     descKey: 'tool.matataxplore.desc',
     hasCreate: false,
@@ -147,13 +156,11 @@ const toolList: Tool[] = [
   }
 ]
 
-// iframe 弹窗状态
 const showIframeModal = ref(false)
 const currentIframeUrl = ref('')
 const currentToolName = ref('')
 const iframeLoading = ref(true)
 
-// 开始创作 - 打开 iframe 弹窗
 const handleCreate = (tool: Tool) => {
   if (tool.createUrl) {
     currentIframeUrl.value = tool.createUrl
@@ -163,12 +170,10 @@ const handleCreate = (tool: Tool) => {
   }
 }
 
-// iframe 加载完成
 const onIframeLoad = () => {
   iframeLoading.value = false
 }
 
-// 关闭 iframe 弹窗
 const closeIframeModal = () => {
   showIframeModal.value = false
   currentIframeUrl.value = ''
@@ -176,26 +181,29 @@ const closeIframeModal = () => {
   iframeLoading.value = true
 }
 
-// 下载移动端
 const handleDownloadMobile = (tool: Tool) => {
-  if (tool.mobileUrl) {
-    window.open(tool.mobileUrl, '_blank')
-  }
+  // TODO: 实现下载移动端逻辑
+  console.log('下载移动端:', tool.id)
 }
 
-// 下载桌面端
 const handleDownloadDesktop = (tool: Tool) => {
-  if (tool.desktopUrl) {
-    window.open(tool.desktopUrl, '_blank')
-  }
+  // TODO: 实现下载桌面端逻辑
+  console.log('下载桌面端:', tool.id)
 }
 </script>
 
 <style scoped>
 .tool-center-page {
-  padding: 24px;
+  padding: 30px 40px;
   min-height: calc(100vh - 70px);
   background: #F5F5F5;
+}
+
+.page-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 24px;
 }
 
 .tool-grid {
@@ -206,26 +214,34 @@ const handleDownloadDesktop = (tool: Tool) => {
 
 .tool-card {
   background: white;
-  border-radius: 12px;
-  padding: 20px;
+  border-radius: 20px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
-  min-height: 240px;
+  min-height: 220px;
 }
 
-.tool-header {
+.tool-content {
   display: flex;
-  gap: 16px;
+  gap: 20px;
   flex: 1;
 }
 
-.tool-icon {
-  width: 64px;
-  height: 64px;
-  border-radius: 12px;
+.tool-left {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 80px;
+}
+
+.tool-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 16px;
   overflow: hidden;
   background: #f5f5f5;
+  margin-bottom: 10px;
 }
 
 .tool-icon img {
@@ -234,75 +250,60 @@ const handleDownloadDesktop = (tool: Tool) => {
   object-fit: cover;
 }
 
-.tool-info {
+.tool-name {
+  font-size: 12px;
+  color: #666;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.tool-right {
   flex: 1;
   min-width: 0;
 }
 
-.tool-title {
-  font-size: 14px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-  line-height: 1.5;
-}
-
 .tool-desc {
-  font-size: 12px;
+  font-size: 13px;
   color: #666;
-  line-height: 1.6;
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.tool-footer {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  margin-top: 16px;
-  padding-top: 12px;
-}
-
-.tool-name {
-  font-size: 12px;
-  color: #999;
-  line-height: 1.4;
+  line-height: 1.8;
+  margin: 0;
 }
 
 .tool-actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
+  margin-top: 16px;
   flex-wrap: wrap;
-  justify-content: flex-end;
 }
 
-.primary-btn {
-  background: #FF9900 !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 20px !important;
-  padding: 6px 14px !important;
-  font-size: 12px !important;
+.btn-primary {
+  background: #FF9900;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
-.primary-btn:hover {
-  background: #E68A00 !important;
+.btn-primary:hover {
+  background: #E68A00;
 }
 
-.outline-btn {
-  background: white !important;
-  color: #FF9900 !important;
-  border: 1px solid #FF9900 !important;
-  border-radius: 20px !important;
-  padding: 6px 14px !important;
-  font-size: 12px !important;
+.btn-outline {
+  background: white;
+  color: #FF9900;
+  border: 1px solid #FF9900;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.outline-btn:hover {
-  background: #FFF9F0 !important;
+.btn-outline:hover {
+  background: #FFF9F0;
 }
 
 /* 响应式 */
@@ -391,7 +392,6 @@ const handleDownloadDesktop = (tool: Tool) => {
   position: absolute;
 }
 
-/* Loading 样式 */
 .iframe-loading {
   position: absolute;
   inset: 0;

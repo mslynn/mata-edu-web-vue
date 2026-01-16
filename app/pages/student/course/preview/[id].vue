@@ -52,10 +52,10 @@
                 </div>
                 <div v-if="expandedSections[group.resourceName]" class="section-content">
                   <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item"
-                    :class="{ active: selectedResource?.resourceId === item.resourceId }"
-                    @click="selectResource(item)">
-                    <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">
-                      {{ getIconText(getFileType(item.fileName)) }}
+                    :class="{ active: selectedResource?.id === item.resourceId }"
+                    @click="handleSelectResource(item)">
+                    <div class="item-icon" :class="getIconClass(item.fileName)">
+                      {{ getIconText(item.fileName) }}
                     </div>
                     <div class="item-info">
                       <span class="item-name">{{ item.fileName }}</span>
@@ -79,41 +79,12 @@
         </button>
       </div>
 
-      <!-- 右侧预览区域 -->
+      <!-- 右侧预览区域 - 使用通用组件 -->
       <div class="preview-area">
-        <div v-if="previewLoading" class="preview-loading">
-          <div class="spinner"></div>
-          <span>{{ $t('common.loading') }}</span>
-        </div>
-        <div v-else-if="!selectedResource" class="preview-empty">
-          <svg class="empty-svg-large" viewBox="0 0 200 200" fill="none">
-            <circle cx="100" cy="100" r="80" fill="#f0f0f0" />
-            <rect x="55" y="50" width="90" height="110" rx="8" fill="white" stroke="#ddd" stroke-width="2" />
-            <circle cx="80" cy="80" r="8" fill="#e8e8e8" />
-            <line x1="95" y1="80" x2="130" y2="80" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round" />
-            <circle cx="80" cy="105" r="8" fill="#e8e8e8" />
-            <line x1="95" y1="105" x2="125" y2="105" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round" />
-            <circle cx="80" cy="130" r="8" fill="#e8e8e8" />
-            <line x1="95" y1="130" x2="120" y2="130" stroke="#e8e8e8" stroke-width="3" stroke-linecap="round" />
-          </svg>
-          <p class="empty-text-large">{{ $t('prepare.selectResourceToPreview') }}</p>
-        </div>
-        <div v-else class="preview-content">
-          <!-- Word/PPT/PDF/图片/Excel 使用 iframe 预览 -->
-          <div v-if="['word', 'ppt', 'pdf', 'image', 'excel'].includes(getFileType(selectedResource.fileName))" class="ppt-preview-wrapper">
-            <iframe :src="pptPreviewUrl" class="ppt-iframe" frameborder="0" allowfullscreen></iframe>
-          </div>
-          <!-- 视频预览 -->
-          <div v-else-if="getFileType(selectedResource.fileName) === 'video'" class="video-preview-wrapper">
-            <video :src="selectedResource.resourceUrl" controls class="preview-video" preload="metadata">
-              {{ $t('prepare.browserNotSupportVideo') }}
-            </video>
-          </div>
-          <!-- 不支持预览 -->
-          <div v-else class="preview-unsupported">
-            <p>{{ $t('prepare.previewNotSupported') }}</p>
-          </div>
-        </div>
+        <FilePreview 
+          :resource="selectedResource" 
+          :loading="loading"
+        />
       </div>
     </div>
   </div>
@@ -123,7 +94,7 @@
 import { ref, reactive, onMounted, computed, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { cursorAdmin } from '~/composables/api/curosr'
-import '~/assets/css/prepare.css'
+import { useFilePreview } from '~/composables/useFilePreview'
 
 definePageMeta({ layout: 'blank' })
 
@@ -131,6 +102,16 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 const { getCursorDetail, getChapterResourceList } = cursorAdmin()
+
+// 使用文件预览 composable
+const { 
+  selectedResource, 
+  loading, 
+  selectResource, 
+  clearPreview,
+  getFileType,
+  getIconClass: getIconClassByType 
+} = useFilePreview()
 
 const courseInfo = ref({ name: '' })
 const chapterList = ref<{ id: string; name: string }[]>([])
@@ -142,7 +123,7 @@ const panelCollapsed = ref(false)
 interface ResourceItem {
   resourceId: number
   chapterId: string
-  resourceType: number
+  resourceType?: number
   resourceCategory: number
   resourceName: string
   ossId: string
@@ -157,23 +138,42 @@ interface ResourceGroup {
 
 const resources = ref<ResourceGroup[]>([])
 const expandedSections = reactive<Record<string, boolean>>({})
-const selectedResource = ref<ResourceItem | null>(null)
-const previewLoading = ref(false)
-const pptPreviewUrl = ref('')
 
-// base64 编码
-const base64Encode = (str: string): string => {
-  if (typeof window !== 'undefined') {
-    return btoa(unescape(encodeURIComponent(str)))
+// 获取图标类名
+const getIconClass = (fileName: string) => {
+  const type = getFileType(fileName)
+  const iconMap: Record<string, string> = {
+    word: 'icon-word',
+    ppt: 'icon-ppt',
+    pdf: 'icon-pdf',
+    excel: 'icon-excel',
+    image: 'icon-image',
+    video: 'icon-video',
   }
-  return str
+  return iconMap[type] || 'icon-default'
 }
 
-// 生成预览地址
-const config = useRuntimeConfig()
-const getPptPreviewUrl = (url: string): string => {
-  const previewBaseUrl = (config.public.previewBaseUrl as string)?.trim() || 'http://192.168.0.145:8012'
-  return `${previewBaseUrl}/onlinePreview?url=${encodeURIComponent(base64Encode(url))}`
+// 获取图标文字
+const getIconText = (fileName: string) => {
+  const type = getFileType(fileName)
+  const textMap: Record<string, string> = {
+    word: 'W',
+    ppt: 'P',
+    pdf: 'PDF',
+    excel: 'X',
+    image: '图',
+    video: '视',
+  }
+  return textMap[type] || '?'
+}
+
+// 选择资源
+const handleSelectResource = (item: ResourceItem) => {
+  selectResource({
+    id: item.resourceId,
+    name: item.fileName,
+    url: item.resourceUrl || ''
+  })
 }
 
 // 点击外部关闭下拉框
@@ -227,15 +227,14 @@ const currentChapterName = computed(() => {
 const selectChapter = async (chapter: { id: string; name: string }) => {
   currentChapterId.value = chapter.id
   dropdownOpen.value = false
-  selectedResource.value = null
-  pptPreviewUrl.value = ''
+  clearPreview() // 清空预览
   await loadChapterResources(chapter.id)
 }
 
 // 加载章节资源（学生只能看教学资源 resourceType=1）
 const loadChapterResources = async (chapterId: string) => {
   try {
-    const data = await getChapterResourceList(chapterId, 1)
+    const data = await getChapterResourceList(chapterId)
     if (data) {
       resources.value = data || []
       resources.value.forEach(group => {
@@ -248,7 +247,7 @@ const loadChapterResources = async (chapterId: string) => {
       const firstGroup = resources.value[0]
       const firstResource = firstGroup?.resourceList?.[0]
       if (firstResource) {
-        selectResource(firstResource)
+        handleSelectResource(firstResource)
       }
     }
   } catch (error) {
@@ -258,45 +257,6 @@ const loadChapterResources = async (chapterId: string) => {
 
 const toggleSection = (name: string) => {
   expandedSections[name] = !expandedSections[name]
-}
-
-const getFileType = (fileName: string) => {
-  const ext = fileName?.split('.').pop()?.toLowerCase() || ''
-  const typeMap: Record<string, string> = {
-    doc: 'word', docx: 'word',
-    ppt: 'ppt', pptx: 'ppt',
-    xls: 'excel', xlsx: 'excel',
-    pdf: 'pdf',
-    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', bmp: 'image', webp: 'image', svg: 'image',
-    mp4: 'video', mov: 'video', webm: 'video'
-  }
-  return typeMap[ext] || 'default'
-}
-
-const getIconClass = (type: string) => ({ word: 'icon-word', ppt: 'icon-ppt', pdf: 'icon-pdf', excel: 'icon-excel' }[type] || 'icon-default')
-const getIconText = (type: string) => ({ word: 'W', ppt: 'P', pdf: 'PDF', excel: 'X' }[type] || '?')
-
-const selectResource = async (item: ResourceItem) => {
-  if (selectedResource.value?.resourceId === item.resourceId) return
-  pptPreviewUrl.value = ''
-  selectedResource.value = item
-  previewLoading.value = true
-  
-  try {
-    const fileType = getFileType(item.fileName)
-    if (['word', 'ppt', 'pdf', 'image', 'excel'].includes(fileType) && item.resourceUrl) {
-      // Word/PPT/PDF/图片/Excel 使用 iframe 预览
-      pptPreviewUrl.value = getPptPreviewUrl(item.resourceUrl)
-      previewLoading.value = false
-    } else if (fileType === 'video') {
-      previewLoading.value = false
-    } else {
-      previewLoading.value = false
-    }
-  } catch (error) {
-    console.error('Failed to load preview:', error)
-    previewLoading.value = false
-  }
 }
 </script>
 
@@ -332,9 +292,7 @@ const selectResource = async (item: ResourceItem) => {
 .back-link:hover { color: #FF9900; }
 .back-icon { width: 24px; height: 24px; }
 
-.chapter-dropdown {
-  position: relative;
-}
+.chapter-dropdown { position: relative; }
 .dropdown-trigger {
   display: flex;
   align-items: center;
@@ -368,25 +326,11 @@ const selectResource = async (item: ResourceItem) => {
 .dropdown-item:hover { background: #FFF8F0; }
 .dropdown-item.active { color: #FF9900; background: #FFF8F0; }
 
-.header-center {
-  flex: 1;
-  text-align: center;
-}
-.course-name {
-  font-size: 16px;
-  font-weight: 500;
-  color: #333;
-}
+.header-center { flex: 1; text-align: center; }
+.course-name { font-size: 16px; font-weight: 500; color: #333; }
+.header-right { width: 200px; }
 
-.header-right {
-  width: 200px;
-}
-
-.preview-body {
-  flex: 1;
-  display: flex;
-  overflow: hidden;
-}
+.preview-body { flex: 1; display: flex; overflow: hidden; }
 
 .left-sidebar {
   width: 280px;
@@ -399,11 +343,7 @@ const selectResource = async (item: ResourceItem) => {
 .left-sidebar.collapsed { width: 0; }
 .left-sidebar.collapsed .resource-panel { display: none; }
 
-.resource-panel {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-}
+.resource-panel { flex: 1; overflow-y: auto; padding: 16px; }
 
 .resource-section { margin-bottom: 8px; }
 .section-header {
@@ -456,6 +396,8 @@ const selectResource = async (item: ResourceItem) => {
 .icon-ppt { background: #D24726; }
 .icon-pdf { background: #F40F02; }
 .icon-excel { background: #217346; }
+.icon-image { background: #4CAF50; }
+.icon-video { background: #9C27B0; }
 .icon-default { background: #999; }
 
 .item-info { flex: 1; min-width: 0; }
@@ -485,81 +427,12 @@ const selectResource = async (item: ResourceItem) => {
   z-index: 10;
 }
 .collapse-btn:hover { background: #f5f5f5; }
-.collapse-icon {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.3s;
-}
+.collapse-icon { width: 16px; height: 16px; transition: transform 0.3s; }
 .collapse-icon.rotated { transform: rotate(180deg); }
 
 .preview-area {
   flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #fafafa;
   overflow: hidden;
-}
-
-.preview-loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  color: #999;
-}
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid #eee;
-  border-top-color: #FF9900;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.preview-empty {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-}
-.empty-svg-large { width: 120px; height: 120px; }
-.empty-text-large { color: #999; font-size: 14px; }
-
-.preview-content {
-  width: 100%;
-  height: 100%;
-}
-
-.ppt-preview-wrapper {
-  width: 100%;
-  height: 100%;
-}
-.ppt-iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-}
-
-.video-preview-wrapper {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-}
-.preview-video {
-  max-width: 100%;
-  max-height: 100%;
-}
-
-.preview-unsupported {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #999;
 }
 
 .empty-content {

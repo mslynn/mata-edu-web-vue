@@ -83,10 +83,9 @@
                   <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item-wrapper">
                     <div class="resource-item" :class="{ active: selectedResource?.resourceId === item.resourceId }"
                       @click="selectResource(item)">
-                      <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">{{
-                        getIconText(getFileType(item.fileName)) }}</div>
+                      <img class="item-icon-img" :src="getFileIconSrc(getFileType(item.fileName))" :alt="getFileType(item.fileName)" />
                       <div class="item-info">
-                        <span class="item-name">{{ item.fileName }}</span>
+                        <span class="item-name" :title="item.fileName">{{ item.fileName }}</span>
                       </div>
                       <button class="item-download" @click.stop="downloadResource(item)" :title="t('common.download')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -135,10 +134,9 @@
                 <div v-if="expandedSections[group.resourceName]" class="section-content">
                   <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item"
                     :class="{ active: selectedResource?.resourceId === item.resourceId }" @click="selectResource(item)">
-                    <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">{{
-                      getIconText(getFileType(item.fileName)) }}</div>
+                    <img class="item-icon-img" :src="getFileIconSrc(getFileType(item.fileName))" :alt="getFileType(item.fileName)" />
                     <div class="item-info">
-                      <span class="item-name">{{ item.fileName }}</span>
+                      <span class="item-name" :title="item.fileName">{{ item.fileName }}</span>
                     </div>
                     <button class="item-download" @click.stop="downloadResource(item)" :title="t('common.download')">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -186,10 +184,9 @@
                     <div v-for="item in group.resourceList" :key="item.resourceId" class="resource-item"
                       :class="{ active: selectedResource?.resourceId === item.resourceId }"
                       @click="selectResource(item)">
-                      <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">{{
-                        getIconText(getFileType(item.fileName)) }}</div>
+                      <img class="item-icon-img" :src="getFileIconSrc(getFileType(item.fileName))" :alt="getFileType(item.fileName)" />
                       <div class="item-info">
-                        <span class="item-name">{{ item.fileName }}</span>
+                        <span class="item-name" :title="item.fileName">{{ item.fileName }}</span>
                       </div>
                       <button class="item-download" @click.stop="downloadResource(item)" :title="t('common.download')">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -596,8 +593,29 @@ const toggleSection = (name: string) => {
 const selectedResource = ref<ResourceItem | null>(null)
 const previewLoading = ref(false)
 
-const getIconClass = (type: string) => ({ word: 'icon-word', ppt: 'icon-ppt', pdf: 'icon-pdf', ucd: 'icon-ucd' }[type] || 'icon-default')
-const getIconText = (type: string) => ({ word: 'W', ppt: 'P', pdf: 'PDF', ucd: 'ucd' }[type] || '?')
+const getIconClass = (type: string) => ({ word: 'icon-word', ppt: 'icon-ppt', pdf: 'icon-pdf', ucd: 'icon-ucd', excel: 'icon-excel', image: 'icon-image', video: 'icon-video' }[type] || 'icon-default')
+const getIconText = (type: string) => ({ word: 'W', ppt: 'P', pdf: 'PDF', ucd: 'ucd', excel: 'X', image: 'IMG', video: 'MP4' }[type] || '?')
+
+// 引入图标图片
+import pptIcon from '~/assets/images/ppt.png'
+import docIcon from '~/assets/images/doc.png'
+import xlsIcon from '~/assets/images/xls.png'
+import pdfIcon from '~/assets/images/pdf.png'
+import mp4Icon from '~/assets/images/mp4.png'
+import pngIcon from '~/assets/images/png.png'
+
+// 根据文件类型获取图标图片路径
+const getFileIconSrc = (type: string) => {
+  const iconMap: Record<string, string> = {
+    ppt: pptIcon, // 暂时用pdf图标代替ppt
+    word: docIcon,
+    excel: xlsIcon,
+    pdf: pdfIcon,
+    video: mp4Icon,
+    image: pngIcon
+  }
+  return iconMap[type] || docIcon
+}
 
 // 我要修改（modifyNum === 0 时）
 const startModify = async (item: ResourceItem) => {

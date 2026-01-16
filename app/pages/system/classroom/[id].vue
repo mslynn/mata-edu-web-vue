@@ -381,6 +381,16 @@ import { useTeacher } from '~/composables/api/useTeacher'
 import { ElMessage } from '~/components/ui'
 import { useI18n } from 'vue-i18n'
 
+// 导入文件类型图标
+import docIcon from '~/assets/images/doc.png'
+import pptIcon from '~/assets/images/ppt.png'
+import pdfIcon from '~/assets/images/pdf.png'
+import xlsIcon from '~/assets/images/xls.png'
+import mp4Icon from '~/assets/images/mp4.png'
+import pngIcon from '~/assets/images/png.png'
+import mcIcon from '~/assets/images/mc.png'
+import morenIcon from '~/assets/images/moren.png'
+
 definePageMeta({ layout: 'blank' })
 
 const { t } = useI18n()
@@ -753,12 +763,30 @@ const selectResource = async (item: ResourceItem) => {
 }
 
 const getResourceIcon = (type: string) => {
-  const iconMap: Record<string, string> = {
-    ucd: '/assets/images/course.png',
-    pdf: '/assets/images/course.png',
-    ppt: '/assets/images/course.png'
+  const typeMap: Record<string, string> = {
+    doc: 'word', docx: 'word',
+    ppt: 'ppt', pptx: 'ppt',
+    xls: 'excel', xlsx: 'excel',
+    pdf: 'pdf',
+    ucd: 'ucd',
+    mc: 'mc',
+    jpg: 'image', jpeg: 'image', png: 'image', gif: 'image', bmp: 'image', webp: 'image', svg: 'image',
+    mp4: 'video', mov: 'video', webm: 'video'
   }
-  return iconMap[type] || '/assets/images/course.png'
+  const fileType = typeMap[type] || 'default'
+  
+  const iconMap: Record<string, string> = {
+    word: docIcon,
+    ppt: pptIcon,
+    excel: xlsIcon,
+    pdf: pdfIcon,
+    image: pngIcon,
+    video: mp4Icon,
+    mc: mcIcon,
+    ucd: morenIcon,
+    default: morenIcon
+  }
+  return iconMap[fileType] || iconMap.default
 }
 
 const selectTask = (taskId: string) => {
@@ -1209,9 +1237,10 @@ onUnmounted(() => {
 }
 
 .resource-icon {
-  width: 16px;
-  height: 16px;
+  width: 30px;
+  height: 30px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .resource-name {

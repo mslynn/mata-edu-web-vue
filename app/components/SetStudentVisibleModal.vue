@@ -55,16 +55,14 @@
                   :key="item.resourceId" 
                   class="tree-item"
                   :class="{ selected: isSelected(item.resourceId) }"
-                  @click="selectItem(item)"
+                  @click="toggleItem(item)"
                 >
                   <div class="item-checkbox" :class="{ checked: isSelected(item.resourceId) }">
                     <svg v-if="isSelected(item.resourceId)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
                   </div>
-                  <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">
-                    <span>{{ getIconText(getFileType(item.fileName)) }}</span>
-                  </div>
+                  <img :src="getFileIcon(item.fileName)" class="item-icon-img" alt="" />
                   <span class="item-name" :title="item.fileName">{{ item.fileName }}</span>
                 </div>
               </div>
@@ -77,9 +75,7 @@
           <div class="selected-list">
             <template v-if="selectedItems.length > 0">
               <div v-for="item in selectedItems" :key="item.resourceId" class="selected-item">
-                <div class="item-icon" :class="getIconClass(getFileType(item.fileName))">
-                  <span>{{ getIconText(getFileType(item.fileName)) }}</span>
-                </div>
+                <img :src="getFileIcon(item.fileName)" class="item-icon-img" alt="" />
                 <span class="item-name">{{ item.fileName }}</span>
                 <div class="item-tags">
                   <span class="tag tag-green">{{ item.resourceName }}</span>
@@ -115,9 +111,19 @@ import { ref, computed, watch, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
 import { cursorAdmin } from '~/composables/api/curosr'
 
+// 导入文件类型图标
+import docIcon from '~/assets/images/doc.png'
+import pptIcon from '~/assets/images/ppt.png'
+import pdfIcon from '~/assets/images/pdf.png'
+import xlsIcon from '~/assets/images/xls.png'
+import mp4Icon from '~/assets/images/mp4.png'
+import pngIcon from '~/assets/images/png.png'
+import mcIcon from '~/assets/images/mc.png'
+import morenIcon from '~/assets/images/moren.png'
+
 interface ResourceItem {
-  resourceId: number
-  chapterId: string
+  resourceId: string
+  chapterId: string | number
   resourceType: number
   resourceCategory: number
   resourceName: string
@@ -141,15 +147,15 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void
-  (e: 'confirm', resourceIds: number[]): void
+  (e: 'confirm', resourceIds: string[]): void
 }>()
 
-const { getChapterResourceList, setChapterResourceVisibleStudent } = cursorAdmin()
+const { getChapterResourceList, setChapterResourceVisibleStudent, getResourceeVisible } = cursorAdmin()
 
 const searchKeyword = ref('')
 const loading = ref(false)
 const saving = ref(false)
-const selectedResourceIds = ref<number[]>([])
+const selectedResourceIds = ref<string[]>([])
 const resourceGroups = ref<ResourceGroup[]>([])
 const expandedGroups = reactive<Record<string, boolean>>({})
 
@@ -167,6 +173,22 @@ const getFileType = (fileName: string) => {
     mp4: 'video', mov: 'video', webm: 'video'
   }
   return typeMap[ext] || 'default'
+}
+
+// 根据文件名获取图标
+const getFileIcon = (fileName: string) => {
+  const type = getFileType(fileName)
+  const iconMap: Record<string, string> = {
+    word: docIcon,
+    ppt: pptIcon,  // PPT 暂时用 doc 图标，如果有 ppt.png 可以替换
+    excel: xlsIcon,
+    pdf: pdfIcon,
+    image: pngIcon,
+    video: mp4Icon,
+    mc: mcIcon,
+    ucd: morenIcon,
+  }
+  return iconMap[type] || morenIcon
 }
 
 // 获取所有资源项的扁平列表（附带分组名）
@@ -240,9 +262,14 @@ const toggleGroup = (groupName: string) => {
   expandedGroups[groupName] = !expandedGroups[groupName]
 }
 
-const selectItem = (item: ResourceItem) => {
-  // 如果已选中则不重复添加
-  if (!selectedResourceIds.value.includes(item.resourceId)) {
+// 切换选中状态（点击可勾选/取消勾选）
+const toggleItem = (item: ResourceItem) => {
+  const index = selectedResourceIds.value.indexOf(item.resourceId)
+  if (index > -1) {
+    // 已选中，取消勾选
+    selectedResourceIds.value.splice(index, 1)
+  } else {
+    // 未选中，添加勾选
     selectedResourceIds.value.push(item.resourceId)
   }
 }
@@ -255,7 +282,7 @@ const removeItem = (item: ResourceItem & { groupName: string }) => {
 }
 
 // 判断资源是否已选中
-const isSelected = (resourceId: number) => {
+const isSelected = (resourceId: string) => {
   return selectedResourceIds.value.includes(resourceId)
 }
 
@@ -265,6 +292,13 @@ const loadResources = async () => {
   
   loading.value = true
   try {
+    // 获取已设置为可见的资源列表（用于默认勾选）
+    const visibleData = await getResourceeVisible({ chapterId: props.chapterId })
+    let visibleIds: string[] = []
+    if (visibleData && visibleData.visibleResourceIds && Array.isArray(visibleData.visibleResourceIds)) {
+      visibleIds = visibleData.visibleResourceIds
+    }
+
     // 不传 resourceType，获取所有类型的资源
     const data = await getChapterResourceList(props.chapterId)
     resourceGroups.value = data || []
@@ -274,15 +308,8 @@ const loadResources = async () => {
       expandedGroups[group.resourceName] = true
     })
     
-    // 根据 isVisible 初始化已选状态
-    selectedResourceIds.value = []
-    resourceGroups.value.forEach(group => {
-      group.resourceList?.forEach(item => {
-        if (item.isVisible === 1) {
-          selectedResourceIds.value.push(item.resourceId)
-        }
-      })
-    })
+    // 根据 visibleResourceIds 初始化已选状态（默认勾选）
+    selectedResourceIds.value = [...visibleIds]
   } catch (error) {
     console.error('加载资源失败:', error)
     ElMessage.error('加载资源失败')
@@ -306,19 +333,16 @@ const handleClose = () => {
 const handleConfirm = async () => {
   saving.value = true
   try {
-    // 构建所有资源的可见状态：已选的 isVisible=1，未选的 isVisible=0
-    const resourceList = allItems.value.map(item => ({
-      resourceId: String(item.resourceId),
-      isVisible: selectedResourceIds.value.includes(item.resourceId) ? 1 : 0
-    }))
+    // 只传递选中的资源ID数组
+    const resourceIds = selectedResourceIds.value.map(id => String(id))
     
-    await setChapterResourceVisibleStudent({ resourceList })
+    await setChapterResourceVisibleStudent({ chapterId: props.chapterId, resourceIds })
     ElMessage.success('设置成功')
     
     // 提交成功后重新加载列表
     await loadResources()
     
-    emit('confirm', selectedResourceIds.value)
+    emit('confirm', resourceIds)
     emit('update:visible', false)
   } catch (error) {
     console.error('设置失败:', error)
@@ -507,6 +531,12 @@ const handleConfirm = async () => {
 
 .tree-item:hover { background: #f5f7fa; }
 .tree-item.selected { background: #e6f7ff; }
+.tree-item.disabled { 
+  opacity: 0.7; 
+  cursor: not-allowed; 
+  background: #f5f5f5;
+}
+.tree-item.disabled:hover { background: #f5f5f5; }
 
 .item-icon {
   width: 24px;
@@ -535,6 +565,13 @@ const handleConfirm = async () => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.item-icon-img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .right-panel {
@@ -590,6 +627,16 @@ const handleConfirm = async () => {
   background: #e6ffed;
   color: #52c41a;
   border: 1px solid #b7eb8f;
+}
+
+.tag-gray {
+  background: #f5f5f5;
+  color: #999;
+  border: 1px solid #d9d9d9;
+}
+
+.selected-item.disabled {
+  opacity: 0.7;
 }
 
 .remove-btn {
@@ -668,9 +715,24 @@ const handleConfirm = async () => {
   border-color: #FF9900;
 }
 
+.item-checkbox.disabled {
+  background: #d9d9d9;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
 .item-checkbox svg {
   width: 12px;
   height: 12px;
   color: white;
+}
+
+.item-tag-submitted {
+  font-size: 11px;
+  color: #999;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 3px;
+  margin-left: auto;
 }
 </style>

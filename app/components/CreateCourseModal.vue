@@ -68,15 +68,9 @@
               <div class="form-row">
                 <label class="form-label"><span class="required">*</span>{{ $t('course.courseName') }}：</label>
                 <div class="form-input-wrapper">
-                  <input
-                    v-model="formData.name"
-                    type="text"
-                    :placeholder="$t('course.pleaseInputCourseName')"
-                    maxlength="20"
-                    class="form-input"
-                    :class="{ 'input-error': errors.name }"
-                    @input="clearError('name')"
-                  />
+                  <input v-model="formData.name" type="text" :placeholder="$t('course.pleaseInputCourseName')"
+                    maxlength="20" class="form-input" :class="{ 'input-error': errors.name }"
+                    @input="clearError('name')" />
                   <span class="char-count">{{ formData.name.length }} / 20</span>
                   <Transition name="error-fade">
                     <p v-if="errors.name" class="error-tip">{{ errors.name }}</p>
@@ -86,23 +80,19 @@
 
               <!-- 封面 -->
               <div class="form-row items-start">
-                <label class="form-label mt-4">{{ $t('course.cover') }}：</label>
+                <label class="form-label mt-4">{{ $t('common.courseCover') }}：</label>
                 <div class="cover-section">
                   <div class="cover-preview">
-                    <img v-if="formData.coverUrl" :src="formData.coverUrl" :alt="$t('common.courseCover')" class="cover-img" />
-                    <img v-else src="../assets/images/two.png" :alt="$t('common.courseCover')" class="cover-img" />
+                    <img v-if="formData.coverUrl" :src="formData.coverUrl" :alt="$t('common.courseCover')"
+                      class="cover-img" />
+                    <p v-else class="cover-img" />
                   </div>
                   <div class="cover-info">
                     <button class="upload-btn" :disabled="uploading" @click="triggerUpload">
                       {{ uploading ? $t('course.uploading') : $t('course.changeCover') }}
                     </button>
-                    <input
-                      ref="fileInputRef"
-                      type="file"
-                      accept="image/png,image/jpg,image/jpeg"
-                      class="hidden"
-                      @change="handleFileChange"
-                    />
+                    <input ref="fileInputRef" type="file" accept="image/png,image/jpg,image/jpeg" class="hidden"
+                      @change="handleFileChange" />
                     <p class="cover-tip">{{ $t('course.coverTip') }}</p>
                   </div>
                 </div>
@@ -113,40 +103,32 @@
                 <label class="form-label mt-3"><span class="required">*</span>{{ $t('course.courseChapter') }}：</label>
                 <div class="form-input-wrapper">
                   <div class="chapters-wrapper" :class="{ 'wrapper-error': errors.chapters }">
-                    <button class="add-chapter-btn" @click="addChapter">
-                      <span class="plus">+</span>
-                      <span>{{ $t('course.createChapter') }}</span>
-                    </button>
+                    <div class="chapters-header">
+                      <button class="add-chapter-btn" @click="addChapter">
+                        <span class="plus">+</span>
+                        <span>{{ $t('course.createChapter') }}</span>
+                      </button>
+                    </div>
                     <div class="chapters-list">
-                      <div
-                        v-for="(chapter, index) in visibleChapters"
-                        :key="chapter.id"
-                        class="chapter-item"
-                        draggable="true"
-                        @dragstart="handleDragStart($event, index)"
-                        @dragover.prevent="handleDragOver($event, index)"
-                        @drop="handleDrop($event, index)"
+                      <div v-for="(chapter, index) in visibleChapters" :key="chapter.id" class="chapter-item"
+                        draggable="true" @dragstart="handleDragStart($event, index)"
+                        @dragover.prevent="handleDragOver($event, index)" @drop="handleDrop($event, index)"
                         @dragend="handleDragEnd"
-                        :class="{ 'dragging': dragIndex === index, 'drag-over': dragOverIndex === index && dragIndex !== index }"
-                      >
-                        <input
-                          v-model="chapter.name"
-                          type="text"
-                          :placeholder="$t('course.pleaseInputChapterName')"
-                          maxlength="20"
-                          class="chapter-input"
-                          @input="clearError('chapters')"
-                        />
+                        :class="{ 'dragging': dragIndex === index, 'drag-over': dragOverIndex === index && dragIndex !== index }">
+                        <input v-model="chapter.name" type="text" :placeholder="$t('course.pleaseInputChapterName')"
+                          maxlength="20" class="chapter-input" @input="clearError('chapters')" />
                         <span class="chapter-count">{{ chapter.name.length }} / 20</span>
                         <div v-if="index > 0" class="chapter-actions">
                           <span class="drag-handle">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 8h16M4 16h16" />
                             </svg>
                           </span>
                           <button class="delete-chapter-btn" @click="removeChapter(index)">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12" />
                             </svg>
                           </button>
                         </div>
@@ -163,14 +145,9 @@
               <div class="form-row items-start">
                 <label class="form-label mt-3">{{ $t('course.description') }}：</label>
                 <div class="form-input-wrapper">
-                  <textarea
-                    v-model="formData.description"
-                    :placeholder="$t('course.pleaseInputDesc')"
-                    maxlength="100"
-                    rows="4"
-                    class="form-textarea"
-                  ></textarea>
-                  <span class="char-count textarea-count">{{ formData.description.length }} / 100</span>
+                  <textarea v-model="formData.description" :placeholder="$t('course.pleaseInputDesc')" maxlength="500"
+                    rows="4" class="form-textarea"></textarea>
+                  <span class="char-count textarea-count">{{ formData.description.length }} / 500</span>
                 </div>
               </div>
 
@@ -178,17 +155,20 @@
               <div class="form-row">
                 <label class="form-label">{{ $t('course.coursePermission') }}：</label>
                 <div class="permission-section">
-                  <label class="radio-label">
-                    <input v-model="formData.permission" type="radio" value="private" class="radio-input" />
-                    <span class="radio-circle"></span>
-                    <span>{{ $t('course.privateOnly') }}</span>
-                  </label>
-                  <label class="radio-label">
-                    <input v-model="formData.permission" type="radio" value="public" class="radio-input" />
-                    <span class="radio-circle"></span>
-                    <span>{{ $t('course.publicToSchool') }}</span>
-                  </label>
-                  <span class="permission-tip">{{ $t('course.permissionTip') }}<span class="highlight">{{ $t('course.privateOnly') }}</span>{{ $t('course.permissionTip2') }}</span>
+                  <div class="permission-radios">
+                    <label class="radio-label">
+                      <input v-model="formData.permission" type="radio" value="private" class="radio-input" />
+                      <span class="radio-circle"></span>
+                      <span>{{ $t('course.privateOnly') }}</span>
+                    </label>
+                    <label class="radio-label">
+                      <input v-model="formData.permission" type="radio" value="public" class="radio-input" />
+                      <span class="radio-circle"></span>
+                      <span>{{ $t('course.publicToSchool') }}</span>
+                    </label>
+                  </div>
+                  <span class="permission-tip">{{ $t('course.permissionTip') }}<span class="highlight">{{
+                    $t('course.privateOnly') }}</span>{{ $t('course.permissionTip2') }}</span>
                 </div>
               </div>
             </div>
@@ -196,7 +176,8 @@
             <!-- 底部按钮 -->
             <div class="modal-footer">
               <button class="btn-cancel" @click="handleCancel">{{ $t('common.cancel') }}</button>
-              <button class="btn-confirm" @click="handleConfirm">{{ isEditMode ? $t('course.saveChanges') : $t('course.completeCreate') }}</button>
+              <button class="btn-confirm" @click="handleConfirm">{{ isEditMode ? $t('course.saveChanges') :
+                $t('course.completeCreate') }}</button>
             </div>
           </div>
         </Transition>
@@ -329,12 +310,12 @@ const loadCourseDetail = async (courseId: string | number) => {
         permission: data.coursePermission === 1 ? 'public' : 'private',
         coverUrl: data.courseCoverUrl || '',
         chapters: data.chapterList?.length
-          ? data.chapterList.map((c: any) => ({ 
-              id: chapterId++, 
-              name: c.chapterName || '',
-              chapterId: c.chapterId,
-              delFlag: 0 // 默认未删除
-            }))
+          ? data.chapterList.map((c: any) => ({
+            id: chapterId++,
+            name: c.chapterName || '',
+            chapterId: c.chapterId,
+            delFlag: 0 // 默认未删除
+          }))
           : [{ id: chapterId++, name: '', delFlag: 0 }],
       }
     }
@@ -383,7 +364,7 @@ const handleDrop = (e: DragEvent, index: number) => {
     const targetVisible = visibleChapters.value[index]
     const realDragIndex = formData.value.chapters.findIndex(c => c.id === draggedVisible?.id)
     const realTargetIndex = formData.value.chapters.findIndex(c => c.id === targetVisible?.id)
-    
+
     if (realDragIndex !== -1 && realTargetIndex !== -1) {
       const chapters = formData.value.chapters
       const draggedItem = chapters[realDragIndex]
@@ -423,7 +404,7 @@ const confirmDelete = () => {
     // 找到在原数组中的真实索引
     const visibleChapter = visibleChapters.value[deleteIndex.value]
     const realIndex = formData.value.chapters.findIndex(c => c.id === visibleChapter?.id)
-    
+
     if (realIndex !== -1) {
       const chapter = formData.value.chapters[realIndex]
       if (isEditMode.value && chapter?.chapterId) {
@@ -467,7 +448,7 @@ const validate = () => {
 
 const handleConfirm = () => {
   if (!validate()) return
-  
+
   emit('confirm', formData.value)
   emit('update:modelValue', false)
 }
@@ -605,6 +586,7 @@ const confirmClose = () => {
     opacity: 0;
     transform: scale(0.85);
   }
+
   100% {
     opacity: 1;
     transform: scale(1);
@@ -616,6 +598,7 @@ const confirmClose = () => {
     opacity: 1;
     transform: scale(1);
   }
+
   100% {
     opacity: 0;
     transform: scale(0.9);
@@ -637,14 +620,16 @@ const confirmClose = () => {
 
 .modal-container {
   background: white;
-  border-radius: 12px;
-  width: 800px;
+  border-radius: 14px;
+  width: 665px;
+  height: 773px;
   max-width: 90vw;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 0 19px 1px rgba(145, 145, 145, 0.2);
   display: flex;
   flex-direction: column;
   position: relative;
   padding: 32px 40px;
+  font-family: 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
 .close-btn {
@@ -675,7 +660,7 @@ const confirmClose = () => {
 
 .form-row {
   display: flex;
-  margin-bottom: 24px;
+  margin-bottom: 15px;
 }
 
 .form-label {
@@ -769,12 +754,14 @@ const confirmClose = () => {
 }
 
 .cover-preview {
-  width: 120px;
-  height: 90px;
-  border-radius: 8px;
+  width: 90px;
+  height: 113px;
+  border-radius: 5px;
+  border-color: #F0F0F0;
   overflow: hidden;
   flex-shrink: 0;
-  background: linear-gradient(180deg, #e0f3ff 0%, #b3e0ff 100%);
+  background: #FAFAFA;
+  /* background: linear-gradient(180deg, #e0f3ff 0%, #b3e0ff 100%); */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -795,25 +782,29 @@ const confirmClose = () => {
 }
 
 .upload-btn {
-  padding: 8px 20px;
+  width: 102px;
+  height: 38px;
+  line-height: 38px;
+  border-radius: 8px;
   border: 1px solid #FF9900;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #FF9900;
-  background: white;
+  font-size: 15px;
+  background: #FE9900;
+  color: #FFFFFF;
+
   cursor: pointer;
   transition: all 0.2s;
-  width: fit-content;
+
 }
 
 .upload-btn:hover {
-  background: #FFF7E6;
+  /* background: #FFF7E6; */
 }
 
 .cover-tip {
   font-size: 13px;
-  color: #999;
+  color: #CDCDCD;
   line-height: 1.6;
+
 }
 
 /* 章节 */
@@ -824,7 +815,8 @@ const confirmClose = () => {
   padding: 16px;
   min-height: 200px;
   max-height: 200px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
   transition: border-color 0.2s;
 }
 
@@ -832,23 +824,32 @@ const confirmClose = () => {
   border-color: #FF9900;
 }
 
-.add-chapter-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  background: #FFF7E6;
-  border: 1px solid #FFD591;
-  border-radius: 6px;
-  font-size: 14px;
-  color: #FF9900;
-  cursor: pointer;
-  transition: all 0.2s;
+.chapters-header {
+  flex-shrink: 0;
   margin-bottom: 16px;
 }
 
+.add-chapter-btn {
+
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  /* padding: 6px 16px; */
+  width: 116px;
+  height: 38px;
+  line-height: 38px;
+  background: #FE9900;
+  border: 1px solid #FFD591;
+  border-radius: 8px;
+  font-size: 15px;
+  color: #fff;
+  cursor: pointer;
+  transition: all 0.2s;
+
+}
+
 .add-chapter-btn:hover {
-  background: #FFE7BA;
+  /* background: #FFE7BA; */
 }
 
 .add-chapter-btn .plus {
@@ -860,6 +861,8 @@ const confirmClose = () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .chapter-item {
@@ -909,7 +912,7 @@ const confirmClose = () => {
 }
 
 .chapter-input {
-  width: 280px;
+  width: 350px;
   height: 36px;
   padding: 0 12px;
   border: none;
@@ -950,7 +953,8 @@ const confirmClose = () => {
 /* 简介 */
 .form-textarea {
   width: 100%;
-  padding: 12px 16px;
+  padding: 8px 10px;
+  height: 100px;
   border: 1px solid #ddd;
   border-radius: 6px;
   font-size: 14px;
@@ -979,10 +983,20 @@ const confirmClose = () => {
 .permission-section {
   flex: 1;
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.permission-radios {
+  display: flex;
   align-items: center;
   gap: 24px;
-  flex-wrap: wrap;
-  line-height: 40px;
+}
+
+.permission-tip {
+  display: block;
+  font-size: 13px;
+  color: #CDCDCD;
 }
 
 .radio-label {
@@ -1007,11 +1021,11 @@ const confirmClose = () => {
   transition: all 0.2s;
 }
 
-.radio-input:checked + .radio-circle {
+.radio-input:checked+.radio-circle {
   border-color: #FF9900;
 }
 
-.radio-input:checked + .radio-circle::after {
+.radio-input:checked+.radio-circle::after {
   content: '';
   position: absolute;
   top: 50%;
@@ -1023,13 +1037,8 @@ const confirmClose = () => {
   border-radius: 50%;
 }
 
-.permission-tip {
-  font-size: 13px;
-  color: #999;
-}
-
 .permission-tip .highlight {
-  color: #FF9900;
+  color: #CDCDCD;
 }
 
 /* 底部按钮 */
@@ -1041,10 +1050,10 @@ const confirmClose = () => {
 }
 
 .btn-cancel {
-  min-width: 120px;
+  min-width: 100px;
   padding: 10px 32px;
   border: 1px solid #FF9900;
-  border-radius: 20px;
+  border-radius: 8px;
   font-size: 14px;
   color: #333;
   background: white;
@@ -1057,10 +1066,10 @@ const confirmClose = () => {
 }
 
 .btn-confirm {
-  min-width: 120px;
+  min-width: 122px;
   padding: 10px 32px;
   border: none;
-  border-radius: 20px;
+  border-radius: 8px;
   font-size: 14px;
   color: white;
   background: #FF9900;
@@ -1095,8 +1104,13 @@ const confirmClose = () => {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .loading-text {
@@ -1128,6 +1142,7 @@ const confirmClose = () => {
     opacity: 0;
     transform: scale(0.85) translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: scale(1) translateY(0);
@@ -1139,6 +1154,7 @@ const confirmClose = () => {
     opacity: 1;
     transform: scale(1);
   }
+
   100% {
     opacity: 0;
     transform: scale(0.9);
@@ -1163,6 +1179,7 @@ const confirmClose = () => {
     opacity: 0;
     transform: translateY(-10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -1173,6 +1190,7 @@ const confirmClose = () => {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
     transform: translateX(20px);

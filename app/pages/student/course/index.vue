@@ -1,13 +1,13 @@
 <template>
   <div class="course-page flex-1 flex flex-col">
     <!-- 右侧内容区 -->
-    <div class="flex-1 flex flex-col p-4 min-h-0 overflow-hidden">
+    <div class="flex-1 flex flex-col p-4 min-h-0 overflow-hidden w-[96.5%] mx-auto">
       <!-- 顶部分类标签 -->
       <div class="flex items-center justify-between mb-4 flex-shrink-0">
         <!-- 一级分类标签 -->
         <div class="flex items-center gap-2 flex-wrap">
           <button v-for="cat in mainCategories" :key="cat.value" :class="[
-            'px-4 py-2 rounded-full text-sm transition-colors',
+            'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
             activeCategory === cat.value
               ? 'bg-[#FF9900] text-white'
               : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
@@ -22,7 +22,7 @@
         <!-- 二级分类标签 -->
         <div class="flex items-center gap-2 flex-wrap">
           <button v-for="sub in subCategories" :key="sub.value" :class="[
-            'px-4 py-2 rounded-full text-sm transition-colors',
+            'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
             activeSubCategory === sub.value
               ? 'bg-[#FF9900] text-white'
               : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
@@ -31,40 +31,44 @@
           </button>
         </div>
         
-        <div class="flex items-center gap-4">
+        <!-- 右侧筛选 -->
+        <div class="flex items-center gap-3">
           <!-- 开通状态下拉 (仅常规课程显示) -->
           <div v-if="activeCategory !== '教师课程'" class="flex items-center gap-2">
-            <span class="text-sm text-gray-600">{{ $t('common.openStatus') }}：</span>
+            <span class="text-sm text-gray-500">{{ $t('common.openStatus') }}</span>
             <div class="relative">
-              <button 
-                @click="showStatusDropdown = !showStatusDropdown"
-                class="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm min-w-[120px] justify-between"
-              >
+              <button type="button"
+                class="flex items-center justify-center gap-2 w-[108px] h-[50px] px-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-600 hover:border-[#FF9900] transition-colors"
+                @click="showStatusDropdown = !showStatusDropdown">
                 <span>{{ activeStatusLabel }}</span>
-                <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': showStatusDropdown }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                <svg class="w-4 h-4 text-gray-400 transition-transform"
+                  :class="{ 'rotate-180': showStatusDropdown }" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              <div v-if="showStatusDropdown" class="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]">
-                <div 
-                  v-for="status in statusOptions" 
-                  :key="status.value"
-                  @click="selectStatus(status.value)"
-                  :class="[
-                    'px-4 py-2 text-sm cursor-pointer hover:bg-[#FFF8F0]',
-                    activeStatus === status.value ? 'text-[#FF9900] bg-[#FFF8F0]' : 'text-gray-600'
-                  ]"
-                >
-                  {{ status.label }}
+              <!-- 下拉选项 -->
+              <Transition name="dropdown">
+                <div v-if="showStatusDropdown"
+                  class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-[5]">
+                  <div v-for="option in statusOptions" :key="option.value"
+                    class="px-3 py-2 text-sm cursor-pointer transition-colors" :class="[
+                      activeStatus === option.value
+                        ? 'bg-[#FFF7E6] text-[#FF9900]'
+                        : 'text-gray-600 hover:bg-gray-50'
+                    ]" @click="selectStatus(option.value)">
+                    {{ option.label }}
+                  </div>
                 </div>
-              </div>
+              </Transition>
             </div>
           </div>
 
           <!-- 搜索框 -->
           <div class="relative">
             <input v-model="searchKeyword" type="text" :placeholder="$t('common.searchPlaceholder')"
-              class="pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-[200px] outline-none focus:border-[#FF9900]" />
+              class="pl-9 pr-4 w-[267px] h-[50px] border border-gray-200 rounded-[10px] text-sm outline-none focus:border-[#FF9900]" />
             <svg class="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
               stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -77,7 +81,7 @@
       <!-- 三级分类 -->
       <div v-if="thirdCategories.length > 0" class="flex items-center gap-2 flex-wrap mb-4 flex-shrink-0">
         <button v-for="third in thirdCategories" :key="third.value" :class="[
-          'px-4 py-2 rounded-full text-sm transition-colors',
+          'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
           activeThirdCategory === third.value
             ? 'bg-[#FF9900] text-white'
             : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
@@ -90,22 +94,22 @@
       <div class="flex-1 bg-white rounded-lg border border-dashed border-gray-300 p-6 overflow-auto">
         <!-- 加载中 -->
         <div v-if="loading" class="flex items-center justify-center h-full">
-          <div class="text-gray-400">加载中...</div>
+          <div class="text-gray-400">{{ $t('common.loading') }}</div>
         </div>
         
         <!-- 课程列表 -->
-        <div v-else-if="courseList.length > 0" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <div v-else-if="courseList.length > 0" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
           <NuxtLink v-for="course in courseList" :key="course.id" :to="`/student/course/${course.id}`"
-            class="course-card cursor-pointer group">
+            class="course-card w-full aspect-[265/380] rounded-[20px] border border-gray-200 shadow-sm cursor-pointer group pt-[5%] px-[8%]">
             <!-- 课程封面 -->
-            <div class="course-cover bg-gray-200 rounded-lg mb-3 flex items-center justify-center relative overflow-hidden">
+            <div class="course-cover w-full aspect-[220/276] bg-gray-200 rounded-[5px] mb-3 flex items-center justify-center relative overflow-hidden">
               <!-- 状态标签（仅常规课程显示） -->
               <span 
                 v-if="activeCategory !== '教师课程' && course.status && statusConfig[course.status]" 
                 class="absolute top-2 right-2 px-2 py-0.5 rounded text-xs z-10"
-                :class="[statusConfig[course.status].bg, statusConfig[course.status].color]"
+                :class="[statusConfig[course.status]?.bg, statusConfig[course.status]?.color]"
               >
-                {{ statusConfig[course.status].label }}
+                {{ statusConfig[course.status]?.label }}
               </span>
               <!-- 封面图片 -->
               <img v-if="course.cover" :src="course.cover" alt="课程封面" class="absolute inset-0 w-full h-full object-cover" />
@@ -121,9 +125,9 @@
               </template>
             </div>
             <!-- 课程名称 -->
-            <div class="text-sm font-medium text-gray-800 mb-1">{{ course.name }}</div>
+            <div class="text-[18px] font-normal text-[#4D4D4D] leading-[24px] mb-[6px] text-center mt-[10px]">{{ course.name }}</div>
             <!-- 课时数 -->
-            <div class="text-xs text-gray-400">{{ course.hours }}{{ $t('common.hours') }}</div>
+            <div class="text-[16px] font-normal text-[#ADADAD] leading-[24px] text-center">{{ course.hours }}{{ $t('common.hours') }}</div>
           </NuxtLink>
         </div>
 
@@ -137,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { cursorAdmin } from '~/composables/api/curosr'
 
@@ -191,6 +195,14 @@ const activeStatusLabel = computed(() => {
 const selectStatus = (value: string) => {
   activeStatus.value = value
   showStatusDropdown.value = false
+}
+
+// 点击外部关闭下拉框
+const closeDropdown = (e: MouseEvent) => {
+  const target = e.target as HTMLElement
+  if (!target.closest('.relative')) {
+    showStatusDropdown.value = false
+  }
 }
 
 // 加载菜单数据
@@ -389,6 +401,11 @@ onMounted(() => {
   if (process.client) {
     loadMenuData()
   }
+  document.addEventListener('click', closeDropdown)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeDropdown)
 })
 </script>
 
@@ -399,8 +416,6 @@ onMounted(() => {
 }
 
 .course-cover {
-  width: 100%;
-  aspect-ratio: 3 / 4;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -410,5 +425,21 @@ onMounted(() => {
 
 .course-card:hover {
   transform: scale(1.05);
+}
+
+.course-card:hover .course-cover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 下拉框动画 */
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
 }
 </style>

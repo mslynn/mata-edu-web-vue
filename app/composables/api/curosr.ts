@@ -27,7 +27,7 @@ export const cursorAdmin = () => {
 
 
   //获取课程菜单树形结构列表 
-const getCursorTreeMenu = async () => {
+  const getCursorTreeMenu = async () => {
     try {
       const response = await http.get(`/system/course/menu/tree`);
       if (response.code !== 200) {
@@ -39,8 +39,8 @@ const getCursorTreeMenu = async () => {
     }
   };
 
-//获取课程列表
-    const getCursorList = async (data?: {menuId:number, openStatus?: number;courseType?:number,coursePermission?:number, name?: string }) => {
+  //获取课程列表
+  const getCursorList = async (data?: { menuId: number, openStatus?: number; courseType?: number, coursePermission?: number, name?: string }) => {
     try {
       const queryParams: Record<string, any> = {}
       if (data?.menuId) {
@@ -127,10 +127,10 @@ const getCursorTreeMenu = async () => {
     try {
       const config = useRuntimeConfig()
       const token = http.getToken()
-      
+
       const formData = new FormData()
       formData.append('file', file)
-      
+
       const res = await fetch(`${config.public.apiBaseUrl}/resource/oss/upload`, {
         method: 'POST',
         headers: {
@@ -138,7 +138,7 @@ const getCursorTreeMenu = async () => {
         },
         body: formData,
       })
-      
+
       const response = await res.json()
       if (response.code !== 200) {
         throw new Error(response.msg || '上传OSS对象存储失败')
@@ -148,7 +148,7 @@ const getCursorTreeMenu = async () => {
       throw error
     }
   }
-// 下载oss（返回 blob URL 用于显示图片）
+  // 下载oss（返回 blob URL 用于显示图片）
   const downloadOSS = async (ossId: string) => {
     try {
       const config = useRuntimeConfig()
@@ -184,21 +184,21 @@ const getCursorTreeMenu = async () => {
       throw error
     }
   }
-  
+
   //查询课程章节资源列表
   const getChapterResourceList = async (chapterId: string, resourceType?: number) => {
     try {
 
-        const queryParams: Record<string, any> = {}
-        if (chapterId) {
-          queryParams.chapterId = chapterId
-        }
-        if (resourceType !== undefined) {
-          queryParams.resourceType = resourceType
-        }
-   
-        
-      const response = await http.get('/system/course/resource/list',queryParams)
+      const queryParams: Record<string, any> = {}
+      if (chapterId) {
+        queryParams.chapterId = chapterId
+      }
+      if (resourceType !== undefined) {
+        queryParams.resourceType = resourceType
+      }
+
+
+      const response = await http.get('/system/course/resource/list', queryParams)
       if (response.code !== 200) {
         throw new Error(response.msg || '获取课程章节资源列表失败')
       }
@@ -207,20 +207,20 @@ const getCursorTreeMenu = async () => {
       throw error
     }
   }
-//根据章节id获取课程章节资源列表
-// const getChapterResourceList = async (chapterId: string) => {
-//     try {
-//       const response = await http.get(`/system/course/chapter/${chapterId}`)
-//       if (response.code !== 200) {
-//         throw new Error(response.msg || '获取课程章节资源列表失败')
-//       }
-//       return response.data
-//     } catch (error: any) {
-//       throw error
-//     }
-//   }
+  //根据章节id获取课程章节资源列表
+  // const getChapterResourceList = async (chapterId: string) => {
+  //     try {
+  //       const response = await http.get(`/system/course/chapter/${chapterId}`)
+  //       if (response.code !== 200) {
+  //         throw new Error(response.msg || '获取课程章节资源列表失败')
+  //       }
+  //       return response.data
+  //     } catch (error: any) {
+  //       throw error
+  //     }
+  //   }
   //开始备课
- const startPrepare = async (chapterId: string,courseId: string) => {
+  const startPrepare = async (chapterId: string, courseId: string) => {
     try {
 
       const queryParams: Record<string, any> = {}
@@ -230,7 +230,7 @@ const getCursorTreeMenu = async () => {
       if (courseId !== undefined) {
         queryParams.courseId = courseId
       }
-      const response = await http.post('/system/course/chapter/prepare',queryParams)
+      const response = await http.post('/system/course/chapter/prepare', queryParams)
       if (response.code !== 200) {
         throw new Error(response.msg || '开始备课失败')
       }
@@ -246,7 +246,7 @@ const getCursorTreeMenu = async () => {
     resourceType: number
     ossId: string
     fileName: string
- 
+
   }) => {
     try {
       const response = await http.post('/system/course/resource/add', data)
@@ -277,7 +277,7 @@ const getCursorTreeMenu = async () => {
   const copyChapterResource = async (resourceId: string) => {
     try {
       const response = await http.get(`/system/course/resource/copy/${resourceId}`)
-      console.log(response,'复制课程章节资源')
+      console.log(response, '复制课程章节资源')
       if (response.code !== 200) {
         throw new Error(response.msg || '复制课程章节资源失败')
       }
@@ -289,7 +289,7 @@ const getCursorTreeMenu = async () => {
 
 
 
-//获取编程字典
+  //获取编程字典
 
   const getResourceeDict = async () => {
     try {
@@ -319,11 +319,12 @@ const getCursorTreeMenu = async () => {
     } catch (error: any) {
       throw error
     }
-  } 
+  }
 
   //设置课程章节资源可见学生
   const setChapterResourceVisibleStudent = async (data: {
-    resourceList: { resourceId: string; isVisible: number }[]
+    chapterId:string
+    resourceIds: string[]
   }) => {
     try {
       const response = await http.post('/system/course/resource/set', data)
@@ -335,7 +336,52 @@ const getCursorTreeMenu = async () => {
       throw error
     }
   }
+  //获取学生可见资源列表
+  const getResourceeVisible = async (
+    data: {
+      chapterId: string
+    }
+  ) => {
+    try {
+      const response = await http.get('/system/course/resource/visible',data)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取学生可见资源列表失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
 
+  //获取课程可见班级列表
+  const GetChapterCourse = async (courseId: string) => {
+    try {
+      const response = await http.get(`/system/course/class/${courseId}`)
+      console.log(response, '获取课程可见班级列表')
+      if (response.code !== 200) {
+        throw new Error(response.msg || '获取课程可见班级列表失败')
+      }
+      return response
+    } catch (error: any) {
+      throw error
+    }
+  }
+
+  // 设置可见班级
+  const setChapterResourceVisibleClass = async (data: {
+    courseId: string | number
+    classIds: string[]
+  }) => {
+    try {
+      const response = await http.post('/system/course/set', data)
+      if (response.code !== 200) {
+        throw new Error(response.msg || '设置可见班级失败')
+      }
+      return response.data
+    } catch (error: any) {
+      throw error
+    }
+  }
 
 
 
@@ -359,7 +405,7 @@ const getCursorTreeMenu = async () => {
     downloadOSS,
     deleteCursor,
     getChapterResourceList,
-   
+
     startPrepare,
     createChapterResource,
     deleteChapterResource,
@@ -367,7 +413,10 @@ const getCursorTreeMenu = async () => {
     copyCursor,
     getResourceeDict,
     getChapterResourceListPage,
-    setChapterResourceVisibleStudent
+    setChapterResourceVisibleStudent,
+    setChapterResourceVisibleClass,
+    GetChapterCourse,
+    getResourceeVisible
 
-  };    
+  };
 };

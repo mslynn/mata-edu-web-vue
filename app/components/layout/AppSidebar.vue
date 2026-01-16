@@ -1,6 +1,6 @@
 <template>
-  <aside class="app-sidebar w-[220px] xl:w-[260px] 2xl:w-[295px] flex flex-col flex-shrink-0">
-    <nav class="flex-1 overflow-auto py-2">
+  <aside class="app-sidebar w-[180px] xl:w-[200px] 2xl:w-[220px] flex flex-col flex-shrink-0">
+    <nav class="flex-1 overflow-auto py-[52px]">
       <button
         v-for="item in menuItems"
         :key="item.path"
@@ -64,6 +64,6 @@ watch(locale, () => {
 
 <style scoped>
 .app-sidebar {
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  /* box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04); */
 }
 </style>

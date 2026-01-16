@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  :  'http://192.168.0.59:8001'
+  :  'http://192.168.0.15:8001'
 
 // 预览服务地址
   
@@ -13,8 +13,8 @@ const previewBaseUrl = process.env.NODE_ENV === 'production'
 
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production' 
-  ? 'wss://test-gateway.matatastudio.com/resource/websocket'
-  : 'ws://192.168.0.59:8001/resource/websocket'
+  ? 'ws://test-gateway.matatastudio.com/resource/websocket'
+  : 'ws://192.168.0.15:8001/resource/websocket'
 
 
 
@@ -28,7 +28,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   devServer: {
-    host: '127.0.0.1',
+    host: '0.0.0.0',
     port: 3001,
   },
 
