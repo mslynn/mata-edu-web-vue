@@ -648,6 +648,8 @@
     "lastClassTag": "上次课",
     "classStartTip": "开始上课了，学生将会收到上课邀请进入教室",
     "classEnded": "课堂已结束",
+    "vincibot": "VinciBot",
+    "nous": "Nous",
     "classExpiredDesc": "本节课已超过有效时间，课堂已自动结束"
   },
   "classroom": {

@@ -5,7 +5,7 @@
         <div class="modal-container">
           <!-- 标题 -->
           <div class="modal-header">
-            <h2 class="modal-title">{{ title }}</h2>
+            <h2 class="modal-title">{{ t(title) }}</h2>
           </div>
 
           <!-- 内容区域 -->
@@ -21,13 +21,13 @@
               class="modal-btn modal-btn-cancel hover:opacity-80 hover:bg-gray-100 transition-all"
               @click="handleCancel"
             >
-              {{ cancelText }}
+              {{ t(cancelText) }}
             </button>
             <button 
               class="modal-btn modal-btn-confirm hover:opacity-90 hover:bg-orange-400 transition-all" 
               @click="handleConfirm"
             >
-              {{ confirmText }}
+              {{ t(confirmText) }}
             </button>
           </div>
         </div>
@@ -38,6 +38,10 @@
 
 <script setup lang="ts">
 
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n(); 
+
 interface Props {
   modelValue: boolean;
   title?: string;
@@ -47,10 +51,10 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: "提示",
+  title: "tool.tips",
   content: "",
-  cancelText: "取消",
-  confirmText: "同意",
+  cancelText: "common.cancel",
+  confirmText: "common.confirm",
 });
 
 const emit = defineEmits<{

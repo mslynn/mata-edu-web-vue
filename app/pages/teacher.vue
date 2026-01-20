@@ -393,7 +393,7 @@ import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { useTeacher } from '~/composables/api/useTeacher'
 import { useI18n } from 'vue-i18n'
 
-const { t: $t } = useI18n()
+const { t: $t, locale } = useI18n()
 const router = useRouter()
 
 definePageMeta({
@@ -466,17 +466,27 @@ const currentToolUrl = ref('')
 const currentToolName = ref('')
 const toolIframeLoading = ref(true)
 
-const toolUrls: Record<string, { url: string; name: string }> = {
-  vincibot: { url: 'https://vinci.matatastudio.com/', name: 'VinciBot' },
-  nous: { url: 'https://nous.matatastudio.com/', name: 'Nous' }
+const toolUrls: Record<string, { url: string; nameKey: string }> = {
+  vincibot: { url: 'https://vinci.matatastudio.com/', nameKey: 'teacher.vincibot' },
+  nous: { url: 'https://nous.matatastudio.com/', nameKey: 'teacher.nous' }
 }
 
 // 打开工具 iframe
 const handleOpenTool = (toolId: string) => {
   const tool = toolUrls[toolId]
   if (tool) {
-    currentToolUrl.value = tool.url
-    currentToolName.value = tool.name
+    let url = tool.url
+    // 动态添加语言参数
+    if (toolId === 'vincibot') {
+      const lang = locale.value === 'zh' ? 'zh-CN' : 'en'
+      url = `${url}?lang=${lang}`
+    } else if (toolId === 'nous') {
+      const lang = locale.value === 'zh' ? 'zh' : 'en'
+      url = `${url}?lang=${lang}`
+    }
+
+    currentToolUrl.value = url
+    currentToolName.value = $t(tool.nameKey)
     toolIframeLoading.value = true
     showToolIframeModal.value = true
   }
@@ -486,7 +496,6 @@ const handleOpenTool = (toolId: string) => {
 const showAIModal = ref(false)
 const aiModelName = ref('')
 const currentAIKey = ref('')
-const { locale } = useI18n()
 
 const handleOpenAIModal = (key: string) => {
   currentAIKey.value = key

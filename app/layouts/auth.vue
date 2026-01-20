@@ -3,7 +3,7 @@
     <!-- 登录页专用顶部导航栏 -->
     <header class="flex justify-between items-center pl-6 md:pl-[115px] bg-[#FF9921] h-[70px] flex-shrink-0">
       <div class="flex items-baseline gap-1">
-        <img src="~/assets/images/logo.png" alt="Logo" class="w-[220px] h-[37px] object-contain" />
+        <img :src="currentLogo" alt="Logo" class="w-[220px] h-[37px] object-contain" />
       </div>
     </header>
 
@@ -15,7 +15,18 @@
 </template>
 
 <script setup>
-  const config = useRuntimeConfig()
-  console.log(config.public.apiBaseUrl) // http://localhost:3001/api or api.yourdomain.com
-  </script>
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import logo from '~/assets/images/logo.png'
+import logoEn from '~/assets/images/logo_en.png'
+
+const config = useRuntimeConfig()
+const { locale } = useI18n()
+
+const currentLogo = computed(() => {
+  return locale.value === 'en' ? logoEn : logo
+})
+
+console.log(config.public.apiBaseUrl) // http://localhost:3001/api or api.yourdomain.com
+</script>
   

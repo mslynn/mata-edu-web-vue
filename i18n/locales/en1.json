@@ -629,7 +629,9 @@
     "teachingRecord": "Teaching Records",
     "unifiedPassword": "Unified login password:",
     "validFor2Hours": "Valid for 2 hours,",
-    "viewLoginStatus": "View Login Status"
+    "viewLoginStatus": "View Login Status",
+    "vincibot": "VinciBot",
+    "nous": "Nous"
   },
   "tool": {
     "downloadDesktop": "Download Desktop Version",
