@@ -74,6 +74,7 @@ interface TeacherMenuItem {
   activeMenu?: string
   icon?: string
   iconSelected?: string
+  externalUrl?: string // 外部链接地址（如赛事中心的 iframe URL）
 }
 
 const STORAGE_KEY = 'teacher-nav-menus'
@@ -118,8 +119,9 @@ export const useTeacherNav = () => {
     const stored = getStoredMenus()
     if (stored.length) {
       menuState.value = stored
+      initializedState.value = true
     }
-    initializedState.value = true
+    // 注意：如果没有缓存，不设置 initializedState，让后续可以继续尝试
   }
 
   const menuItems = computed(() => menuState.value)
@@ -212,7 +214,7 @@ export const useTeacherNav = () => {
         if (!child) return null
         const label = child.meta?.title || child.name || ''
         // 优先使用 component 生成路由路径，否则用 path
-        let path = child.component 
+        let path = child.component
           ? componentToRoute(child.component)
           : (child.path?.startsWith('/') ? child.path : `/${child.path || ''}`)
         // 根据菜单名称修正路由路径
@@ -234,6 +236,7 @@ export const useTeacherNav = () => {
           activeMenu: child.path || '',
           icon,
           iconSelected,
+          externalUrl: child.meta?.link || child.meta?.externalUrl || '', // 保存外部链接地址
         }
       })
       .filter(Boolean) as TeacherMenuItem[]

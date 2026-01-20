@@ -128,7 +128,7 @@
                     >
                       {{ getChapterStatusText(chapter) }}
                     </span>
-                    <span class="chapter-name">{{ chapter.chapterName }}</span>
+                    <span class="chapter-name" v-html="formatChapterName(chapter.chapterName)"></span>
                     <div class="chapter-actions">
                       <button class="action-btn teach-btn" @click.stop="goToTeach(chapter)">
                         {{ chapter.teachStatus === 1 ? $t('teacher.backToClassroom') : (chapter.teachStatus === 2 ? $t('teacher.classAgain') : $t('teacher.goToClass')) }}
@@ -157,15 +157,22 @@
           <div class="tool-list">
             <div class="tool-item" @click="handleOpenTool('vincibot')">
               <div class="tool-icon">
-                <img src="../assets/images/account.png" alt="VinciBot" />
+                <img src="../assets/images/tool1.png" alt="VinciBot" />
               </div>
               <span class="tool-name">VinciBot</span>
             </div>
+            
             <div class="tool-item" @click="handleOpenTool('nous')">
               <div class="tool-icon">
-                <img src="../assets/images/ai.png" alt="Nous" />
+                <img src="../assets/images/tool2.png" alt="Nous" />
               </div>
               <span class="tool-name">Nous</span>
+            </div>
+               <div class="tool-item">
+              <div class="tool-icon">
+                <img src="../assets/images/tool3.png" alt="Nous" />
+              </div>
+              <span class="tool-name">MatataCode</span>
             </div>
           </div>
         </div>
@@ -177,8 +184,60 @@
             <img src="~/assets/images/diandian.png" alt="more" class="more-icon" />
           </div>
           <div class="tool-list">
-            <div v-for="i in 4" :key="i" class="tool-icon">
-              <img src="~/assets/images/four.png" alt="practice" />
+            <div class="tool-item" @click="handleOpenAIModal('imageClassModel')">
+              <div class="tool-icon">
+                <img src="~/assets/images/1.svg" alt="图像分类" />
+              </div>
+              <span class="tool-name">{{ $t('ai.imageClassModel') }}</span>
+            </div>
+            <div class="tool-item" @click="handleOpenAIModal('gestureClassModel')">
+              <div class="tool-icon">
+                <img src="~/assets/images/2.svg" alt="手势分类" />
+              </div>
+              <span class="tool-name">{{ $t('ai.gestureClassModel') }}</span>
+            </div>
+            <div class="tool-item" @click="handleOpenAIModal('voiceClassModel')">
+              <div class="tool-icon">
+                <img src="~/assets/images/3.svg" alt="语音分类" />
+              </div>
+              <span class="tool-name">{{ $t('ai.voiceClassModel') }}</span>
+            </div>
+            <div class="tool-item" @click="handleOpenAIModal('poseClassModel')">
+              <div class="tool-icon">
+                <img src="~/assets/images/4.svg" alt="姿态分类" />
+              </div>
+              <span class="tool-name">{{ $t('ai.poseClassModel') }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI 项目名称输入弹窗 -->
+        <div v-if="showAIModal" class="modal-overlay" @click.self="showAIModal = false">
+          <div class="modal-content">
+            <div class="modal-header">
+              <span class="modal-title">{{ $t('ai.createProject') }}</span>
+              <button class="close-btn" @click="showAIModal = false">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="form-item">
+                <span class="form-label">{{ $t('ai.modelName') }}</span>
+                <input 
+                  v-model="aiModelName" 
+                  type="text" 
+                  class="form-input" 
+                  :placeholder="$t('ai.inputModelName')"
+                  @keyup.enter="handleAIConfirm"
+                />
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-cancel" @click="showAIModal = false">{{ $t('common.cancel') }}</button>
+              <button class="btn-confirm" @click="handleAIConfirm">{{ $t('common.confirm') }}</button>
             </div>
           </div>
         </div>
@@ -423,6 +482,48 @@ const handleOpenTool = (toolId: string) => {
   }
 }
 
+// AI 弹窗逻辑
+const showAIModal = ref(false)
+const aiModelName = ref('')
+const currentAIKey = ref('')
+const { locale } = useI18n()
+
+const handleOpenAIModal = (key: string) => {
+  currentAIKey.value = key
+  aiModelName.value = ''
+  showAIModal.value = true
+}
+
+const handleAIConfirm = () => {
+  if (!aiModelName.value.trim()) return
+
+  const token = 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ7XCJ0b2tlblR5cGVcIjpcImFjY2Vzc190b2tlblwiLFwidXNlcklkXCI6MTE1MzIsXCJ1c2VybmFtZVwiOlwiMzI4NzI1Nzk0QHFxLmNvbVwifSIsImV4cCI6MTc3MDQzODM0MSwiaWF0IjoxNzY3ODQ2MzQxNDU0LCJqdGkiOiI0YzBmYWQ1ZC1mYjVjLTRjMTMtOTUwNi1kOGVlOGI0YWUzMTAifQ.MKTjQtiuXvbl1TDvp3AF8j0qllvMX-Hr6wwqjkzKW3LpUlM7A882MhYX78l2DoqrxrRPQ1gAzm8uZ_anCgzlrg'
+  const typeMap: Record<string, number> = {
+    'imageClassModel': 1,
+    'gestureClassModel': 2,
+    'voiceClassModel': 3,
+    'poseClassModel': 4
+  }
+  const type = typeMap[currentAIKey.value] || 1
+  const lang = locale.value === 'zh' ? 'zh' : 'en'
+  const url = `https://pre.matatalab.com/?token=${token}&type=${type}&projectName=${aiModelName.value}&lang=${lang}`
+  
+  currentToolUrl.value = url
+  
+  const titleMap: Record<string, string> = {
+     'imageClassModel': $t('ai.imageClassModel'),
+     'gestureClassModel': $t('ai.gestureClassModel'),
+     'voiceClassModel': $t('ai.voiceClassModel'),
+     'poseClassModel': $t('ai.poseClassModel'),
+  }
+
+  currentToolName.value = titleMap[currentAIKey.value] || ''
+  toolIframeLoading.value = true
+  showToolIframeModal.value = true
+  
+  showAIModal.value = false
+}
+
 // iframe 加载完成
 const onToolIframeLoad = () => {
   toolIframeLoading.value = false
@@ -601,6 +702,14 @@ const getChapterStatusText = (chapter: ChapterItem) => {
   }
 }
 
+// 格式化章节名称：将 "-" 替换为换行，不显示 "-"
+const formatChapterName = (name: string) => {
+  if (!name) return ''
+  // 按 "-" 分割，过滤空字符串，用 <br> 连接
+  const parts = name.split('-').map(p => p.trim()).filter(p => p)
+  return parts.join('<br>')
+}
+
 // 加载章节列表
 const loadChapterList = async () => {
   if (!selectedCourseId.value || !selectedClassId.value) {
@@ -690,7 +799,7 @@ const loadTeachList = async () => {
         className: item.className,
         gradeName: item.gradeName,
         courseList: (item.courseList || []).map((course: any) => ({
-          courseId: String(course.courseId),
+          courseId: course.courseId ? String(course.courseId) : null,
           courseName: course.courseName,
           courseCoverUrl: course.courseCoverUrl || ''
         }))
@@ -746,30 +855,34 @@ const handleGoToClass = async () => {
     }
 
     // 设置课程列表（从分组结构中提取所有课程）
+    // 设置课程树形结构
     if (courseTreeRes && Array.isArray(courseTreeRes)) {
-      // 设置树形结构
-      startClassData.courseTree = courseTreeRes.map((group: any) => ({
-        menuId: group.menuId,
-        menuName: group.menuName || '未分组',
-        courseList: (group.courseList || []).map((course: any) => ({
-          courseId: String(course.courseId),
-          courseName: course.courseName
-        }))
-      }))
-      
-      // 同时设置扁平列表（兼容）
-      const allCourses: { courseId: string; courseName: string }[] = []
-      courseTreeRes.forEach((group: any) => {
-        if (group.courseList && Array.isArray(group.courseList)) {
-          group.courseList.forEach((course: any) => {
-            allCourses.push({
-              courseId: String(course.courseId),
-              courseName: course.courseName
+      // 递归提取所有课程（用于扁平列表兼容）
+      const extractAllCourses = (nodes: any[]): { courseId: string; courseName: string }[] => {
+        let courses: { courseId: string; courseName: string }[] = []
+        nodes.forEach((node: any) => {
+          // 提取当前节点的课程
+          if (node.courseList && Array.isArray(node.courseList)) {
+            node.courseList.forEach((course: any) => {
+              courses.push({
+                courseId: String(course.courseId),
+                courseName: course.courseName
+              })
             })
-          })
-        }
-      })
-      startClassData.courseList = allCourses
+          }
+          // 递归提取子节点的课程
+          if (node.children && Array.isArray(node.children)) {
+            courses = courses.concat(extractAllCourses(node.children))
+          }
+        })
+        return courses
+      }
+
+      // 设置树形结构（保持原始结构）
+      startClassData.courseTree = courseTreeRes
+
+      // 设置扁平列表（兼容）
+      startClassData.courseList = extractAllCourses(courseTreeRes)
     } else {
       startClassData.courseTree = []
       startClassData.courseList = []
@@ -1038,14 +1151,139 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 
 .empty-record {
   width: 200px;
-  height: 250px;
-  display: flex;
   align-items: center;
   justify-content: center;
   background: #f5f5f5;
   border-radius: 8px;
   color: #999;
   font-size: 14px;
+}
+
+/* AI 弹窗样式 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 12px;
+  width: 480px;
+  max-width: 90vw;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: modalFadeIn 0.3s ease;
+}
+
+.modal-header {
+  background: #FF9900;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+  display: flex;
+}
+
+.close-btn:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 40px 48px;
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.form-label {
+  font-size: 14px;
+  color: #333;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.form-input {
+  flex: 1;
+  height: 40px;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: #FF9900;
+}
+
+.modal-footer {
+  padding: 20px 48px 40px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.btn-confirm {
+  background: #FF9900;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  width: 120px;
+  height: 40px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.btn-confirm:hover {
+  background: #E68A00;
+}
+
+.btn-cancel {
+  background: white;
+  color: #666;
+  border: 1px solid #E5E5E5;
+  border-radius: 4px;
+  width: 120px;
+  height: 40px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  border-color: #999;
+  color: #333;
+}
+
+@keyframes modalFadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .lesson-card {
@@ -1095,8 +1333,8 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 
 .chapter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
   padding-bottom: 16px;
 }
 
@@ -1107,8 +1345,8 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .chapter-card {
-  width: 120px;
-  height: 155px;
+  width: 160px;
+  height: 180px;
   background: white;
   border: 1px solid #E5E5E5;
   border-radius: 8px;
@@ -1163,26 +1401,28 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   font-size: 13px;
   color: #333;
   text-align: center;
-  word-break: break-all;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  margin-bottom: 12px;
+  word-break: break-word;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: -40px;
+  margin-bottom: 0;
 }
 
 .chapter-actions {
   position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
+  bottom: 10px;
+  left: 10px;
+  right: 10px;
   display: flex;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
 }
 
 .action-btn {
-  flex: 1;
-  padding: 6px 0;
+  width: 100%;
+  padding: 5px 0;
   font-size: 10px;
   border-radius: 4px;
   cursor: pointer;
@@ -1375,10 +1615,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
     width: 50px;
     height: 50px;
   }
-  
-  .lesson-cover {
-    /* height: 150px; */
-  }
+
   
   .top-cards {
     gap: 20px;

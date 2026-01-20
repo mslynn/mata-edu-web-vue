@@ -332,8 +332,10 @@
                                     class="library-card"
                                     @click="handleLibraryClick(item)">
                                     <div class="flex items-center justify-center gap-3 mb-3">
-                                        <div class="w-10 h-10 bg-gray-100 rounded flex items-center justify-center flex-shrink-0">
-                                            <span class="text-xs font-bold text-gray-500">{{ item.logo }}</span>
+                                        <div class="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 overflow-hidden" 
+                                            :class="item.iconUrl ? 'bg-transparent' : 'bg-gray-100'">
+                                            <img v-if="item.iconUrl" :src="item.iconUrl" class="w-full h-full object-contain text-[10px]" :alt="item.logo" />
+                                            <span v-else class="text-xs font-bold text-gray-500">{{ item.logo }}</span>
                                         </div>
                                         <h3 class="font-medium text-gray-800">{{ item.title }}</h3>
                                     </div>
@@ -885,6 +887,8 @@ interface LibraryItem {
     title: string
     description: string
     url?: string
+    content?: string
+    iconUrl?: string
 }
 
 const libraryList = ref<LibraryItem[]>([])
@@ -915,7 +919,8 @@ const loadLibraryList = async () => {
             logo: item.bookLogo || item.logo || item.bookName?.substring(0, 2) || 'LIB',
             title: item.bookName || item.title || '',
             description: item.bookDesc || item.description || '',
-            content:item.content || ''
+            content:item.content || '',
+            iconUrl: item.iconUrl
         }))
         libraryTotal.value = data?.total || libraryList.value.length
     } catch (error) {

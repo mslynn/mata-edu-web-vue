@@ -1,20 +1,20 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.55:8001' 
+// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.54:8001'  ws://192.168.0.54:8001/resource/websocket
 
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production' 
   ? 'https://test-gateway.matatastudio.com'
-  :  'http://192.168.0.15:8001'
+  :  'https://test-gateway.matatastudio.com'
 
 // 预览服务地址
   
 const previewBaseUrl = process.env.NODE_ENV === 'production' 
 ? 'https://edu-view.matatastudio.com'
-:  'http://192.168.0.145:8012'
+:  'https://edu-view.matatastudio.com'
 
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production' 
   ? 'ws://test-gateway.matatastudio.com/resource/websocket'
-  : 'ws://192.168.0.15:8001/resource/websocket'
+  : 'ws://test-gateway.matatastudio.com/resource/websocket'
 
 
 

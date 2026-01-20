@@ -34,11 +34,20 @@
             <div 
               v-for="file in resourceList" 
               :key="file.id"
-              class="resource-item"
+              class="resource-item group"
               @click="downloadFile(file)"
             >
-              <img :src="getFileIcon(file.fileType)" class="w-6 h-6" />
-              <span class="resource-name">{{ file.name }}</span>
+              <div class="flex items-center gap-3">
+                <img :src="getFileIcon(file.fileType)" class="w-6 h-6" />
+                <span class="resource-name">{{ file.name }}</span>
+              </div>
+              
+              <!-- 下载图标 -->
+              <div class="download-icon opacity-0 group-hover:opacity-100 transition-opacity">
+                 <svg class="w-5 h-5 text-gray-400 hover:text-[#FF9900]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
@@ -231,9 +240,15 @@ onMounted(() => {
 .resource-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 10px 0;
+  justify-content: space-between;
+  padding: 12px 16px;
   cursor: pointer;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.resource-item:hover {
+  background-color: #f5f7fa;
 }
 
 .resource-item:hover .resource-name {

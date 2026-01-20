@@ -27,7 +27,7 @@
             />
             <span class="class-name">
               {{ cls.name }}
-              <span v-if="cls.isClassed" class="taken-hint">（该班级已经上过当前课程）</span>
+              <span v-if="cls.isClassed" class="taken-hint">{{ $t('course.classTakenCourse') }}</span>
             </span>
           </label>
         </div>

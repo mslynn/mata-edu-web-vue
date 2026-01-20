@@ -8,7 +8,7 @@
           </svg>
         </button>
         
-        <h2 class="modal-title">课程测评</h2>
+        <h2 class="modal-title">{{ $t('course.courseEvaluation') }}</h2>
         
         <div class="evaluation-list">
           <div v-for="item in evaluationList" :key="item.id" class="evaluation-item">
@@ -22,20 +22,20 @@
               </svg>
             </div>
             <span class="item-name">
-              {{ item.name }} 
+              {{ $t('course.codingTest') }} {{ item.id }} 
               <span class="distribute-text" :class="{ sent: item.distributed }">
-                {{ item.distributed ? '已下发' : '未下发' }}
+                {{ item.distributed ? $t('course.distributed') : $t('course.notDistributed') }}
               </span>
             </span>
             <div class="hover-actions">
-              <button class="hover-btn" @click="handleViewQuestions(item)">查看试题</button>
-              <button class="hover-btn" @click="handleSetExam(item)">设置考试</button>
+              <button class="hover-btn" @click="handleViewQuestions(item)">{{ $t('course.viewQuestions') }}</button>
+              <button class="hover-btn" @click="handleSetExam(item)">{{ $t('course.setExam') }}</button>
               <button 
                 class="hover-btn" 
                 :class="{ disabled: !item.distributed }"
                 :disabled="!item.distributed"
                 @click="item.distributed && handleGrading(item)"
-              >批改试卷</button>
+              >{{ $t('course.gradeExam') }}</button>
             </div>
           </div>
         </div>
@@ -57,25 +57,25 @@ const props = defineProps<{
 const emit = defineEmits(['update:visible', 'distribute'])
 
 const evaluationList = ref([
-  { id: 1, name: '优创未来', distributed: true },
-  { id: 2, name: '优创未来2', distributed: false },
-  { id: 3, name: '优创未来3', distributed: true },
+  { id: 1, distributed: true },
+  { id: 2, distributed: false },
+  { id: 3, distributed: true },
 ])
 
 const handleClose = () => {
   emit('update:visible', false)
 }
 
-const handleDistribute = (item: { id: number; name: string }) => {
+const handleDistribute = (item: any) => {
   emit('distribute', item)
 }
 
-const handleViewQuestions = (item: { id: number; name: string }) => {
+const handleViewQuestions = (item: any) => {
   console.log('查看试题:', item)
 }
 
 const showSetExamModal = ref(false)
-const handleSetExam = (item: { id: number; name: string }) => {
+const handleSetExam = (item: any) => {
   showSetExamModal.value = true
 }
 
@@ -83,7 +83,7 @@ const handleExamSubmit = (data: any) => {
   console.log('下发考试:', data)
 }
 
-const handleGrading = (item: { id: number; name: string }) => {
+const handleGrading = (item: any) => {
   console.log('批改试卷:', item)
 }
 </script>

@@ -181,6 +181,7 @@
 import { ref, watch, nextTick, computed } from "vue";
 import { ElMessage } from "element-plus";
 import { useAuth } from '~/composables/api/useAuth'
+import { useTeacherNav } from '~/composables/api/useTeacherNav'
 
 const { $i18n } = useNuxtApp()
 const t = (key: string) => $i18n.t(key)
@@ -318,6 +319,12 @@ const handleLogin = async () => {
         'password'
       );
       console.log("✅ 登录结果:", result);
+
+      // 登录成功，预加载菜单数据（如果是教师角色）
+      if (result?.redirectPath?.startsWith('/system')) {
+        const { loadMenus } = useTeacherNav();
+        await loadMenus(true); // 强制刷新菜单
+      }
 
       // 登录成功，跳转到对应页面
       if (result?.redirectPath) {

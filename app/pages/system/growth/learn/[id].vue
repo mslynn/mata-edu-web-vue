@@ -103,6 +103,7 @@ import folderIcon from '~/assets/images/ziliao.png'
 import docIcon from '~/assets/images/doc.png'
 import xlsIcon from '~/assets/images/xls.png'
 import pdfIcon from '~/assets/images/pdf.png'
+import pptIcon from '~/assets/images/ppt.png'
 import mp4Icon from '~/assets/images/mp4.png'
 import pngIcon from '~/assets/images/png.png'
 
@@ -191,9 +192,10 @@ const getFileType = (fileName: string) => {
 // 根据文件类型获取图标图片路径
 const getFileIconSrc = (type: string) => {
   const iconMap: Record<string, string> = {
-    ppt: pdfIcon,
+   
     word: docIcon,
     excel: xlsIcon,
+    ppt:pptIcon,
     pdf: pdfIcon,
     video: mp4Icon,
     image: pngIcon

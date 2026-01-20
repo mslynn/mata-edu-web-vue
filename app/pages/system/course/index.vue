@@ -205,7 +205,7 @@
                         <!-- 课程名称 -->
                         <div class="text-[18px] font-normal text-[#4D4D4D] leading-[24px] mb-[6px] text-center mt-[10px]">{{ course.name }}</div>
                         <!-- 课时数 -->
-                        <div class="text-[16px] font-normal text-[#ADADAD] leading-[24px] text-center">{{ course.hours }}{{ $t('common.hours') }}</div>
+                        <!-- <div class="text-[16px] font-normal text-[#ADADAD] leading-[24px] text-center">{{ course.hours }}{{ $t('common.hours') }}</div> -->
                     </NuxtLink>
                 </div>
 

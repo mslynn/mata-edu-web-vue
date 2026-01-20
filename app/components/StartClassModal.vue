@@ -47,34 +47,44 @@
             <div class="selection-column">
               <div class="column-header">{{ t('teacher.pleaseSelectCourse') }}</div>
               <div class="column-list">
-                <!-- 如果有树形数据，显示树形结构 -->
-                <template v-if="courseTree.length > 0">
-                  <div v-for="menu in courseTree" :key="menu.menuName" class="menu-group">
+                <!-- 渲染扁平化的树形结构 -->
+                <template v-if="flattenedTree.length > 0">
+                  <template v-for="item in flattenedTree" :key="item.key">
                     <!-- 分组标题 -->
-                    <div class="menu-header" @click="toggleMenu(menu.menuName)">
-                      <svg class="expand-icon" :class="{ expanded: expandedMenus.has(menu.menuName) }" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <div 
+                      v-if="item.type === 'menu'"
+                      class="menu-header" 
+                      :style="{ paddingLeft: (item.level * 16 + 16) + 'px' }"
+                      @click="toggleMenu(item.key)"
+                    >
+                      <svg 
+                        class="expand-icon" 
+                        :class="{ expanded: expandedMenus.has(item.key) }" 
+                        width="12" 
+                        height="12" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        stroke-width="2"
+                      >
                         <path d="M9 18l6-6-6-6"/>
                       </svg>
-                      <span class="menu-name">{{ menu.menuName }}</span>
+                      <span class="menu-name">{{ item.name }}</span>
                     </div>
-                    <!-- 课程列表 -->
-                    <Transition name="slide">
-                      <div v-if="expandedMenus.has(menu.menuName)" class="course-list">
-                        <div 
-                          v-for="course in menu.courseList" 
-                          :key="course.courseId" 
-                          class="list-item course-item"
-                          :class="{ active: selectedCourse?.courseId === course.courseId }"
-                          @click="selectCourse(course)"
-                        >
-                          {{ course.courseName }}
-                        </div>
-                      </div>
-                    </Transition>
-                  </div>
+                    <!-- 课程项 -->
+                    <div 
+                      v-else-if="item.type === 'course' && item.course"
+                      class="list-item course-item"
+                      :class="{ active: selectedCourse?.courseId === item.course.courseId }"
+                      :style="{ paddingLeft: (item.level * 16 + 16) + 'px' }"
+                      @click="selectCourse(item.course)"
+                    >
+                      {{ item.course.courseName }}
+                    </div>
+                  </template>
                 </template>
                 <!-- 兼容旧的扁平列表 -->
-                <template v-else>
+                <template v-else-if="courseList.length > 0">
                   <div 
                     v-for="course in courseList" 
                     :key="course.courseId" 
@@ -143,7 +153,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -159,9 +169,10 @@ interface CourseItem {
 }
 
 interface MenuGroup {
-  menuId: string | null
+  menuId: number | null
   menuName: string
-  courseList: CourseItem[]
+  courseList?: CourseItem[]
+  children?: MenuGroup[]
 }
 
 interface ChapterItem {
@@ -174,7 +185,7 @@ interface Props {
   visible: boolean
   classList?: ClassItem[]
   courseList?: CourseItem[]
-  courseTree?: MenuGroup[]  // 新增：树形课程数据
+  courseTree?: MenuGroup[]
   initialCourseId?: string
   initialChapterId?: string
 }
@@ -199,25 +210,77 @@ const selectedCourse = ref<CourseItem | null>(null)
 const selectedChapter = ref<ChapterItem | null>(null)
 const chapterList = ref<ChapterItem[]>([])
 const confirmData = ref<{ classId: string; courseId: string; chapterId: string } | null>(null)
-// 分组展开状态
 const expandedMenus = ref<Set<string>>(new Set())
+
+// 扁平化树形结构
+const flattenedTree = computed(() => {
+  const result: Array<{
+    type: 'menu' | 'course'
+    key: string
+    name?: string
+    course?: CourseItem
+    level: number
+    parentKey?: string
+  }> = []
+
+  const flatten = (nodes: MenuGroup[], level: number, parentKey?: string) => {
+    nodes.forEach(node => {
+      const menuKey = node.menuId ? String(node.menuId) : node.menuName
+      
+      // 添加菜单项
+      result.push({
+        type: 'menu',
+        key: menuKey,
+        name: node.menuName,
+        level,
+        parentKey
+      })
+
+      // 如果展开，添加子内容
+      if (expandedMenus.value.has(menuKey)) {
+        // 添加子菜单
+        if (node.children && node.children.length > 0) {
+          flatten(node.children, level + 1, menuKey)
+        }
+        
+        // 添加课程
+        if (node.courseList && node.courseList.length > 0) {
+          node.courseList.forEach(course => {
+            result.push({
+              type: 'course',
+              key: `course-${course.courseId}`,
+              course,
+              level: level + 1,
+              parentKey: menuKey
+            })
+          })
+        }
+      }
+    })
+  }
+
+  if (props.courseTree.length > 0) {
+    flatten(props.courseTree, 0)
+  }
+
+  return result
+})
 
 const toggleClassDropdown = () => {
   showClassDropdown.value = !showClassDropdown.value
 }
 
-const toggleMenu = (menuName: string) => {
-  if (expandedMenus.value.has(menuName)) {
-    expandedMenus.value.delete(menuName)
+const toggleMenu = (menuKey: string) => {
+  if (expandedMenus.value.has(menuKey)) {
+    expandedMenus.value.delete(menuKey)
   } else {
-    expandedMenus.value.add(menuName)
+    expandedMenus.value.add(menuKey)
   }
 }
 
 const selectClass = (cls: ClassItem) => {
   selectedClass.value = cls
   showClassDropdown.value = false
-  // 清空已选课程和章节
   selectedCourse.value = null
   selectedChapter.value = null
   chapterList.value = []
@@ -246,7 +309,6 @@ const handleConfirm = () => {
   if (!selectedClass.value || !selectedCourse.value || !selectedChapter.value) {
     return
   }
-  // 保存数据，显示提示弹窗
   confirmData.value = {
     classId: selectedClass.value.classId,
     courseId: selectedCourse.value.courseId,
@@ -275,16 +337,25 @@ const setChapterList = (list: ChapterItem[]) => {
 // 监听弹窗显示
 watch(() => props.visible, (val) => {
   if (!val) {
-    // 弹窗关闭时重置状态
     selectedClass.value = null
     selectedCourse.value = null
     selectedChapter.value = null
     chapterList.value = []
     expandedMenus.value.clear()
   } else {
-    // 弹窗打开时，默认展开第一个分组
-    if (props.courseTree.length > 0 && props.courseTree[0]) {
-      expandedMenus.value.add(props.courseTree[0].menuName)
+    // 弹窗打开时，递归展开所有分组
+    expandedMenus.value.clear()
+    const expandAllMenus = (menus: MenuGroup[]) => {
+      menus.forEach(menu => {
+        const key = menu.menuId ? String(menu.menuId) : menu.menuName
+        expandedMenus.value.add(key)
+        if (menu.children && menu.children.length > 0) {
+          expandAllMenus(menu.children)
+        }
+      })
+    }
+    if (props.courseTree.length > 0) {
+      expandAllMenus(props.courseTree)
     }
   }
 })
@@ -293,7 +364,6 @@ watch(() => props.visible, (val) => {
 watch(() => props.classList, (list) => {
   if (props.visible && list.length > 0 && !selectedClass.value) {
     selectedClass.value = list[0] || null
-    // 如果课程已选中，触发加载章节
     if (selectedCourse.value && list[0]) {
       emit('course-change', selectedCourse.value.courseId, list[0].classId)
     }
@@ -308,7 +378,6 @@ watch(() => props.courseList, (list) => {
       : list[0]
     if (course) {
       selectedCourse.value = course
-      // 只有班级已选中时才触发加载章节
       if (selectedClass.value) {
         emit('course-change', course.courseId, selectedClass.value.classId)
       }
@@ -485,14 +554,6 @@ defineExpose({ setChapterList })
 }
 
 /* 树形菜单样式 */
-.menu-group {
-  border-bottom: 1px solid #EFEFEF;
-}
-
-.menu-group:last-child {
-  border-bottom: none;
-}
-
 .menu-header {
   display: flex;
   align-items: center;
@@ -512,6 +573,7 @@ defineExpose({ setChapterList })
 .expand-icon {
   transition: transform 0.2s;
   color: #999;
+  flex-shrink: 0;
 }
 
 .expand-icon.expanded {
@@ -522,26 +584,8 @@ defineExpose({ setChapterList })
   flex: 1;
 }
 
-.course-list {
-  background: #FFFFFF;
-  overflow: hidden;
-}
-
 .course-item {
-  padding-left: 36px !important;
-}
-
-/* 展开/收起动画 */
-.slide-enter-active,
-.slide-leave-active {
-  transition: all 0.25s ease;
-  max-height: 500px;
-}
-
-.slide-enter-from,
-.slide-leave-to {
-  max-height: 0;
-  opacity: 0;
+  background: #FFFFFF;
 }
 
 .item-text {

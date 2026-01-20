@@ -260,27 +260,27 @@
       <div class="mb-6">
         <p class="text-[#4D4D4D] font-medium mb-4">{{ t('studentManage.step1') }}</p>
         <div class="space-y-4 pl-4">
-          <div class="flex items-center gap-2 whitespace-nowrap">
-            <span class="text-red-500">*</span>
-            <span class="text-[#4D4D4D]">{{ t('studentManage.groupName') }}</span>
-            <MInput v-model="groupForm.name" :placeholder="t('studentManage.groupNamePlaceholder')" class="w-[280px]" />
+          <div class="flex items-center gap-2">
+            <span class="text-red-500 w-2">*</span>
+            <span class="text-[#4D4D4D]" style="width: 140px; flex-shrink: 0;">{{ t('studentManage.groupName') }}</span>
+            <MInput v-model="groupForm.name" :placeholder="t('studentManage.groupNamePlaceholder')" style="flex: 1; max-width: 320px;" />
           </div>
-          <div class="flex items-center gap-2 whitespace-nowrap">
-            <span class="text-transparent">*</span>
-            <span class="text-[#4D4D4D]">{{ t('studentManage.groupDesc') }}</span>
-            <MInput v-model="groupForm.remarks" :placeholder="t('studentManage.groupDescPlaceholder')" class="w-[280px]" />
+          <div class="flex items-center gap-2">
+            <span class="text-transparent w-2">*</span>
+            <span class="text-[#4D4D4D]" style="width: 140px; flex-shrink: 0;">{{ t('studentManage.groupDesc') }}</span>
+            <MInput v-model="groupForm.remarks" :placeholder="t('studentManage.groupDescPlaceholder')" style="flex: 1; max-width: 320px;" />
           </div>
         </div>
       </div>
 
       <!-- 第二步：添加小组成员 -->
       <div class="mb-6">
-        <div class="flex items-center justify-between mb-4">
-          <p class="text-[#4D4D4D] font-medium whitespace-nowrap">
-            {{ t('studentManage.step2') }}<span class="text-[#FF9900] text-sm font-normal">{{ t('studentManage.rememberLeader') }}</span>
+        <div class="flex items-start justify-between gap-4 mb-4">
+          <p class="text-[#4D4D4D] font-medium leading-relaxed flex-1" style="word-break: break-word;">
+            {{ t('studentManage.step2') }}<span class="text-[#FF9900] text-sm font-normal ml-1">{{ t('studentManage.rememberLeader') }}</span>
           </p>
           <button
-            class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap"
+            class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap shrink-0"
             @click="handleAddGroupMember"
           >
             {{ t('studentManage.addMember') }}
@@ -292,11 +292,11 @@
           <table class="w-full">
             <thead class="bg-[#FFF1DD]">
               <tr>
-                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.serialNumber') }}</th>
-                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.account') }}</th>
-                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.name') }}</th>
-                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.isLeader') }}</th>
-                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ t('studentManage.operation') }}</th>
+                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ t('studentManage.serialNumber') }}</th>
+                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ t('studentManage.account') }}</th>
+                <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ t('studentManage.name') }}</th>
+                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D] leading-tight min-w-[100px]">{{ t('studentManage.isLeader') }}</th>
+                <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ t('studentManage.operation') }}</th>
               </tr>
             </thead>
             <tbody>

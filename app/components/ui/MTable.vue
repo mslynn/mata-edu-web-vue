@@ -1,9 +1,11 @@
 <template>
-  <div class="bg-white rounded-lg overflow-hidden shadow-sm">
+  <div class="bg-white rounded-lg overflow-hidden shadow-sm relative">
     <!-- 加载遮罩 -->
-    <div v-if="loading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
-      <div class="text-[#4CB9CF]">{{ $t('common.loading') }}</div>
-    </div>
+    <Transition name="fade">
+      <div v-if="loading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+        <div class="text-[#4CB9CF]">{{ $t('common.loading') }}</div>
+      </div>
+    </Transition>
     
     <div class="overflow-x-auto">
       <table class="w-full">
@@ -175,3 +177,14 @@ const handleSelectAll = (e: Event) => {
 }
 </script>
 
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.15s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

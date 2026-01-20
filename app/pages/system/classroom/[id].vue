@@ -146,7 +146,7 @@
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                   <span>{{ t('classroom.aiPracticeTask') }}</span>
-                  <span class="group-desc">{{ t('classroom.aiPracticeTaskDesc') }}</span>
+                  <!-- <span class="group-desc">{{ t('classroom.aiPracticeTaskDesc') }}</span> -->
                 </div>
                 <div v-if="expandedGroups.aiPractice" class="group-content">
                   <div class="task-item" @click="selectTask('ai-dialog')">
@@ -164,12 +164,12 @@
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                   <span>{{ t('classroom.customExercise') }}</span>
-                  <span class="group-desc">{{ t('classroom.customExerciseDesc') }}</span>
+                  <!-- <span class="group-desc">{{ t('classroom.customExerciseDesc') }}</span> -->
                 </div>
                 <div v-if="expandedGroups.customExercise" class="group-content">
-                  <div class="task-item">
+                  <!-- <div class="task-item">
                     <span>今天学习的几个快捷键</span>
-                  </div>
+                  </div> -->
                 </div>
               </div>
               <!-- 3. 随堂练习 -->
@@ -179,7 +179,7 @@
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                   <span>{{ t('classroom.classExercise') }}</span>
-                  <span class="group-desc">{{ t('classroom.classExerciseDesc') }}</span>
+                  <!-- <span class="group-desc">{{ t('classroom.classExerciseDesc') }}</span> -->
                 </div>
                 <div v-if="expandedGroups.classExercise" class="group-content">
                   <div class="empty-tip">{{ t('classroom.noClassExercise') }}</div>
@@ -192,7 +192,7 @@
                     <path d="M9 18l6-6-6-6"/>
                   </svg>
                   <span>{{ t('classroom.freeCoding') }}</span>
-                  <span class="group-desc">{{ t('classroom.freeCodingDesc') }}</span>
+                  <!-- <span class="group-desc">{{ t('classroom.freeCodingDesc') }}</span> -->
                 </div>
                 <div v-if="expandedGroups.freeCoding" class="group-content">
                   <div class="task-item">
@@ -473,9 +473,9 @@ const loadQuickLoginInfo = async () => {
 }
 
 const copyClassInfo = () => {
-  const text = `班级码：${classCode.value}\n登录密码：${loginPassword.value}`
+  const text = `${t('classroom.classCode')}${classCode.value}\n${t('classroom.loginPassword')}${loginPassword.value}`
   navigator.clipboard.writeText(text)
-  alert('班级信息已复制')
+  alert(t('classroom.classInfoCopied'))
 }
 
 const toggleBlackboard = () => {
@@ -582,7 +582,7 @@ const loadResourceList = async () => {
     if (data && Array.isArray(data)) {
       resourceList.value = data.map((item: any) => ({
         id: String(item.resourceId),
-        name: item.fileName || item.resourceName || '未命名文件',
+        name: item.fileName || item.resourceName || t('classroom.unnamedFile'),
         type: getFileExtension(item.fileName || ''),
         resourceUrl: item.resourceUrl || '',
         isSent: item.isSent || false
@@ -814,7 +814,7 @@ const confirmEndClass = async () => {
     navigateTo(`/system/course/${courseId}`)
   } catch (error: any) {
     console.error('下课失败:', error)
-    ElMessage.error(error.message || '下课失败')
+    ElMessage.error(error.message || t('classroom.endClassFailed'))
   }
 }
 

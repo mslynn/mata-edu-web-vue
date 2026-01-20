@@ -4,7 +4,7 @@
     <div v-if="!pageInitialized" class="flex-1 flex items-center justify-center">
       <div class="flex flex-col items-center gap-3">
         <div class="w-8 h-8 border-3 border-[#FF9900] border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-gray-400 text-sm">{{ $t('common.loading') || '加载中...' }}</span>
+        <span class="text-gray-400 text-sm">{{ $t('common.loading') }}</span>
       </div>
     </div>
 
@@ -31,9 +31,9 @@
                 <template v-if="node.children"></template>
                 <template v-else>
                   <div class="flex items-center gap-2">
-                    <img src="~/assets/images/edit.png" alt="编辑" class="w-5 h-5 cursor-pointer"
+                    <img src="~/assets/images/edit.png" :alt="$t('common.edit')" class="w-5 h-5 cursor-pointer"
                       @click.stop="handleEditClass(node)" />
-                    <img src="~/assets/images/del.png" alt="删除" class="w-5 h-5 cursor-pointer"
+                    <img src="~/assets/images/del.png" :alt="$t('common.delete')" class="w-5 h-5 cursor-pointer"
                       @click.stop="handleDeleteClass(node)" />
                   </div>
                 </template>
@@ -61,15 +61,18 @@
         <!-- Tab 切换 - 固定 -->
         <!-- <MTabs v-model="activeTab" :tabs="tabList" class="mb-4 flex-shrink-0" /> -->
 
-             <div class="mb-4 flex-shrink-0 relative">
+          <div class="mb-4 flex-shrink-0 relative">
             <MTabs v-model="activeTab" :tabs="tabList" @change="handleTabChange" />
-            <span class="absolute top-1/2 -translate-y-1/2 right-[3%] text-xs sm:text-sm text-gray-500 whitespace-nowrap">{{
-              $t('user.studentCount') }}<span class="text-[#FF9900] font-medium ml-1">{{ studentList.length
-                }}人</span></span>
+            <span class="absolute top-1/2 -translate-y-1/2 right-[3%] text-xs sm:text-sm text-gray-500 whitespace-nowrap">
+              {{ activeTab === 'student' ? $t('class.studentCount') : $t('class.groupCount') }}
+              <span class="text-[#FF9900] font-medium ml-1">
+                {{ activeTab === 'student' ? studentList.length : groupList.length }}{{ $t('user.person') }}
+              </span>
+            </span>
           </div>
 
         <!-- 学生管理 Tab -->
-        <div v-if="activeTab === 'student'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
+        <div v-show="activeTab === 'student'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
           <!-- 搜索 + 统一密码 + 操作按钮 - 固定 -->
           <div class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
             <!-- 左侧：搜索框 + 提示 -->
@@ -269,7 +272,7 @@
         </div>
 
         <!-- 小组管理 Tab -->
-        <div v-else-if="activeTab === 'group'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
+        <div v-show="activeTab === 'group'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
           <!-- 搜索 + 操作按钮 -->
           <div class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
             <!-- 左侧：搜索框 -->
@@ -863,27 +866,32 @@
         <div class="mb-6">
           <p class="text-[#4D4D4D] font-medium mb-4">{{ $t('class.stepOneGroupInfo') }}</p>
           <div class="space-y-4 pl-4">
-            <div class="flex items-center gap-2 whitespace-nowrap">
-              <span class="text-red-500">*</span>
-              <span class="text-[#4D4D4D]">{{ $t('class.groupName') }}：</span>
-              <MInput v-model="groupForm.name" :placeholder="$t('class.pleaseInputGroupName')" class="w-[280px]" />
+            <div class="flex items-center gap-2">
+              <span class="text-red-500 w-2">*</span>
+              <span class="text-[#4D4D4D]" style="width: 140px; flex-shrink: 0;">{{ $t('class.groupName') }}：</span>
+              <MInput v-model="groupForm.name" :placeholder="$t('class.pleaseInputGroupName')" style="flex: 1; max-width: 320px;" />
             </div>
-            <div class="flex items-center gap-2 whitespace-nowrap">
-              <span class="text-transparent">*</span>
-              <span class="text-[#4D4D4D]">{{ $t('class.groupDesc') }}：</span>
-              <MInput v-model="groupForm.remarks" :placeholder="$t('class.pleaseInputGroupName')" class="w-[280px]" />
+            <div class="flex items-center gap-2">
+              <span class="text-transparent w-2">*</span>
+              <span class="text-[#4D4D4D]" style="width: 140px; flex-shrink: 0;">{{ $t('class.groupDesc') }}：</span>
+              <MInput v-model="groupForm.remarks" :placeholder="$t('class.pleaseInputGroupName')" style="flex: 1; max-width: 320px;" />
             </div>
           </div>
         </div>
 
         <!-- 第二步：添加小组成员 -->
         <div class="mb-6">
-          <div class="flex items-center justify-between mb-4">
-            <p class="text-[#4D4D4D] font-medium whitespace-nowrap">
-              {{ $t('class.stepTwoAddMembers') }}<span class="text-[#FF9900] text-sm font-normal">{{ $t('class.rememberSelectLeader') }}</span>
-            </p>
+          <div class="flex items-start justify-between gap-4 mb-4">
+            <div class="flex-1">
+              <p class="text-[#4D4D4D] font-medium leading-relaxed">
+                {{ $t('class.stepTwoAddMembers') }}
+              </p>
+              <p class="text-[#FF9900] text-sm font-normal mt-1">
+                {{ $t('class.rememberSelectLeader') }}
+              </p>
+            </div>
             <button
-              class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap"
+              class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap shrink-0"
               @click="handleAddGroupMember"
             >
               + {{ $t('class.addMember') }}
@@ -895,11 +903,11 @@
             <table class="w-full">
               <thead class="bg-[#FFF1DD]">
                 <tr>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.serialNumber') }}</th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.account') }}</th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('class.name') }}</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('class.isLeader') }}</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('common.operation') }}</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ $t('class.serialNumber') }}</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ $t('class.account') }}</th>
+                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ $t('class.name') }}</th>
+                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D] leading-tight min-w-[100px]">{{ $t('class.isLeader') }}</th>
+                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D] whitespace-nowrap">{{ $t('common.operation') }}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1464,8 +1472,9 @@ const loadClassList = async () => {
       if (!expandedKeys.value.includes(firstGrade.id)) {
         expandedKeys.value.push(firstGrade.id);
       }
-      // 加载第一个班级的学生列表
-      loadStudentList(firstClass.id);
+      // 加载第一个班级的学生列表和小组列表
+      loadStudentList(firstClass.id, activeTab.value === 'student');
+      loadGroupList(activeTab.value === 'group');
     }
   } catch (error) {
     console.error("获取班级列表失败:", error);
@@ -1475,11 +1484,13 @@ const loadClassList = async () => {
 };
 
 // 获取学生列表
-const loadStudentList = async (classId?: string) => {
+const loadStudentList = async (classId?: string, showLoading = true) => {
   const id = classId || selectedClass.value?.id;
   if (!id) return;
 
-  loading.value = true;
+  if (showLoading && studentList.value.length === 0) {
+    loading.value = true;
+  }
   try {
     const keyword = searchKeyword.value?.trim();
     const params = {
@@ -1538,15 +1549,16 @@ const loadQuickLoginStatus = async () => {
 // 树节点选择
 const handleTreeSelect = (node: any) => {
   if (!node.children) {
-    // 只有班级（叶子节点）才能选中
+    const isNewClass = selectedClass.value?.id !== node.id;
     selectedClass.value = node;
-    // 根据当前 Tab 加载对应数据
-    if (activeTab.value === 'group') {
-      loadGroupList();
-    } else {
-      loadStudentList(node.id);
+    // 切换班级时清空列表，防止看到上一个班级的数据
+    if (isNewClass) {
+      studentList.value = [];
+      groupList.value = [];
     }
-    // 不在切换班级时检查快捷登录状态，保持之前的状态
+    // 同时加载两份数据，当前 Tab 显示 Loading，另一个 Tab 静默加载
+    loadStudentList(node.id, activeTab.value === 'student');
+    loadGroupList(activeTab.value === 'group');
   }
 };
 
@@ -2431,12 +2443,16 @@ const handleClearGroupSelection = () => {
 
 // Tab 切换处理
 const handleTabChange = (newTab: string) => {
-  // alert('9')
   if (!selectedClass.value?.id) return;
+  // 如果目标 Tab 已有数据，不再重新加载，直接显示已有数据
   if (newTab === "group") {
-    loadGroupList();
+    if (groupList.value.length === 0) {
+      loadGroupList(false); // 静默加载，不显示 loading
+    }
   } else {
-    loadStudentList(selectedClass.value.id);
+    if (studentList.value.length === 0) {
+      loadStudentList(selectedClass.value.id, false); // 静默加载
+    }
   }
 };
 </script>

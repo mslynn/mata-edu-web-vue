@@ -23,11 +23,30 @@
           <button v-if="tool.hasCreate" class="btn-primary" @click="handleCreate(tool)">
             {{ t('tool.startCreate') }}
           </button>
-          <button v-if="tool.hasMobile" class="btn-outline" @click="handleDownloadMobile(tool)">
-            {{ t('tool.downloadMobile') }}
+          
+          <!-- 下载客户端 (VinciBot, Nous, TaleMap) -->
+          <button v-if="tool.hasDownloadClient" class="btn-outline" @click="handleDownloadClient(tool)">
+            {{ t('tool.downloadClient') }}
           </button>
-          <button v-if="tool.hasDesktop" class="btn-outline" @click="handleDownloadDesktop(tool)">
-            {{ t('tool.downloadDesktop') }}
+
+          <!-- macOS (MatataXplore) -->
+          <button v-if="tool.hasMacOS" class="btn-outline" @click="handleDownloadMacOS(tool)">
+            {{ t('tool.downloadMacOS') }}
+          </button>
+
+          <!-- Windows (MatataXplore) -->
+          <button v-if="tool.hasWindows" class="btn-outline" @click="handleDownloadWindows(tool)">
+            {{ t('tool.downloadWindows') }}
+          </button>
+          
+          <!-- App Store (MatataXplore, MatataCode) -->
+          <button v-if="tool.hasAppStore" class="btn-outline" @click="handleDownloadAppStore(tool)">
+            {{ t(tool.appStoreKey || 'tool.downloadAppStore') }}
+          </button>
+
+          <!-- Google Play (MatataXplore, MatataCode) -->
+          <button v-if="tool.hasGooglePlay" class="btn-outline" @click="handleDownloadGooglePlay(tool)">
+            {{ t(tool.googlePlayKey || 'tool.downloadGooglePlay') }}
           </button>
         </div>
       </div>
@@ -77,7 +96,7 @@ definePageMeta({
   layout: 'sidebar'
 })
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 interface Tool {
   id: string
@@ -86,11 +105,19 @@ interface Tool {
   titleKey: string
   descKey: string
   hasCreate: boolean
-  hasMobile: boolean
-  hasDesktop: boolean
+  hasDownloadClient?: boolean // 下载客户端
+  hasMacOS?: boolean        // 下载macOS
+  hasWindows?: boolean      // 下载Windows
+  hasAppStore?: boolean     // App Store
+  hasGooglePlay?: boolean   // Google Play
+  appStoreKey?: string      // App Store 按钮文案key
+  googlePlayKey?: string    // Google Play 按钮文案key
   createUrl?: string
-  mobileUrl?: string
-  desktopUrl?: string
+  downloadClientUrl?: string
+  macOSUrl?: string
+  windowsUrl?: string
+  appStoreUrl?: string
+  googlePlayUrl?: string
 }
 
 const toolList: Tool[] = [
@@ -101,11 +128,9 @@ const toolList: Tool[] = [
     titleKey: 'tool.vincibot.title',
     descKey: 'tool.vincibot.desc',
     hasCreate: true,
-    hasMobile: true,
-    hasDesktop: true,
+    hasDownloadClient: true,
     createUrl: 'https://vinci.matatastudio.com/',
-    mobileUrl: 'https://example.com/vincibot/mobile',
-    desktopUrl: 'https://example.com/vincibot/desktop'
+    downloadClientUrl: 'https://vinci.matatastudio.com/static/download.html'
   },
   {
     id: 'nous',
@@ -114,11 +139,9 @@ const toolList: Tool[] = [
     titleKey: 'tool.nous.title',
     descKey: 'tool.nous.desc',
     hasCreate: true,
-    hasMobile: true,
-    hasDesktop: true,
+    hasDownloadClient: true,
     createUrl: 'https://nous.matatastudio.com/',
-    mobileUrl: 'https://example.com/nous/mobile',
-    desktopUrl: 'https://example.com/nous/desktop'
+    downloadClientUrl: 'https://nous.matatastudio.com/?page=download'
   },
   {
     id: 'matatacode',
@@ -127,9 +150,12 @@ const toolList: Tool[] = [
     titleKey: 'tool.matatacode.title',
     descKey: 'tool.matatacode.desc',
     hasCreate: false,
-    hasMobile: true,
-    hasDesktop: false,
-    mobileUrl: 'https://example.com/matatacode/mobile'
+    hasAppStore: true,
+    hasGooglePlay: true,
+    appStoreKey: 'tool.downloadTheAppStore',
+    googlePlayKey: 'tool.downloadTheGooglePlay',
+    appStoreUrl: 'https://apps.apple.com/us/app/matatacode/id1448969038',
+    googlePlayUrl: 'https://nous.matatastudio.com/?page=download&lang=zh'
   },
   {
     id: 'talemap',
@@ -138,9 +164,8 @@ const toolList: Tool[] = [
     titleKey: 'tool.talemap.title',
     descKey: 'tool.talemap.desc',
     hasCreate: false,
-    hasMobile: false,
-    hasDesktop: true,
-    desktopUrl: 'https://example.com/talemap/desktop'
+    hasDownloadClient: true,
+    downloadClientUrl: 'https://www.mediafire.com/file_premium/rz1j080mpbsdhus/MatataCode-TaleMap-v1.0.0-win-x64.exe/file'
   },
   {
     id: 'matataxplore',
@@ -149,10 +174,17 @@ const toolList: Tool[] = [
     titleKey: 'tool.matataxplore.title',
     descKey: 'tool.matataxplore.desc',
     hasCreate: false,
-    hasMobile: true,
-    hasDesktop: true,
-    mobileUrl: 'https://example.com/matataxplore/mobile',
-    desktopUrl: 'https://example.com/matataxplore/desktop'
+    hasDownloadClient: false,
+    hasMacOS: true,
+    hasWindows: true,
+    hasAppStore: true,
+    hasGooglePlay: true,
+    appStoreKey: 'tool.downloadTheAppStore',
+    googlePlayKey: 'tool.downloadTheGooglePlay',
+    macOSUrl: 'https://rrrorwxhlpoolo5m.ldycdn.com/attachment/kijkKBliqnRllSnllimilrSR7ww7fgzb73r/MatataXplore.dmg',
+    windowsUrl: 'https://jjrorwxhlpoolo5m.ldycdn.com/attachment/kjjkKBliqnRllSnllipiljSR7ww7fgzb73r/MatataXplore.exe',
+    appStoreUrl: 'https://apps.apple.com/us/app/matataxplore/id6450284009',
+    googlePlayUrl: 'https://play.google.com/store/apps/details?id=com.matatalab.mtts&pli=1'
   }
 ]
 
@@ -163,7 +195,18 @@ const iframeLoading = ref(true)
 
 const handleCreate = (tool: Tool) => {
   if (tool.createUrl) {
-    currentIframeUrl.value = tool.createUrl
+    let url = tool.createUrl
+    
+    // 动态添加语言参数
+    if (tool.id === 'vincibot') {
+      const lang = locale.value === 'zh' ? 'zh-CN' : 'en'
+      url = `${url}?lang=${lang}`
+    } else if (tool.id === 'nous') {
+      const lang = locale.value === 'zh' ? 'zh' : 'en'
+      url = `${url}?lang=${lang}`
+    }
+
+    currentIframeUrl.value = url
     currentToolName.value = tool.name.replace('<br/>', ' ')
     iframeLoading.value = true
     showIframeModal.value = true
@@ -181,14 +224,43 @@ const closeIframeModal = () => {
   iframeLoading.value = true
 }
 
-const handleDownloadMobile = (tool: Tool) => {
-  // TODO: 实现下载移动端逻辑
-  console.log('下载移动端:', tool.id)
+const handleDownloadClient = (tool: Tool) => {
+  console.log('Download Client:', tool.id)
+  if (tool.id === 'nous') {
+    const lang = locale.value === 'zh' ? 'zh' : 'en'
+    window.open(`https://nous.matatastudio.com/?page=download&lang=${lang}`, '_blank')
+    return
+  }
+  if (tool.id === 'vincibot') {
+    const lang = locale.value === 'zh' ? 'zh-CN' : 'en'
+    window.open(`https://vinci.matatastudio.com/static/download.html?lang=${lang}`, '_blank')
+    return
+  }
+  if (tool.downloadClientUrl) window.open(tool.downloadClientUrl, '_blank')
 }
 
-const handleDownloadDesktop = (tool: Tool) => {
-  // TODO: 实现下载桌面端逻辑
-  console.log('下载桌面端:', tool.id)
+const handleDownloadMacOS = (tool: Tool) => {
+  console.log('Download macOS:', tool.id)
+  if (tool.macOSUrl) {
+    window.location.href = tool.macOSUrl
+  }
+}
+
+const handleDownloadWindows = (tool: Tool) => {
+  console.log('Download Windows:', tool.id)
+  if (tool.windowsUrl) {
+    window.location.href = tool.windowsUrl
+  }
+}
+
+const handleDownloadAppStore = (tool: Tool) => {
+  console.log('Download App Store:', tool.id)
+  if (tool.appStoreUrl) window.open(tool.appStoreUrl, '_blank')
+}
+
+const handleDownloadGooglePlay = (tool: Tool) => {
+  console.log('Download Google Play:', tool.id)
+  if (tool.googlePlayUrl) window.open(tool.googlePlayUrl, '_blank')
 }
 </script>
 

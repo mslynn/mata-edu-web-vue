@@ -3,9 +3,9 @@
     <div class="header-content">
       <div class="flex items-center">
         <img 
-          src="~/assets/images/logo.png" 
+          :src="logoSrc" 
           alt="Logo" 
-          class="w-[220px] h-[37px] object-contain cursor-pointer" 
+          class="h-[37px] w-auto object-contain cursor-pointer" 
           @click="handleLogoClick"
         />
       </div>
@@ -21,7 +21,7 @@
         <!-- 用户头像下拉菜单 -->
         <div class="relative" ref="dropdownRef">
           <img 
-            src="~/assets/images/avatar.png" 
+            :src="user?.avatar || defaultAvatar" 
             alt="Avatar" 
             class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 transition-all"
             @click="toggleDropdown"
@@ -73,9 +73,19 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
+import { useI18n } from 'vue-i18n'
+import defaultAvatar from '~/assets/images/avatar.png'
+import logoZh from '~/assets/images/logo.png'
+import logoEn from '~/assets/images/logo_en.png'
 
 const router = useRouter()
 const { logout, user } = useAuth()
+const { locale } = useI18n()
+
+// 根据语言显示不同的 Logo
+const logoSrc = computed(() => {
+  return locale.value === 'en' ? logoEn : logoZh
+})
 
 const showDropdown = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)

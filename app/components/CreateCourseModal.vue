@@ -45,7 +45,7 @@
     <Transition name="modal-fade">
       <div v-if="modelValue" class="modal-overlay" @click.self="handleCancel">
         <Transition name="modal-scale" appear>
-          <div v-if="modelValue" class="modal-container">
+          <div v-if="modelValue" class="modal-container" :class="{ 'modal-container-en': isEnglish }">
             <!-- 关闭按钮 -->
             <button class="close-btn" @click="handleCancel">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -191,7 +191,10 @@ import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { cursorAdmin } from '~/composables/api/curosr'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// 是否英文环境
+const isEnglish = computed(() => locale.value === 'en')
 
 interface CourseData {
   id?: number | string
@@ -632,6 +635,15 @@ const confirmClose = () => {
   font-family: 'Source Han Sans SC', 'PingFang SC', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
 }
 
+/* 英文环境下加宽弹窗 */
+.modal-container-en {
+  width: 780px;
+}
+
+.modal-container-en .form-label {
+  width: 140px;
+}
+
 .close-btn {
   position: absolute;
   right: 20px;
@@ -835,7 +847,8 @@ const confirmClose = () => {
   justify-content: center;
   gap: 4px;
   /* padding: 6px 16px; */
-  width: 116px;
+  /* width: 116px; */
+  padding: 0px 10px 0px 10px;
   height: 38px;
   line-height: 38px;
   background: #FE9900;

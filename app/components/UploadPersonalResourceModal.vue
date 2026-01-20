@@ -2,7 +2,7 @@
   <div v-if="visible" class="modal-overlay" @click.self="handleClose">
     <div class="modal-container">
       <div class="modal-header">
-        <span class="modal-title">新增个人资源</span>
+        <span class="modal-title">{{ $t('prepare.addPersonalResource') }}</span>
         <button class="close-btn" @click="handleClose">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -12,10 +12,10 @@
       </div>
       
       <div class="modal-body">
-        <p class="upload-tip">请选择对应本地个人文件上传或关联作品中心文件：</p>
+        <p class="upload-tip">{{ $t('prepare.uploadOrLinkTip') }}</p>
         
         <button class="upload-btn" @click="showUploadDialog = true">
-          <span>点击上传本地资源</span>
+          <span>{{ $t('prepare.clickToUpload') }}</span>
         </button>
         
         <div class="warning-box">
@@ -25,9 +25,9 @@
               <line x1="12" y1="8" x2="12" y2="12"></line>
               <line x1="12" y1="16" x2="12.01" y2="16"></line>
             </svg>
-            <span>温馨提示：</span>
+            <span>{{ $t('prepare.warmTip') }}</span>
             <div class="tooltip-wrapper">
-              <a href="javascript:;" class="link">查看上传要求</a>
+              <a href="javascript:;" class="link">{{ $t('prepare.viewUploadRequirements') }}</a>
               <div class="tooltip-content">
                 <p>1、文件大小&lt;=20MB</p>
                 <p>jpg、jpeg、png、gif</p>
@@ -41,17 +41,17 @@
               </div>
             </div>
           </div>
-          <p class="warning-text">PPT/Word中尽量不要包含视频,视频单独作为资源上传预览更流畅;尽量减少PPT中gif图片的数量,作为单独资源上传,保证预览更流畅。</p>
+          <p class="warning-text">{{ $t('prepare.uploadWarningText') }}</p>
         </div>
         
         <!-- 文件列表表格 - 始终显示表头 -->
         <div class="file-table">
           <div class="table-header">
-            <div class="col-index">序号</div>
-            <div class="col-name">文件名称</div>
-            <div class="col-progress">上传进度</div>
-            <div class="col-type">资源类型</div>
-            <div class="col-action">操作</div>
+            <div class="col-index">{{ $t('common.serialNumber') }}</div>
+            <div class="col-name">{{ $t('prepare.fileName') }}</div>
+            <div class="col-progress">{{ $t('prepare.uploadProgress') }}</div>
+            <div class="col-type">{{ $t('prepare.resourceTypeCol') }}</div>
+            <div class="col-action">{{ $t('common.operation') }}</div>
           </div>
           
           <!-- 表格内容区域 - 固定高度 -->
@@ -71,9 +71,9 @@
                   <span class="type-text">{{ item.fileTypeName || '-' }}</span>
                 </div>
                 <div class="col-action">
-                  <button class="action-btn delete-btn" @click="deleteResource(item)">删除</button>
-                  <button class="action-btn cancel-upload-btn" @click="deleteResource(item)">取消上传</button>
-                  <button class="action-btn config-btn" @click="configEvaluation(item)">配置素养评价</button>
+                  <button class="action-btn delete-btn" @click="deleteResource(item)">{{ $t('common.delete') }}</button>
+                  <button class="action-btn cancel-upload-btn" @click="deleteResource(item)">{{ $t('prepare.cancelUpload') }}</button>
+                  <button class="action-btn config-btn" @click="configEvaluation(item)">{{ $t('prepare.configEvaluation') }}</button>
                 </div>
               </div>
             </template>
@@ -93,7 +93,7 @@
                   <text x="95" y="80" text-anchor="middle" font-size="20" fill="#FFB84D">?</text>
                 </svg>
               </div>
-              <p class="empty-text">暂无资源</p>
+              <p class="empty-text">{{ $t('common.noData') }}</p>
             </div>
           </div>
         </div>
@@ -104,7 +104,7 @@
     <div v-if="showUploadDialog" class="upload-dialog-overlay" @click.self="closeUploadDialog">
       <div class="upload-dialog">
         <div class="upload-dialog-header">
-          <span>上传本地资源</span>
+          <span>{{ $t('prepare.uploadLocalResource') }}</span>
           <button class="close-btn" @click="closeUploadDialog">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -115,33 +115,33 @@
         <div class="upload-dialog-body">
           <!-- mc 文件需要选择资源类型 -->
           <div v-if="pendingMcFiles.length > 0" class="form-item">
-            <label>资源类型 <span class="required">*</span></label>
+            <label>{{ $t('prepare.resourceType') }} <span class="required">*</span></label>
             <MSelect
               v-model="selectedResourceType"
               :options="resourceTypeList"
               value-key="dictValue"
               label-key="dictLabel"
-              placeholder="请选择资源类型"
+              placeholder="$t('prepare.pleaseSelectType')"
             />
-            <p class="mc-tip">检测到 MC 文件，请选择资源类型后确认上传</p>
+            <p class="mc-tip">{{ $t('prepare.mcFileTip') }}</p>
             <div class="mc-file-list">
               <span v-for="file in pendingMcFiles" :key="file.name" class="mc-file-tag">{{ file.name }}</span>
             </div>
             <div class="dialog-footer">
-              <button class="cancel-btn" @click="closeUploadDialog">取消</button>
-              <button class="confirm-btn" @click="confirmMcUpload" :disabled="!selectedResourceType">确认上传</button>
+              <button class="cancel-btn" @click="closeUploadDialog">{{ $t('common.cancel') }}</button>
+              <button class="confirm-btn" @click="confirmMcUpload" :disabled="!selectedResourceType">{{ $t('prepare.confirmUpload') }}</button>
             </div>
           </div>
           <!-- 非 mc 文件直接选择上传 -->
           <div v-else class="form-item">
-            <label>选择文件</label>
+            <label>{{ $t('prepare.selectFile') }}</label>
             <button class="select-file-btn" @click="triggerFileInput">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="17 8 12 3 7 8"></polyline>
                 <line x1="12" y1="3" x2="12" y2="15"></line>
               </svg>
-              <span>选择文件</span>
+              <span>{{ $t('prepare.selectFile') }}</span>
             </button>
             <input 
               ref="fileInputRef" 

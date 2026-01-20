@@ -20,7 +20,14 @@
               class="cover-img" />
           </div>
           <div class="info-box">
-            <h1 class="title">{{ courseInfo.name }}</h1>
+            <div class="title-container">
+              <h1 class="title">{{ courseInfo.name }}</h1>
+              <div v-if="courseLabelList.length > 0" class="label-container">
+                <span v-for="label in courseLabelList" :key="label" class="course-label">
+                  {{ label }}
+                </span>
+              </div>
+            </div>
             <p class="desc">{{ courseInfo.description }}</p>
             <div class="action-buttons">
               <button class="action-btn-primary" @click="showEvaluationModal = true">{{ $t('course.courseEvaluation') }}</button>
@@ -152,22 +159,22 @@ import { useI18n } from 'vue-i18n'
 import { cursorAdmin } from '~/composables/api/curosr'
 import { useTeacher } from '~/composables/api/useTeacher'
 
-const { t } = useI18n()
+const { locale, t } = useI18n()
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const { getCursorDetail, startPrepare, getChapterResourceList } = cursorAdmin()
 const { getTeachChapterList, getClassListNoPage, getCourseMenuTree } = useTeacher()
 
-// 页面加载时加载课程详情
-onMounted(async () => {
-  // 加载课程详情
+// 加载课程详情函数
+const loadCourseDetail = async () => {
   try {
     const data = await getCursorDetail(String(route.params.id))
     if (data) {
       courseInfo.value.name = data.courseName || courseInfo.value.name
       courseInfo.value.description = data.courseDesc || courseInfo.value.description
       courseInfo.value.courseCoverUrl = data.courseCoverUrl || ''
+      courseInfo.value.courseLabels = data.courseLabels || ''
 
       // 更新章节列表
       if (data.chapterList && Array.isArray(data.chapterList)) {
@@ -177,8 +184,8 @@ onMounted(async () => {
           isPrepare: c.isPrepare || 0
         }))
 
-        // 默认选中第一个章节并加载详情
-        if (chapters.value.length > 0 && chapters.value[0]) {
+        // 默认选中第一个章节并加载详情（仅在初次加载且没有选中章节时）
+        if (!activeChapter.value && chapters.value.length > 0 && chapters.value[0]) {
           activeChapter.value = chapters.value[0].id
         }
       }
@@ -186,13 +193,32 @@ onMounted(async () => {
   } catch (error) {
     console.error('加载课程详情失败:', error)
   }
+}
+
+// 监听语言变化
+watch(locale, () => {
+  loadCourseDetail()
+  if (activeChapter.value) {
+    loadChapterDetail(activeChapter.value)
+  }
+})
+
+// 页面加载时
+onMounted(() => {
+  loadCourseDetail()
 })
 
 const courseInfo = ref({
   id: route.params.id,
   name: '',
   description: '',
-  courseCoverUrl: ''
+  courseCoverUrl: '',
+  courseLabels: ''
+})
+
+const courseLabelList = computed(() => {
+  if (!courseInfo.value.courseLabels) return []
+  return courseInfo.value.courseLabels.split(',').map(s => s.trim()).filter(s => s !== '')
 })
 const chapters = ref<{ id: number; name: string; isPrepare: number }[]>([])
 const activeChapter = ref<number | null>(null)
@@ -385,7 +411,7 @@ const startClassModalRef = ref<any>(null)
 const startClassData = reactive({
   classList: [] as { classId: string; className: string }[],
   courseList: [] as { courseId: string; courseName: string }[],
-  courseTree: [] as { menuId: string | null; menuName: string; courseList: { courseId: string; courseName: string }[] }[],
+  courseTree: [] as { menuId: number | null; menuName: string; courseList: { courseId: string; courseName: string }[] }[],
   initialCourseId: '',
   initialChapterId: ''
 })
@@ -483,31 +509,34 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
       startClassData.classList = []
     }
 
-    // 设置课程列表（从分组结构中提取所有课程）
+    // 设置课程树形结构
     if (courseTreeRes && Array.isArray(courseTreeRes)) {
-      // 设置树形结构
-      startClassData.courseTree = courseTreeRes.map((group: any) => ({
-        menuId: group.menuId,
-        menuName: group.menuName || '未分组',
-        courseList: (group.courseList || []).map((course: any) => ({
-          courseId: String(course.courseId),
-          courseName: course.courseName
-        }))
-      }))
-
-      // 同时设置扁平列表（兼容）
-      const allCourses: { courseId: string; courseName: string }[] = []
-      courseTreeRes.forEach((group: any) => {
-        if (group.courseList && Array.isArray(group.courseList)) {
-          group.courseList.forEach((course: any) => {
-            allCourses.push({
-              courseId: String(course.courseId),
-              courseName: course.courseName
+      // 递归提取所有课程（用于扁平列表兼容）
+      const extractAllCourses = (nodes: any[]): { courseId: string; courseName: string }[] => {
+        let courses: { courseId: string; courseName: string }[] = []
+        nodes.forEach((node: any) => {
+          // 提取当前节点的课程
+          if (node.courseList && Array.isArray(node.courseList)) {
+            node.courseList.forEach((course: any) => {
+              courses.push({
+                courseId: String(course.courseId),
+                courseName: course.courseName
+              })
             })
-          })
-        }
-      })
-      startClassData.courseList = allCourses
+          }
+          // 递归提取子节点的课程
+          if (node.children && Array.isArray(node.children)) {
+            courses = courses.concat(extractAllCourses(node.children))
+          }
+        })
+        return courses
+      }
+
+      // 设置树形结构（保持原始结构）
+      startClassData.courseTree = courseTreeRes
+
+      // 设置扁平列表（兼容）
+      startClassData.courseList = extractAllCourses(courseTreeRes)
     } else {
       startClassData.courseTree = []
       startClassData.courseList = []
@@ -637,11 +666,38 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   flex-direction: column;
 }
 
+.title-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px 0;
+  flex-wrap: wrap;
+}
+
 .title {
   font-size: 20px;
   font-weight: 500;
   color: #333;
-  margin: 0 0 12px 0;
+  margin: 0;
+}
+
+.label-container {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.course-label {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  background: #FFF8F0;
+  border: 1px solid #FF9900;
+  color: #FF9900;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: normal;
+  line-height: 1.2;
 }
 
 .desc {
@@ -649,11 +705,8 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   color: #666;
   line-height: 1.8;
   margin: 0 40px 16px 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  height: 130px;
+  overflow-y: auto;
   background: #F5F5F5;
   padding: 12px 16px;
   border-radius: 8px;
@@ -665,7 +718,8 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
 }
 
 .action-btn-primary {
-  min-width: 120px;
+  min-width: auto;
+  padding: 0 24px;
   height: 36px;
   background: #FE9900;
   color: #FFFFFF;
@@ -715,10 +769,11 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
 }
 
 .chapter-item {
+  position: relative;
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 12px 20px;
+
   font-size: 13px;
   color: #666;
   cursor: pointer;
@@ -738,15 +793,16 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
 
 .chapter-name {
   flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* min-width: 0; */
 }
 
 .chapter-actions {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
   display: flex;
-  gap: 8px;
+  gap: 6px;
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -756,8 +812,8 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
 }
 
 .action-btn {
-  padding: 4px 12px;
-  font-size: 12px;
+  padding: 4px 10px;
+  font-size: 11px;
   border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;

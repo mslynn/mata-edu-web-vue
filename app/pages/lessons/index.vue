@@ -92,7 +92,7 @@
         </div>
         <div class="flex items-center gap-4">
           <button class="text-sm text-[#FF9900] hover:underline" @click="handleSetVisibility">
-            设置课程可见班级
+            {{ $t('course.setVisibleClass') }}
           </button>
         </div>
       </div>
@@ -102,7 +102,7 @@
         <div class="bg-white rounded-lg shadow-sm">
           <!-- 课程标题 -->
           <div class="px-6 py-4 border-b border-gray-100">
-            <h2 class="text-lg font-medium text-gray-800">{{ selectedCourse?.courseName || '请选择课程' }}</h2>
+            <h2 class="text-lg font-medium text-gray-800">{{ selectedCourse?.courseName || $t('teacher.pleaseSelectCourse') }}</h2>
           </div>
 
           <!-- 章节列表 -->
@@ -115,7 +115,7 @@
               <span class="text-sm text-gray-700">{{ chapter.chapterName }}</span>
               <div class="chapter-actions">
                 <button class="prepare-btn" @click.stop="handlePrepare(chapter)">
-                  {{ chapter.isPrepare === 1 ? '继续备课' : '开始备课' }}
+                  {{ chapter.isPrepare === 1 ? $t('course.continuePrepare') : $t('course.startPrepare') }}
                 </button>
               </div>
             </div>
@@ -142,7 +142,7 @@ definePageMeta({
   layout: 'default'
 })
 
-useI18n()
+const { t } = useI18n()
 const router = useRouter()
 const { getCursorDetail, createCursor, startPrepare } = cursorAdmin()
 const { getCourseMenuTree } = useTeacher()
@@ -152,10 +152,10 @@ const showClassModal = ref(false)
 const searchKeyword = ref('')
 
 const activeTab = ref('chapters')
-const tabs = [
-  { label: '课程章节', value: 'chapters' },
-  { label: '课程测评', value: 'resources' }
-]
+const tabs = computed(() => [
+  { label: t('course.courseChapter'), value: 'chapters' },
+  { label: t('course.courseEvaluation'), value: 'resources' }
+])
 
 // 类型定义
 interface MenuNode {
@@ -209,7 +209,7 @@ const toggleMenu = (menuKey: string) => {
 const parseMenuNode = (item: any): MenuNode => {
   const node: MenuNode = {
     menuId: item.menuId,
-    menuName: item.menuName || '未分组',
+    menuName: item.menuName || t('course.unGrouped'),
     courseList: (item.courseList || []).map((c: any) => ({
       courseId: String(c.courseId),
       courseName: c.courseName
@@ -339,7 +339,7 @@ const handleCreateCourseConfirm = async (data: any) => {
 
 const handleSetVisibility = () => {
   if (!selectedCourse.value) {
-    ElMessage.warning('请先选择课程')
+    ElMessage.warning(t('course.pleaseSelectCourseFirst'))
     return
   }
   showClassModal.value = true

@@ -2,7 +2,7 @@
   <div v-if="visible" class="modal-overlay" @click.self="handleClose">
     <div class="modal-container">
       <div class="modal-header">
-        <span class="modal-title">设置学生可见资源（学生可在课前、课后查看资源）</span>
+        <span class="modal-title">{{ $t('prepare.setVisibleTitle') }}</span>
         <button class="close-btn" @click="handleClose">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -15,7 +15,7 @@
         <div class="left-panel">
           <!-- 搜索框 -->
           <div class="search-box">
-            <input type="text" v-model="searchKeyword" placeholder="可输入资源名称快速搜索" />
+            <input type="text" v-model="searchKeyword" :placeholder="$t('prepare.searchResourcePlaceholder')" />
             <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="11" cy="11" r="8"></circle>
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -27,7 +27,7 @@
             <!-- 加载中 -->
             <div v-if="loading" class="loading-state">
               <div class="spinner"></div>
-              <span>加载中...</span>
+              <span>{{ $t('common.loading') }}</span>
             </div>
             
             <!-- 暂无数据 -->
@@ -38,7 +38,7 @@
                 <line x1="30" y1="50" x2="60" y2="50" stroke="#d9d9d9" stroke-width="2"/>
                 <line x1="30" y1="60" x2="50" y2="60" stroke="#d9d9d9" stroke-width="2"/>
               </svg>
-              <span>暂无数据</span>
+              <span>{{ $t('common.noData') }}</span>
             </div>
             
             <div v-else v-for="group in filteredResourceGroups" :key="group.resourceName" class="tree-group">
@@ -71,7 +71,7 @@
         </div>
         
         <div class="right-panel">
-          <div class="selected-header">已选资源（{{ selectedItems.length }}）</div>
+          <div class="selected-header">{{ $t('prepare.selectedResources') }}（{{ selectedItems.length }}）</div>
           <div class="selected-list">
             <template v-if="selectedItems.length > 0">
               <div v-for="item in selectedItems" :key="item.resourceId" class="selected-item">
@@ -90,16 +90,16 @@
               </div>
             </template>
             <div v-else class="empty-selected">
-              <span>请从左侧选择资源</span>
+              <span>{{ $t('prepare.selectFromLeft') }}</span>
             </div>
           </div>
         </div>
       </div>
       
       <div class="modal-footer">
-        <button class="btn-cancel" @click="handleClose">取 消</button>
+        <button class="btn-cancel" @click="handleClose">{{ $t('common.cancel') }}</button>
         <button class="btn-confirm" :disabled="saving" @click="handleConfirm">
-          {{ saving ? '保存中...' : '确 定' }}
+          {{ saving ? $t('common.saving') : $t('common.confirm') }}
         </button>
       </div>
     </div>

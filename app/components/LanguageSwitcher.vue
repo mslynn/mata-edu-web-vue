@@ -7,7 +7,7 @@
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
       </svg>
     </div>
-    <span class="lang-text">{{ locale === 'zh' ? 'Chinese' : 'English' }}</span>
+    <span class="lang-text">{{ locale === 'zh' ? '中文' : 'English' }}</span>
     <div class="arrow-icon">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="6 9 12 15 18 9"/>
@@ -23,7 +23,7 @@
           @click="switchLang('zh')"
         >
           <span class="flag">🇨🇳</span>
-          <span>Chinese</span>
+          <span>中文</span>
           <svg v-if="locale === 'zh'" class="check-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12"/>
           </svg>
