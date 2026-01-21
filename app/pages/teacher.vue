@@ -43,14 +43,22 @@
                 />
               </div>
               
-              <MSelect 
-                v-model="selectedCourseId" 
-                :options="courseOptions" 
-                value-key="value" 
-                label-key="label"
-                :placeholder="$t('teacher.selectCourse')"
-                class="course-select"
-              />
+              <div class="course-select-container" @mouseenter="showCoursePopover = true" @mouseleave="showCoursePopover = false">
+                <MSelect 
+                  v-model="selectedCourseId" 
+                  :options="courseOptions" 
+                  value-key="value" 
+                  label-key="label"
+                  :placeholder="$t('teacher.selectCourse')"
+                  class="course-select"
+                />
+                <Transition name="fade">
+                  <div v-if="showCoursePopover && selectedCourse?.courseName" class="course-tooltip">
+                    {{ selectedCourse?.courseName }}
+                    <div class="tooltip-arrow"></div>
+                  </div>
+                </Transition>
+              </div>
               
               <div class="lesson-card" @click="goToCourse">
                 <img 
@@ -380,6 +388,7 @@
             :class="{ hidden: toolIframeLoading }"
             frameborder="0" 
             allowfullscreen
+            allow="camera; microphone"
             @load="onToolIframeLoad"
           ></iframe>
         </div>
@@ -453,6 +462,7 @@ const teachList = ref<TeachItem[]>([])
 const selectedClassId = ref<string | null>(null)
 const selectedCourseId = ref<string | null>(null)
 const selectedChapterId = ref<string | null>(null)
+const showCoursePopover = ref(false)
 
 // 快捷登录相关
 const showLoginPopover = ref(false)
@@ -987,8 +997,8 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .action-card {
-  width: 260px;
-  height: 396px;
+  flex: 1;
+  height: 320px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1006,10 +1016,10 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .card-icon {
-  width: 210px;
-  height: 210px;
+  width: 150px;
+  height: 150px;
   object-fit: contain;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .card-label {
@@ -1020,14 +1030,19 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 /* 下方内容区 */
 .bottom-section {
   display: flex;
-  gap: 32px;
-  flex: 1;
+  gap: 24px;
+  flex: none;
   min-height: 0;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .section-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-bottom: 12px;
 }
@@ -1035,10 +1050,12 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 .section-title {
   font-size: 14px;
   color: #666;
+  white-space: nowrap;
 }
 
 .class-select {
-  width: 140px;
+  flex: 1;
+  min-width: 0;
 }
 
 /* 登录按钮和气泡 */
@@ -1062,8 +1079,9 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 .login-popover {
   position: absolute;
   top: 100%;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 0; /* Align to right since button is right aligned in its context usually */
+  left: auto;
+  transform: none;
   padding-top: 12px;
   z-index: 100;
 }
@@ -1071,8 +1089,9 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 .popover-arrow {
   position: absolute;
   top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
+  right: 20px; /* Adjust arrow position */
+  left: auto;
+  transform: none;
   width: 0;
   height: 0;
   border-left: 8px solid transparent;
@@ -1156,10 +1175,53 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 /* 授课记录 */
 .lesson-record {
   flex-shrink: 0;
+  width: 240px;
+  padding-right: 24px;
+  border-right: 1px solid #E5E5E5;
+}
+
+.lesson-record .section-header {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+}
+
+.course-select-container {
+  position: relative;
+  width: 100%;
+}
+
+.course-tooltip {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #303133;
+  color: white;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  pointer-events: none;
+}
+
+.tooltip-arrow {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+  width: 8px;
+  height: 8px;
+  background: #303133;
 }
 
 .empty-record {
-  width: 200px;
+  width: 100%;
+  height: 200px; /* consistent height */
+  display: flex;
   align-items: center;
   justify-content: center;
   background: #f5f5f5;
@@ -1296,16 +1358,18 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .lesson-card {
-  width: 200px;
-  height: 250px;
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 .lesson-cover {
   width: 100%;
-  height: 100%;
-  /* height: 250px; */
+  height: auto;
+  min-height: 200px;
   border-radius: 8px;
-  object-fit: cover;
+  object-fit: fill;
   cursor: pointer;
   transition: transform 0.3s, box-shadow 0.3s;
 }
@@ -1342,8 +1406,8 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 
 .chapter-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+  gap: 40px;
   padding-bottom: 16px;
 }
 
@@ -1354,7 +1418,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .chapter-card {
-  width: 160px;
+  width: 100%;
   height: 180px;
   background: white;
   border: 1px solid #E5E5E5;

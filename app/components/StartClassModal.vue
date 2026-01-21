@@ -169,7 +169,7 @@ interface CourseItem {
 }
 
 interface MenuGroup {
-  menuId: number | null
+  menuId: number | string | null
   menuName: string
   courseList?: CourseItem[]
   children?: MenuGroup[]

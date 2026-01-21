@@ -258,7 +258,7 @@
       </div>
       <div class="iframe-content">
         <div v-if="iframeLoading" class="loading-state">{{ $t('common.loading') }}</div>
-        <iframe :src="currentIframeUrl" class="iframe-view" @load="onIframeLoad"></iframe>
+        <iframe :src="currentIframeUrl" class="iframe-view" allow="camera; microphone" @load="onIframeLoad"></iframe>
       </div>
     </div>
   </div>

@@ -72,7 +72,6 @@
                 </div>
                 <div class="col-action">
                   <button class="action-btn delete-btn" @click="deleteResource(item)">{{ $t('common.delete') }}</button>
-                  <button class="action-btn cancel-upload-btn" @click="deleteResource(item)">{{ $t('prepare.cancelUpload') }}</button>
                   <button class="action-btn config-btn" @click="configEvaluation(item)">{{ $t('prepare.configEvaluation') }}</button>
                 </div>
               </div>
@@ -665,9 +664,9 @@ const removeFile = (index: number) => {
 
 .col-index { width: 60px; flex-shrink: 0; justify-content: center; }
 .col-name { flex: 1; min-width: 0; }
-.col-progress { width: 200px; flex-shrink: 0; gap: 8px; }
+.col-progress { width: 140px; flex-shrink: 0; gap: 8px; }
 .col-type { width: 100px; flex-shrink: 0; justify-content: center; }
-.col-action { width: 220px; justify-content: center; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; }
+.col-action { width: 280px; justify-content: center; gap: 6px; flex-wrap: nowrap; flex-shrink: 0; }
 
 .table-content {
   height: 300px;

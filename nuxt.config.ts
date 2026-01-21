@@ -1,18 +1,18 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.54:8001'  ws://192.168.0.54:8001/resource/websocket
 
 // 根据环境直接设置 API 地址
-const apiBaseUrl = process.env.NODE_ENV === 'production' 
+const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  :  'https://test-gateway.matatastudio.com'
+  : 'https://test-gateway.matatastudio.com'
 
 // 预览服务地址
-  
-const previewBaseUrl = process.env.NODE_ENV === 'production' 
-? 'https://edu-view.matatastudio.com'
-:  'https://edu-view.matatastudio.com'
+
+const previewBaseUrl = process.env.NODE_ENV === 'production'
+  ? 'https://edu-view.matatastudio.com'
+  : 'https://edu-view.matatastudio.com'
 
 //websocket通信
-const signalingUrl = process.env.NODE_ENV === 'production' 
+const signalingUrl = process.env.NODE_ENV === 'production'
   ? 'ws://test-gateway.matatastudio.com/resource/websocket'
   : 'ws://test-gateway.matatastudio.com/resource/websocket'
 
@@ -28,20 +28,20 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   devServer: {
-    host: '0.0.0.0',
+    host: 'localhost',
     port: 3001,
   },
 
   // 运行时配置 - API地址等
   runtimeConfig: {
     public: {
-    //   apiBaseUrl:'https://test-gateway.matatastudio.com',
+      //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
       apiBaseUrl: apiBaseUrl || 'http://192.168.0.59:8001',
       // 预览服务地址
-      previewBaseUrl:  previewBaseUrl || 'https://edu-view.matatastudio.com',
+      previewBaseUrl: previewBaseUrl || 'https://edu-view.matatastudio.com',
       // WebRTC 信令服务器地址
-      signalingUrl:signalingUrl || 'ws://192.168.0.59:8001/resource/websocket',
+      signalingUrl: signalingUrl || 'ws://192.168.0.59:8001/resource/websocket',
     }
   },
 
@@ -78,7 +78,7 @@ export default defineNuxtConfig({
   },
 
   // Element Plus 按需引入 + 环境变量
-  vite: {  
+  vite: {
     optimizeDeps: {
       include: ['element-plus']
     },
