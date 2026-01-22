@@ -398,7 +398,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, watch } from 'vue'
 import { useTeacher } from '~/composables/api/useTeacher'
 import { useI18n } from 'vue-i18n'
 
@@ -409,7 +409,7 @@ definePageMeta({
   layout: 'sidebar'
 })
 
-const { getClassListNoPage, getCourseMenuTree, getTeachChapterList, beginClass, getTeachList } = useTeacher()
+const { getClassListNoPage, getCourseMenuTree, getTeachChapterList, beginClass, getTeachList, getQuickLoginInfo } = useTeacher()
 
 const goToLessons = () => {
   router.push('/lessons')
@@ -429,21 +429,6 @@ const copyCode = () => {
   alert($t('teacher.copied'))
 }
 
-// 加载快捷登录信息
-const { getQuickLoginInfo } = useTeacher()
-const loadQuickLoginInfo = async () => {
-  try {
-    const data = await getQuickLoginInfo()
-    if (data) {
-      quickLoginCode.value = data.classCode || ''
-      quickLoginPwd.value = data.classCodePwd || ''
-      quickLoginExpire.value = data.expirationDate || ''
-    }
-  } catch (error) {
-    console.error('加载快捷登录信息失败:', error)
-  }
-}
-
 // 授课记录数据
 interface CourseItem {
   courseId: string
@@ -451,24 +436,132 @@ interface CourseItem {
   courseCoverUrl: string
 }
 
-interface TeachItem {
-  classId: string
-  className: string
-  gradeName: string
-  courseList: CourseItem[]
-}
+// 使用 useAsyncData 加载授课记录
+const { data: teachList } = await useAsyncData(
+  'teacher-teach-list',
+  async () => {
+    const data = await getTeachList()
+    return data
+  },
+  {
+    // 默认空数组
+    default: () => [],
+    // 数据转换
+    transform: (data: any) => {
+      if (!Array.isArray(data)) return []
+      return data.map((item: any) => ({
+        classId: String(item.classId),
+        className: item.className,
+        gradeName: item.gradeName,
+        courseList: (item.courseList || [])
+          .filter((course: any) => course.courseId) // 过滤掉没有 courseId 的课程
+          .map((course: any) => ({
+            courseId: String(course.courseId),
+            courseName: course.courseName,
+            courseCoverUrl: course.courseCoverUrl || ''
+          }))
+      }))
+    }
+  }
+)
 
-const teachList = ref<TeachItem[]>([])
 const selectedClassId = ref<string | null>(null)
 const selectedCourseId = ref<string | null>(null)
 const selectedChapterId = ref<string | null>(null)
 const showCoursePopover = ref(false)
 
+// 章节列表数据
+interface ChapterItem {
+  chapterId: string
+  chapterName: string
+  teachStatus: number
+  isLatestTeach: number
+}
+const chapterList = ref<ChapterItem[]>([])
+
+// 加载章节列表
+const loadChapterList = async () => {
+  if (!selectedCourseId.value || !selectedClassId.value) {
+    chapterList.value = []
+    return
+  }
+  
+  try {
+    const data = await getTeachChapterList(selectedCourseId.value, selectedClassId.value)
+    if (data && Array.isArray(data)) {
+      chapterList.value = data.map((c: any) => ({
+        chapterId: String(c.chapterId),
+        chapterName: c.chapterName,
+        teachStatus: c.teachStatus ?? 0,
+        isLatestTeach: c.isLatestTeach ?? 0
+      }))
+    } else {
+      chapterList.value = []
+    }
+  } catch (error) {
+    console.error('加载章节列表失败:', error)
+    chapterList.value = []
+  }
+}
+
+// 监听 teachList 变化，自动选中第一个班级
+watch(teachList, (list) => {
+  if (list.length > 0 && list[0] && !selectedClassId.value) {
+    selectedClassId.value = list[0].classId
+  }
+}, { immediate: true })
+
+// 班级切换时，重置课程选择并默认选中第一个课程
+watch(selectedClassId, (newClassId) => {
+  if (newClassId) {
+    const selectedClass = teachList.value.find(item => item.classId === newClassId)
+    if (selectedClass?.courseList && selectedClass.courseList.length > 0) {
+      const firstCourse = selectedClass.courseList[0]
+      selectedCourseId.value = firstCourse?.courseId || null
+      console.log('班级切换，选中课程:', firstCourse?.courseId, firstCourse?.courseName)
+    } else {
+      selectedCourseId.value = null
+      console.log('班级切换，没有课程')
+    }
+  } else {
+    selectedCourseId.value = null
+  }
+}, { immediate: true })
+
+// 监听课程变化，加载章节列表
+watch(selectedCourseId, (newCourseId) => {
+  console.log('课程变化:', newCourseId)
+  loadChapterList()
+}, { immediate: true })
+
 // 快捷登录相关
 const showLoginPopover = ref(false)
-const quickLoginCode = ref('')
-const quickLoginPwd = ref('')
-const quickLoginExpire = ref('')
+
+// 使用 useAsyncData 加载快捷登录信息
+const { data: quickLoginInfo, refresh: refreshQuickLoginInfo } = await useAsyncData(
+  'teacher-quick-login',
+  async () => {
+    const data = await getQuickLoginInfo()
+    return data
+  },
+  {
+    default: () => ({
+      classCode: '',
+      classCodePwd: '',
+      expirationDate: ''
+    }),
+    transform: (data: any) => ({
+      classCode: data?.classCode || '',
+      classCodePwd: data?.classCodePwd || '',
+      expirationDate: data?.expirationDate || ''
+    })
+  }
+)
+
+// 从 quickLoginInfo 中解构出各个字段（保持响应式）
+const quickLoginCode = computed(() => quickLoginInfo.value.classCode)
+const quickLoginPwd = computed(() => quickLoginInfo.value.classCodePwd)
+const quickLoginExpire = computed(() => quickLoginInfo.value.expirationDate)
 
 // 工具 iframe 弹窗相关
 const showToolIframeModal = ref(false)
@@ -622,7 +715,7 @@ const handleQuickLoginConfirm = async () => {
     showQuickLoginResultModal.value = true
     
     // 刷新快捷登录信息
-    await loadQuickLoginInfo()
+    await refreshQuickLoginInfo()
   } catch (error) {
     console.error('创建快捷登录失败:', error)
   }
@@ -658,11 +751,6 @@ const selectedClassName = computed(() => {
   return selectedClass?.className || ''
 })
 
-// 检测是否有开课中的章节
-const ongoingClass = computed(() => {
-  return chapterList.value.find(chapter => chapter.teachStatus === 1)
-})
-
 // 班级选项
 const classOptions = computed(() => {
   return teachList.value.map(item => ({
@@ -675,7 +763,7 @@ const classOptions = computed(() => {
 const courseOptions = computed(() => {
   const selectedClass = teachList.value.find(item => item.classId === selectedClassId.value)
   if (!selectedClass || !selectedClass.courseList) return []
-  return selectedClass.courseList.map(course => ({
+  return selectedClass.courseList.map((course: CourseItem) => ({
     value: course.courseId,
     label: course.courseName
   }))
@@ -685,17 +773,9 @@ const courseOptions = computed(() => {
 const selectedCourse = computed(() => {
   const selectedClass = teachList.value.find(item => item.classId === selectedClassId.value)
   if (!selectedClass || !selectedClass.courseList) return null
-  return selectedClass.courseList.find(course => course.courseId === selectedCourseId.value)
+  return selectedClass.courseList.find((course: CourseItem) => course.courseId === selectedCourseId.value)
 })
 
-// 章节列表
-interface ChapterItem {
-  chapterId: string
-  chapterName: string
-  teachStatus: number // 0-未开课, 1-开课中, 2-结束
-  isLatestTeach: number // 0否 1是 最近一次上课的章节（上节课）
-}
-const chapterList = ref<ChapterItem[]>([])
 
 // 获取章节状态：0-已结束, 1-未开始, 2-上节课, 3-开课中
 const getChapterStatus = (chapter: ChapterItem) => {
@@ -729,74 +809,30 @@ const formatChapterName = (name: string) => {
   return parts.join('<br>')
 }
 
-// 加载章节列表
-const loadChapterList = async () => {
-  if (!selectedCourseId.value || !selectedClassId.value) {
-    chapterList.value = []
-    return
-  }
-  
-  try {
-    const data = await getTeachChapterList(selectedCourseId.value, selectedClassId.value)
-    if (data && Array.isArray(data)) {
-      chapterList.value = data.map((c: any) => ({
-        chapterId: String(c.chapterId),
-        chapterName: c.chapterName,
-        teachStatus: c.teachStatus ?? 0,
-        isLatestTeach: c.isLatestTeach ?? 0
-      }))
-    } else {
-      chapterList.value = []
-    }
-  } catch (error) {
-    console.error('加载章节列表失败:', error)
-    chapterList.value = []
-  }
-}
-
-// 班级切换时，重置课程选择并默认选中第一个课程
-watch(selectedClassId, (newClassId) => {
-  if (newClassId) {
-    const selectedClass = teachList.value.find(item => item.classId === newClassId)
-    if (selectedClass?.courseList && selectedClass.courseList.length > 0) {
-      selectedCourseId.value = selectedClass.courseList[0]?.courseId || null
-    } else {
-      selectedCourseId.value = null
-    }
-  } else {
-    selectedCourseId.value = null
-  }
-})
-
-// 课程切换时，加载章节列表
-watch(selectedCourseId, () => {
-  loadChapterList()
-})
-
 // 去上课 - 从授课记录直接进入课堂
 const goToTeach = async (chapter: ChapterItem) => {
   if (!selectedClassId.value || !selectedCourseId.value) return
   
-  const classId = selectedClassId.value
+  const currentClassId = selectedClassId.value
   const courseId = selectedCourseId.value
   const chapterId = chapter.chapterId
   
   // 如果是开课中状态，直接跳转，不调用 beginClass 接口
   if (chapter.teachStatus === 1) {
-    navigateTo(`/system/classroom/${chapterId}?classId=${classId}&courseId=${courseId}&from=teacher`)
+    navigateTo(`/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`)
     return
   }
   
   // 未开课或已结束，调用接口开课
   try {
     await beginClass({ 
-      classId, 
+      classId: currentClassId, 
       courseId, 
       chapterId, 
-      peerId: classId 
+      peerId: currentClassId 
     })
     console.log('开始上课成功')
-    navigateTo(`/system/classroom/${chapterId}?classId=${classId}&courseId=${courseId}&from=teacher`)
+    navigateTo(`/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`)
   } catch (error: any) {
     console.error('开始上课失败:', error)
   }
@@ -807,37 +843,6 @@ const goToPrepare = (chapter: ChapterItem) => {
   if (!selectedCourseId.value) return
   navigateTo(`/system/course/prepare/${selectedCourseId.value}?chapterId=${chapter.chapterId}`)
 }
-
-// 加载授课记录
-const loadTeachList = async () => {
-  try {
-    const data = await getTeachList()
-    if (data && Array.isArray(data)) {
-      teachList.value = data.map((item: any) => ({
-        classId: String(item.classId),
-        className: item.className,
-        gradeName: item.gradeName,
-        courseList: (item.courseList || []).map((course: any) => ({
-          courseId: course.courseId ? String(course.courseId) : null,
-          courseName: course.courseName,
-          courseCoverUrl: course.courseCoverUrl || ''
-        }))
-      }))
-      
-      // 默认选中第一个班级
-      if (teachList.value.length > 0 && teachList.value[0]) {
-        selectedClassId.value = teachList.value[0].classId
-      }
-    }
-  } catch (error) {
-    console.error('加载授课记录失败:', error)
-  }
-}
-
-onMounted(() => {
-  loadTeachList()
-  loadQuickLoginInfo()
-})
 
 // 开课设置弹窗
 const showStartClassModal = ref(false)

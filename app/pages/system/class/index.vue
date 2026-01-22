@@ -1435,8 +1435,8 @@ const loadGradeOptions = async () => {
     const data = await getGradeDict();
     console.log(data, "年级字典列表");
     gradeOptions.value = (data || []).map((item: any) => ({
-      label: item.dictLabel,
-      value: item.dictValue,
+      label: item.gradeName,
+      value: item.grade,
     }));
   } catch (error) {
     console.error("获取年级字典失败:", error);

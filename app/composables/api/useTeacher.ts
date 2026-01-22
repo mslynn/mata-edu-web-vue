@@ -46,7 +46,7 @@ export const useTeacher = () => {
   // 获取年级字典
   const getGradeDict = async () => {
     try {
-      const response = await http.get("/system/dict/data/type/edu_grade_type");
+      const response = await http.get("/system/class/grade/list");
       if (response.code !== 200) {
         throw new Error(response.msg || "获取年级字典失败");
       }
