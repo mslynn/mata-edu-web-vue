@@ -13,13 +13,16 @@
           <tr>
             <!-- 选择列 -->
             <th v-if="selectable" class="w-12 px-4 py-3">
-              <input 
-                type="checkbox" 
-                :checked="isAllSelected"
-                :indeterminate="isIndeterminate"
-                @change="handleSelectAll"
-                class="w-4 h-4 rounded border-gray-300 accent-[#FF9900] focus:ring-[#FF9900]"
-              />
+              <div 
+                class="w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors mx-auto"
+                :class="isAllSelected ? 'bg-[#FF9900] border-[#FF9900]' : isIndeterminate ? 'bg-[#FF9900] border-[#FF9900]' : 'border-gray-300 bg-white'"
+                @click="handleSelectAllClick"
+              >
+                <svg v-if="isAllSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div v-else-if="isIndeterminate" class="w-2 h-0.5 bg-white rounded"></div>
+              </div>
             </th>
             <!-- 序号列 -->
             <th v-if="showIndex" class="w-16 px-4 py-3 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
@@ -35,7 +38,9 @@
                 col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
               ]"
             >
-              {{ col.title }}
+              <slot :name="`header-${col.key}`" :column="col">
+                {{ col.title }}
+              </slot>
             </th>
           </tr>
         </thead>
@@ -52,13 +57,15 @@
           >
             <!-- 选择列 -->
             <td v-if="selectable" class="px-4 py-3">
-              <input 
-                type="checkbox" 
-                :checked="selectedKeys.includes(row[rowKey || 'id'])"
-                @change="handleSelect(row)"
-                @click.stop
-                class="w-4 h-4 rounded border-gray-300 accent-[#FF9900] focus:ring-[#FF9900]"
-              />
+              <div 
+                class="w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors mx-auto"
+                :class="selectedKeys.includes(row[rowKey || 'id']) ? 'bg-[#FF9900] border-[#FF9900]' : 'border-gray-300 bg-white'"
+                @click.stop="handleSelect(row)"
+              >
+                <svg v-if="selectedKeys.includes(row[rowKey || 'id'])" width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
             </td>
             <!-- 序号列 -->
             <td v-if="showIndex" class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
@@ -162,6 +169,18 @@ const handleSelect = (row: any) => {
   }
   
   emit('select', newKeys, newRows)
+}
+
+const handleSelectAllClick = () => {
+  const newSelected = !isAllSelected.value
+  emit('select-all', newSelected)
+  
+  if (newSelected) {
+    const allKeys = props.data.map(row => row[props.rowKey || 'id'])
+    emit('select', allKeys, props.data)
+  } else {
+    emit('select', [], [])
+  }
 }
 
 const handleSelectAll = (e: Event) => {

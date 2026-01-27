@@ -1,9 +1,9 @@
 <template>
-  <div class="relative" ref="selectRef">
+  <div class="relative" ref="selectRef" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <!-- 选择框 -->
     <div 
       :class="[
-        'flex items-center justify-between px-4 py-2 border rounded-lg cursor-pointer transition-all',
+        'flex items-center justify-between px-3 py-1.5 border rounded-lg cursor-pointer transition-all',
         disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:border-[#FF9900]',
         isOpen ? 'border-[#FF9900] ring-2 ring-[#FF9900]/20' : 'border-gray-300',
         error ? 'border-red-500' : ''
@@ -27,7 +27,11 @@
     <Transition name="select-dropdown">
       <div 
         v-if="isOpen" 
-        class="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto"
+        :class="[
+          'absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto',
+          placement === 'bottom-end' ? 'right-0' : placement === 'bottom-center' ? 'left-1/2 -translate-x-1/2' : 'left-0',
+          dropdownClass || 'w-full'
+        ]"
       >
         <!-- 搜索框 -->
         <div v-if="filterable" class="p-2 border-b border-gray-100">
@@ -86,13 +90,19 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   filterable?: boolean
   error?: boolean
+  trigger?: 'click' | 'hover'
+  placement?: 'bottom-start' | 'bottom-end' | 'bottom-center'
+  dropdownClass?: string
 }>(), {
   valueKey: 'value',
   labelKey: 'label',
   placeholder: '请选择',
   disabled: false,
   filterable: false,
-  error: false
+  error: false,
+  trigger: 'click',
+  placement: 'bottom-start',
+  dropdownClass: ''
 })
 
 const emit = defineEmits<{
@@ -120,11 +130,30 @@ const filteredOptions = computed(() => {
 })
 
 const toggleOpen = () => {
-  if (props.disabled) return
+  if (props.disabled || props.trigger === 'hover') return
   isOpen.value = !isOpen.value
   if (!isOpen.value) {
     searchKeyword.value = ''
   }
+}
+
+const timer = ref<NodeJS.Timeout | null>(null)
+
+const handleMouseEnter = () => {
+  if (props.disabled || props.trigger !== 'hover') return
+  if (timer.value) {
+    clearTimeout(timer.value)
+    timer.value = null
+  }
+  isOpen.value = true
+}
+
+const handleMouseLeave = () => {
+  if (props.disabled || props.trigger !== 'hover') return
+  timer.value = setTimeout(() => {
+    isOpen.value = false
+    searchKeyword.value = ''
+  }, 100) // 100ms delay to allow moving to dropdown
 }
 
 const handleSelect = (option: Option) => {
@@ -137,6 +166,7 @@ const handleSelect = (option: Option) => {
 
 // 点击外部关闭
 const handleClickOutside = (e: MouseEvent) => {
+  if (props.trigger === 'hover') return
   if (selectRef.value && !selectRef.value.contains(e.target as Node)) {
     isOpen.value = false
     searchKeyword.value = ''
@@ -161,7 +191,7 @@ onUnmounted(() => {
 .select-dropdown-enter-from,
 .select-dropdown-leave-to {
   opacity: 0;
-  transform: translateY(-8px);
+  margin-top: -8px;
 }
 </style>
 

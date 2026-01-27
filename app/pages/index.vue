@@ -186,7 +186,7 @@ import { useTeacherNav } from '~/composables/api/useTeacherNav'
 const { $i18n } = useNuxtApp()
 const t = (key: string) => $i18n.t(key)
 
-const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole, classCodeLogin, getClassCodeLoginList } = useAuth();
+const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, resetPassword, user, getRedirectPathByRole, classCodeLogin, getClassCodeLoginList,getUser } = useAuth();
 // 登录页也阻止返回
 const { allowNavigation } = usePreventBack();
 // 是否正在跳转（防止布局闪烁）

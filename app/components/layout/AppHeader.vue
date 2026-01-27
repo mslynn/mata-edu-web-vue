@@ -34,7 +34,7 @@
               class="absolute right-0 top-12 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
             >
               <div class="px-4 py-2 border-b border-gray-100">
-                <p class="text-sm font-medium text-gray-800 truncate">{{ user?.nick_name || '用户' }}</p>
+                <p class="text-sm font-medium text-gray-800 truncate">{{ user?.nickname || user?.nick_name || '用户' }}</p>
                 <p class="text-xs text-gray-400 truncate">{{ user?.role_name || '' }}</p>
               </div>
               <!-- 模块切换 - 仅市/区管理员显示 -->
@@ -154,28 +154,16 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 0;
+  padding: 16px 5% 16px 6%;
   width: 100%;
-  max-width: 1712px;
-  margin-left: 115px;
-  margin-right: 95px;
+  box-sizing: border-box;
 }
 
-/* 小屏幕时用较小边距 */
-@media (max-width: 1920px) {
+/* 小屏幕时减少内边距 */
+@media (max-width: 1280px) {
   .header-content {
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-}
-
-/* 大屏幕(>=1920px)时用设计稿边距 */
-@media (min-width: 1920px) {
-  .header-content {
-    margin-left: 115px;
-    margin-right: 95px;
+    padding-left: 24px;
+    padding-right: 24px;
   }
 }
 

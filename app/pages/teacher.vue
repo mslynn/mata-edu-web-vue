@@ -19,7 +19,7 @@
           </div>
 
           <!-- 作业 -->
-          <div class="action-card">
+          <div class="action-card" @click="handleGoToTask">
             <img src="~/assets/images/three.png" :alt="$t('teacher.homework')" class="card-icon" />
             <span class="card-label">{{ $t('teacher.homework') }}</span>
           </div>
@@ -920,6 +920,10 @@ const handleGoToClass = async () => {
 
   // 打开弹窗
   showStartClassModal.value = true
+}
+//跳转到作业
+const handleGoToTask = () => {
+    router.push('/taskmanagement')
 }
 
 // 班级切换

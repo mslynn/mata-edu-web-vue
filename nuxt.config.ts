@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'https://test-gateway.matatastudio.com'
+  : 'http://192.168.0.24:8001'
 
 // 预览服务地址
 
@@ -28,7 +28,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   devServer: {
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 3001,
   },
 
@@ -37,7 +37,7 @@ export default defineNuxtConfig({
     public: {
       //   apiBaseUrl:'https://test-gateway.matatastudio.com',
       // API 基础地址，从环境变量读取，默认值用于开发环境
-      apiBaseUrl: apiBaseUrl || 'http://192.168.0.59:8001',
+      apiBaseUrl: apiBaseUrl || 'http://192.168.0.65:8001',
       // 预览服务地址
       previewBaseUrl: previewBaseUrl || 'https://edu-view.matatastudio.com',
       // WebRTC 信令服务器地址

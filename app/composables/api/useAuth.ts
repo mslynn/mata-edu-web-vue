@@ -65,6 +65,54 @@ export const useAuth = () => {
     }
   }
 
+  // 获取用户信息
+  const getUser = async () => {
+    try {
+      const response = await http.get<{
+        code: number
+        msg: string
+        data: {
+          user: {
+            userId: string
+            username: string
+            nickname: string
+            avatar: string
+            roleKey: string
+            roleName: string
+          }
+        }
+      }>('/system/user/get')
+      
+      if (response.code === 200 && response.data?.user) {
+        const userInfo = response.data.user
+        // 转换为统一的用户信息格式（与现有代码兼容）
+        const formattedUser = {
+          user_id: userInfo.userId,
+          user_name: userInfo.username,
+          nick_name: userInfo.nickname,
+          nickname: userInfo.nickname, // 同时保留 nickname 字段
+          avatar: userInfo.avatar,
+          role_key: userInfo.roleKey,
+          role_name: userInfo.roleName
+        }
+        
+        // 更新用户状态
+        user.value = formattedUser
+        
+        // 保存到 localStorage
+        if (import.meta.client) {
+          localStorage.setItem('user_info', JSON.stringify(formattedUser))
+        }
+        
+        return formattedUser
+      }
+      
+      return null
+    } catch (error: any) {
+      throw error
+    }
+  }
+
   // 登录
   const login = async (username: string, password: string, grantType: string = 'password', studentNumber?: string) => {
     try {
@@ -102,17 +150,23 @@ export const useAuth = () => {
         http.setToken(accessToken)
       }
       
-      // 保存用户信息到 state 和 localStorage
-      const userInfo = response.data.user_info
-      user.value = userInfo
-      if (process.client && userInfo) {
-        localStorage.setItem('user_info', JSON.stringify(userInfo))
+      // 登录成功后调用 getUser 获取用户信息
+      let userInfo = null
+      try {
+        userInfo = await getUser()
+        console.log('👤 获取用户信息成功:', userInfo)
+      } catch (e) {
+        console.warn('获取用户信息失败，使用登录返回的用户信息')
+        // 如果 getUser 失败，使用登录接口返回的用户信息
+        userInfo = response.data.user_info
+        user.value = userInfo
+        if (import.meta.client && userInfo) {
+          localStorage.setItem('user_info', JSON.stringify(userInfo))
+        }
       }
       
       // 登录成功提示
       ElMessage.success(t('auth.loginSuccess'))
-      
-      console.log('👤 用户信息已保存:', userInfo)
       
       // 等待 1 秒让用户看到成功提示
       await new Promise(resolve => setTimeout(resolve, 1000))
@@ -236,6 +290,7 @@ export const useAuth = () => {
     applyTrialAccount,
     resetPassword,
     getClassCodeLoginList,
-    getPeerjsToken
+    getPeerjsToken,
+    getUser
   }
 }

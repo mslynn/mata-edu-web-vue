@@ -97,10 +97,10 @@
                     </div>
                     <div class="item-actions">
                       <template v-if="item.modifyNum === 0">
-                        <span class="action-link" @click.stop="startModify(item)">{{ t('prepare.startModify') }}</span>
+                        <span class="action-link" @click.stop="startModify(item)">{{ t('common.copy') }}</span>
                       </template>
-                      <template v-else>
-                        <span class="action-link" @click.stop="continueModify(item)">{{ t('prepare.continueModify') }}</span>
+                      <template v-if="item.modifyNum  > 0">
+                        <span class="action-link" @click.stop="continueModify(item)">{{ t('prepare.startModify') }}</span>
                         <span class="action-link" @click.stop="addCopy(item)">{{ t('prepare.addCopy') }}</span>
                       </template>
                     </div>
