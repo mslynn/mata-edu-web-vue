@@ -19,22 +19,33 @@
         <div class="flex-1">
           <div 
             class="w-full min-h-[36px] px-3 py-2 border rounded text-sm mb-2 flex flex-wrap items-center gap-1"
-            :class="showError && !hasContent ? 'border-red-400' : 'border-gray-300'"
+            :class="showError && !hasContent ? 'border-red-400' : 'border-gray-300 focus-within:border-[#FF9900]'"
           >
             <template v-for="(part, idx) in contentParts" :key="idx">
-              <span v-if="part.type === 'text'" class="whitespace-pre-wrap">{{ part.value }}</span>
+              <!-- Editable text part -->
+              <input
+                v-if="part.type === 'text'"
+                :value="part.value"
+                type="text"
+                class="outline-none border-none bg-transparent text-sm"
+                :style="{ width: Math.max((part.value?.length || 1) * 14, 20) + 'px' }"
+                :placeholder="idx === 0 && !part.value ? $t('customExercise.questionTitlePlaceholder') : ''"
+                @input="updateTextPart(idx, ($event.target as HTMLInputElement).value)"
+              />
+              <!-- Blank tag -->
               <span 
                 v-else 
-                class="inline-flex items-center px-2 py-0.5 bg-[#E6F7FF] text-[#1890FF] text-xs rounded border border-[#91D5FF]"
+                class="inline-flex items-center px-2 py-0.5 bg-[#FFF7E6] text-[#FF9900] text-xs rounded border border-[#FF9900] shrink-0"
               >「{{ $t('customExercise.blank') }}{{ part.index }}」</span>
             </template>
+            <!-- Input for adding new text at the end -->
             <input
-              ref="hiddenInput"
-              v-model="textInput"
+              ref="endInput"
+              v-model="endText"
               type="text"
-              class="flex-1 min-w-[100px] outline-none border-none bg-transparent text-sm"
-              :placeholder="contentParts.length === 0 ? $t('customExercise.questionTitlePlaceholder') : ''"
-              @keydown="handleKeydown"
+              class="flex-1 min-w-[20px] outline-none border-none bg-transparent text-sm"
+              @input="appendEndText"
+              @keydown.backspace="handleBackspace"
             />
           </div>
           <button 
@@ -55,8 +66,12 @@
           <span class="text-red-500">*</span>{{ $t('customExercise.answer') }}：
         </label>
         <div class="flex-1 space-y-2">
-          <div v-for="(blank, index) in localQuestion.blanks" :key="index" class="flex items-center gap-2">
-            <span class="text-sm text-gray-600 shrink-0">{{ $t('customExercise.blank') }}{{ index + 1 }}</span>
+          <div 
+            v-for="(blank, index) in localQuestion.blanks" 
+            :key="index" 
+            class="flex items-center gap-2 group"
+          >
+            <span class="text-sm text-gray-600 shrink-0 w-[40px]">{{ $t('customExercise.blank') }}{{ index + 1 }}</span>
             <div class="flex-1 relative">
               <input 
                 v-model="blank.answer"
@@ -68,6 +83,18 @@
               />
               <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ blank.answer?.length || 0 }}/100</span>
             </div>
+            <!-- Delete button - show on hover, but not for first blank -->
+            <button 
+              v-if="index > 0"
+              class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity w-5"
+              @click="removeBlank(index)"
+            >
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+            <!-- Placeholder for first blank to keep alignment -->
+            <div v-else class="w-5"></div>
           </div>
           <div v-if="showError && hasEmptyBlank" class="text-sm text-[#FF9900]">
             {{ $t('customExercise.optionRequired') }}
@@ -150,17 +177,18 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
-const textInput = ref('')
-const hiddenInput = ref<HTMLInputElement>()
+const endText = ref('')
+const endInput = ref<HTMLInputElement>()
 
 const localQuestion = computed({
   get: () => props.question,
   set: (val) => emit('update:question', val)
 })
 
+// Parse content into parts (text and blanks)
 const contentParts = computed<ContentPart[]>(() => {
   const content = localQuestion.value.content || ''
-  if (!content) return []
+  if (!content) return [{ type: 'text', value: '' }]
   
   const parts: ContentPart[] = []
   const regex = /「填空(\d+)」/g
@@ -168,13 +196,13 @@ const contentParts = computed<ContentPart[]>(() => {
   let match
   
   while ((match = regex.exec(content)) !== null) {
-    if (match.index > lastIndex) {
-      parts.push({ type: 'text', value: content.slice(lastIndex, match.index) })
-    }
+    // Add text before blank (even if empty, to allow editing)
+    parts.push({ type: 'text', value: content.slice(lastIndex, match.index) })
     parts.push({ type: 'blank', index: parseInt(match[1] || '0') })
     lastIndex = regex.lastIndex
   }
   
+  // Add remaining text after last blank
   if (lastIndex < content.length) {
     parts.push({ type: 'text', value: content.slice(lastIndex) })
   }
@@ -183,13 +211,64 @@ const contentParts = computed<ContentPart[]>(() => {
 })
 
 const hasContent = computed(() => {
-  return (localQuestion.value.content?.trim().length || 0) > 0 || textInput.value.trim().length > 0
+  const content = localQuestion.value.content || ''
+  // Check if there's any actual text content (not just blank tags)
+  const textOnly = content.replace(/「填空\d+」/g, '').trim()
+  return textOnly.length > 0
 })
 
 const hasEmptyBlank = computed(() => {
   if (!localQuestion.value.blanks) return false
   return localQuestion.value.blanks.some(b => !b.answer?.trim())
 })
+
+const updateTextPart = (partIndex: number, newValue: string) => {
+  const parts = contentParts.value
+  let newContent = ''
+  
+  for (let i = 0; i < parts.length; i++) {
+    const part = parts[i]
+    if (!part) continue
+    if (part.type === 'blank') {
+      newContent += `「填空${part.index}」`
+    } else {
+      newContent += i === partIndex ? newValue : (part.value || '')
+    }
+  }
+  
+  localQuestion.value.content = newContent
+}
+
+const appendEndText = () => {
+  if (endText.value) {
+    localQuestion.value.content = (localQuestion.value.content || '') + endText.value
+    endText.value = ''
+  }
+}
+
+const handleBackspace = (e: KeyboardEvent) => {
+  if (endText.value === '') {
+    const content = localQuestion.value.content || ''
+    if (content.length > 0) {
+      // Check if last part is a blank tag
+      const match = content.match(/「填空(\d+)」$/)
+      if (match) {
+        const blankIndex = parseInt(match[1] || '0') - 1
+        localQuestion.value.content = content.slice(0, -match[0].length)
+        if (localQuestion.value.blanks && localQuestion.value.blanks.length > blankIndex) {
+          localQuestion.value.blanks.splice(blankIndex, 1)
+          // Re-index remaining blanks
+          let newContent = localQuestion.value.content
+          for (let i = blankIndex; i < localQuestion.value.blanks.length; i++) {
+            newContent = newContent.replace(`「填空${i + 2}」`, `「填空${i + 1}」`)
+          }
+          localQuestion.value.content = newContent
+        }
+        e.preventDefault()
+      }
+    }
+  }
+}
 
 const addBlank = () => {
   if (!localQuestion.value.blanks) {
@@ -199,30 +278,25 @@ const addBlank = () => {
   localQuestion.value.blanks.push({ answer: '' })
   
   // Add blank tag to content
-  const currentContent = localQuestion.value.content || ''
-  const blankTag = `「填空${blankIndex}」`
-  localQuestion.value.content = currentContent + textInput.value + blankTag
-  textInput.value = ''
+  localQuestion.value.content = (localQuestion.value.content || '') + `「填空${blankIndex}」`
 }
 
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Backspace' && textInput.value === '') {
-    // Remove last blank if exists
-    const content = localQuestion.value.content || ''
-    const match = content.match(/「填空(\d+)」$/)
-    if (match) {
-      localQuestion.value.content = content.slice(0, -match[0].length)
-      if (localQuestion.value.blanks && localQuestion.value.blanks.length > 0) {
-        localQuestion.value.blanks.pop()
-      }
-      e.preventDefault()
-    }
+const removeBlank = (index: number) => {
+  if (!localQuestion.value.blanks) return
+  
+  // Remove blank from array
+  localQuestion.value.blanks.splice(index, 1)
+  
+  // Remove blank tag from content and re-index
+  let content = localQuestion.value.content || ''
+  const blankTag = `「填空${index + 1}」`
+  content = content.replace(blankTag, '')
+  
+  // Re-index remaining blanks
+  for (let i = index + 1; i <= localQuestion.value.blanks.length + 1; i++) {
+    content = content.replace(`「填空${i + 1}」`, `「填空${i}」`)
   }
+  
+  localQuestion.value.content = content
 }
-
-watch(textInput, (val) => {
-  // Update content when typing
-  const baseContent = localQuestion.value.content || ''
-  // Content is managed separately, textInput is just for new text
-})
 </script>

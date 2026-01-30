@@ -1,9 +1,11 @@
+
+
 <template>
   <div class="h-full flex flex-col bg-white overflow-hidden">
     <!-- Row 1: Breadcrumb & Custom Exercise Button (White Background) -->
     <div class="pl-[6%] pr-[5%] py-4 flex items-center justify-between">
       <div class="flex items-center text-sm text-gray-500">
-        <span class="hover:text-gray-700 transition-colors cursor-pointer"   @click="goHome">{{ $t('nav.myDesktop') }}</span>
+        <span class="hover:text-gray-700 transition-colors cursor-pointer"   @click="goHome">{{ $t('nav.home') }}</span>
         <span class="mx-2 text-gray-400">&gt;</span>
         <span class="text-gray-900 font-medium">{{ $t('taskManagement.title') }}</span>
       </div>
@@ -428,40 +430,60 @@
                         </span>
                      </template>
 
+                     <!-- Custom Cell for Score/Total -->
+                     <template #cell-scoreTotal="{ row }">
+                        <span class="text-sm text-gray-600">{{ row.scoreTotal || '-' }}</span>
+                     </template>
+
                      <!-- Custom Cell for Grade (Star Rating) -->
                      <template #cell-grade="{ row }">
-                        <div class="flex items-center justify-center gap-0.5">
-                           <template v-for="i in 3" :key="i">
-                              <svg 
-                                 width="16" height="16" viewBox="0 0 24 24" 
-                                 :fill="i <= (row.grade || 0) ? '#FFD700' : 'none'"
-                                 :stroke="i <= (row.grade || 0) ? '#FFD700' : '#D9D9D9'"
-                                 stroke-width="2"
-                              >
-                                 <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-                              </svg>
-                           </template>
-                        </div>
+                        <StarRating 
+                           :model-value="row.grade || 0" 
+                           :size="16" 
+                           wrapper-class="justify-center"
+                           readonly
+                        />
+                     </template>
+
+                     <!-- Custom Cell for Teacher Score (Star Rating) -->
+                     <template #cell-teacherScore="{ row }">
+                        <StarRating 
+                           v-if="row.teacherScore !== undefined && row.teacherScore !== null"
+                           :model-value="row.teacherScore" 
+                           :size="20" 
+                           wrapper-class="justify-center"
+                           readonly
+                        />
+                        <span v-else class="text-gray-400">-</span>
                      </template>
 
                      <!-- Custom Cell for Actions -->
                      <template #cell-action="{ row }">
                         <div class="flex items-center justify-center gap-2">
-                           <template v-if="row.submissionStatus === 'submitted'">
+                           <!-- Custom Exercise: 查看 + 打回重做 -->
+                           <template v-if="isCustomExercise && row.submissionStatus === 'submitted'">
                               <button 
-                                 class="px-3 py-1 text-xs bg-white border border-gray-200 rounded hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                                 class="px-3 py-1 text-xs text-[#FF9900] border border-[#FF9900] rounded hover:bg-[#FFF7E6] transition-colors"
                                  @click="handleViewAndGrade(row)"
                               >
-                                 {{ $t('taskManagement.viewAndGrade') }}
+                                 {{ $t('taskManagement.view') }}
                               </button>
                               <button 
-                                 class="px-3 py-1 text-xs bg-white border border-gray-200 rounded hover:bg-gray-50 hover:border-gray-300 transition-colors"
+                                 class="px-3 py-1 text-xs text-[#FF9900] border border-[#FF9900] rounded hover:bg-[#FFF7E6] transition-colors"
                                  @click="handleReturnToRedo(row)"
                               >
                                  {{ $t('taskManagement.returnToRedo') }}
                               </button>
                            </template>
-                           <span v-else class="text-gray-400">-</span>
+                           <!-- Free Coding: 查看并评分 -->
+                           <template v-else-if="isFreeCoding && row.submissionStatus === 'submitted'">
+                              <button 
+                                 class="px-4 py-1.5 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                                 @click="handleViewAndScore(row)"
+                              >
+                                 {{ $t('taskManagement.viewAndScore') }}
+                              </button>
+                           </template>
                         </div>
                      </template>
 
@@ -586,6 +608,15 @@
     <TaskWithdrawModal
        v-model="showWithdrawModal"
        @confirm="handleWithdrawConfirm"
+    />
+
+    <ViewAndScoreModal
+       :visible="showViewScoreModal"
+       :row-data="currentScoreRow"
+       :has-next-submission="hasNextSubmission"
+       @close="showViewScoreModal = false"
+       @save="handleScoreSave"
+       @next="handleScoreNext"
     />
   </div>
 </template>
@@ -773,7 +804,7 @@ const customExerciseColumns = computed(() => [
   { key: 'studentName', title: t('taskManagement.studentName'), align: 'center' as const, width: '120px' },
   { key: 'studentAccount', title: t('taskManagement.studentAccount'), align: 'center' as const, width: '150px' },
   { key: 'submissionStatus', title: t('taskManagement.submissionStatus'), align: 'center' as const, width: '100px' },
-  { key: 'score', title: t('taskManagement.score'), align: 'center' as const, width: '80px' },
+  { key: 'scoreTotal', title: t('taskManagement.scoreTotal'), align: 'center' as const, width: '100px' },
   { key: 'duration', title: t('taskManagement.durationMinutes'), align: 'center' as const, width: '120px' },
   { key: 'submissionTime', title: t('taskManagement.submissionTime'), align: 'center' as const, width: '150px' },
   { key: 'grade', title: t('taskManagement.grade'), align: 'center' as const, width: '120px' },
@@ -782,27 +813,34 @@ const customExerciseColumns = computed(() => [
 
 // Upload Task Columns for Student (Personal Upload / Free Coding)
 const uploadTaskStudentColumns = computed(() => [
-  { key: 'studentName', title: t('taskManagement.studentName'), align: 'center' as const, width: '150px' },
-  { key: 'studentAccount', title: t('taskManagement.studentAccount'), align: 'center' as const, width: '200px' },
-  { key: 'submissionStatus', title: t('taskManagement.submissionStatus'), align: 'center' as const, width: '120px' },
-  { key: 'duration', title: t('taskManagement.durationMinutes'), align: 'center' as const, width: '120px' },
-  { key: 'submissionTime', title: t('taskManagement.submissionTime'), align: 'center' as const, width: '180px' },
-  { key: 'action', title: t('common.operation'), align: 'center' as const, width: '100px' }
+  { key: 'studentName', title: t('taskManagement.studentName'), align: 'center' as const, width: '120px' },
+  { key: 'studentAccount', title: t('taskManagement.studentAccount'), align: 'center' as const, width: '150px' },
+  { key: 'submissionStatus', title: t('taskManagement.submissionStatus'), align: 'center' as const, width: '100px' },
+  { key: 'duration', title: t('taskManagement.durationMinutes'), align: 'center' as const, width: '100px' },
+  { key: 'submissionTime', title: t('taskManagement.submissionTime'), align: 'center' as const, width: '160px' },
+  { key: 'teacherScore', title: t('taskManagement.teacherScore'), align: 'center' as const, width: '160px' },
+  { key: 'action', title: t('common.operation'), align: 'center' as const, width: '120px' }
 ])
 
 // Upload Task Columns for Group (Personal Upload / Free Coding)
 const uploadTaskGroupColumns = computed(() => [
-  { key: 'groupName', title: t('taskManagement.groupName'), align: 'center' as const, width: '200px' },
-  { key: 'submissionStatus', title: t('taskManagement.submissionStatus'), align: 'center' as const, width: '120px' },
-  { key: 'duration', title: t('taskManagement.durationMinutes'), align: 'center' as const, width: '120px' },
-  { key: 'submissionTime', title: t('taskManagement.submissionTime'), align: 'center' as const, width: '180px' },
-  { key: 'action', title: t('common.operation'), align: 'center' as const, width: '100px' }
+  { key: 'groupName', title: t('taskManagement.groupName'), align: 'center' as const, width: '150px' },
+  { key: 'submissionStatus', title: t('taskManagement.submissionStatus'), align: 'center' as const, width: '100px' },
+  { key: 'duration', title: t('taskManagement.durationMinutes'), align: 'center' as const, width: '100px' },
+  { key: 'submissionTime', title: t('taskManagement.submissionTime'), align: 'center' as const, width: '160px' },
+  { key: 'teacherScore', title: t('taskManagement.teacherScore'), align: 'center' as const, width: '160px' },
+  { key: 'action', title: t('common.operation'), align: 'center' as const, width: '120px' }
 ])
 
 // Check if current task is a custom exercise
-const isCustomExercise = computed(() => [
-  'today_shortcuts', 'three_people', 'three_people2', 'three_people3', 'three_people4'
-].includes(selectedTaskKey.value))
+const isCustomExercise = computed(() => {
+  // Check if selected key is under custom_exercise parent
+  const customExerciseNode = treeData.value.find(node => node.id === 'custom_exercise')
+  if (customExerciseNode && customExerciseNode.children) {
+    return customExerciseNode.children.some(child => child.id === selectedTaskKey.value)
+  }
+  return false
+})
 
 // Check if current task is upload task (Personal Upload / Free Coding)
 const isUploadTask = computed(() => [
@@ -866,19 +904,30 @@ const handleMoreAction = (val: string | number | null) => {
 
 // Group Task Data (mock data for demo)
 const groupTaskData = ref<any[]>([
-  { id: 1, studentName: 'lynn', studentAccount: '4285lynn01', submissionStatus: 'submitted', score: '-', duration: 0.96, submissionTime: '2025-12-30 11:33:33', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 2, studentName: 'tony', studentAccount: '4285tony01', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 3, studentName: 'jack', studentAccount: '4285jack', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 4, studentName: 'wang', studentAccount: '4285wang09', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 5, studentName: 'tony', studentAccount: '4285tony', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 6, studentName: '1', studentAccount: '4285155', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 7, studentName: 'jack', studentAccount: '4285jack01', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 8, studentName: '2', studentAccount: '4285237', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' },
-  { id: 9, studentName: 'wang', studentAccount: '4285wang010', submissionStatus: 'unsubmitted', score: '-', duration: '-', submissionTime: '-', grade: 3, graded: false, qaStatus: 'pushed' }
+  { id: 1, studentName: 'lynn', studentAccount: '4285lynn01', submissionStatus: 'submitted', scoreTotal: '70/100', duration: 0.96, submissionTime: '2025-12-30 11:33:33', grade: 2.5, teacherScore: 2.5, graded: false, qaStatus: 'pushed' },
+  { id: 2, studentName: 'tony', studentAccount: '4285tony01', submissionStatus: 'submitted', scoreTotal: '-', duration: 1.2, submissionTime: '2025-12-30 10:20:15', grade: 3, teacherScore: 2.5, graded: false, qaStatus: 'pushed' },
+  { id: 3, studentName: 'jack', studentAccount: '4285jack', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 1.5, teacherScore: null, graded: false, qaStatus: 'pushed' },
+  { id: 4, studentName: 'wang', studentAccount: '4285wang09', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 2, teacherScore: null, graded: false, qaStatus: 'pushed' },
+  { id: 5, studentName: 'tony', studentAccount: '4285tony', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 0.5, teacherScore: null, graded: false, qaStatus: 'pushed' },
+  { id: 6, studentName: '1', studentAccount: '4285155', submissionStatus: 'submitted', scoreTotal: '-', duration: 0.8, submissionTime: '2025-12-30 09:15:00', grade: 1, teacherScore: 2.5, graded: false, qaStatus: 'pushed' },
+  { id: 7, studentName: 'jack', studentAccount: '4285jack01', submissionStatus: 'submitted', scoreTotal: '-', duration: 1.5, submissionTime: '2025-12-30 14:30:00', grade: 3, teacherScore: 3, graded: false, qaStatus: 'pushed' },
+  { id: 8, studentName: '2', studentAccount: '4285237', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 2.5, teacherScore: null, graded: false, qaStatus: 'pushed' },
+  { id: 9, studentName: 'wang', studentAccount: '4285wang010', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 1.5, teacherScore: null, graded: false, qaStatus: 'pushed' }
 ])
 
 // Withdraw Modal State
 const showWithdrawModal = ref(false)
+
+// View and Score Modal State
+const showViewScoreModal = ref(false)
+const currentScoreRow = ref<any>(null)
+
+// Check if there's a next submission to score
+const hasNextSubmission = computed(() => {
+  if (!currentScoreRow.value) return false
+  const currentIndex = groupTaskData.value.findIndex(r => r.id === currentScoreRow.value?.id)
+  return groupTaskData.value.slice(currentIndex + 1).some(r => r.submissionStatus === 'submitted')
+})
 
 // Answer Analysis Toggle
 const answerAnalysisEnabled = ref(false)
@@ -921,6 +970,28 @@ const goHome  = ()=>{
 // Action handlers
 const handleViewAndGrade = (row: any) => {
   console.log('View and grade:', row)
+}
+
+const handleViewAndScore = (row: any) => {
+  currentScoreRow.value = row
+  showViewScoreModal.value = true
+}
+
+const handleScoreSave = (data: any) => {
+  console.log('Score saved:', data)
+  showViewScoreModal.value = false
+}
+
+const handleScoreNext = () => {
+  // Find next submitted row
+  const currentIndex = groupTaskData.value.findIndex(r => r.id === currentScoreRow.value?.id)
+  const nextRow = groupTaskData.value.slice(currentIndex + 1).find(r => r.submissionStatus === 'submitted')
+  if (nextRow) {
+    currentScoreRow.value = nextRow
+  } else {
+    ElMessage.info(t('taskManagement.noMoreSubmissions') || '没有更多待评分的作业了')
+    showViewScoreModal.value = false
+  }
 }
 
 const handleReturnToRedo = (row: any) => {

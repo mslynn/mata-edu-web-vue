@@ -114,10 +114,10 @@ export const useAuth = () => {
   }
 
   // 登录
-  const login = async (username: string, password: string, grantType: string = 'password', studentNumber?: string) => {
+  const login = async (username: string, password: string, grantType: string = 'password', studentNumber?: string, clientId: string = '3ad3f52781fd471b86779ca0cf192508') => {
     try {
       // 根据 grantType 构建请求参数
-      let requestBody: any = { grantType }
+      let requestBody: any = { grantType, clientId }
       
       if (grantType === 'sms') {
         // 验证码登录：phonenumber + smsCode

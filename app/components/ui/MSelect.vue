@@ -2,6 +2,7 @@
   <div class="relative" ref="selectRef" @mouseenter="handleMouseEnter" @mouseleave="handleMouseLeave">
     <!-- 选择框 -->
     <div 
+      ref="triggerRef"
       :class="[
         'flex items-center justify-between px-3 py-1.5 border rounded-lg cursor-pointer transition-all',
         disabled ? 'bg-gray-100 cursor-not-allowed' : 'bg-white hover:border-[#FF9900]',
@@ -23,58 +24,63 @@
       </svg>
     </div>
     
-    <!-- 下拉选项 -->
-    <Transition name="select-dropdown">
-      <div 
-        v-if="isOpen" 
-        :class="[
-          'absolute z-50 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto',
-          placement === 'bottom-end' ? 'right-0' : placement === 'bottom-center' ? 'left-1/2 -translate-x-1/2' : 'left-0',
-          dropdownClass || 'w-full'
-        ]"
-      >
-        <!-- 搜索框 -->
-        <div v-if="filterable" class="p-2 border-b border-gray-100">
-          <input 
-            v-model="searchKeyword"
-            type="text"
-            placeholder="搜索..."
-            class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#FF9900]"
-            @click.stop
-          />
-        </div>
-        
-        <!-- 选项列表 -->
-        <div class="py-1">
-          <div
-            v-for="option in filteredOptions"
-            :key="option[valueKey]"
-            :class="[
-              'px-4 py-2 text-sm cursor-pointer transition-colors',
-              modelValue === option[valueKey] 
-                ? 'bg-[#FF9900]/10 text-[#FF9900]' 
-                : 'text-gray-700 hover:bg-[#FF9900]/10 hover:text-[#FF9900]',
-              option.disabled ? 'opacity-50 cursor-not-allowed' : ''
-            ]"
-            @click="handleSelect(option)"
-          >
-            <slot name="option" :option="option">
-              {{ option[labelKey] }}
-            </slot>
+    <!-- 下拉选项 - 使用 Teleport 避免被 overflow:hidden 裁剪 -->
+    <Teleport to="body">
+      <Transition name="select-dropdown">
+        <div 
+          v-if="isOpen" 
+          ref="dropdownRef"
+          :style="dropdownStyle"
+          :class="[
+            'fixed z-[9999] bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto',
+            dropdownClass || 'min-w-[200px]'
+          ]"
+          @mouseenter="handleDropdownMouseEnter"
+          @mouseleave="handleDropdownMouseLeave"
+        >
+          <!-- 搜索框 -->
+          <div v-if="filterable" class="p-2 border-b border-gray-100">
+            <input 
+              v-model="searchKeyword"
+              type="text"
+              placeholder="搜索..."
+              class="w-full px-3 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:border-[#FF9900]"
+              @click.stop
+            />
           </div>
           
-          <!-- 无数据 -->
-          <div v-if="!filteredOptions.length" class="px-4 py-3 text-sm text-gray-400 text-center">
-            暂无数据
+          <!-- 选项列表 -->
+          <div class="py-1">
+            <div
+              v-for="option in filteredOptions"
+              :key="option[valueKey]"
+              :class="[
+                'px-4 py-2 text-sm cursor-pointer transition-colors',
+                modelValue === option[valueKey] 
+                  ? 'bg-[#FF9900]/10 text-[#FF9900]' 
+                  : 'text-gray-700 hover:bg-[#FF9900]/10 hover:text-[#FF9900]',
+                option.disabled ? 'opacity-50 cursor-not-allowed' : ''
+              ]"
+              @click="handleSelect(option)"
+            >
+              <slot name="option" :option="option">
+                {{ option[labelKey] }}
+              </slot>
+            </div>
+            
+            <!-- 无数据 -->
+            <div v-if="!filteredOptions.length" class="px-4 py-3 text-sm text-gray-400 text-center">
+              暂无数据
+            </div>
           </div>
         </div>
-      </div>
-    </Transition>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 interface Option {
   [key: string]: any
@@ -111,8 +117,11 @@ const emit = defineEmits<{
 }>()
 
 const selectRef = ref<HTMLElement>()
+const triggerRef = ref<HTMLElement>()
+const dropdownRef = ref<HTMLElement>()
 const isOpen = ref(false)
 const searchKeyword = ref('')
+const dropdownStyle = ref<Record<string, string>>({})
 
 const selectedLabel = computed(() => {
   const option = props.options.find(o => o[props.valueKey] === props.modelValue)
@@ -129,15 +138,40 @@ const filteredOptions = computed(() => {
   )
 })
 
+// 计算下拉框位置
+const updateDropdownPosition = () => {
+  if (!triggerRef.value) return
+  const rect = triggerRef.value.getBoundingClientRect()
+  const scrollTop = window.scrollY || document.documentElement.scrollTop
+  const scrollLeft = window.scrollX || document.documentElement.scrollLeft
+  
+  let left = rect.left + scrollLeft
+  if (props.placement === 'bottom-end') {
+    left = rect.right + scrollLeft
+  } else if (props.placement === 'bottom-center') {
+    left = rect.left + rect.width / 2 + scrollLeft
+  }
+  
+  dropdownStyle.value = {
+    top: `${rect.bottom + scrollTop + 4}px`,
+    left: props.placement === 'bottom-end' ? 'auto' : `${left}px`,
+    right: props.placement === 'bottom-end' ? `${window.innerWidth - rect.right - scrollLeft}px` : 'auto',
+    width: `${rect.width}px`,
+    transform: props.placement === 'bottom-center' ? 'translateX(-50%)' : 'none'
+  }
+}
+
 const toggleOpen = () => {
   if (props.disabled || props.trigger === 'hover') return
   isOpen.value = !isOpen.value
-  if (!isOpen.value) {
+  if (isOpen.value) {
+    nextTick(updateDropdownPosition)
+  } else {
     searchKeyword.value = ''
   }
 }
 
-const timer = ref<NodeJS.Timeout | null>(null)
+const timer = ref<ReturnType<typeof setTimeout> | null>(null)
 
 const handleMouseEnter = () => {
   if (props.disabled || props.trigger !== 'hover') return
@@ -146,6 +180,7 @@ const handleMouseEnter = () => {
     timer.value = null
   }
   isOpen.value = true
+  nextTick(updateDropdownPosition)
 }
 
 const handleMouseLeave = () => {
@@ -153,7 +188,23 @@ const handleMouseLeave = () => {
   timer.value = setTimeout(() => {
     isOpen.value = false
     searchKeyword.value = ''
-  }, 100) // 100ms delay to allow moving to dropdown
+  }, 150)
+}
+
+const handleDropdownMouseEnter = () => {
+  if (props.trigger !== 'hover') return
+  if (timer.value) {
+    clearTimeout(timer.value)
+    timer.value = null
+  }
+}
+
+const handleDropdownMouseLeave = () => {
+  if (props.trigger !== 'hover') return
+  timer.value = setTimeout(() => {
+    isOpen.value = false
+    searchKeyword.value = ''
+  }, 150)
 }
 
 const handleSelect = (option: Option) => {
@@ -167,18 +218,34 @@ const handleSelect = (option: Option) => {
 // 点击外部关闭
 const handleClickOutside = (e: MouseEvent) => {
   if (props.trigger === 'hover') return
-  if (selectRef.value && !selectRef.value.contains(e.target as Node)) {
+  const target = e.target as Node
+  if (selectRef.value && !selectRef.value.contains(target) && 
+      dropdownRef.value && !dropdownRef.value.contains(target)) {
     isOpen.value = false
     searchKeyword.value = ''
   }
 }
 
+// 滚动时更新位置
+const handleScroll = () => {
+  if (isOpen.value) {
+    updateDropdownPosition()
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleClickOutside)
+  window.addEventListener('scroll', handleScroll, true)
+  window.addEventListener('resize', updateDropdownPosition)
 })
 
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
+  window.removeEventListener('scroll', handleScroll, true)
+  window.removeEventListener('resize', updateDropdownPosition)
+  if (timer.value) {
+    clearTimeout(timer.value)
+  }
 })
 </script>
 

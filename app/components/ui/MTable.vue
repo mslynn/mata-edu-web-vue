@@ -80,8 +80,8 @@
                 col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
               ]"
             >
-              <!-- 自定义插槽 -->
-              <slot :name="col.key" :row="row" :index="index" :value="row[col.key]">
+              <!-- 自定义插槽 - 支持 cell-xxx 格式 -->
+              <slot :name="`cell-${col.key}`" :row="row" :index="index" :value="row[col.key]">
                 {{ row[col.key] }}
               </slot>
             </td>

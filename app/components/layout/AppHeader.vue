@@ -51,6 +51,17 @@
                 </svg>
                 {{ $t('common.moduleSwitch') }}
               </button>
+              <!-- 个人中心 -->
+              <button 
+                @click="handleProfile"
+                class="w-full px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 hover:text-[#FF9900] transition-colors flex items-center gap-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                {{ $t('user.profile') }}
+              </button>
               <button 
                 @click="handleLogout"
                 class="w-full px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 hover:text-red-500 transition-colors flex items-center gap-2"
@@ -117,6 +128,12 @@ const handleLogoClick = () => {
 const handleModuleSwitch = () => {
   showDropdown.value = false
   router.push('/district')
+}
+
+// 个人中心
+const handleProfile = () => {
+  showDropdown.value = false
+  router.push('/personalcenter')
 }
 
 const handleLogout = () => {

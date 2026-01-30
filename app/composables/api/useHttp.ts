@@ -182,8 +182,8 @@ export const useHttp = () => {
   }
 
   // PUT 请求
-  const put = <T = any>(url: string, body?: any) => {
-    return request<T>(url, { method: 'PUT', body })
+  const put = <T = any>(url: string, body?: any, headers?: Record<string, string>) => {
+    return request<T>(url, { method: 'PUT', body, headers })
   }
 
   // DELETE 请求
