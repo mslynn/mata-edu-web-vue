@@ -28,14 +28,16 @@
             />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" :class="showError && !localQuestion.content?.trim() ? 'text-red-400' : 'text-gray-400'">{{ localQuestion.content?.length || 0 }}/200</span>
           </div>
-          <button class="px-4 py-1.5 bg-[#FF9900] text-white text-sm rounded hover:bg-[#e68a00] inline-flex items-center gap-1">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-            </svg>
-            {{ $t('customExercise.uploadImage') }}
-          </button>
-          <span class="text-xs text-gray-400 ml-2">{{ $t('customExercise.uploadImageTip') }}</span>
-          <div v-if="showError && !localQuestion.content?.trim()" class="text-sm text-[#FF9900] mt-1">
+          <ImageUploader
+            :oss-id="localQuestion.contentImage"
+            :image-url="localQuestion.contentImageUrl"
+            :size="80"
+            button-style="primary"
+            :upload-fn="uploadOSS"
+            @update:oss-id="localQuestion.contentImage = $event"
+            @update:image-url="localQuestion.contentImageUrl = $event"
+          />
+          <div v-if="showError && !localQuestion.content?.trim()" class="text-sm text-red-500 mt-1">
             {{ $t('customExercise.questionContentRequired') }}
           </div>
         </div>
@@ -90,12 +92,16 @@
               </div>
               <!-- 图片上传 -->
               <div v-else class="flex-1">
-                <button class="px-3 py-1.5 border border-[#FF9900] text-[#FF9900] text-sm rounded hover:bg-[#FFF7E6] inline-flex items-center gap-1">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                  </svg>
-                  {{ $t('customExercise.uploadImage') }}
-                </button>
+                <ImageUploader
+                  :oss-id="option.image"
+                  :image-url="option.imageUrl"
+                  :size="60"
+                  button-style="outline"
+                  :show-tip="false"
+                  :upload-fn="uploadOSS"
+                  @update:oss-id="option.image = $event"
+                  @update:image-url="option.imageUrl = $event"
+                />
               </div>
             </div>
             <div class="flex items-center gap-2">
@@ -105,10 +111,10 @@
               >
                 + {{ $t('customExercise.addOption') }}
               </button>
-              <span v-if="showError && hasEmptyOption" class="text-sm text-[#FF9900]">{{ $t('customExercise.optionRequired') }}</span>
+              <span v-if="showError && hasEmptyOption" class="text-sm text-red-500">{{ $t('customExercise.optionRequired') }}</span>
             </div>
           </div>
-          <div v-if="showError && !hasAnswer" class="text-sm text-[#FF9900] mt-1">
+          <div v-if="showError && !hasAnswer" class="text-sm text-red-500 mt-1">
             {{ $t('customExercise.answerRequired') }}
           </div>
         </div>
@@ -130,7 +136,7 @@
             :class="showError && (localQuestion.score < 1 || localQuestion.score > 100) ? 'border-red-400' : 'border-gray-300'"
           />
         </div>
-        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-[#FF9900]">
+        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-red-500">
           {{ $t('customExercise.scoreRangeError') }}
         </div>
       </div>
@@ -157,16 +163,21 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
+import ImageUploader from '../ui/ImageUploader.vue'
 
 interface QuestionOption {
   text: string
   type: 'text' | 'image'
   image?: string
+  imageUrl?: string
 }
 
 interface Question {
   type: string
   content: string
+  contentImage?: string
+  contentImageUrl?: string
   score: number
   options?: QuestionOption[]
   correctAnswer?: number | number[] | boolean
@@ -186,6 +197,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { uploadOSS } = taskmanagementcenterApi()
 
 const localQuestion = computed({
   get: () => props.question,

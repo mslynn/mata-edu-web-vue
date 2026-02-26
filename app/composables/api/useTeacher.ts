@@ -556,7 +556,7 @@ export const useTeacher = () => {
   //查询课件列表
   const getCoursewareList = async (data: { chapterId: string }) => {
     try {
-      const response = await http.get("/system/teach/resource/list", data);
+      const response = await http.get("/system/teach/courseware/list", data);
       return response.data;
     } catch (error: any) {
       throw error;

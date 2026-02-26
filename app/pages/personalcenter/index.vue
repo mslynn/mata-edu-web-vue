@@ -461,7 +461,17 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input v-model="passwordForm.oldPassword" type="password" :placeholder="$t('personalCenter.oldPassword')" />
+                            <input v-model="passwordForm.oldPassword" :type="showOldPassword ? 'text' : 'password'" :placeholder="$t('personalCenter.oldPassword')" />
+                            <button type="button" class="password-eye-btn" @click="showOldPassword = !showOldPassword">
+                                <svg v-if="showOldPassword" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg v-else viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
                         </div>
                         <p v-if="passwordErrors.oldPassword" class="field-error">{{ passwordErrors.oldPassword }}</p>
                     </div>
@@ -471,7 +481,17 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input v-model="passwordForm.newPassword" type="password" :placeholder="$t('personalCenter.newPasswordPlaceholder')" />
+                            <input v-model="passwordForm.newPassword" :type="showNewPassword ? 'text' : 'password'" :placeholder="$t('personalCenter.newPasswordPlaceholder')" />
+                            <button type="button" class="password-eye-btn" @click="showNewPassword = !showNewPassword">
+                                <svg v-if="showNewPassword" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg v-else viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
                         </div>
                         <p v-if="passwordErrors.newPassword" class="field-error">{{ passwordErrors.newPassword }}</p>
                     </div>
@@ -481,7 +501,17 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input v-model="passwordForm.confirmPassword" type="password" :placeholder="$t('personalCenter.confirmNewPassword')" />
+                            <input v-model="passwordForm.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" :placeholder="$t('personalCenter.confirmNewPassword')" />
+                            <button type="button" class="password-eye-btn" @click="showConfirmPassword = !showConfirmPassword">
+                                <svg v-if="showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                    <circle cx="12" cy="12" r="3" />
+                                </svg>
+                                <svg v-else viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+                                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                                    <line x1="1" y1="1" x2="23" y2="23" />
+                                </svg>
+                            </button>
                         </div>
                         <p v-if="passwordErrors.confirmPassword" class="field-error">{{ passwordErrors.confirmPassword }}</p>
                     </div>
@@ -566,9 +596,9 @@ import { ElMessage } from 'element-plus'
 definePageMeta({ layout: false })
 
 const router = useRouter()
-const { user } = useAuth()
+const { user, logout } = useAuth()
 const { t } = useI18n()
-const { uploadOSS, addOpus, editOpus, getProfileopus, getOpusDetail, deleteOpus, downloadOSS, getProfile } = personalcenterApi()
+const { uploadOSS, addOpus, editOpus, getProfileopus, getOpusDetail, deleteOpus, downloadOSS, getProfile, updatePwd, account } = personalcenterApi()
 
 // 用户信息
 const userProfile = ref<any>(null)
@@ -595,6 +625,9 @@ const deleteWorkId = ref('')
 const deleteAccountPassword = ref('')
 const deleteAccountError = ref('')
 const showDeletePassword = ref(false)
+const showOldPassword = ref(false)
+const showNewPassword = ref(false)
+const showConfirmPassword = ref(false)
 const worksList = ref<any[]>([])
 const worksLoading = ref(false)
 const pagination = ref({
@@ -641,6 +674,9 @@ const validatePassword = () => {
     let isValid = true
     passwordErrors.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
     
+    // 密码格式正则：8-16位，必须包含数字、大写字母、小写字母
+    const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,16}$/
+    
     if (!passwordForm.value.oldPassword) {
         passwordErrors.value.oldPassword = t('personalCenter.pleaseInputOldPassword')
         isValid = false
@@ -649,31 +685,76 @@ const validatePassword = () => {
     if (!passwordForm.value.newPassword) {
         passwordErrors.value.newPassword = t('personalCenter.pleaseInputPassword')
         isValid = false
+    } else if (!passwordRegex.test(passwordForm.value.newPassword)) {
+        passwordErrors.value.newPassword = t('personalCenter.passwordFormatError')
+        isValid = false
+    } else if (passwordForm.value.newPassword === passwordForm.value.oldPassword) {
+        passwordErrors.value.newPassword = t('personalCenter.passwordSameError')
+        isValid = false
     }
     
     if (!passwordForm.value.confirmPassword) {
         passwordErrors.value.confirmPassword = t('personalCenter.pleaseInputConfirmPassword')
+        isValid = false
+    } else if (passwordForm.value.confirmPassword !== passwordForm.value.newPassword) {
+        passwordErrors.value.confirmPassword = t('personalCenter.passwordNotMatch')
         isValid = false
     }
     
     return isValid
 }
 
-const handleSavePassword = () => {
-    if (validatePassword()) {
-        // TODO: 调用修改密码接口
-        console.log('Password validated, submit:', passwordForm.value)
+const handleSavePassword = async () => {
+    if (!validatePassword()) return
+    
+    try {
+        uploading.value = true
+        await updatePwd({
+            oldPassword: passwordForm.value.oldPassword,
+            newPassword: passwordForm.value.newPassword
+        })
+        showPasswordModal.value = false
+        // 清空表单
+        passwordForm.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
+        // 显示倒计时提示，3秒后重新登录
+        let countdown = 3
+        ElMessage.success(t('personalCenter.passwordChangedRelogin', { seconds: countdown }))
+        const timer = setInterval(() => {
+            countdown--
+            if (countdown > 0) {
+                ElMessage.success(t('personalCenter.passwordChangedRelogin', { seconds: countdown }))
+            } else {
+                clearInterval(timer)
+                logout()
+            }
+        }, 1000)
+    } catch (error: any) {
+        ElMessage.error(error.message || t('personalCenter.changePasswordFailed'))
+    } finally {
+        uploading.value = false
     }
 }
 
-const handleDeleteAccount = () => {
+const handleDeleteAccount = async () => {
     deleteAccountError.value = ''
     if (!deleteAccountPassword.value) {
         deleteAccountError.value = t('personalCenter.pleaseInputPassword')
         return
     }
-    // TODO: 调用注销账号接口
-    console.log('Delete account with password:', deleteAccountPassword.value)
+    
+    try {
+        uploading.value = true
+        await account({ password: deleteAccountPassword.value })
+        ElMessage.success(t('personalCenter.deleteAccountSuccess'))
+        showDeleteModal.value = false
+        deleteAccountPassword.value = ''
+        // 注销成功后退出登录
+        await logout()
+    } catch (error: any) {
+        deleteAccountError.value = error.message || t('personalCenter.deleteAccountFailed')
+    } finally {
+        uploading.value = false
+    }
 }
 
 // 关闭上传弹窗并清空表单
@@ -1049,7 +1130,7 @@ const handleSubmitWork = async () => {
             // 编辑模式
             submitData.opusId = editOpusId.value
             await editOpus(submitData)
-            ElMessage.success(t('personalCenter.editSuccess'))
+            ElMessage.success(t('common.editSuccess'))
         } else {
             // 新增模式
             await addOpus(submitData)
@@ -2643,6 +2724,25 @@ const handleBack = () => router.back()
 
 .password-input-box input::placeholder {
     color: #bbb;
+}
+
+.password-eye-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-eye-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.password-eye-btn:hover svg {
+    stroke: #FF9900;
 }
 
 .password-input-box:focus-within {

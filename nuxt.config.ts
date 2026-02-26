@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.73:8001'
+  : 'http://192.168.0.77:8001'
 
 // 预览服务地址
 
@@ -13,8 +13,8 @@ const previewBaseUrl = process.env.NODE_ENV === 'production'
 
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production'
-  ? 'ws://test-gateway.matatastudio.com/resource/websocket'
-  : 'wss://test-gateway.matatastudio.com/resource/websocket'
+  ? 'wss://test-gateway.matatastudio.com/resource/websocket'
+  : 'ws://test-gateway.matatastudio.com/resource/websocket'
 
 
 

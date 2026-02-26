@@ -11,6 +11,7 @@ export interface Teacher {
   teacherAccount: string;
   phonenumber: string;
   createTime: string;
+  orgId:string
 }
 
 export const useSchoolUser = () => {

@@ -102,6 +102,7 @@ const implementedPages = [
   '/system/ai',
   '/system/growth',
   '/system/event',
+  '/system/user',
 ]
 
 const go = (path: string) => {

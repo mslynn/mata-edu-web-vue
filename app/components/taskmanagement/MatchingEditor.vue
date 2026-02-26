@@ -28,14 +28,16 @@
             />
             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs" :class="showError && !localQuestion.content?.trim() ? 'text-red-400' : 'text-gray-400'">{{ localQuestion.content?.length || 0 }}/200</span>
           </div>
-          <button class="px-4 py-1.5 bg-[#FF9900] text-white text-sm rounded hover:bg-[#e68a00] inline-flex items-center gap-1">
-            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-            </svg>
-            {{ $t('customExercise.uploadImage') }}
-          </button>
-          <span class="text-xs text-gray-400 ml-2">{{ $t('customExercise.uploadImageTip') }}</span>
-          <div v-if="showError && !localQuestion.content?.trim()" class="text-sm text-[#FF9900] mt-1">
+          <ImageUploader
+            :oss-id="localQuestion.contentImage"
+            :image-url="localQuestion.contentImageUrl"
+            :size="80"
+            button-style="primary"
+            :upload-fn="uploadOSS"
+            @update:oss-id="localQuestion.contentImage = $event"
+            @update:image-url="localQuestion.contentImageUrl = $event"
+          />
+          <div v-if="showError && !localQuestion.content?.trim()" class="text-sm text-red-500 mt-1">
             {{ $t('customExercise.questionContentRequired') }}
           </div>
         </div>
@@ -94,6 +96,12 @@
             >
               + {{ $t('customExercise.addListItem') }}
             </button>
+            <div v-if="showError && hasEmptyLeftItem" class="text-sm text-red-500 mt-1">
+              {{ $t('customExercise.optionRequired') }}
+            </div>
+            <div v-if="showError && !isListCountEqual" class="text-sm text-red-500 mt-1">
+              {{ $t('customExercise.matchingCountError') }}
+            </div>
           </div>
         </div>
 
@@ -147,6 +155,12 @@
             >
               + {{ $t('customExercise.addListItem') }}
             </button>
+            <div v-if="showError && hasEmptyRightItem" class="text-sm text-red-500 mt-1">
+              {{ $t('customExercise.optionRequired') }}
+            </div>
+            <div v-if="hasDuplicateAnswer" class="text-sm text-red-500 mt-1">
+              {{ $t('customExercise.unmatchedRightItemError') }}
+            </div>
           </div>
         </div>
       </div>
@@ -156,16 +170,24 @@
         <label class="text-sm text-gray-600 shrink-0 w-[60px] pt-2">
           <span class="text-red-500">*</span>{{ $t('customExercise.answer') }}：
         </label>
-        <div class="flex-1 flex flex-wrap items-center gap-4">
-          <div v-for="(_, index) in localQuestion.leftItems" :key="'answer-' + index" class="flex items-center gap-1">
-            <span class="text-sm">{{ index + 1 }}</span>
-            <MSelect 
-              :model-value="getMatchAnswer(index)"
-              :options="rightOptions"
-              class="w-[70px]"
-              placeholder=""
-              @update:model-value="setMatchAnswer(index, $event)"
-            />
+        <div class="flex-1">
+          <div class="flex flex-wrap items-center gap-4">
+            <div v-for="(_, index) in localQuestion.leftItems" :key="'answer-' + index" class="flex items-center gap-1">
+              <span class="text-sm">{{ index + 1 }}</span>
+              <MSelect 
+                :model-value="getMatchAnswer(index)"
+                :options="rightOptions"
+                class="w-[70px]"
+                placeholder=""
+                @update:model-value="setMatchAnswer(index, $event)"
+              />
+            </div>
+          </div>
+          <div v-if="showError && hasEmptyAnswer" class="text-sm text-red-500 mt-1">
+            {{ $t('customExercise.answerRequired') }}
+          </div>
+          <div v-if="hasDuplicateAnswer" class="text-sm text-red-500 mt-1">
+            {{ $t('customExercise.answerDuplicateError') }}
           </div>
         </div>
       </div>
@@ -186,7 +208,7 @@
             :class="showError && (localQuestion.score < 1 || localQuestion.score > 100) ? 'border-red-400' : 'border-gray-300'"
           />
         </div>
-        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-[#FF9900]">
+        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-red-500">
           {{ $t('customExercise.scoreRangeError') }}
         </div>
       </div>
@@ -213,6 +235,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
+import ImageUploader from '../ui/ImageUploader.vue'
 
 interface MatchItem {
   type: 'text' | 'image'
@@ -222,6 +246,8 @@ interface MatchItem {
 interface Question {
   type: string
   content: string
+  contentImage?: string
+  contentImageUrl?: string
   score: number
   leftItems?: MatchItem[]
   rightItems?: MatchItem[]
@@ -242,6 +268,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const { uploadOSS } = taskmanagementcenterApi()
 
 const localQuestion = computed({
   get: () => props.question,
@@ -259,6 +286,55 @@ const rightOptions = computed(() => {
     label: String.fromCharCode(65 + index),
     value: index
   }))
+})
+
+const hasEmptyLeftItem = computed(() => {
+  const items = localQuestion.value.leftItems || []
+  return items.some(item => item.type === 'text' && !item.content?.trim())
+})
+
+const hasEmptyRightItem = computed(() => {
+  const items = localQuestion.value.rightItems || []
+  return items.some(item => item.type === 'text' && !item.content?.trim())
+})
+
+const isListCountEqual = computed(() => {
+  const leftCount = (localQuestion.value.leftItems || []).length
+  const rightCount = (localQuestion.value.rightItems || []).length
+  return leftCount === rightCount
+})
+
+const hasEmptyAnswer = computed(() => {
+  const answers = localQuestion.value.matchAnswers || []
+  const leftCount = (localQuestion.value.leftItems || []).length
+  // 检查是否所有左侧项都有对应的答案
+  for (let i = 0; i < leftCount; i++) {
+    if (answers[i] === undefined || answers[i] === null) {
+      return true
+    }
+  }
+  return false
+})
+
+const hasDuplicateAnswer = computed(() => {
+  const answers = localQuestion.value.matchAnswers || []
+  const validAnswers = answers.filter(a => a !== undefined && a !== null)
+  const uniqueAnswers = new Set(validAnswers)
+  return validAnswers.length !== uniqueAnswers.size
+})
+
+// 检查列表2是否有未被配对的选项
+const hasUnmatchedRightItem = computed(() => {
+  const answers = localQuestion.value.matchAnswers || []
+  const rightCount = (localQuestion.value.rightItems || []).length
+  const validAnswers = answers.filter(a => a !== undefined && a !== null) as number[]
+  // 检查是否所有右侧选项都被选中了
+  for (let i = 0; i < rightCount; i++) {
+    if (!validAnswers.includes(i)) {
+      return true
+    }
+  }
+  return false
 })
 
 const addLeftItem = () => {

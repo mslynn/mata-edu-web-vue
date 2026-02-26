@@ -48,19 +48,24 @@
           <div class="bg-white rounded-lg px-5 py-4">
             <div class="flex">
               <div class="flex-1 mr-4">
-                <div class="flex items-center mb-3">
-                  <label class="text-sm text-gray-600 shrink-0 whitespace-nowrap min-w-[90px]">
-                    <span class="text-red-500">*</span>{{ $t('customExercise.exerciseNameLabel') }}：
-                  </label>
-                  <input 
-                    v-model="exerciseName"
-                    type="text"
-                    :placeholder="$t('customExercise.exerciseNamePlaceholder')"
-                    class="flex-1 h-9 px-3 border rounded text-sm focus:outline-none transition-all"
-                    :class="exerciseNameError 
-                      ? 'border-red-400 bg-red-50/50' 
-                      : 'border-[#91D5FF] bg-[#E6F7FF]/40 focus:border-[#FF9900]'"
-                  />
+                <div class="mb-3">
+                  <div class="flex items-center">
+                    <label class="text-sm text-gray-600 shrink-0 whitespace-nowrap min-w-[90px]">
+                      <span class="text-red-500">*</span>{{ $t('customExercise.exerciseNameLabel') }}：
+                    </label>
+                    <input 
+                      v-model="exerciseName"
+                      type="text"
+                      :placeholder="$t('customExercise.exerciseNamePlaceholder')"
+                      class="flex-1 h-9 px-3 border rounded text-sm focus:outline-none transition-all"
+                      :class="exerciseNameError 
+                        ? 'border-red-400 bg-red-50/50' 
+                        : 'border-[#91D5FF] bg-[#E6F7FF]/40 focus:border-[#FF9900]'"
+                    />
+                  </div>
+                  <div v-if="exerciseNameError" class="ml-[90px] mt-1 text-xs text-red-500">
+                    {{ $t('customExercise.exerciseNameRequired') }}
+                  </div>
                 </div>
                 <div class="flex items-center">
                   <label class="text-sm text-gray-600 shrink-0 whitespace-nowrap min-w-[90px]">
@@ -204,21 +209,66 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- Leave Confirmation Modal -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="leaveModalVisible" class="fixed inset-0 z-50 flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/50" @click="leaveModalVisible = false"></div>
+          <div class="relative bg-white rounded-lg w-[400px] p-6">
+            <!-- Close Button -->
+            <button 
+              class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+              @click="leaveModalVisible = false"
+            >
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+            
+            <!-- Title -->
+            <h3 class="text-lg font-medium text-center mb-6">{{ $t('common.tips') }}</h3>
+            
+            <!-- Content -->
+            <p class="text-center text-gray-600 mb-8">{{ $t('customExercise.leaveConfirmText') }}</p>
+            
+            <!-- Buttons -->
+            <div class="flex justify-center gap-4">
+              <button 
+                class="px-8 py-2 border border-[#FF9900] text-[#FF9900] rounded hover:bg-[#FFF7E6]"
+                @click="leaveModalVisible = false"
+              >
+                {{ $t('common.cancel') }}
+              </button>
+              <button 
+                class="px-8 py-2 bg-[#FF9900] text-white rounded hover:bg-[#e68a00]"
+                @click="confirmLeave"
+              >
+                {{ $t('common.confirm') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ElMessage } from 'element-plus'
 import QuestionEditor from '../../../components/taskmanagement/QuestionEditor.vue'
 import TrueFalseEditor from '../../../components/taskmanagement/TrueFalseEditor.vue'
 import FillBlankEditor from '../../../components/taskmanagement/FillBlankEditor.vue'
 import MatchingEditor from '../../../components/taskmanagement/MatchingEditor.vue'
+import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
 
 interface QuestionOption {
   text: string
   type: 'text' | 'image'
   image?: string
+  imageUrl?: string
 }
 
 interface BlankItem {
@@ -233,6 +283,8 @@ interface MatchItem {
 interface Question {
   type: string
   content: string
+  contentImage?: string // 题目图片ossId
+  contentImageUrl?: string // 题目图片预览URL
   score: number
   options?: QuestionOption[]
   correctAnswer?: number | number[] | boolean
@@ -247,18 +299,142 @@ interface Question {
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+const { addExercise, getDetailExercise, updateExercise } = taskmanagementcenterApi()
 
 // 判断是否为编辑模式
 const isEditMode = computed(() => !!route.query.id)
+const saving = ref(false)
+const loading = ref(false)
 
 const exerciseName = ref('')
 const exerciseDesc = ref('')
 const exerciseNameError = ref(false)
+
+// 输入时自动取消错误状态
+watch(exerciseName, (val) => {
+  if (val.trim()) {
+    exerciseNameError.value = false
+  }
+})
 const selectedType = ref('')
 const deleteModalVisible = ref(false)
 const deleteIndex = ref(-1)
 const questionsAreaRef = ref<HTMLElement | null>(null)
 const showBackToTop = ref(false)
+
+// 加载练习题详情（编辑模式）
+const loadExerciseDetail = async () => {
+  const exerciseId = route.query.id as string
+  if (!exerciseId) return
+  
+  loading.value = true
+  try {
+    const data = await getDetailExercise(exerciseId)
+    exerciseName.value = data.exerciseName || ''
+    exerciseDesc.value = data.exerciseDesc || ''
+    
+    // 转换题目数据
+    if (data.questions && data.questions.length > 0) {
+      questions.value = data.questions.map((q: any) => transformApiToQuestion(q))
+    }
+  } catch (error) {
+    console.error('加载练习题详情失败:', error)
+    ElMessage.error(t('customExercise.loadDetailFailed'))
+  } finally {
+    loading.value = false
+  }
+}
+
+// 将API返回的题目数据转换为页面格式
+const transformApiToQuestion = (apiQuestion: any): Question => {
+  const questionTypeMap: Record<string, string> = {
+    'single': 'single',
+    'multiple': 'multiple',
+    'judge': 'trueFalse',
+    'blank': 'fillBlank',
+    'connect': 'matching'
+  }
+  
+  const type = questionTypeMap[apiQuestion.questionType] || apiQuestion.questionType
+  const question: Question = {
+    type,
+    content: apiQuestion.questionName || '',
+    contentImage: apiQuestion.imageOssId || undefined,
+    contentImageUrl: apiQuestion.imageUrl || undefined,
+    score: apiQuestion.score || 10,
+    analysis: apiQuestion.analysis || ''
+  }
+  
+  // 单选/多选题
+  if (type === 'single' || type === 'multiple') {
+    question.options = (apiQuestion.options || []).map((opt: any) => ({
+      text: opt.optionText || '',
+      type: opt.imageOssId ? 'image' : 'text',
+      image: opt.imageOssId || undefined,
+      imageUrl: opt.imageUrl || undefined
+    }))
+    
+    const answerTempIds = (apiQuestion.answers || []).map((a: any) => a.optionTempId)
+    if (type === 'single') {
+      const correctOpt = apiQuestion.options?.findIndex((opt: any) => answerTempIds.includes(opt.tempId))
+      question.correctAnswer = correctOpt >= 0 ? correctOpt : undefined
+    } else {
+      question.correctAnswer = apiQuestion.options
+        ?.map((opt: any, idx: number) => answerTempIds.includes(opt.tempId) ? idx : -1)
+        .filter((idx: number) => idx >= 0) || []
+    }
+  }
+  
+  // 判断题
+  if (type === 'trueFalse') {
+    const answerTempId = apiQuestion.answers?.[0]?.optionTempId
+    const correctOpt = apiQuestion.options?.find((opt: any) => opt.tempId === answerTempId)
+    if (correctOpt) {
+      question.correctAnswer = correctOpt.optionLabel === 'A'
+    }
+  }
+  
+  // 填空题
+  if (type === 'fillBlank') {
+    question.blanks = (apiQuestion.answers || []).map((a: any) => ({
+      answer: a.blankText || ''
+    }))
+  }
+  
+  // 连线题
+  if (type === 'matching') {
+    const sourceItems = (apiQuestion.options || []).filter((opt: any) => opt.groupType === 'source')
+    const targetItems = (apiQuestion.options || []).filter((opt: any) => opt.groupType === 'target')
+    
+    question.leftItems = sourceItems.map((opt: any) => ({
+      type: 'text' as const,
+      content: opt.optionText || ''
+    }))
+    question.rightItems = targetItems.map((opt: any) => ({
+      type: 'text' as const,
+      content: opt.optionText || ''
+    }))
+    
+    // 解析答案匹配关系
+    question.matchAnswers = sourceItems.map((sourceOpt: any) => {
+      const answer = apiQuestion.answers?.find((a: any) => a.optionTempId === sourceOpt.tempId)
+      if (answer) {
+        const targetIndex = targetItems.findIndex((t: any) => t.tempId === answer.matchOptionTempId)
+        return targetIndex >= 0 ? targetIndex : undefined
+      }
+      return undefined
+    })
+  }
+  
+  return question
+}
+
+// 初始化
+onMounted(() => {
+  if (isEditMode.value) {
+    loadExerciseDetail()
+  }
+})
 
 const handleScroll = () => {
   if (questionsAreaRef.value) {
@@ -360,6 +536,42 @@ const validateQuestion = (question: Question) => {
     if (hasEmpty) isValid = false
   }
   
+  // 连线题验证：左右列表数量必须相等
+  if (question.type === 'matching') {
+    const leftCount = (question.leftItems || []).length
+    const rightCount = (question.rightItems || []).length
+    if (leftCount !== rightCount) {
+      isValid = false
+    }
+    // 检查左右列表是否有空内容
+    const hasEmptyLeft = (question.leftItems || []).some(item => item.type === 'text' && !item.content?.trim())
+    const hasEmptyRight = (question.rightItems || []).some(item => item.type === 'text' && !item.content?.trim())
+    if (hasEmptyLeft || hasEmptyRight) {
+      isValid = false
+    }
+    // 检查答案是否都已选择
+    const answers = question.matchAnswers || []
+    for (let i = 0; i < leftCount; i++) {
+      if (answers[i] === undefined || answers[i] === null) {
+        isValid = false
+        break
+      }
+    }
+    // 检查答案是否有重复
+    const validAnswers = answers.filter(a => a !== undefined && a !== null) as number[]
+    const uniqueAnswers = new Set(validAnswers)
+    if (validAnswers.length !== uniqueAnswers.size) {
+      isValid = false
+    }
+    // 检查列表2是否有未被配对的选项
+    for (let i = 0; i < rightCount; i++) {
+      if (!validAnswers.includes(i)) {
+        isValid = false
+        break
+      }
+    }
+  }
+  
   if (question.score < 1 || question.score > 100) {
     isValid = false
   }
@@ -367,12 +579,157 @@ const validateQuestion = (question: Question) => {
   return isValid
 }
 
-const goBack = () => router.back()
-const goHome = () => router.push('/teacher')
-const goTaskManagement = () => router.push('/taskmanagement')
-const goCustomExercise = () => router.push('/taskmanagement/custom-exercise')
+const goBack = () => handleLeave(() => router.back())
+const goHome = () => handleLeave(() => router.push('/teacher'))
+const goTaskManagement = () => handleLeave(() => router.push('/taskmanagement'))
+const goCustomExercise = () => handleLeave(() => router.push('/taskmanagement/custom-exercise'))
 
-const handleSave = () => {
+// 离开确认弹窗
+const leaveModalVisible = ref(false)
+const pendingNavigation = ref<(() => void) | null>(null)
+
+// 检查是否有未保存的内容
+const hasUnsavedContent = computed(() => {
+  return exerciseName.value.trim() !== '' || 
+         exerciseDesc.value.trim() !== '' || 
+         questions.value.length > 0
+})
+
+// 处理离开
+const handleLeave = (navigateFn: () => void) => {
+  if (hasUnsavedContent.value) {
+    pendingNavigation.value = navigateFn
+    leaveModalVisible.value = true
+  } else {
+    navigateFn()
+  }
+}
+
+// 确认离开
+const confirmLeave = () => {
+  leaveModalVisible.value = false
+  if (pendingNavigation.value) {
+    pendingNavigation.value()
+    pendingNavigation.value = null
+  }
+}
+
+// 转换题目数据为 API 格式
+const transformQuestionToApi = (question: Question, index: number) => {
+  const typeMap: Record<string, string> = {
+    'single': 'single',
+    'multiple': 'multiple',
+    'trueFalse': 'judge',
+    'fillBlank': 'blank',
+    'matching': 'connect'
+  }
+  
+  const result: any = {
+    questionType: typeMap[question.type] || question.type,
+    questionName: question.content, // 始终用文字内容
+    score: question.score,
+    analysis: question.analysis || '',
+    sequence: index + 1, // 排序字段，按下标排序
+    options: [],
+    answers: []
+  }
+  
+  // 如果题目有图片，新增imageOssId字段
+  if (question.contentImage) {
+    result.imageOssId = question.contentImage
+  }
+  
+  // 单选/多选题
+  if (question.type === 'single' || question.type === 'multiple') {
+    result.options = (question.options || []).map((opt, i) => {
+      const option: any = {
+        tempId: `opt_${index}_${i}`,
+        optionLabel: String.fromCharCode(65 + i), // A, B, C, D...
+        optionText: opt.text,
+        sequence: i + 1
+      }
+      // 如果选项是图片类型且有图片，添加imageOssId字段
+      if (opt.type === 'image' && opt.image) {
+        option.imageOssId = opt.image
+      }
+      return option
+    })
+    
+    if (question.type === 'single' && question.correctAnswer !== undefined) {
+      result.answers = [{ optionTempId: `opt_${index}_${question.correctAnswer}` }]
+    } else if (question.type === 'multiple' && Array.isArray(question.correctAnswer)) {
+      result.answers = question.correctAnswer.map(idx => ({ optionTempId: `opt_${index}_${idx}` }))
+    }
+  }
+  
+  // 判断题
+  if (question.type === 'trueFalse') {
+    result.options = [
+      { tempId: `opt_${index}_true`, optionLabel: 'A', optionText: '正确', sequence: 1 },
+      { tempId: `opt_${index}_false`, optionLabel: 'B', optionText: '错误', sequence: 2 }
+    ]
+    if (question.correctAnswer === true) {
+      result.answers = [{ optionTempId: `opt_${index}_true` }]
+    } else if (question.correctAnswer === false) {
+      result.answers = [{ optionTempId: `opt_${index}_false` }]
+    }
+  }
+  
+  // 填空题
+  if (question.type === 'fillBlank') {
+    result.options = []
+    result.answers = (question.blanks || []).map((blank, i) => ({
+      blankIndex: i + 1,
+      blankText: blank.answer
+    }))
+  }
+  
+  // 连线题
+  if (question.type === 'matching') {
+    const leftItems = question.leftItems || []
+    const rightItems = question.rightItems || []
+    
+    result.options = [
+      ...leftItems.map((item, i) => ({
+        tempId: `opt_${index}_L${i}`,
+        optionLabel: `L${i + 1}`,
+        optionText: item.content,
+        groupType: 'source',
+        sequence: i + 1
+      })),
+      ...rightItems.map((item, i) => ({
+        tempId: `opt_${index}_R${i}`,
+        optionLabel: `R${i + 1}`,
+        optionText: item.content,
+        groupType: 'target',
+        sequence: i + 1
+      }))
+    ]
+    
+    result.answers = (question.matchAnswers || [])
+      .map((rightIdx, leftIdx) => {
+        if (rightIdx !== undefined) {
+          return {
+            optionTempId: `opt_${index}_L${leftIdx}`,
+            matchOptionTempId: `opt_${index}_R${rightIdx}`
+          }
+        }
+        return null
+      })
+      .filter(Boolean)
+  }
+  
+  return result
+}
+
+const handleSave = async () => {
+  // 先检查是否有题目
+  if (questions.value.length === 0) {
+    ElMessage.warning(t('customExercise.pleaseAddQuestion'))
+    return
+  }
+  
+  // 再检查练习题名称
   if (!exerciseName.value.trim()) {
     exerciseNameError.value = true
     return
@@ -391,7 +748,39 @@ const handleSave = () => {
     return
   }
   
-  console.log('Save:', { name: exerciseName.value, desc: exerciseDesc.value, questions: questions.value })
+  try {
+    saving.value = true
+    const apiQuestions = questions.value.map((q, i) => transformQuestionToApi(q, i))
+    console.log(apiQuestions,'题目格式*******参数')
+    
+    if (isEditMode.value) {
+      // 编辑模式 - 调用修改接口
+      await updateExercise({
+        exerciseId: route.query.id as string,
+        exerciseName: exerciseName.value,
+        exerciseDesc: exerciseDesc.value || undefined,
+        questionCount: String(questions.value.length),
+        totalScore: String(totalScore.value),
+        questions: apiQuestions as any
+      })
+    } else {
+      // 新增模式
+      await addExercise({
+        exerciseName: exerciseName.value,
+        exerciseDesc: exerciseDesc.value || undefined,
+        questionCount: String(questions.value.length),
+        totalScore: String(totalScore.value),
+        questions: apiQuestions as any
+      })
+    }
+    
+    ElMessage.success(t('common.editSuccess'))
+    router.push('/taskmanagement/custom-exercise')
+  } catch (error: any) {
+   // ElMessage.error(error.message || t('customExercise.saveFailed'))
+  } finally {
+    saving.value = false
+  }
 }
 </script>
 

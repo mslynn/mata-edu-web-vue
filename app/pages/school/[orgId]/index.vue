@@ -530,41 +530,34 @@ const handleTransferTeacherClass = async (row: any) => {
     transferTeacherOptions.value = []
   }
 
-  // 年级列表在选择目标老师后获取
-
-  showTransferTeacherModal.value = true
-}
-
-const handleSelectTransferTeacher = async (userId: string) => {
-  transferTeacherForm.targetTeacherId = userId
-  
-  // 选择目标老师后，获取目标老师的年级列表
-  transferClassForm.gradeId = ''
-  transferClassForm.classId = ''
-  transferClassOptions.value = []
-  
+  // 获取当前教师的年级列表
   try {
-    const gradeList = await schoolUserApi.transferGrade(userId, orgId.value)
+    const gradeList = await schoolUserApi.transferGrade(row.userId, orgId.value)
     transferGradeOptions.value = (gradeList || []).map((g: any) => ({
       label: g.gradeName,
       value: g.grade
     }))
   } catch (error) {
-    // 错误由全局处理
     transferGradeOptions.value = []
   }
+
+  showTransferTeacherModal.value = true
+}
+
+const handleSelectTransferTeacher = (userId: string) => {
+  transferTeacherForm.targetTeacherId = userId
 }
 
 const handleTransferGradeChange = async (gradeId: string | number | null) => {
   if (!gradeId) return
-  if (!transferTeacherForm.targetTeacherId) return
+  if (!transferTeacherForm.teacherId) return
   
   transferClassForm.classId = ''
   transferClassOptions.value = []
   try {
-    // 根据目标老师和年级获取班级列表
+    // 根据原老师和年级获取班级列表（要转让的班级）
     const classList = await schoolUserApi.transferClassList({
-      teacherId: transferTeacherForm.targetTeacherId,
+      teacherId: transferTeacherForm.teacherId,
       grade: String(gradeId),
       schoolId: orgId.value
     })
@@ -584,8 +577,8 @@ const handleConfirmTransferTeacher = async () => {
   try {
     const selectedClass = transferClassOptions.value.find((c: any) => c.id === transferClassForm.classId)
     await schoolUserApi.transferClass({
-      teacherId: transferTeacherForm.targetTeacherId as string,
-      targetTeacherId: transferTeacherForm.teacherId,
+      teacherId: transferTeacherForm.teacherId,  // 原老师（班级要被转走的）
+      targetTeacherId: transferTeacherForm.targetTeacherId as string,  // 目标老师（接收班级的）
       classId: transferClassForm.classId,
       schoolId: orgId.value,
       className: selectedClass?.name || ''

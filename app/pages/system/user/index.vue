@@ -766,39 +766,27 @@
 
         <!-- 教师列表表格 -->
         <div class="border border-gray-200 rounded-lg mb-4 max-h-[200px] overflow-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 sticky top-0">
-              <tr>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('common.serialNumber') }}</th>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('user.name') }}</th>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('user.account') }}</th>
-                <th class="px-3 py-2 text-center text-[#4D4D4D] font-medium">{{ $t('user.select') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(teacher, index) in filteredTransferTeachers" :key="teacher.userId"
-                class="border-t border-gray-100">
-                <td class="px-3 py-2 text-[#4D4D4D]">{{ index + 1 }}</td>
-                <td class="px-3 py-2 text-[#4D4D4D]">{{ teacher.nickName }}</td>
-                <td class="px-3 py-2 text-[#4D4D4D]">{{ teacher.userName }}</td>
-                <td class="px-3 py-2 text-center">
-                  <label class="custom-checkbox" @click="handleSelectTransferTeacher(teacher.userId)">
-                    <span 
-                      class="checkbox-box"
-                      :class="{ checked: transferTeacherForm.targetTeacherId === teacher.userId }"
-                    >
-                      <svg v-if="transferTeacherForm.targetTeacherId === teacher.userId" class="checkbox-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-                        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </span>
-                  </label>
-                </td>
-              </tr>
-              <tr v-if="filteredTransferTeachers.length === 0">
-                <td colspan="4" class="px-3 py-4 text-center text-gray-400">{{ $t('schoolAdmin.noTransferableTeacher') }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <MTable :columns="transferTeacherColumns" :data="filteredTransferTeachers" show-index row-key="userId"
+            class="transfer-teacher-table">
+            <template #nickName="{ row }">
+              {{ row.nickName }}
+            </template>
+            <template #userName="{ row }">
+              {{ row.userName }}
+            </template>
+            <template #select="{ row }">
+              <label class="custom-checkbox" @click="handleSelectTransferTeacher(row.userId)">
+                <span 
+                  class="checkbox-box"
+                  :class="{ checked: transferTeacherForm.targetTeacherId === row.userId }"
+                >
+                  <svg v-if="transferTeacherForm.targetTeacherId === row.userId" class="checkbox-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                    <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </label>
+            </template>
+          </MTable>
         </div>
 
         <!-- 选择班级 -->
@@ -1134,44 +1122,23 @@
               @click="handleAddGroupMember">+ {{ $t('user.addMember') }}</button>
           </div>
           <div class="border border-gray-200 rounded-lg overflow-hidden">
-            <table class="w-full">
-              <thead class="bg-[#FFF1DD]">
-                <tr>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('common.serialNumber') }}
-                  </th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.account') }}</th>
-                  <th class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.name') }}</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('user.isLeader') }}</th>
-                  <th class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D]">{{ $t('common.operation') }}</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="(member, index) in groupForm.members" :key="member.id" class="border-t border-gray-100">
-                  <td class="px-3 py-2 text-sm text-[#4D4D4D]">{{ index + 1 }}</td>
-                  <td class="px-3 py-2 text-sm text-[#4D4D4D]">{{ member.studentNumber }}</td>
-                  <td class="px-3 py-2 text-sm text-[#4D4D4D]">{{ member.studentName }}</td>
-                  <td class="px-3 py-2 text-center">
-                    <input type="radio" :name="'group-leader'" :checked="groupForm.leaderId === member.id"
-                      class="w-4 h-4 accent-[#FF9900]" @change="groupForm.leaderId = member.id" />
-                  </td>
-                  <td class="px-3 py-2 text-center">
-                    <button class="text-red-500 text-sm hover:text-red-600"
-                      @click="handleRemoveGroupMember(index)">{{ $t('common.delete') }}</button>
-                  </td>
-                </tr>
-                <tr v-if="!groupForm.members.length">
-                  <td colspan="5" class="px-4 py-8 text-center">
-                    <div class="flex flex-col items-center gap-2 text-gray-400">
-                      <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                      <span class="text-sm">{{ $t('common.noData') }}</span>
-                    </div>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+            <MTable :columns="groupMemberColumns" :data="groupForm.members" show-index row-key="id"
+              class="group-member-table">
+              <template #studentNumber="{ row }">
+                {{ row.studentNumber }}
+              </template>
+              <template #studentName="{ row }">
+                {{ row.studentName }}
+              </template>
+              <template #isLeader="{ row }">
+                <input type="radio" :name="'group-leader'" :checked="groupForm.leaderId === row.id"
+                  class="w-4 h-4 accent-[#FF9900]" @change="groupForm.leaderId = row.id" />
+              </template>
+              <template #action="{ index }">
+                <button class="text-red-500 text-sm hover:text-red-600"
+                  @click="handleRemoveGroupMember(index)">{{ $t('common.delete') }}</button>
+              </template>
+            </MTable>
           </div>
         </div>
         <div class="flex items-center justify-center gap-4">
@@ -1206,33 +1173,16 @@
         </div>
 
         <div class="max-h-[300px] overflow-y-auto border border-gray-200 rounded-lg">
-          <table class="w-full">
-            <thead class="bg-[#FFF1DD] sticky top-0">
-              <tr>
-                <th class="w-10 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">
-                  <input type="checkbox" :checked="isAllMemberSelected" class="w-4 h-4 accent-[#FF9900]"
-                    @change="toggleAllMemberSelection" />
-                </th>
-                <th class="w-16 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('common.serialNumber') }}
-                </th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.account') }}</th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">{{ $t('user.name') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(student, index) in filteredAvailableStudents" :key="student.id"
-                class="border-b border-gray-100 last:border-b-0 hover:bg-[#FFF1DD] cursor-pointer"
-                @click="toggleStudentSelection(student)">
-                <td class="px-2 py-3">
-                  <input type="checkbox" :checked="selectedMemberIds.includes(student.id)"
-                    class="w-4 h-4 accent-[#FF9900]" @click.stop @change="toggleStudentSelection(student)" />
-                </td>
-                <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ index + 1 }}</td>
-                <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ student.studentNumber || '-' }}</td>
-                <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ student.studentName || '-' }}</td>
-              </tr>
-            </tbody>
-          </table>
+          <MTable :columns="addMemberColumns" :data="filteredAvailableStudents" show-index row-key="id"
+            selectable :selected-keys="selectedMemberIds" class="add-member-table"
+            @select="handleMemberTableSelect" @select-all="handleMemberTableSelectAll" @row-click="(row) => toggleStudentSelection(row)">
+            <template #studentNumber="{ row }">
+              {{ row.studentNumber || '-' }}
+            </template>
+            <template #studentName="{ row }">
+              {{ row.studentName || '-' }}
+            </template>
+          </MTable>
           <div v-if="!filteredAvailableStudents.length" class="px-4 py-8 text-center text-gray-400">{{ $t('user.noStudentsToAdd') }}</div>
         </div>
         <div v-if="selectedMemberIds.length" class="mt-3 p-3 bg-[#F5F5F5] rounded-lg">
@@ -1400,6 +1350,13 @@ const importTeacherFileName = ref('')
 const transferTeacherForm = reactive({ teacherId: '', teacherName: '', targetTeacherId: '' as string | null })
 const transferTeacherOptions = ref<Teacher[]>([])
 const transferTeacherSearch = ref('')
+
+// 班级转让教师列表列配置
+const transferTeacherColumns = computed(() => [
+  { key: "nickName", title: t('user.name'), minWidth: "100px" },
+  { key: "userName", title: t('user.account'), minWidth: "120px" },
+  { key: "select", title: t('user.select'), width: "80px", align: "center" as const },
+])
 const transferClassForm = reactive({ gradeId: '', classId: '' })
 const transferClassOptions = ref<any[]>([])
 const transferGradeOptions = ref<any[]>([])
@@ -1423,39 +1380,23 @@ const handleTransferTeacherSearchChange = () => {
 }
 
 // 选择目标教师
-const handleSelectTransferTeacher = async (userId: string) => {
+const handleSelectTransferTeacher = (userId: string) => {
   transferTeacherForm.targetTeacherId = userId
-  
-  // 选择目标老师后，获取目标老师的年级列表
-  transferClassForm.gradeId = ''
-  transferClassForm.classId = ''
-  transferClassOptions.value = []
-  
-  try {
-    const schoolId = schoolList.value?.[0]?.id || ''
-    const gradeList = await schoolUserApi.transferGrade(userId, schoolId)
-    transferGradeOptions.value = (gradeList || []).map((g: any) => ({
-      label: g.gradeName,
-      value: g.grade
-    }))
-  } catch (error) {
-    transferGradeOptions.value = []
-  }
 }
 
-const handleTransferGradeChange = async (gradeId: string) => {
+const handleTransferGradeChange = async (gradeId: string | number | null) => {
   if (!gradeId) return
-  if (!transferTeacherForm.targetTeacherId) return
+  if (!transferTeacherForm.teacherId) return
   
   transferClassForm.classId = ''
   transferClassOptions.value = []
   
-  // 根据目标老师和年级获取班级列表
+  // 根据原老师和年级获取班级列表（要转让的班级）
   const schoolId = schoolList.value?.[0]?.id || ''
   try {
     const classList = await schoolUserApi.transferClassList({
-      teacherId: transferTeacherForm.targetTeacherId,
-      grade: gradeId,
+      teacherId: transferTeacherForm.teacherId,
+      grade: String(gradeId),
       schoolId
     })
     transferClassOptions.value = (classList || []).map((c: any) => ({
@@ -1704,6 +1645,7 @@ const handleConfirmImportTeacher = async () => {
 }
 
 const handleTransferTeacherClass = async (row: Teacher) => {
+  console.log(row,'转让老师的数据')
   transferTeacherForm.teacherId = row.userId
   transferTeacherForm.teacherName = row.nickName
   transferTeacherForm.targetTeacherId = null
@@ -1724,7 +1666,7 @@ const handleTransferTeacherClass = async (row: Teacher) => {
 
   // 获取当前教师的年级列表
   try {
-    const gradeList = await schoolUserApi.transferGrade(row.userId)
+    const gradeList = await schoolUserApi.transferGrade(row.userId,row.orgId)
     transferGradeOptions.value = (gradeList || []).map((g: any) => ({
       label: g.gradeName,
       value: g.grade
@@ -1741,8 +1683,8 @@ const handleConfirmTransferTeacher = async () => {
   try {
     const selectedClass = transferClassOptions.value.find((c: any) => c.id === transferClassForm.classId)
     await schoolUserApi.transferClass({
-      teacherId: transferTeacherForm.targetTeacherId as string,  // 目标老师（接收班级的）
-      targetTeacherId: transferTeacherForm.teacherId,  // 原老师（被转让的）
+      teacherId: transferTeacherForm.teacherId,  // 原老师（班级要被转走的）
+      targetTeacherId: transferTeacherForm.targetTeacherId as string,  // 目标老师（接收班级的）
       classId: transferClassForm.classId,
       schoolId: schoolList.value?.[0]?.id || '',
       className: selectedClass?.name || ''
@@ -1807,6 +1749,32 @@ const groupTableColumns = computed(() => [
   { key: "createTime", title: t('class.createTime'), minWidth: "120px" },
   { key: "action", title: t('common.operation'), width: "100px", align: "center" as const },
 ]);
+
+// 小组成员表格列配置
+const groupMemberColumns = computed(() => [
+  { key: "studentNumber", title: t('user.account'), minWidth: "100px" },
+  { key: "studentName", title: t('user.name'), minWidth: "80px" },
+  { key: "isLeader", title: t('user.isLeader'), width: "80px", align: "center" as const },
+  { key: "action", title: t('common.operation'), width: "80px", align: "center" as const },
+]);
+
+// 添加成员表格列配置
+const addMemberColumns = computed(() => [
+  { key: "studentNumber", title: t('user.account'), minWidth: "120px" },
+  { key: "studentName", title: t('user.name'), minWidth: "100px" },
+]);
+
+// 添加成员表格选择事件
+const handleMemberTableSelect = (keys: (string | number)[]) => {
+  selectedMemberIds.value = keys as string[]
+}
+const handleMemberTableSelectAll = (selected: boolean) => {
+  if (selected) {
+    selectedMemberIds.value = filteredAvailableStudents.value.map((s: any) => s.id)
+  } else {
+    selectedMemberIds.value = []
+  }
+}
 
 // 小组弹窗
 const showGroupModal = ref(false);

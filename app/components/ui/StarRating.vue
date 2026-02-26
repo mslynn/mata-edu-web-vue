@@ -1,3 +1,5 @@
+ 
+
 <template>
   <div class="flex items-center" :class="wrapperClass">
     <div class="flex" :style="{ gap: `${gap}px` }">
@@ -60,7 +62,7 @@ const props = withDefaults(defineProps<{
   readonly?: boolean
   wrapperClass?: string
 }>(), {
-  maxStars: 3,
+  maxStars: 5,
   size: 20,
   gap: 2,
   fillColor: '#FBBF24',

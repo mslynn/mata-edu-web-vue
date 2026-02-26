@@ -25,7 +25,7 @@
       
       <!-- 左侧 - 学习与任务中心 585x581 -->
       <aside class="left-panel p-4 flex-shrink-0">
-        <div class="border-2 border-dashed border-[#B8D4E8] rounded-lg p-6 h-[581px]">
+        <div class="border-2 border-dashed border-[#B8D4E8] rounded-lg p-6 h-[581px] cursor-pointer hover:bg-white/50 transition-colors" @click="$router.push('/student/lessonsrecord')">
           <div class="text-gray-600 text-sm font-medium mb-6">学习与任务中心</div>
           
           <!-- 上次课程 -->

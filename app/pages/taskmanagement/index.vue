@@ -53,7 +53,8 @@
               v-model="filters.class" 
               :options="classOptions" 
               class="w-[200px]"
-              placeholder="请选择班级"
+              :placeholder="$t('taskManagement.selectClass')"
+              @change="handleClassChange"
             />
           </div>
           <div class="flex items-center gap-2">
@@ -62,7 +63,9 @@
               v-model="filters.course" 
               :options="courseOptions" 
               class="w-[200px]"
-              placeholder="请选择课程"
+              :placeholder="$t('taskManagement.selectCourse')"
+              :disabled="!filters.class"
+              @change="handleCourseChange"
             />
           </div>
           <div class="flex items-center gap-2">
@@ -70,7 +73,8 @@
               v-model="filters.topic" 
               :options="topicOptions" 
               class="w-[240px]"
-              placeholder="主题12-噪声检测仪"
+              :placeholder="$t('taskManagement.selectChapter')"
+              :disabled="!filters.course"
             />
           </div>
         </div>
@@ -116,9 +120,9 @@
           </div>
         </div>
 
-        <div class="flex-1 flex flex-col bg-white rounded-xl relative">
-          <div class="flex-1 w-full overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none']">
-            <div class="min-h-full w-full">
+        <div class="flex-1 flex flex-col bg-white rounded-xl relative overflow-hidden">
+          <div class="flex-1 w-full overflow-hidden">
+            <div class="h-full w-full flex flex-col">
               
               <!-- Cards Grid (Free Creation / Tools) - Only show when task not issued -->
               <div v-if="selectedTaskKey === 'free_creation' && !isTaskIssued" class="w-full min-h-full flex flex-col justify-center items-center p-8 text-center max-w-5xl mx-auto">
@@ -235,7 +239,7 @@
                             <MButton 
                                type="primary" 
                                class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-4 py-1.5 h-9 shadow-sm"
-                               @click="console.log('View details')"
+                               @click="handleViewTaskDetail"
                             >
                                {{ $t('taskManagement.viewTaskFileDetails') }}
                             </MButton>
@@ -260,7 +264,7 @@
                             <div class="relative group">
                               <MButton 
                                  class="!bg-white !text-[#FF9900] !border-gray-200 hover:!bg-orange-50 hover:!border-[#FF9900] px-4 py-1.5 h-9 shadow-sm"
-                                 @click="console.log('Refresh')"
+                                 @click="handleRefreshList"
                               >
                                  {{ $t('taskManagement.refreshList') }}
                               </MButton>
@@ -282,7 +286,7 @@
                          <MButton 
                             type="primary" 
                             class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-4 py-1.5 h-9 shadow-sm"
-                            @click="console.log('View details')"
+                            @click="handleViewTaskDetail"
                          >
                             {{ $t('taskManagement.viewTaskFileDetails') }}
                          </MButton>
@@ -297,13 +301,15 @@
                          
                          <!-- Refresh Button with Tooltip -->
                          <div class="relative group">
-                           <button class="px-4 py-1.5 h-9 bg-white text-[#FF9900] border border-gray-200 text-sm rounded-md hover:bg-orange-50 hover:border-[#FF9900] transition-colors font-medium shadow-sm">
+                           <button 
+                              class="px-4 py-1.5 h-9 bg-white text-[#FF9900] border border-gray-200 text-sm rounded-md hover:bg-orange-50 hover:border-[#FF9900] transition-colors font-medium shadow-sm"
+                              @click="handleRefreshList"
+                           >
                               {{ $t('taskManagement.refreshList') }}
                            </button>
                            <!-- Tooltip -->
                            <div class="absolute top-full right-0 mt-2 z-50 hidden group-hover:block w-max max-w-[200px] whitespace-normal text-center">
                               <div class="bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-md shadow-lg relative">
-                                 <!-- Arrow - positioned to right -->
                                  <div class="absolute -top-1 right-6 w-2 h-2 bg-black/80 rotate-45"></div>
                                  {{ $t('taskManagement.refreshTip') }}
                               </div>
@@ -321,13 +327,15 @@
                          
                          <!-- Refresh Button with Tooltip -->
                          <div class="relative group">
-                           <button class="px-4 py-1.5 h-9 bg-white text-[#FF9900] border border-gray-200 text-sm rounded-md hover:bg-orange-50 hover:border-[#FF9900] transition-colors font-medium shadow-sm">
+                           <button 
+                              class="px-4 py-1.5 h-9 bg-white text-[#FF9900] border border-gray-200 text-sm rounded-md hover:bg-orange-50 hover:border-[#FF9900] transition-colors font-medium shadow-sm"
+                              @click="handleRefreshList"
+                           >
                               {{ $t('taskManagement.refreshList') }}
                            </button>
                            <!-- Tooltip -->
                            <div class="absolute top-full right-0 mt-2 z-50 hidden group-hover:block w-max max-w-[200px] whitespace-normal text-center">
                               <div class="bg-black/80 backdrop-blur-sm text-white text-xs px-3 py-2 rounded-md shadow-lg relative">
-                                 <!-- Arrow - positioned to right -->
                                  <div class="absolute -top-1 right-6 w-2 h-2 bg-black/80 rotate-45"></div>
                                  {{ $t('taskManagement.refreshTip') }}
                               </div>
@@ -361,14 +369,24 @@
                      <span class="text-sm text-[#1890FF]">{{ $t('taskManagement.uploadTaskHint') }}</span>
                   </div>
 
-                  <div class="flex-1 px-6 py-4 overflow-auto">
+                  <div class="flex-1 px-6 py-4 overflow-hidden flex flex-col min-h-0 relative">
+                     <!-- Loading Overlay -->
+                     <div v-if="refreshing" class="absolute inset-0 z-20 bg-white/70 flex items-center justify-center rounded-lg">
+                        <div class="flex flex-col items-center gap-2">
+                           <svg class="animate-spin h-8 w-8 text-[#FF9900]" fill="none" viewBox="0 0 24 24">
+                              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                           </svg>
+                        </div>
+                     </div>
                      <MTable 
                         :columns="currentColumns" 
                         :data="groupTaskData" 
-                        class="rounded-lg overflow-hidden border border-gray-100"
+                        class="rounded-lg overflow-hidden border border-gray-100 task-student-table"
                         :show-index="true"
                         :selectable="isBatchMode && isCustomExercise"
                         :selected-keys="selectedRowKeys"
+                        :selectable-filter="batchSelectableFilter"
                         @select="handleTableSelect"
                         @select-all="handleTableSelectAll"
                      >
@@ -406,12 +424,16 @@
                                  <div class="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-black/90 rotate-45"></div>
                                  <div class="mb-2 leading-relaxed">{{ $t('taskManagement.gradeTooltipTitle') }}</div>
                                  <div class="space-y-0.5 text-gray-300">
-                                    <div>[0%-17%] [0-1/6] 0.5颗</div>
-                                    <div>[17%-34%] [1/6-1/3] 1颗</div>
-                                    <div>[34%-50%] [1/3-1/2] 1.5颗</div>
-                                    <div>[50%-67%] [1/2-2/3] 2颗</div>
-                                    <div>[67%-84%] [2/3-5/6] 2.5颗</div>
-                                    <div>[84%-100%] [5/6-1] 3颗</div>
+                                    <div>[1%-10%] 0.5颗</div>
+                                    <div>[11%-20%] 1颗</div>
+                                    <div>[21%-30%] 1.5颗</div>
+                                    <div>[31%-40%] 2颗</div>
+                                    <div>[41%-50%] 2.5颗</div>
+                                    <div>[51%-60%] 3颗</div>
+                                    <div>[61%-70%] 3.5颗</div>
+                                    <div>[71%-80%] 4颗</div>
+                                    <div>[81%-90%] 4.5颗</div>
+                                    <div>[91%-100%] 5颗</div>
                                  </div>
                               </div>
                            </div>
@@ -596,7 +618,7 @@
     
     <TaskIssueModal
        v-model="showIssueModal"
-       :class-name="filters.class"
+       :class-name="currentClassName"
        :task-name="currentTaskLabel"
        :has-ai-settings="!isUploadTask && !isCustomExercise"
        :is-free-coding="isFreeCoding"
@@ -610,6 +632,12 @@
        @confirm="handleWithdrawConfirm"
     />
 
+    <ExerciseDetailModal
+       v-model="showExerciseDetailModal"
+       :resource-id="currentResourceId"
+       :task-id="viewTaskId"
+    />
+
     <ViewAndScoreModal
        :visible="showViewScoreModal"
        :row-data="currentScoreRow"
@@ -618,37 +646,144 @@
        @save="handleScoreSave"
        @next="handleScoreNext"
     />
+
+    <!-- 打回重做确认弹窗 -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showReturnToRedoModal" class="fixed inset-0 z-[1000] flex items-center justify-center">
+          <div class="absolute inset-0 bg-black/50" @click="showReturnToRedoModal = false" />
+          <div class="relative bg-white rounded-lg w-[420px] p-6">
+            <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" @click="showReturnToRedoModal = false">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+            <h3 class="text-lg font-bold text-center mb-6">{{ $t('taskManagement.returnToRedoConfirmTitle') }}</h3>
+            <p class="text-center text-gray-600 mb-8 whitespace-pre-line">{{ $t('taskManagement.returnToRedoConfirmContent') }}</p>
+            <div class="flex justify-center gap-4">
+              <button class="px-8 py-2 border border-[#FF9900] text-[#FF9900] rounded hover:bg-[#FFF7E6]" @click="showReturnToRedoModal = false">
+                {{ $t('common.cancel') }}
+              </button>
+              <button class="px-8 py-2 bg-[#FF9900] text-white rounded hover:bg-[#e68a00]" @click="confirmReturnToRedo">
+                {{ $t('common.confirm') }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
 const { t } = useI18n()
 const router = useRouter()
+const taskApi = taskmanagementcenterApi()
 
 // --- Filter Data & State ---
 const filters = ref({
-  class: '1年级1111111',
-  course: 'AI上全能助手',
-  topic: 'topic1'
+  class: null as string | null,
+  course: null as string | null,
+  topic: null as string | null,
 })
 
-const classOptions = [
-  { label: '1年级1111111', value: '1年级1111111' },
-  { label: '12年级333', value: '12年级333' },
-  { label: '11年级222', value: '11年级222' }
-]
+// 接口返回的原始数据
+const chapterData = ref<any[]>([])
 
-const courseOptions = [
-  { label: 'AI上全能助手', value: 'AI上全能助手' },
-  { label: 'Python基础', value: 'Python基础' }
-]
+// 班级选项 - 从接口数据中提取
+const classOptions = computed(() => {
+  return chapterData.value.map((item: any) => ({
+    label: item.className,
+    value: item.classId
+  }))
+})
 
-const topicOptions = [
-  { label: '主题12-噪声检测仪', value: 'topic1' },
-  { label: '主题13-智能台灯', value: 'topic2' }
-]
+// 课程选项 - 根据选中的班级过滤
+const courseOptions = computed(() => {
+  if (!filters.value.class) return []
+  const classItem = chapterData.value.find((item: any) => item.classId === filters.value.class)
+  if (!classItem?.courseList) return []
+  return classItem.courseList.map((course: any) => ({
+    label: course.courseName,
+    value: course.courseId
+  }))
+})
+
+// 章节选项 - 根据选中的课程过滤
+const topicOptions = computed(() => {
+  if (!filters.value.class || !filters.value.course) return []
+  const classItem = chapterData.value.find((item: any) => item.classId === filters.value.class)
+  if (!classItem?.courseList) return []
+  const courseItem = classItem.courseList.find((c: any) => c.courseId === filters.value.course)
+  if (!courseItem?.chapterList) return []
+  return courseItem.chapterList.map((chapter: any) => ({
+    label: chapter.chapterName,
+    value: chapter.chapterId
+  }))
+})
+
+// 班级变化 → 默认选中第一个课程和章节
+const handleClassChange = (classId: string | number | null) => {
+  filters.value.course = null
+  filters.value.topic = null
+  if (!classId) return
+  const classItem = chapterData.value.find((item: any) => item.classId === classId)
+  if (classItem?.courseList?.length > 0) {
+    filters.value.course = classItem.courseList[0].courseId
+    if (classItem.courseList[0].chapterList?.length > 0) {
+      filters.value.topic = classItem.courseList[0].chapterList[0].chapterId
+    }
+  }
+}
+
+// 课程变化 → 默认选中第一个章节
+const handleCourseChange = (courseId: string | number | null) => {
+  filters.value.topic = null
+  if (!courseId || !filters.value.class) return
+  const classItem = chapterData.value.find((item: any) => item.classId === filters.value.class)
+  const courseItem = classItem?.courseList?.find((c: any) => c.courseId === courseId)
+  if (courseItem?.chapterList?.length > 0) {
+    filters.value.topic = courseItem.chapterList[0].chapterId
+  }
+}
+
+// 加载三级联动数据
+const fetchChapterData = async () => {
+  try {
+    const data = await taskApi.getChapter()
+    chapterData.value = data || []
+    // 默认选中第一个班级
+    if (chapterData.value.length > 0) {
+      filters.value.class = chapterData.value[0].classId
+      // 默认选中第一个课程
+      const firstClass = chapterData.value[0]
+      if (firstClass.courseList?.length > 0) {
+        filters.value.course = firstClass.courseList[0].courseId
+        // 默认选中第一个章节
+        if (firstClass.courseList[0].chapterList?.length > 0) {
+          filters.value.topic = firstClass.courseList[0].chapterList[0].chapterId
+          // 加载任务列表
+          await fetchTaskList()
+        }
+      }
+    }
+  } catch (error) {
+    console.error('获取授课章节数据失败', error)
+  }
+}
+
+// 监听章节变化，重新加载任务列表
+watch(() => filters.value.topic, (newVal) => {
+  if (newVal) {
+    fetchTaskList()
+  } else {
+    taskListData.value = []
+    selectedTaskKey.value = ''
+  }
+})
 
 // --- Sidebar Data & State ---
 const activeTab = ref('tasks')
@@ -657,47 +792,59 @@ const tabs = computed(() => [
   { label: t('taskManagement.courseAssessment'), value: 'assessment' }
 ])
 
-const selectedTaskKey = ref('ai_chat')
-const expandedKeys = ref<(string | number)[]>(['personal_training', 'personal_upload', 'custom_exercise', 'free_code'])
+const selectedTaskKey = ref<string | number>('')
+const expandedKeys = ref<(string | number)[]>([])
 
-const treeData = computed(() => [
-  {
-    id: 'personal_training',
-    label: t('taskManagement.personalTraining'),
-    children: [
-      { id: 'ai_chat', label: t('taskManagement.aiChat') },
-      { id: 'cluster_analysis', label: t('taskManagement.clusterAnalysis') }
-    ]
-  },
-  {
-    id: 'personal_upload',
-    label: t('classroom.personalUploadTask'),
-    children: [
-      { id: 'smart_supermarket', label: '智慧超市（完整版）' },
-      { id: 'unnamed', label: '未命名' }
-    ]
-  },
-  {
-    id: 'custom_exercise',
-    label: t('taskManagement.customExercise'),
-    children: [
-      { id: 'today_shortcuts', label: '今天学习的几个快捷键' },
-      { id: 'three_people', label: '三人四' },  
-      { id: 'three_people2', label: '三人三2' },
- 
-    ]
-  },
-  {
-    id: 'free_code',
-    label: t('taskManagement.freeCoding'),
-    children: [
-      { id: 'free_creation', label: t('taskManagement.freeCreationTask') }
-    ]
+// 任务列表原始数据
+const taskListData = ref<any[]>([])
+
+// 从接口数据构建树形结构
+const treeData = computed(() => {
+  return taskListData.value.map((category: any) => ({
+    id: `category_${category.resourceCategory}`,
+    label: category.resourceName,
+    children: (category.resourceList || []).map((resource: any) => ({
+      id: resource.resourceId,
+      label: resource.fileName || resource.resourceName,
+      ...resource
+    }))
+  }))
+})
+
+// 加载任务列表
+const fetchTaskList = async () => {
+  if (!filters.value.topic) return
+  try {
+    const data = await taskApi.getTaskList({ chapterId: Number(filters.value.topic), classId: String(filters.value.class || '') })
+    taskListData.value = data || []
+    // 默认展开所有分类
+    expandedKeys.value = taskListData.value.map((c: any) => `category_${c.resourceCategory}`)
+    // 默认选中第一个任务
+    if (taskListData.value.length > 0 && taskListData.value[0].resourceList?.length > 0) {
+      selectedTaskKey.value = taskListData.value[0].resourceList[0].resourceId
+      // 如果该任务已下发，加载学生任务列表
+      const firstTask = taskListData.value[0].resourceList[0]
+      if (firstTask.distributeType !== null && firstTask.distributeType !== undefined) {
+        fetchStudentTaskList()
+      }
+    } else {
+      selectedTaskKey.value = ''
+      groupTaskData.value = []
+    }
+  } catch (error) {
+    console.error('获取任务列表失败', error)
+    taskListData.value = []
   }
-])
+}
 
 const handleNodeSelect = (node: any) => {
   selectedTaskKey.value = node.id
+  // 如果任务已下发，加载学生任务列表；否则清空
+  if (node.distributeType !== null && node.distributeType !== undefined) {
+    fetchStudentTaskList()
+  } else {
+    groupTaskData.value = []
+  }
 }
 
 const handleNodeExpand = (key: string | number, expanded: boolean) => {
@@ -715,21 +862,23 @@ import { ElMessage } from 'element-plus'
 // --- Main Content Data & State ---
 const selectedEditor = ref('ucode4')
 const showIssueModal = ref(false)
-// Task Status Management (Per Task)
-interface TaskStatus {
-  issued: boolean
-  type: 'group' | 'student'
-}
-const taskStatusMap = ref<Record<string, TaskStatus>>({})
 
+// 根据接口返回的 distributeType 判断任务是否已下发
+// distributeType: 1=学生, 2=小组, null=未下发
 const isTaskIssued = computed({
-  get: () => taskStatusMap.value[selectedTaskKey.value]?.issued ?? false,
-  set: (val) => {
-    if (!taskStatusMap.value[selectedTaskKey.value]) {
-       taskStatusMap.value[selectedTaskKey.value] = { issued: false, type: 'group' }
-    }
-    taskStatusMap.value[selectedTaskKey.value]!.issued = val
+  get: () => {
+    return selectedTask.value?.distributeType !== null && selectedTask.value?.distributeType !== undefined
+  },
+  set: () => {
+    // 下发后重新加载任务列表即可
   }
+})
+
+const issueTypeFromApi = computed(() => {
+  const dt = selectedTask.value?.distributeType
+  if (dt === 2) return 'group'
+  if (dt === 1) return 'student'
+  return 'group'
 })
 
 const editorsList = computed(() => [
@@ -758,22 +907,48 @@ const currentTaskLabel = computed(() => {
   return findLabel(treeData.value, selectedTaskKey.value)
 })
 
+// 当前选中班级名称
+const currentClassName = computed(() => {
+  const classItem = chapterData.value.find((item: any) => item.classId === filters.value.class)
+  return classItem?.className || ''
+})
+
 const openIssueModal = () => {
   showIssueModal.value = true
 }
 
-const handleIssueGroup = () => {
-  issueType.value = 'group'
-  isTaskIssued.value = true
-  ElMessage.success(t('taskManagement.taskIssuedSuccess') || t('taskManagement.issueSuccess'))
-  showIssueModal.value = false
+const handleIssueGroup = async () => {
+  try {
+    await taskApi.bindDistributer({
+      classId: String(filters.value.class || ''),
+      resourceId: String(selectedTaskKey.value),
+      distributeType: 2
+    })
+    showIssueModal.value = false
+    ElMessage.success(t('taskManagement.issueTaskSuccess'))
+    // 重新加载任务列表，让 distributeType 从接口更新
+    await fetchTaskList()
+    fetchStudentTaskList()
+  } catch (error: any) {
+    ElMessage.error(error.message || t('taskManagement.issueTaskFailed'))
+  }
 }
 
-const handleIssueStudent = () => {
-  issueType.value = 'student'
-  isTaskIssued.value = true
-  ElMessage.success(t('taskManagement.taskIssuedSuccess') || t('taskManagement.issueSuccess'))
-  showIssueModal.value = false
+const handleIssueStudent = async () => {
+  try {
+    await taskApi.bindDistributer({
+      classId: String(filters.value.class || ''),
+      resourceId: String(selectedTaskKey.value),
+      distributeType: 1
+    })
+    showIssueModal.value = false
+    ElMessage.success(t('taskManagement.issueTaskSuccess'))
+    // 重新加载任务列表，让 distributeType 从接口更新
+    await fetchTaskList()
+    fetchStudentTaskList()
+  } catch (error: any) {
+    ElMessage.error(error.message || t('taskManagement.issueTaskFailed'))
+  }
 }
 
 // Group Task Columns matching the screenshot
@@ -832,32 +1007,36 @@ const uploadTaskGroupColumns = computed(() => [
   { key: 'action', title: t('common.operation'), align: 'center' as const, width: '120px' }
 ])
 
-// Check if current task is a custom exercise
-const isCustomExercise = computed(() => {
-  // Check if selected key is under custom_exercise parent
-  const customExerciseNode = treeData.value.find(node => node.id === 'custom_exercise')
-  if (customExerciseNode && customExerciseNode.children) {
-    return customExerciseNode.children.some(child => child.id === selectedTaskKey.value)
+// 获取当前选中任务的完整数据
+const selectedTask = computed(() => {
+  for (const category of taskListData.value) {
+    const found = (category.resourceList || []).find((r: any) => r.resourceId === selectedTaskKey.value)
+    if (found) return { ...found, resourceCategory: category.resourceCategory }
   }
+  return null
+})
+
+// Check if current task is a custom exercise (resourceCategory: 10)
+const isCustomExercise = computed(() => {
+  return selectedTask.value?.resourceCategory === 10
+})
+
+// Check if current task is upload task
+const isUploadTask = computed(() => {
+  // TODO: 根据实际 resourceCategory 判断上传任务类型
   return false
 })
 
-// Check if current task is upload task (Personal Upload / Free Coding)
-const isUploadTask = computed(() => [
-  'smart_supermarket', 'unnamed', 'free_creation'
-].includes(selectedTaskKey.value))
-
 // Check if current task is free coding
-const isFreeCoding = computed(() => selectedTaskKey.value === 'free_creation')
+const isFreeCoding = computed(() => {
+  // TODO: 根据实际 resourceCategory 判断自由编程类型
+  return false
+})
 
 const issueType = computed({
-  get: () => taskStatusMap.value[selectedTaskKey.value]?.type ?? 'group',
-  set: (val: 'group' | 'student') => {
-    if (!taskStatusMap.value[selectedTaskKey.value]) {
-       taskStatusMap.value[selectedTaskKey.value] = { issued: false, type: val }
-    } else {
-       taskStatusMap.value[selectedTaskKey.value]!.type = val
-    }
+  get: () => issueTypeFromApi.value,
+  set: () => {
+    // 下发后重新加载任务列表即可
   }
 })
 const currentColumns = computed(() => {
@@ -895,28 +1074,64 @@ const moreActionOptions = computed(() => [
 ])
 const handleMoreAction = (val: string | number | null) => {
   if (val === 'view') {
-    console.log('View details')
+    handleViewTaskDetail()
   } else if (val === 'withdraw') {
     showWithdrawModal.value = true
   }
   moreActionValue.value = ''
 }
 
-// Group Task Data (mock data for demo)
-const groupTaskData = ref<any[]>([
-  { id: 1, studentName: 'lynn', studentAccount: '4285lynn01', submissionStatus: 'submitted', scoreTotal: '70/100', duration: 0.96, submissionTime: '2025-12-30 11:33:33', grade: 2.5, teacherScore: 2.5, graded: false, qaStatus: 'pushed' },
-  { id: 2, studentName: 'tony', studentAccount: '4285tony01', submissionStatus: 'submitted', scoreTotal: '-', duration: 1.2, submissionTime: '2025-12-30 10:20:15', grade: 3, teacherScore: 2.5, graded: false, qaStatus: 'pushed' },
-  { id: 3, studentName: 'jack', studentAccount: '4285jack', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 1.5, teacherScore: null, graded: false, qaStatus: 'pushed' },
-  { id: 4, studentName: 'wang', studentAccount: '4285wang09', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 2, teacherScore: null, graded: false, qaStatus: 'pushed' },
-  { id: 5, studentName: 'tony', studentAccount: '4285tony', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 0.5, teacherScore: null, graded: false, qaStatus: 'pushed' },
-  { id: 6, studentName: '1', studentAccount: '4285155', submissionStatus: 'submitted', scoreTotal: '-', duration: 0.8, submissionTime: '2025-12-30 09:15:00', grade: 1, teacherScore: 2.5, graded: false, qaStatus: 'pushed' },
-  { id: 7, studentName: 'jack', studentAccount: '4285jack01', submissionStatus: 'submitted', scoreTotal: '-', duration: 1.5, submissionTime: '2025-12-30 14:30:00', grade: 3, teacherScore: 3, graded: false, qaStatus: 'pushed' },
-  { id: 8, studentName: '2', studentAccount: '4285237', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 2.5, teacherScore: null, graded: false, qaStatus: 'pushed' },
-  { id: 9, studentName: 'wang', studentAccount: '4285wang010', submissionStatus: 'unsubmitted', scoreTotal: '-', duration: '-', submissionTime: '-', grade: 1.5, teacherScore: null, graded: false, qaStatus: 'pushed' }
-])
+// 学生任务列表数据
+const groupTaskData = ref<any[]>([])
+
+// 根据正确率计算星星数（半颗星-五颗星，10个等级）
+const scoreToStars = (score: number | null, totalScore: number | null): number => {
+  if (score === null || totalScore === null || totalScore === 0) return 0
+  const rate = Math.round((score / totalScore) * 100)
+  if (rate <= 0) return 0
+  if (rate <= 10) return 0.5
+  if (rate <= 20) return 1
+  if (rate <= 30) return 1.5
+  if (rate <= 40) return 2
+  if (rate <= 50) return 2.5
+  if (rate <= 60) return 3
+  if (rate <= 70) return 3.5
+  if (rate <= 80) return 4
+  if (rate <= 90) return 4.5
+  return 5
+}
+
+// 加载学生任务列表
+const fetchStudentTaskList = async () => {
+  if (!selectedTaskKey.value) return
+  try {
+    const data = await taskApi.getStudentTaskList({ resourceId: String(selectedTaskKey.value) })
+    groupTaskData.value = (data || []).map((item: any) => ({
+      id: item.taskId,
+      studentName: item.studentName,
+      studentAccount: item.studentNumber,
+      submissionStatus: item.status === 1 ? 'submitted' : 'unsubmitted',
+      scoreTotal: item.score !== null ? `${item.score}/${item.totalScore}` : '-',
+      duration: item.taskDuration || '-',
+      submissionTime: item.taskEndTime || '-',
+      grade: scoreToStars(item.score, item.totalScore),
+      teacherScore: null,
+      graded: false,
+      _raw: item
+    }))
+  } catch (error) {
+    console.error('获取学生任务列表失败', error)
+    groupTaskData.value = []
+  }
+}
 
 // Withdraw Modal State
 const showWithdrawModal = ref(false)
+
+// Exercise Detail Modal State
+const showExerciseDetailModal = ref(false)
+const viewTaskId = ref<string | null>(null)
+const currentResourceId = computed(() => selectedTask.value?.resourceId ? String(selectedTask.value.resourceId) : null)
 
 // View and Score Modal State
 const showViewScoreModal = ref(false)
@@ -931,6 +1146,17 @@ const hasNextSubmission = computed(() => {
 
 // Answer Analysis Toggle
 const answerAnalysisEnabled = ref(false)
+
+// Refresh student task list
+const refreshing = ref(false)
+const handleRefreshList = async () => {
+  refreshing.value = true
+  try {
+    await fetchStudentTaskList()
+  } finally {
+    refreshing.value = false
+  }
+}
 
 const toggleAnswerAnalysis = () => {
   answerAnalysisEnabled.value = !answerAnalysisEnabled.value
@@ -969,7 +1195,13 @@ const goHome  = ()=>{
 }
 // Action handlers
 const handleViewAndGrade = (row: any) => {
-  console.log('View and grade:', row)
+  viewTaskId.value = row._raw?.taskId || row.id || null
+  showExerciseDetailModal.value = true
+}
+
+const handleViewTaskDetail = () => {
+  viewTaskId.value = null
+  showExerciseDetailModal.value = true
 }
 
 const handleViewAndScore = (row: any) => {
@@ -995,17 +1227,50 @@ const handleScoreNext = () => {
 }
 
 const handleReturnToRedo = (row: any) => {
-  console.log('Return to redo:', row)
+  returnToRedoRow.value = row
+  showReturnToRedoModal.value = true
 }
 
-const handleWithdrawConfirm = () => {
-  isTaskIssued.value = false
-  ElMessage.success(t('taskManagement.withdrawSuccess'))
+const showReturnToRedoModal = ref(false)
+const returnToRedoRow = ref<any>(null)
+
+const confirmReturnToRedo = async () => {
+  if (!returnToRedoRow.value) return
+  try {
+    const taskId = returnToRedoRow.value._raw?.taskId || returnToRedoRow.value.id
+    await taskApi.bindReject([String(taskId)])
+    showReturnToRedoModal.value = false
+    ElMessage.success(t('taskManagement.returnToRedoSuccess'))
+    fetchStudentTaskList()
+  } catch (error: any) {
+    ElMessage.error(error.message || t('taskManagement.returnToRedo'))
+  }
+}
+
+const handleWithdrawConfirm = async () => {
+  try {
+    await taskApi.bindWithdrawr({
+      classId: String(filters.value.class || ''),
+      resourceId: String(selectedTaskKey.value),
+      distributeType: issueTypeFromApi.value === 'group' ? 2 : 1
+    })
+    ElMessage.success(t('taskManagement.withdrawSuccess'))
+    // 撤回后重新加载任务列表，让 distributeType 从接口更新
+    await fetchTaskList()
+    groupTaskData.value = []
+  } catch (error: any) {
+    ElMessage.error(error.message || t('taskManagement.withdrawFailed'))
+  }
 }
 
 // Batch Operation State
 const isBatchMode = ref(false)
 const selectedRowKeys = ref<(string | number)[]>([])
+
+// Only submitted rows can be selected in batch mode
+const batchSelectableFilter = (row: any) => row.submissionStatus === 'submitted'
+
+const selectableRows = computed(() => groupTaskData.value.filter(row => row.submissionStatus === 'submitted'))
 
 const enterBatchMode = () => {
   isBatchMode.value = true
@@ -1018,8 +1283,8 @@ const exitBatchMode = () => {
 }
 
 const isAllSelected = computed(() => {
-  if (!groupTaskData.value.length) return false
-  return groupTaskData.value.every(row => selectedRowKeys.value.includes(row.id))
+  if (!selectableRows.value.length) return false
+  return selectableRows.value.every(row => selectedRowKeys.value.includes(row.id))
 })
 
 const handleTableSelect = (keys: (string | number)[], rows: any[]) => {
@@ -1028,7 +1293,7 @@ const handleTableSelect = (keys: (string | number)[], rows: any[]) => {
 
 const handleTableSelectAll = (selected: boolean) => {
   if (selected) {
-    selectedRowKeys.value = groupTaskData.value.map(row => row.id)
+    selectedRowKeys.value = selectableRows.value.map(row => row.id)
   } else {
     selectedRowKeys.value = []
   }
@@ -1038,23 +1303,59 @@ const handleSelectAllCheckbox = () => {
   if (isAllSelected.value) {
     selectedRowKeys.value = []
   } else {
-    selectedRowKeys.value = groupTaskData.value.map(row => row.id)
+    selectedRowKeys.value = selectableRows.value.map(row => row.id)
   }
 }
 
-const handleBatchReturnToRedo = () => {
+const handleBatchReturnToRedo = async () => {
   if (selectedRowKeys.value.length === 0) {
     ElMessage.warning(t('taskManagement.noDataSelectedTip'))
     return
   }
-  console.log('Batch return to redo:', selectedRowKeys.value)
-  ElMessage.success(t('taskManagement.batchReturnSuccess'))
-  exitBatchMode()
+  // 从选中的行中找到对应的 taskId
+  const taskIds = selectedRowKeys.value.map(key => {
+    const row = groupTaskData.value.find(r => r.id === key)
+    return String(row?._raw?.taskId || key)
+  })
+  try {
+    await taskApi.bindReject(taskIds)
+    ElMessage.success(t('taskManagement.batchReturnSuccess'))
+    exitBatchMode()
+    fetchStudentTaskList()
+  } catch (error: any) {
+    ElMessage.error(error.message || t('taskManagement.batchReturnSuccess'))
+  }
 }
+
+// 初始化
+onMounted(() => {
+  fetchChapterData()
+})
 </script>
 
 <style scoped>
 /* Ensure the page takes full height of its container if setup in a layout */
+
+/* 任务学生列表：表头固定，内容滚动 */
+.task-student-table {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.task-student-table :deep(.overflow-x-auto) {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.task-student-table :deep(thead) {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
 
 .icon-fade-enter-active,
 .icon-fade-leave-active {

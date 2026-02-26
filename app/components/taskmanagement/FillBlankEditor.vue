@@ -54,7 +54,7 @@
           >
             + {{ $t('customExercise.addBlank') }}
           </button>
-          <div v-if="showError && !hasContent" class="text-sm text-[#FF9900] mt-1">
+          <div v-if="showError && !hasContent" class="text-sm text-red-500 mt-1">
             {{ $t('customExercise.questionContentRequired') }}
           </div>
         </div>
@@ -96,7 +96,7 @@
             <!-- Placeholder for first blank to keep alignment -->
             <div v-else class="w-5"></div>
           </div>
-          <div v-if="showError && hasEmptyBlank" class="text-sm text-[#FF9900]">
+          <div v-if="showError && hasEmptyBlank" class="text-sm text-red-500">
             {{ $t('customExercise.optionRequired') }}
           </div>
         </div>
@@ -118,7 +118,7 @@
             :class="showError && (localQuestion.score < 1 || localQuestion.score > 100) ? 'border-red-400' : 'border-gray-300'"
           />
         </div>
-        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-[#FF9900]">
+        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-red-500">
           {{ $t('customExercise.scoreRangeError') }}
         </div>
       </div>

@@ -58,11 +58,15 @@
             <!-- 选择列 -->
             <td v-if="selectable" class="px-4 py-3">
               <div 
-                class="w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors mx-auto"
-                :class="selectedKeys.includes(row[rowKey || 'id']) ? 'bg-[#FF9900] border-[#FF9900]' : 'border-gray-300 bg-white'"
+                class="w-4 h-4 rounded border flex items-center justify-center transition-colors mx-auto"
+                :class="!isRowSelectable(row) 
+                  ? 'border-gray-200 bg-gray-100 cursor-not-allowed' 
+                  : selectedKeys.includes(row[rowKey || 'id']) 
+                    ? 'bg-[#FF9900] border-[#FF9900] cursor-pointer' 
+                    : 'border-gray-300 bg-white cursor-pointer'"
                 @click.stop="handleSelect(row)"
               >
-                <svg v-if="selectedKeys.includes(row[rowKey || 'id'])" width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <svg v-if="isRowSelectable(row) && selectedKeys.includes(row[rowKey || 'id'])" width="10" height="8" viewBox="0 0 10 8" fill="none">
                   <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
@@ -80,9 +84,11 @@
                 col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
               ]"
             >
-              <!-- 自定义插槽 - 支持 cell-xxx 格式 -->
-              <slot :name="`cell-${col.key}`" :row="row" :index="index" :value="row[col.key]">
-                {{ row[col.key] }}
+              <!-- 自定义插槽 - 支持 xxx 和 cell-xxx 两种格式 -->
+              <slot :name="col.key" :row="row" :index="index" :value="row[col.key]">
+                <slot :name="`cell-${col.key}`" :row="row" :index="index" :value="row[col.key]">
+                  {{ row[col.key] }}
+                </slot>
               </slot>
             </td>
           </tr>
@@ -129,13 +135,25 @@ const props = withDefaults(defineProps<{
   showIndex?: boolean
   selectable?: boolean
   selectedKeys?: (string | number)[]
+  selectableFilter?: ((row: any) => boolean) | null
 }>(), {
   rowKey: 'id',
   loading: false,
   stripe: false,
   showIndex: false,
   selectable: false,
-  selectedKeys: () => []
+  selectedKeys: () => [],
+  selectableFilter: null
+})
+
+const isRowSelectable = (row: any): boolean => {
+  if (!props.selectableFilter) return true
+  return props.selectableFilter(row)
+}
+
+const selectableData = computed(() => {
+  if (!props.selectableFilter) return props.data
+  return props.data.filter(row => props.selectableFilter!(row))
 })
 
 const emit = defineEmits<{
@@ -145,17 +163,18 @@ const emit = defineEmits<{
 }>()
 
 const isAllSelected = computed(() => {
-  if (!props.data.length) return false
-  return props.data.every(row => props.selectedKeys.includes(row[props.rowKey || 'id']))
+  if (!selectableData.value.length) return false
+  return selectableData.value.every(row => props.selectedKeys.includes(row[props.rowKey || 'id']))
 })
 
 const isIndeterminate = computed(() => {
-  if (!props.data.length) return false
-  const selectedCount = props.data.filter(row => props.selectedKeys.includes(row[props.rowKey || 'id'])).length
-  return selectedCount > 0 && selectedCount < props.data.length
+  if (!selectableData.value.length) return false
+  const selectedCount = selectableData.value.filter(row => props.selectedKeys.includes(row[props.rowKey || 'id'])).length
+  return selectedCount > 0 && selectedCount < selectableData.value.length
 })
 
 const handleSelect = (row: any) => {
+  if (!isRowSelectable(row)) return
   const key = row[props.rowKey || 'id']
   let newKeys: (string | number)[]
   let newRows: any[]
@@ -176,8 +195,8 @@ const handleSelectAllClick = () => {
   emit('select-all', newSelected)
   
   if (newSelected) {
-    const allKeys = props.data.map(row => row[props.rowKey || 'id'])
-    emit('select', allKeys, props.data)
+    const allKeys = selectableData.value.map(row => row[props.rowKey || 'id'])
+    emit('select', allKeys, selectableData.value)
   } else {
     emit('select', [], [])
   }
@@ -188,8 +207,8 @@ const handleSelectAll = (e: Event) => {
   emit('select-all', checked)
   
   if (checked) {
-    const allKeys = props.data.map(row => row[props.rowKey || 'id'])
-    emit('select', allKeys, props.data)
+    const allKeys = selectableData.value.map(row => row[props.rowKey || 'id'])
+    emit('select', allKeys, selectableData.value)
   } else {
     emit('select', [], [])
   }

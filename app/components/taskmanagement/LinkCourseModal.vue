@@ -370,9 +370,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { ElMessage } from "element-plus";
+import { taskmanagementcenterApi } from "~/composables/api/taskmanagement";
+
 
 interface Chapter {
   id: number;
@@ -390,17 +392,39 @@ interface Course {
   subCategory?: string; // example | external | research | other | video | doc
 }
 
+// API 返回的菜单树结构
+interface MenuTreeItem {
+  menuId: number | null;
+  parentId: number | null;
+  menuName: string;
+  sortOrder: number | null;
+  menuLevel: number | null;
+  isVisible: number | null;
+  children?: MenuTreeItem[];
+}
+
 const props = defineProps<{
   visible: boolean;
+  exerciseId?: string;
   initialLinked?: number[];
 }>();
 
 const emit = defineEmits<{
   close: [];
-  confirm: [data: number[]];
+  confirm: [];
 }>();
 
 const { t } = useI18n();
+const api = taskmanagementcenterApi();
+
+
+// 菜单树数据（从 API 获取）
+const menuTree = ref<MenuTreeItem[]>([]);
+const menuLoading = ref(false);
+
+// 自定义课程数据
+const customCourses = ref<Course[]>([]);
+const customCoursesLoading = ref(false);
 
 // Course type tabs
 const courseTypes = computed(() => [
@@ -408,60 +432,19 @@ const courseTypes = computed(() => [
   { value: "custom", label: t("linkCourse.customCourse") },
 ]);
 
-// Sub tabs with children
-const subTabs = computed(() => [
-  {
-    value: "normal",
-    label: t("linkCourse.normalClass"),
-    children: [
-      { value: "example", label: t("linkCourse.exampleClass") },
-      { value: "external", label: t("linkCourse.externalClass") },
-      { value: "research", label: t("linkCourse.researchClass") },
-      { value: "other", label: t("linkCourse.otherClass") },
-    ],
-  },
-  {
-    value: "club",
-    label: t("linkCourse.clubClass"),
-    children: [
-      { value: "club-example", label: t("linkCourse.exampleClass") },
-      { value: "club-external", label: t("linkCourse.externalClass") },
-      { value: "club-other", label: t("linkCourse.otherClass") },
-    ],
-  },
-  {
-    value: "custom",
-    label: t("linkCourse.customClass"),
-    children: [
-      { value: "custom-example", label: t("linkCourse.exampleClass") },
-      { value: "custom-other", label: t("linkCourse.otherClass") },
-    ],
-  },
-  {
-    value: "dual",
-    label: t("linkCourse.dualClass"),
-    children: [
-      { value: "dual-example", label: t("linkCourse.exampleClass") },
-      { value: "dual-external", label: t("linkCourse.externalClass") },
-    ],
-  },
-  {
-    value: "demo",
-    label: t("linkCourse.demoClass"),
-    children: [
-      { value: "demo-example", label: t("linkCourse.exampleClass") },
-      { value: "demo-other", label: t("linkCourse.otherClass") },
-    ],
-  },
-  {
-    value: "crealand",
-    label: "Crealand内容资源",
-    children: [
-      { value: "crealand-video", label: t("linkCourse.videoResource") },
-      { value: "crealand-doc", label: t("linkCourse.docResource") },
-    ],
-  },
-]);
+// Sub tabs - 从 API 数据动态生成（过滤掉没有 menuId 的项）
+const subTabs = computed(() => {
+  return menuTree.value
+    .filter(item => item.menuId !== null)
+    .map(item => ({
+      value: String(item.menuId),
+      label: item.menuName,
+      children: item.children?.filter(child => child.menuId !== null).map(child => ({
+        value: String(child.menuId),
+        label: child.menuName
+      })) || []
+    }));
+});
 
 const selectedSubTab2 = ref("");
 const hoveredTab = ref("");
@@ -479,6 +462,8 @@ const displaySecondLevelTabs = computed(() => {
 const selectFirstLevel = (tabValue: string) => {
   selectedSubTab.value = tabValue;
   selectedSubTab2.value = "";
+  // 加载该菜单下的课程
+  loadOfficialCourses(Number(tabValue));
 };
 
 // Select second level tab
@@ -489,178 +474,191 @@ const selectSecondLevel = (childValue: string) => {
     if (child) {
       selectedSubTab.value = tab.value;
       selectedSubTab2.value = childValue;
+      // 加载该二级菜单下的课程
+      loadOfficialCourses(Number(childValue));
       break;
     }
   }
 };
 
 const selectedCourseType = ref("official");
-const selectedSubTab = ref("normal");
+const selectedSubTab = ref("");
 const leftSearchKeyword = ref("");
 const rightSearchKeyword = ref("");
-const expandedCourses = ref<number[]>([1]);
+const expandedCourses = ref<number[]>([]);
 const selectedChapters = ref<number[]>([]);
 const linkedChapters = ref<Chapter[]>([]);
 const initialLinkedIds = ref<number[]>([]);
 const expandedLinkedCourses = ref<number[]>([]);
 const selectedLinkedChapters = ref<number[]>([]);
 
-// Mock data with category info
-const courses = ref<Course[]>([
-  // 官方课程 - 常态课
-  {
-    id: 1,
-    name: "AI上神奇动物",
-    courseType: "official",
-    category: "normal",
-    subCategory: "",
-    chapters: [
-      { id: 101, name: "《AI上神奇动物》资料合集", courseId: 1 },
-      { id: 102, name: "主题01 走近神奇动物", courseId: 1 },
-      { id: 103, name: "主题02 谁的大嘴巴", courseId: 1 },
-      { id: 104, name: "主题03 猫的眼睛", courseId: 1 },
-      { id: 105, name: "主题04 活动课——奇特的朋友：猫头鹰", courseId: 1 },
-      { id: 106, name: "主题05 会说话的大象（1）", courseId: 1 },
-      { id: 107, name: "主题06 会说话的大象（2）", courseId: 1 },
-      { id: 108, name: "主题07 喜欢摇尾巴的小狗", courseId: 1 },
-      { id: 109, name: "主题08 小鸟的翅膀", courseId: 1 },
-      { id: 110, name: "主题09 活动课——我们不一样", courseId: 1 },
-      { id: 111, name: "主题10 长颈鹿的长脖子", courseId: 1 },
-      { id: 112, name: "主题11 蜗牛的触角（1）", courseId: 1 },
-    ],
-  },
-  {
-    id: 2,
-    name: "AI未来实验室",
-    courseType: "official",
-    category: "normal",
-    subCategory: "",
-    chapters: [
-      { id: 201, name: "主题01 认识人工智能", courseId: 2 },
-      { id: 202, name: "主题02 机器学习基础", courseId: 2 },
-      { id: 203, name: "主题03 图像识别技术", courseId: 2 },
-    ],
-  },
-  // 官方课程 - 常态课 - 示例课
-  {
-    id: 8,
-    name: "常态课示例：编程基础",
-    courseType: "official",
-    category: "normal",
-    subCategory: "example",
-    chapters: [
-      { id: 801, name: "示例01 变量与数据类型", courseId: 8 },
-      { id: 802, name: "示例02 条件语句", courseId: 8 },
-    ],
-  },
-  // 官方课程 - 常态课 - 校外机构课程
-  {
-    id: 9,
-    name: "校外机构：机器人课程",
-    courseType: "official",
-    category: "normal",
-    subCategory: "external",
-    chapters: [
-      { id: 901, name: "机器人入门", courseId: 9 },
-      { id: 902, name: "机器人进阶", courseId: 9 },
-    ],
-  },
-  // 官方课程 - 社团课
-  {
-    id: 3,
-    name: "机器人编程入门",
-    courseType: "official",
-    category: "club",
-    subCategory: "",
-    chapters: [
-      { id: 301, name: "第一课 认识机器人", courseId: 3 },
-      { id: 302, name: "第二课 基础编程", courseId: 3 },
-    ],
-  },
-  // 官方课程 - 双师课
-  {
-    id: 4,
-    name: "创意编程工坊",
-    courseType: "official",
-    category: "dual",
-    subCategory: "",
-    chapters: [
-      { id: 401, name: "项目01 动画制作", courseId: 4 },
-      { id: 402, name: "项目02 游戏设计", courseId: 4 },
-    ],
-  },
-  // 官方课程 - 展示课
-  {
-    id: 10,
-    name: "展示课：AI创作展",
-    courseType: "official",
-    category: "demo",
-    subCategory: "",
-    chapters: [
-      { id: 1001, name: "展示01 学生作品", courseId: 10 },
-      { id: 1002, name: "展示02 优秀案例", courseId: 10 },
-    ],
-  },
-  // 官方课程 - Crealand内容资源
-  {
-    id: 7,
-    name: "Crealand视频教程",
-    courseType: "official",
-    category: "crealand",
-    subCategory: "",
-    chapters: [
-      { id: 701, name: "视频01 平台介绍", courseId: 7 },
-      { id: 702, name: "视频02 功能演示", courseId: 7 },
-    ],
-  },
-  // 自定义课程 - 常态课
-  {
-    id: 5,
-    name: "Scratch趣味编程",
-    courseType: "custom",
-    category: "normal",
-    subCategory: "",
-    chapters: [
-      { id: 501, name: "入门篇 认识Scratch", courseId: 5 },
-      { id: 502, name: "基础篇 角色与舞台", courseId: 5 },
-    ],
-  },
-  // 自定义课程 - 社团课
-  {
-    id: 6,
-    name: "Python数据分析",
-    courseType: "custom",
-    category: "club",
-    subCategory: "",
-    chapters: [
-      { id: 601, name: "数据处理基础", courseId: 6 },
-      { id: 602, name: "数据可视化", courseId: 6 },
-    ],
-  },
-]);
+// 课程数据（官方课程）
+const courses = ref<Course[]>([]);
+const coursesLoading = ref(false);
+// 记录已加载章节的课程ID
+const loadedChapterCourseIds = ref<number[]>([]);
+
+// 加载官方课程列表（根据menuId）- 不包含章节
+const loadOfficialCourses = async (menuId: number) => {
+  coursesLoading.value = true;
+  try {
+    const data = await api.getCursorList({ menuId });
+    // 转换 API 数据为 Course 格式（章节初始为空）
+    courses.value = (data || []).map((item: any) => ({
+      id: item.courseId,
+      name: item.courseName,
+      courseType: 'official',
+      category: String(menuId),
+      chapters: [] // 章节需要点击展开时加载
+    }));
+    // 清空已加载章节记录
+    loadedChapterCourseIds.value = [];
+  } catch (error) {
+    console.error("获取官方课程列表失败:", error);
+  } finally {
+    coursesLoading.value = false;
+  }
+};
+
+// 加载课程章节列表
+const loadChapterList = async (courseId: number) => {
+  // 如果已经加载过，不重复加载
+  if (loadedChapterCourseIds.value.includes(courseId)) return;
+  
+  try {
+    const data = await api.getChapterList({ courseId });
+    const chapters = (data || []).map((ch: any) => ({
+      id: ch.chapterId,
+      name: ch.chapterName,
+      courseId: courseId
+    }));
+    
+    // 更新对应课程的章节（官方课程）
+    const course = courses.value.find(c => c.id === courseId);
+    if (course) {
+      course.chapters = chapters;
+    }
+    // 更新自定义课程的章节
+    const customCourse = customCourses.value.find(c => c.id === courseId);
+    if (customCourse) {
+      customCourse.chapters = chapters;
+    }
+    
+    loadedChapterCourseIds.value.push(courseId);
+  } catch (error) {
+    console.error("获取章节列表失败:", error);
+  }
+};
+
+// 加载自定义课程列表
+const loadCustomCourses = async () => {
+  customCoursesLoading.value = true;
+  try {
+    const data = await api.getCursorList({ courseType: 1 });
+    // 转换 API 数据为 Course 格式（章节初始为空）
+    customCourses.value = (data || []).map((item: any) => ({
+      id: item.courseId,
+      name: item.courseName,
+      courseType: 'custom',
+      category: '',
+      chapters: [] // 章节需要点击展开时加载
+    }));
+  } catch (error) {
+    console.error("获取自定义课程列表失败:", error);
+  } finally {
+    customCoursesLoading.value = false;
+  }
+};
+
+// 加载菜单树数据
+const loadMenuTree = async () => {
+  menuLoading.value = true;
+  try {
+    const data = await api.getExerciseCourseMenuTree();
+    menuTree.value = data || [];
+    // 默认选中第一个有 menuId 的一级菜单
+    const firstValidMenu = menuTree.value.find(item => item.menuId !== null);
+    if (firstValidMenu) {
+      selectedSubTab.value = String(firstValidMenu.menuId);
+      // 加载第一个菜单的课程列表
+      loadOfficialCourses(firstValidMenu.menuId!);
+    }
+  } catch (error) {
+    console.error("获取课程菜单树失败:", error);
+    ElMessage.error("获取课程菜单树失败");
+  } finally {
+    menuLoading.value = false;
+  }
+};
+
+// 加载已关联的课程章节
+const loadLinkedChapters = async () => {
+  if (!props.exerciseId) return;
+  
+  try {
+    const data = await api.getExercisebind(props.exerciseId);
+    // API 返回的是课程列表，每个课程包含 chapterList
+    const chapters: Chapter[] = [];
+    (data || []).forEach((course: any) => {
+      (course.chapterList || []).forEach((ch: any) => {
+        chapters.push({
+          id: ch.chapterId,
+          name: ch.chapterName,
+          courseId: course.courseId,
+          courseName: course.courseName
+        });
+      });
+    });
+    linkedChapters.value = chapters;
+    
+    // 自动展开已关联的课程
+    const courseIds = [...new Set(linkedChapters.value.map(c => c.courseId))];
+    expandedLinkedCourses.value = courseIds;
+  } catch (error) {
+    console.error("获取已关联课程章节失败:", error);
+  }
+};
 
 // Watch visible to init
 watch(
   () => props.visible,
-  (newVal) => {
+  async (newVal) => {
     if (newVal) {
       linkedChapters.value = [];
       selectedChapters.value = [];
-      if (props.initialLinked && props.initialLinked.length > 0) {
-        props.initialLinked.forEach((chapterId) => {
-          const chapter = findChapterById(chapterId);
-          if (chapter) {
-            linkedChapters.value.push(chapter);
-          }
-        });
-      }
-      initialLinkedIds.value = linkedChapters.value.map((c) => c.id);
+      selectedLinkedChapters.value = [];
+      expandedLinkedCourses.value = [];
+      
+      // 加载已关联的课程章节
+      await loadLinkedChapters();
+      
+      // 加载菜单树
+      loadMenuTree();
     }
   },
 );
 
+// Watch course type change
+watch(
+  () => selectedCourseType.value,
+  (newVal) => {
+    // 切换到自定义课程时加载自定义课程列表
+    if (newVal === 'custom' && customCourses.value.length === 0) {
+      loadCustomCourses();
+    }
+  }
+);
+
 const findChapterById = (id: number): Chapter | null => {
+  // 先从官方课程中查找
   for (const course of courses.value) {
+    const chapter = course.chapters.find((c) => c.id === id);
+    if (chapter) {
+      return { ...chapter, courseName: course.name };
+    }
+  }
+  // 再从自定义课程中查找
+  for (const course of customCourses.value) {
     const chapter = course.chapters.find((c) => c.id === id);
     if (chapter) {
       return { ...chapter, courseName: course.name };
@@ -670,51 +668,48 @@ const findChapterById = (id: number): Chapter | null => {
 };
 
 const filteredCourses = computed(() => {
-  let result = courses.value;
-  
-  // Filter by course type (official/custom)
-  result = result.filter(course => course.courseType === selectedCourseType.value);
-  
-  // Only filter by category for official courses
-  if (selectedCourseType.value === 'official') {
-    // Filter by category (first level tab)
-    result = result.filter(course => course.category === selectedSubTab.value);
-    
-    // Filter by sub category (second level tab) if selected
-    if (selectedSubTab2.value) {
-      result = result.filter(course => course.subCategory === selectedSubTab2.value);
+  // 自定义课程使用 customCourses
+  if (selectedCourseType.value === 'custom') {
+    let result = customCourses.value;
+    // Filter by search keyword (搜索课程名称和已加载的章节名称)
+    if (leftSearchKeyword.value) {
+      const keyword = leftSearchKeyword.value.toLowerCase();
+      result = result.filter(course => {
+        const courseNameMatch = course.name.toLowerCase().includes(keyword);
+        const chapterMatch = course.chapters.some(c => 
+          c.name.toLowerCase().includes(keyword)
+        );
+        return courseNameMatch || chapterMatch;
+      });
     }
+    return result;
   }
   
-  // Filter by search keyword
+  // 官方课程使用 courses（已经根据 menuId 加载了对应课程）
+  let result = courses.value;
+  
+  // Filter by search keyword (搜索课程名称和已加载的章节名称)
   if (leftSearchKeyword.value) {
     const keyword = leftSearchKeyword.value.toLowerCase();
-    // Filter courses and their chapters
-    result = result.map(course => {
-      const matchedChapters = course.chapters.filter(c => 
+    result = result.filter(course => {
+      const courseNameMatch = course.name.toLowerCase().includes(keyword);
+      const chapterMatch = course.chapters.some(c => 
         c.name.toLowerCase().includes(keyword)
       );
-      const courseNameMatch = course.name.toLowerCase().includes(keyword);
-      
-      // If course name matches, return all chapters
-      if (courseNameMatch) {
-        return course;
-      }
-      // If chapters match, return course with only matched chapters
-      if (matchedChapters.length > 0) {
-        return { ...course, chapters: matchedChapters };
-      }
-      return null;
-    }).filter((course): course is Course => course !== null);
+      return courseNameMatch || chapterMatch;
+    });
   }
   
   return result;
 });
 
 // Auto expand first course when filtered courses change
-watch(filteredCourses, (newCourses) => {
+watch(filteredCourses, async (newCourses) => {
   if (newCourses && newCourses.length > 0 && newCourses[0]) {
-    expandedCourses.value = [newCourses[0].id];
+    const firstCourseId = newCourses[0].id;
+    expandedCourses.value = [firstCourseId];
+    // 自动加载第一个课程的章节
+    await loadChapterList(firstCourseId);
   } else {
     expandedCourses.value = [];
   }
@@ -761,20 +756,13 @@ const filteredGroupedLinkedCourses = computed(() => {
   if (!rightSearchKeyword.value) return groupedLinkedCourses.value;
   const keyword = rightSearchKeyword.value.toLowerCase();
   
-  return groupedLinkedCourses.value.map(group => {
-    const matchedChapters = group.chapters.filter(c => 
+  return groupedLinkedCourses.value.filter(group => {
+    const courseNameMatch = group.courseName.toLowerCase().includes(keyword);
+    const chapterMatch = group.chapters.some(c => 
       c.name.toLowerCase().includes(keyword)
     );
-    const courseNameMatch = group.courseName.toLowerCase().includes(keyword);
-    
-    if (courseNameMatch) {
-      return group;
-    }
-    if (matchedChapters.length > 0) {
-      return { ...group, chapters: matchedChapters };
-    }
-    return null;
-  }).filter((group): group is LinkedCourseGroup => group !== null);
+    return courseNameMatch || chapterMatch;
+  });
 });
 
 // Toggle linked course expand
@@ -829,12 +817,14 @@ const toggleLinkedChapter = (chapterId: number) => {
   }
 };
 
-const toggleCourseExpand = (courseId: number) => {
+const toggleCourseExpand = async (courseId: number) => {
   const index = expandedCourses.value.indexOf(courseId);
   if (index > -1) {
     expandedCourses.value.splice(index, 1);
   } else {
     expandedCourses.value.push(courseId);
+    // 展开时加载章节列表
+    await loadChapterList(courseId);
   }
 };
 
@@ -875,33 +865,38 @@ const isChapterSelected = (chapterId: number) =>
 const isChapterLinked = (chapterId: number) =>
   linkedChapters.value.some(c => c.id === chapterId);
 
-// Check if all chapters of a course are linked
+// Check if all chapters of a course are linked (in right panel)
 const isCourseFullyLinked = (courseId: number) => {
-  const course = courses.value.find(c => c.id === courseId);
-  if (!course) return false;
+  // 从当前显示的课程列表中查找
+  const course = filteredCourses.value.find(c => c.id === courseId);
+  if (!course || course.chapters.length === 0) return false;
   return course.chapters.every(ch => isChapterLinked(ch.id));
 };
 
-// Check if some chapters of a course are linked
+// Check if some chapters of a course are linked (in right panel)
 const isCoursePartiallyLinked = (courseId: number) => {
-  const course = courses.value.find(c => c.id === courseId);
-  if (!course) return false;
+  const course = filteredCourses.value.find(c => c.id === courseId);
+  if (!course || course.chapters.length === 0) return false;
   const linkedCount = course.chapters.filter(ch => isChapterLinked(ch.id)).length;
   return linkedCount > 0 && linkedCount < course.chapters.length;
 };
 
 // Get course checkbox class
 const getCourseCheckClass = (courseId: number) => {
+  // 如果所有章节都已关联，显示灰色不可选
   if (isCourseFullyLinked(courseId)) {
     return 'bg-gray-300 border-gray-300 cursor-not-allowed';
   }
+  // 如果部分章节已关联，显示灰色但可选（选择未关联的章节）
   if (isCoursePartiallyLinked(courseId)) {
     return 'bg-gray-300 border-gray-300 cursor-pointer hover:border-[#FF9900]';
   }
+  // 正常选中状态
   const state = getCourseCheckState(courseId);
   if (state === 'full' || state === 'partial') {
     return 'bg-[#FF9900] border-[#FF9900] cursor-pointer hover:border-[#FF9900]';
   }
+  // 未选中状态
   return 'border-gray-300 cursor-pointer hover:border-[#FF9900]';
 };
 
@@ -914,25 +909,42 @@ const toggleChapter = (chapter: Chapter) => {
   }
 };
 
-const handleLink = () => {
+const handleLink = async () => {
   if (selectedChapters.value.length === 0) return;
+  if (!props.exerciseId) {
+    ElMessage.error('缺少练习题ID');
+    return;
+  }
   
-  selectedChapters.value.forEach((chapterId) => {
-    if (!linkedChapters.value.find((c) => c.id === chapterId)) {
-      const chapter = findChapterById(chapterId);
-      if (chapter) {
-        linkedChapters.value.push(chapter);
-        // Auto expand the linked course
-        if (!expandedLinkedCourses.value.includes(chapter.courseId)) {
-          expandedLinkedCourses.value.push(chapter.courseId);
+  try {
+    // 调用关联接口
+    await api.bindExerciseChapter({
+      exerciseId: props.exerciseId,
+      type: 1, // 1-关联
+      chapterIds: selectedChapters.value
+    });
+    
+    // 更新本地状态
+    selectedChapters.value.forEach((chapterId) => {
+      if (!linkedChapters.value.find((c) => c.id === chapterId)) {
+        const chapter = findChapterById(chapterId);
+        if (chapter) {
+          linkedChapters.value.push(chapter);
+          // Auto expand the linked course
+          if (!expandedLinkedCourses.value.includes(chapter.courseId)) {
+            expandedLinkedCourses.value.push(chapter.courseId);
+          }
         }
       }
-    }
-  });
-  selectedChapters.value = [];
-  
-  // Show success message
-  ElMessage.success(t('linkCourse.linkSuccess'));
+    });
+    selectedChapters.value = [];
+    
+    ElMessage.success(t('linkCourse.linkSuccess'));
+    emit('confirm');
+  } catch (error) {
+    console.error('关联课程章节失败:', error);
+    ElMessage.error('关联课程章节失败');
+  }
 };
 
 const removeLinked = (chapterId: number) => {
@@ -942,14 +954,32 @@ const removeLinked = (chapterId: number) => {
   }
 };
 
-const handleUnlink = () => {
-  // Remove selected linked chapters
-  if (selectedLinkedChapters.value.length > 0) {
+const handleUnlink = async () => {
+  if (selectedLinkedChapters.value.length === 0) return;
+  if (!props.exerciseId) {
+    ElMessage.error('缺少练习题ID');
+    return;
+  }
+  
+  try {
+    // 调用取消关联接口
+    await api.bindExerciseChapter({
+      exerciseId: props.exerciseId,
+      type: 2, // 2-取消关联
+      chapterIds: selectedLinkedChapters.value
+    });
+    
+    // 更新本地状态
     linkedChapters.value = linkedChapters.value.filter(
       c => !selectedLinkedChapters.value.includes(c.id)
     );
     selectedLinkedChapters.value = [];
+    
     ElMessage.success(t('linkCourse.unlinkSuccess'));
+    emit('confirm');
+  } catch (error) {
+    console.error('取消关联课程章节失败:', error);
+    ElMessage.error('取消关联课程章节失败');
   }
 };
 
