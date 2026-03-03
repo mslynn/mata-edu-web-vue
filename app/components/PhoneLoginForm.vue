@@ -15,6 +15,8 @@
         />
         <input 
           type="tel" 
+          inputmode="numeric"
+          :maxlength="phoneMaxLength"
           :value="modelValue.phone"
           @input="handleInput('phone', $event)"
           :placeholder="t('auth.pleaseInputPhone')"
@@ -33,6 +35,8 @@
         <img src="~/assets/images/code.png" alt="code" class="w-5 h-5 mr-3" />
         <input 
           type="text" 
+          inputmode="numeric"
+          maxlength="6"
           :value="modelValue.code"
           @input="handleInput('code', $event)"
           :placeholder="t('auth.pleaseInputCode')"
@@ -93,14 +97,27 @@ const emit = defineEmits<{
 const countdown = ref(0)
 const phoneErrorMsg = ref(t('auth.pleaseInputPhone'))
 const countryCode = ref('86') // 默认中国大陆
+const phoneMaxLength = ref(11)
 const countryCodeSelectorRef = ref<InstanceType<typeof import('./CountryCodeSelector.vue').default> | null>(null)
 
 const handleCountryChange = (country: Country) => {
+  phoneMaxLength.value = country.maxLength
+  // 区号切换后，同步截断已输入手机号
+  const trimmedPhone = (props.modelValue.phone || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
+  if (trimmedPhone !== props.modelValue.phone) {
+    emit('update:modelValue', {
+      ...props.modelValue,
+      phone: trimmedPhone
+    })
+  }
   emit('update:countryCode', country.code)
 }
 
 const handleInput = (field: 'phone' | 'code', event: Event) => {
-  const value = (event.target as HTMLInputElement).value
+  const rawValue = (event.target as HTMLInputElement).value
+  const value = field === 'phone'
+    ? rawValue.replace(/\D/g, '').slice(0, phoneMaxLength.value)
+    : rawValue.replace(/\D/g, '').slice(0, 6)
   emit('update:modelValue', {
     ...props.modelValue,
     [field]: value

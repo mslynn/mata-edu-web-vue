@@ -89,7 +89,7 @@
                   </template>
                 </MInput>
                 <span class="hidden xl:inline-block text-sm text-[#999] whitespace-nowrap">
-                  {{ $t('user.teacherDefaultPassword') }}<span class="text-[#4D4D4D]">{{ teacherPassword || 'xxxxxxxx'
+                  {{ $t('user.teacherDefaultPassword') }}<span class="text-[#4D4D4D]">{{ teacherDefaultPasswordDisplay
                     }}</span>
                 </span>
               </div>
@@ -170,9 +170,17 @@
             <div v-if="teacherActiveAction === 'batch'"
               class="flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] rounded-lg">
               <div class="flex items-center gap-4">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" :checked="isAllTeacherSelected" class="w-4 h-4 accent-[#FF9900]"
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" :checked="isAllTeacherSelected" class="sr-only"
                     @change="handleTeacherSelectAllToggle" />
+                  <span
+                    class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                    :class="isAllTeacherSelected ? 'bg-[#FF9900] border-[#FF9900]' : 'bg-white border-gray-300'"
+                  >
+                    <svg v-if="isAllTeacherSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
                   <span class="text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
                 </label>
                 <span class="text-sm text-[#4D4D4D]">
@@ -212,7 +220,7 @@
           </div>
 
           <!-- 学生管理 Tab -->
-          <div v-if="activeTab === 'student'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
+          <div v-if="activeTab === 'student'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0 min-w-0 overflow-visible">
             <!-- 搜索 + 统一密码 + 操作按钮 - 固定 -->
             <div
               class="flex flex-col lg:flex-row lg:flex-wrap items-start lg:items-center justify-between gap-3 mb-3 flex-shrink-0 min-w-0">
@@ -391,9 +399,17 @@
             <div v-if="activeAction === 'batch'"
               class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mt-3 p-2 sm:p-3 bg-[#FFF2DD] border-t border-gray-200 rounded-b-lg">
               <div class="flex items-center gap-3 sm:gap-4">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" :checked="isAllSelected" class="w-4 h-4 accent-[#FF9900]"
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" :checked="isAllSelected" class="sr-only"
                     @change="handleSelectAllToggle" />
+                  <span
+                    class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                    :class="isAllSelected ? 'bg-[#FF9900] border-[#FF9900]' : 'bg-white border-gray-300'"
+                  >
+                    <svg v-if="isAllSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
                   <span class="text-xs sm:text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
                 </label>
                 <span class="text-xs sm:text-sm text-[#4D4D4D]">{{ $t('class.selected') }}
@@ -537,9 +553,17 @@
             <div v-if="groupActiveAction === 'batch'"
               class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-3 p-2 lg:p-3 bg-[#FFF2DD] border-t border-gray-200 rounded-b-lg">
               <div class="flex items-center gap-2 lg:gap-4">
-                <label class="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" :checked="isAllGroupSelected" class="w-4 h-4 accent-[#FF9900]"
+                <label class="flex items-center gap-2 cursor-pointer select-none">
+                  <input type="checkbox" :checked="isAllGroupSelected" class="sr-only"
                     @change="handleGroupSelectAllToggle" />
+                  <span
+                    class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                    :class="isAllGroupSelected ? 'bg-[#FF9900] border-[#FF9900]' : 'bg-white border-gray-300'"
+                  >
+                    <svg v-if="isAllGroupSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </span>
                   <span class="text-xs lg:text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
                 </label>
                 <span class="text-xs lg:text-sm text-[#4D4D4D]">
@@ -613,8 +637,9 @@
           </div>
           <input ref="teacherFileInputRef" type="file" accept=".xlsx,.xls" class="hidden"
             @change="handleTeacherFileChange" />
-          <p class="text-[13px] text-[#999] leading-relaxed">{{ $t('user.batchImportTeacherTip') }}</p>
-          <p class="text-[13px] text-[#999] mt-1">{{ teacherPassword || 'XXXXXXX' }}</p>
+          <p class="text-[13px] text-[#999] leading-relaxed">
+            {{ $t('user.batchImportTeacherTip') }}<span class="whitespace-nowrap">{{ teacherDefaultPasswordDisplay }}</span>
+          </p>
         </div>
 
         <!-- 手动添加内容 -->
@@ -638,8 +663,9 @@
               />
             </div>
           </div>
-          <p class="text-[13px] text-[#999] mt-5 leading-relaxed">{{ $t('user.manualAddTeacherTip') }}</p>
-          <p class="text-[13px] text-[#999] mt-1">{{ teacherPassword || 'XXXXXXX' }}</p>
+          <p class="text-[13px] text-[#999] mt-5 leading-relaxed">
+            {{ $t('user.manualAddTeacherTip') }}<span class="whitespace-nowrap">{{ teacherDefaultPasswordDisplay }}</span>
+          </p>
         </div>
 
         <!-- 底部按钮 -->
@@ -664,13 +690,33 @@
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-[15px] text-[#4D4D4D] leading-relaxed" :class="isBatchDeleteTeacher ? 'mb-5 text-left' : 'mb-6 text-center'">{{ deleteTeacherConfirmText }}</p>
-        <input 
-          v-if="isBatchDeleteTeacher"
-          v-model="deleteTeacherPassword"
-          type="password"
-          :placeholder="t('user.pleaseInputTeacherPassword')"
-          class="w-full h-[50px] px-4 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors mb-6"
-        />
+        <div v-if="isBatchDeleteTeacher" class="relative mb-6">
+          <input
+            v-model="deleteTeacherPassword"
+            :type="showDeleteTeacherPassword ? 'text' : 'password'"
+            :placeholder="t('user.pleaseInputTeacherPassword')"
+            class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
+          />
+          <button
+            type="button"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#666]"
+            @click="showDeleteTeacherPassword = !showDeleteTeacherPassword"
+          >
+            <svg v-if="showDeleteTeacherPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          </button>
+        </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteTeacherModal = false">{{ $t('common.cancel') }}</button>
@@ -691,13 +737,33 @@
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-[15px] text-[#4D4D4D] leading-relaxed text-center" :class="isBatchResetTeacher ? 'mb-5 text-left' : 'mb-6'">{{ resetTeacherConfirmText }}</p>
-        <input 
-          v-if="isBatchResetTeacher"
-          v-model="resetTeacherPassword"
-          type="password"
-          :placeholder="t('user.pleaseInputTeacherPassword')"
-          class="w-full h-[50px] px-4 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors mb-6"
-        />
+        <div v-if="isBatchResetTeacher" class="relative mb-6">
+          <input
+            v-model="resetTeacherPassword"
+            :type="showResetTeacherPassword ? 'text' : 'password'"
+            :placeholder="t('user.pleaseInputTeacherPassword')"
+            class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
+          />
+          <button
+            type="button"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#666]"
+            @click="showResetTeacherPassword = !showResetTeacherPassword"
+          >
+            <svg v-if="showResetTeacherPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          </button>
+        </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showResetTeacherModal = false">{{ $t('common.cancel') }}</button>
@@ -726,7 +792,7 @@
         </div>
         <p v-if="importTeacherFileName" class="text-sm text-[#4CB9CF] text-center mb-4">{{ $t('user.selectedFile', { name: importTeacherFileName }) }}
         </p>
-        <p class="text-sm text-gray-400 flex-1">{{ $t('user.batchImportTeacherTip') }}{{ teacherPassword }}</p>
+        <p class="text-sm text-gray-400 flex-1">{{ $t('user.batchImportTeacherTip') }}{{ teacherDefaultPasswordDisplay }}</p>
         <div class="flex items-center justify-center gap-4 mt-auto pt-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showImportTeacherModal = false">{{ $t('common.cancel') }}</button>
@@ -973,20 +1039,45 @@
     <!-- 批量重置密码确认弹窗 -->
     <MModal v-model="showBatchResetPasswordModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
+      <div class="p-6 relative flex flex-col">
         <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-          @click="showBatchResetPasswordModal = false">
+          @click="closeBatchResetPasswordModal">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
-        <div class="flex-1 flex items-center justify-center px-4">
-          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmBatchResetPassword', { names: selectedStudentNames }) }}</p>
+        <p class="text-[15px] text-[#4D4D4D] text-center leading-relaxed mb-5">{{ $t('class.confirmBatchResetPassword', { names: selectedStudentNames }) }}</p>
+        <div class="relative mb-6">
+          <input
+            v-model="batchResetPassword"
+            :type="showBatchResetPassword ? 'text' : 'password'"
+            :placeholder="t('user.pleaseInputTeacherPassword')"
+            class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
+          />
+          <button
+            type="button"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#666]"
+            @click="showBatchResetPassword = !showBatchResetPassword"
+          >
+            <svg v-if="showBatchResetPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          </button>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showBatchResetPasswordModal = false">{{ $t('common.cancel') }}</button>
+            @click="closeBatchResetPasswordModal">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmBatchResetPassword">{{ $t('common.confirm') }}</button>
         </div>
@@ -996,19 +1087,44 @@
     <!-- 批量删除确认弹窗 -->
     <MModal v-model="showBatchDeleteModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showBatchDeleteModal = false">
+      <div class="p-6 relative flex flex-col">
+        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="closeBatchDeleteModal">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
-        <div class="flex-1 flex items-center justify-center px-4">
-          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmBatchDelete', { count: selectedStudentIds.length }) }}</p>
+        <p class="text-[15px] text-[#4D4D4D] text-center leading-relaxed mb-5">{{ $t('class.confirmBatchDelete', { count: selectedStudentIds.length }) }}</p>
+        <div class="relative mb-6">
+          <input
+            v-model="batchDeletePassword"
+            :type="showBatchDeletePassword ? 'text' : 'password'"
+            :placeholder="t('user.pleaseInputTeacherPassword')"
+            class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
+          />
+          <button
+            type="button"
+            class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#666]"
+            @click="showBatchDeletePassword = !showBatchDeletePassword"
+          >
+            <svg v-if="showBatchDeletePassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+            <svg v-else xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+              <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+              <path d="M14.12 14.12a3 3 0 1 1-4.24-4.24" />
+              <line x1="1" y1="1" x2="23" y2="23" />
+            </svg>
+          </button>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showBatchDeleteModal = false">{{ $t('common.cancel') }}</button>
+            @click="closeBatchDeleteModal">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="handleConfirmBatchDelete">{{ $t('common.confirm') }}</button>
         </div>
@@ -1309,6 +1425,7 @@ const teacherTabList = computed(() => [{ label: t('user.teacherManagement'), val
 const teacherActiveTab = ref('teacher')
 const teacherSearchKeyword = ref('')
 const teacherPassword = ref('')
+const teacherDefaultPasswordDisplay = computed(() => teacherPassword.value || '123456')
 type TeacherActionType = 'normal' | 'batch'
 const teacherActiveAction = ref<TeacherActionType>('normal')
 const teacherLoading = ref(false)
@@ -1339,10 +1456,12 @@ const teacherForm = reactive({ id: '', orgId: '', teacherName: '', phone: '', co
 const deleteTeacherConfirmText = ref('')
 const deleteTeacherIds = ref<string[]>([])
 const deleteTeacherPassword = ref('')
+const showDeleteTeacherPassword = ref(false)
 const isBatchDeleteTeacher = ref(false)
 const resetTeacherConfirmText = ref('')
 const resetTeacherIds = ref<string[]>([])
 const resetTeacherPassword = ref('')
+const showResetTeacherPassword = ref(false)
 const isBatchResetTeacher = ref(false)
 const teacherFileInputRef = ref<HTMLInputElement>()
 const importTeacherFile = ref<File | null>(null)
@@ -1436,7 +1555,7 @@ const handleTeacherSearch = () => {
 const fetchTeacherPassword = async () => {
   try {
     const pwd = await schoolUserApi.getTeacherPassword()
-    teacherPassword.value = pwd || 'xxxxxxxx'
+    teacherPassword.value = pwd || '123456'
   } catch (error) {
     console.error('获取教师密码失败', error)
   }
@@ -1520,7 +1639,10 @@ const handleConfirmTeacher = async () => {
       }
       showTeacherModal.value = false
       fetchTeacherList()
-    } catch (error: any) { ElMessage.error(error.message || t('common.failed')) }
+    } catch (error: any) {
+      // useHttp/useSchoolUser already show API error message; avoid duplicate toast here.
+      console.error('确认教师信息失败:', error)
+    }
   } else {
     // 批量导入模式
     if (!importTeacherFile.value) { ElMessage.warning(t('user.pleaseSelectFile')); return }
@@ -1530,7 +1652,10 @@ const handleConfirmTeacher = async () => {
       ElMessage.success(t('common.importSuccess'))
       showTeacherModal.value = false
       fetchTeacherList()
-    } catch (error: any) { ElMessage.error(error.message || t('common.importFailed')) }
+    } catch (error: any) {
+      // importTeacher already shows message in API layer; avoid duplicate toast here.
+      console.error('导入教师失败:', error)
+    }
   }
 }
 
@@ -1545,6 +1670,7 @@ const handleBatchDeleteTeacher = () => {
   deleteTeacherIds.value = [...selectedTeacherIds.value]
   deleteTeacherConfirmText.value = t('user.batchDeleteConfirmText', { count: selectedTeacherIds.value.length })
   deleteTeacherPassword.value = ''
+  showDeleteTeacherPassword.value = false
   isBatchDeleteTeacher.value = true
   showDeleteTeacherModal.value = true
 }
@@ -1564,6 +1690,7 @@ const handleConfirmDeleteTeacher = async () => {
     showDeleteTeacherModal.value = false
     selectedTeacherIds.value = []
     deleteTeacherPassword.value = ''
+    showDeleteTeacherPassword.value = false
     fetchTeacherList()
   } catch (error: any) { ElMessage.error(error.message || t('common.failed')) }
 }
@@ -1579,6 +1706,7 @@ const handleBatchResetTeacherPassword = () => {
   resetTeacherIds.value = [...selectedTeacherIds.value]
   resetTeacherConfirmText.value = t('user.batchResetConfirmText', { count: selectedTeacherIds.value.length })
   resetTeacherPassword.value = ''
+  showResetTeacherPassword.value = false
   isBatchResetTeacher.value = true
   showResetTeacherModal.value = true
 }
@@ -1597,6 +1725,7 @@ const handleConfirmResetTeacher = async () => {
     ElMessage.success(t('user.resetPasswordSuccess'))
     showResetTeacherModal.value = false
     resetTeacherPassword.value = ''
+    showResetTeacherPassword.value = false
   } catch (error: any) { ElMessage.error(error.message || t('user.resetPasswordFailed')) }
 }
 
@@ -1854,9 +1983,13 @@ const deletingStudent = ref<any>(null);
 
 // 批量重置密码确认弹窗
 const showBatchResetPasswordModal = ref(false);
+const batchResetPassword = ref("");
+const showBatchResetPassword = ref(false);
 
 // 批量删除确认弹窗
 const showBatchDeleteModal = ref(false);
+const batchDeletePassword = ref("");
+const showBatchDeletePassword = ref(false);
 
 // 批量移班弹窗
 const showBatchTransferModal = ref(false);
@@ -1918,7 +2051,14 @@ const loadClassList = async () => {
     if (treeData.value.length > 0 && treeData.value[0].children?.length > 0) {
       const firstGrade = treeData.value[0];
       const firstClass = firstGrade.children[0];
+      const isNewClass = selectedClass.value?.id !== firstClass.id;
       selectedClass.value = firstClass;
+      if (isNewClass) {
+        activeAction.value = null;
+        selectedStudentIds.value = [];
+        groupActiveAction.value = null;
+        selectedGroupIds.value = [];
+      }
       console.log('选中班级:', firstClass.id, '快捷登录班级:', quickLoginClassId.value);
       // 展开第一个年级
       if (!expandedKeys.value.includes(firstGrade.id)) {
@@ -1980,7 +2120,15 @@ const loadQuickLoginStatus = async () => {
 
 const handleTreeSelect = (node: any) => {
   if (!node.children) {
+    const isNewClass = selectedClass.value?.id !== node.id;
     selectedClass.value = node;
+    if (isNewClass) {
+      // Reset batch states when switching class to prevent cross-class state leakage.
+      activeAction.value = null;
+      selectedStudentIds.value = [];
+      groupActiveAction.value = null;
+      selectedGroupIds.value = [];
+    }
     // 根据当前 Tab 加载对应数据
     if (activeTab.value === 'group') {
       loadGroupList();
@@ -2131,17 +2279,29 @@ const handleSelectAllToggle = (e: Event) => { handleStudentSelectAll((e.target a
 
 const handleBatchDelete = () => {
   if (selectedStudentIds.value.length === 0) { ElMessage.warning(t('user.noStudentSelected')); return; }
+  batchDeletePassword.value = "";
+  showBatchDeletePassword.value = false;
   showBatchDeleteModal.value = true;
 };
 
+const closeBatchDeleteModal = () => {
+  showBatchDeleteModal.value = false;
+  batchDeletePassword.value = "";
+  showBatchDeletePassword.value = false;
+};
+
 const handleConfirmBatchDelete = async () => {
+  if (!batchDeletePassword.value.trim()) {
+    ElMessage.warning(t('user.pleaseInputTeacherPassword'));
+    return;
+  }
   try {
-    await removeStudent(selectedStudentIds.value.map(String));
+    await removeStudent(selectedStudentIds.value.map(String), batchDeletePassword.value);
     ElMessage.success(t('class.deletedStudents', { count: selectedStudentIds.value.length }));
     selectedStudentIds.value = [];
     loadStudentList();
   } catch (error) { console.error("批量删除失败:", error); }
-  finally { showBatchDeleteModal.value = false; }
+  finally { closeBatchDeleteModal(); }
 };
 
 const handleBatchTransfer = () => {
@@ -2165,20 +2325,34 @@ const handleConfirmBatchTransfer = async () => {
 
 const batchTransferClassOptions = computed(() => batchTransferClassList.value.map((cls: any) => ({ label: cls.className, value: cls.id })));
 
+const closeBatchResetPasswordModal = () => {
+  showBatchResetPasswordModal.value = false;
+  batchResetPassword.value = "";
+  showBatchResetPassword.value = false;
+};
+
 const handleBatchResetPassword = () => {
   if (selectedStudentIds.value.length === 0) { ElMessage.warning(t('user.noStudentSelected')); return; }
+  batchResetPassword.value = "";
+  showBatchResetPassword.value = false;
   showBatchResetPasswordModal.value = true;
 };
 
 const selectedStudentNames = computed(() => studentList.value.filter((s) => selectedStudentIds.value.includes(String(s.id))).map((s) => s.studentName).join(","));
 
 const handleConfirmBatchResetPassword = async () => {
+  if (!batchResetPassword.value.trim()) {
+    ElMessage.warning(t('user.pleaseInputTeacherPassword'));
+    return;
+  }
   try {
-    const data = await resetPassword(selectedStudentIds.value);
-    showBatchResetPasswordModal.value = false;
+    const data = await resetPassword(selectedStudentIds.value, batchResetPassword.value);
+    closeBatchResetPasswordModal();
     newPassword.value = data || "";
     showNewPasswordModal.value = true;
-  } catch (error) { console.error("批量重置密码失败:", error); showBatchResetPasswordModal.value = false; }
+  } catch (error) {
+    console.error("批量重置密码失败:", error);
+  }
 };
 
 const handleResetPassword = (row: any) => { resettingStudent.value = row; showResetPasswordModal.value = true; };

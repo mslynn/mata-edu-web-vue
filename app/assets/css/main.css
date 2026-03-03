@@ -491,3 +491,22 @@
   box-shadow: 0 0 0 1px #f56c6c inset;
 }
 
+/* 体验账号验证码按钮：单独样式，避免影响其他页面 */
+.trial-account-form .trial-send-code-btn {
+  margin-left: 8px;
+  min-width: 88px;
+  border: 1px solid #FFA54D;
+  border-radius: 16px;
+  padding: 4px 10px;
+  color: #FFA54D;
+  background: #fff7f0;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.trial-account-form .trial-send-code-btn.is-counting {
+  border-color: #FFA54D;
+  color: #ffffff;
+  background: #FFA54D;
+}
+

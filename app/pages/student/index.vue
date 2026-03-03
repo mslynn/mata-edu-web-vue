@@ -25,14 +25,14 @@
       
       <!-- 左侧 - 学习与任务中心 585x581 -->
       <aside class="left-panel p-4 flex-shrink-0">
-        <div class="border-2 border-dashed border-[#B8D4E8] rounded-lg p-6 h-[581px] cursor-pointer hover:bg-white/50 transition-colors" @click="$router.push('/student/lessonsrecord')">
+        <div class="border-2 border-dashed border-[#B8D4E8] rounded-lg p-6 h-[581px] cursor-pointer hover:bg-white/50 transition-colors" @click="goLessonsRecord">
           <div class="text-gray-600 text-sm font-medium mb-6">学习与任务中心</div>
           
           <!-- 上次课程 -->
           <div class="mb-6">
             <div class="text-gray-500 text-xs mb-2">上次课程</div>
             <div class="bg-[#F1F1F1] text-[#808080] rounded px-3 py-2 text-sm text-center  cursor-pointer">
-              第一单元 第十课
+              {{ learningCenterData.chapterName }}
             </div>
           </div>
           
@@ -40,7 +40,7 @@
           <div class="mb-6">
             <div class="text-gray-500 text-xs mb-2">未完成任务</div>
             <div class="bg-[#F1F1F1] text-[#808080] rounded px-3 py-2 text-sm text-center cursor-pointer">
-              第一单元 第十课
+              {{ learningCenterData.unCommitTaskNum }} 个
         </div>
       </div>
 
@@ -48,7 +48,7 @@
           <div>
             <div class="text-gray-500 text-xs mb-2">未完成评测</div>
             <div class="bg-[#F1F1F1] text-[#808080] rounded px-3 py-2 text-sm text-center cursor-pointer">
-              第一单元 第十课
+              {{ learningCenterData.unCommitTestNum }} 个
             </div>
           </div>
         </div>
@@ -126,6 +126,7 @@
 
 <script setup lang="ts">
 import { useAuth } from '~/composables/api/useAuth'
+import { student } from '~/composables/api/student'
 import { ElMessage } from '~/components/ui'
 
 definePageMeta({
@@ -134,6 +135,14 @@ definePageMeta({
 
 const config = useRuntimeConfig()
 const { logout } = useAuth()
+const { getStudentList } = student()
+const router = useRouter()
+
+const learningCenterData = reactive({
+  chapterName: '暂无',
+  unCommitTaskNum: 0,
+  unCommitTestNum: 0
+})
 
 // 上课通知弹窗
 const showClassNotification = ref(false)
@@ -147,9 +156,22 @@ const classInfo = ref({
 let notifyWs: WebSocket | null = null
 const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
 
+const loadLearningCenterData = async () => {
+  try {
+    const data = await getStudentList()
+    const source = data || {}
+    learningCenterData.chapterName = String(source.chapterName || '暂无')
+    learningCenterData.unCommitTaskNum = Number(source.unCommitTaskNum ?? 0) || 0
+    learningCenterData.unCommitTestNum = Number(source.unCommitTestNum ?? 0) || 0
+  } catch (error) {
+    console.error('获取学习与任务中心数据失败:', error)
+  }
+}
+
 // 连接 WebSocket 监听上课通知
 onMounted(() => {
   connectNotifyWebSocket()
+  loadLearningCenterData()
 })
 
 onUnmounted(() => {
@@ -196,7 +218,7 @@ const connectNotifyWebSocket = () => {
         console.log('[学生端首页] 收到上课通知，直接进入课堂！')
         
         // 直接跳转到课堂页面，不带参数
-        navigateTo('/student/classroom')
+        router.push('/student/classroom')
       }
       
       // 处理下课通知
@@ -216,6 +238,10 @@ const connectNotifyWebSocket = () => {
   notifyWs.onerror = (error) => {
     console.error('[学生端] WebSocket 错误:', error)
   }
+}
+
+const goLessonsRecord = () => {
+  router.push('/student/lessonsrecord')
 }
 
 const handleLogout = () => {

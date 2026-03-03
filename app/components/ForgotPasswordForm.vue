@@ -17,7 +17,9 @@
         <input 
           type="tel" 
           v-model="formData.phone"
-          @input="clearError('phone')"
+          inputmode="numeric"
+          :maxlength="phoneMaxLength"
+          @input="handlePhoneInput"
           :placeholder="t('auth.pleaseInputPhone')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
@@ -35,7 +37,9 @@
         <input 
           type="text" 
           v-model="formData.code"
-          @input="clearError('code')"
+          inputmode="numeric"
+          maxlength="6"
+          @input="handleCodeInput"
           :placeholder="t('auth.pleaseInputCode')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
         />
@@ -134,7 +138,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
 
 const { $i18n } = useNuxtApp()
@@ -151,6 +155,7 @@ const countryCode = ref('86')
 const countdown = ref(0)
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
+const phoneMaxLength = computed(() => (countryCode.value === '852' ? 8 : 11))
 
 const formData = reactive({
   phone: '',
@@ -168,6 +173,16 @@ const errors = reactive({
 
 const clearError = (field: keyof typeof errors) => {
   errors[field] = ''
+}
+
+const handlePhoneInput = () => {
+  formData.phone = formData.phone.replace(/\D/g, '').slice(0, phoneMaxLength.value)
+  clearError('phone')
+}
+
+const handleCodeInput = () => {
+  formData.code = formData.code.replace(/\D/g, '').slice(0, 6)
+  clearError('code')
 }
 
 // 校验手机号格式

@@ -70,6 +70,7 @@
     "classCodeLogin": "Class code login",
     "classCodePasswordTip": "Please enter the class code and password",
     "codeSendFailed": "Failed to send verification code",
+    "codeSendSuccess": "Verification code sent successfully",
     "confirmNewPassword": "Please re-enter a new password",
     "forgotPassword": "Forgot password",
     "getCode": "Get verification code",
@@ -263,6 +264,7 @@
     "transferredStudents": "{count} students have been transferred to the new class",
     "unifiedPassword": "Unified login password:",
     "validFor2Hours": "Valid for 2 hours,",
+    "groupUnit": "Groups",
     "person": "Students"
   },
   "classroom": {

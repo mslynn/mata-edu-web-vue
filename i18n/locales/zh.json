@@ -95,13 +95,14 @@
     "userAgreement": "《用户协议》",
     "and": "及",
     "privacyPolicy": "《隐私协议》",
-    "agreementTip": "我已阅读同意用户协议，隐私协议。",
+    "agreementTip": "我已阅读并同意《用户协议》《隐私协议》。",
     "tips": "提示",
     "submit": "提交",
     "phoneError11": "请输入正确的11位手机号",
     "phoneError8": "请输入正确的8位香港手机号",
     "phoneErrorGeneral": "请输入正确的手机号",
     "codeSendFailed": "验证码发送失败",
+    "codeSendSuccess": "验证码发送成功",
     "sendCode": "发送验证码",
     "welcomeApplyTrial": "欢迎申请开通玛塔智慧教育平台",
     "name": "姓名",
@@ -312,7 +313,7 @@
     "studentDefaultPasswordIs": "学生默认密码为: ",
     "enableQuickLogin": "启用快捷登录",
     "disableQuickLogin": "停用快捷登录",
-    "quickLoginTip": "您已经在其他班级创建了班级码",
+    "quickLoginTip": "您已经在其他班级创建了快捷登录",
     "exportStudentInfo": "导出学生信息",
     "unifiedPassword": "统一登录密码：",
     "validFor2Hours": "有效时长为2小时，",
@@ -619,6 +620,7 @@
     "pleaseInputTransferTeacherName": "请输入可转让教师姓名",
     "pleaseInputTeacherPassword": "请输入教师帐号密码",
     "groupCount": "小组数量：",
+    "groupUnit": "组",
     "person": "人"
   },
   "teacher": {
@@ -737,7 +739,7 @@
   "studentManage": {
     "title": "学生管理",
     "groupManage": "小组管理",
-    "searchStudentPlaceholder": "请输入学生账号及学生姓名",
+    "searchStudentPlaceholder": "请输入小组的名称或学生姓名",
     "searchGroupPlaceholder": "请输入小组名称及组长姓名",
     "enableQuickLogin": "启用快捷登录",
     "disableQuickLogin": "停用快捷登录",
@@ -934,7 +936,7 @@
     "collapse": "收起"
   },
   "taskManagement": {
-    "title": "任务管理",
+    "title": "作品管理",
     "customExercise": "自定义练习题",
     "courseTasks": "课程任务",
     "courseAssessment": "课程测评",

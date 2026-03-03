@@ -222,6 +222,8 @@ export const useAuth = () => {
         organizationName,
         purpose,
         product
+      }, {
+        'ignoreAuthError': 'true'
       })
       return response
     } catch (error: any) {

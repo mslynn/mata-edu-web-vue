@@ -75,7 +75,7 @@
                             <!-- 下拉选项 -->
                             <Transition name="dropdown">
                                 <div v-if="showStatusDropdown"
-                                    class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-[5]">
+                                    class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-[200]">
                                     <div v-for="option in statusOptions" :key="option.value"
                                         class="px-3 py-2 text-sm cursor-pointer transition-colors" :class="[
                                             courseStatus === option.value
@@ -114,7 +114,18 @@
 
             <!-- 课程列表区域 -->
             <div class="flex-1 bg-white rounded-lg border border-dashed border-gray-300 p-6 overflow-auto">
-                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                <!-- 骨架屏 -->
+                <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                    <div v-for="i in 10" :key="i" class="w-full aspect-[265/380] rounded-[20px] border border-gray-200 pt-[5%] px-[8%]">
+                        <el-skeleton animated :rows="0">
+                            <template #template>
+                                <el-skeleton-item variant="rect" style="width: 100%; aspect-ratio: 220/276; border-radius: 5px; margin-bottom: 12px" />
+                                <el-skeleton-item variant="text" style="width: 70%; margin: 0 auto; display: block" />
+                            </template>
+                        </el-skeleton>
+                    </div>
+                </div>
+                <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     <NuxtLink v-for="course in courseList" :key="course.id" :to="`/system/course/${course.id}`"
                         class="course-card w-full aspect-[265/380] rounded-[20px] border border-gray-200 shadow-sm cursor-pointer group pt-[5%] px-[8%]">
                         <!-- 课程封面 -->
@@ -189,7 +200,7 @@
                                 {{ statusConfig[course.status]?.label }}
                             </span>
                             <!-- 封面图片 -->
-                            <img v-if="course.cover" :src="course.cover" alt="课程封面" class="absolute inset-0 w-full h-full object-cover" />
+                            <img v-if="course.cover" :src="course.cover" alt="课程封面" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
                             <!-- 无封面时显示占位 -->
                             <template v-else>
                                 <div class="absolute inset-0 flex items-center justify-center">
@@ -210,7 +221,7 @@
                 </div>
 
                 <!-- 空状态 -->
-                <div v-if="!courseList.length" class="flex flex-col items-center justify-center h-full text-gray-400">
+                <div v-if="!loading && !courseList.length" class="flex flex-col items-center justify-center h-full text-gray-400">
                     <p>{{ $t('course.noChapter') }}</p>
                 </div>
             </div>

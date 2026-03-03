@@ -6,277 +6,515 @@
       <section class="left-section">
         <!-- 顶部三个授课卡片 -->
         <div class="top-cards">
-          <!-- 备课 -->
-          <div class="action-card" @click="goToLessons">
-            <img src="~/assets/images/one.png" :alt="$t('teacher.prepare')" class="card-icon" />
-            <span class="card-label">{{ $t('teacher.prepare') }}</span>
-          </div>
+          <template v-if="pageLoading">
+            <div v-for="i in 3" :key="i" class="action-card skeleton-card">
+              <el-skeleton animated :rows="0">
+                <template #template>
+                  <div
+                    style="
+                      display: flex;
+                      flex-direction: column;
+                      align-items: center;
+                      justify-content: center;
+                      height: 100%;
+                    "
+                  >
+                    <el-skeleton-item
+                      variant="rect"
+                      style="width: 120px; height: 120px; border-radius: 12px"
+                    />
+                    <el-skeleton-item
+                      variant="text"
+                      style="width: 60px; margin-top: 16px"
+                    />
+                  </div>
+                </template>
+              </el-skeleton>
+            </div>
+          </template>
+          <template v-else>
+            <!-- 备课 -->
+            <div class="action-card" @click="goToLessons">
+              <img
+                src="~/assets/images/one.png"
+                :alt="$t('teacher.prepare')"
+                class="card-icon"
+              />
+              <span class="card-label">{{ $t("teacher.prepare") }}</span>
+            </div>
 
-          <!-- 授课 -->
-          <div class="action-card" @click="handleGoToClass">
-            <img src="~/assets/images/two.png" :alt="$t('teacher.teach')" class="card-icon" />
-            <span class="card-label">{{ $t('teacher.teach') }}</span>
-          </div>
+            <!-- 授课 -->
+            <div class="action-card" @click="handleGoToClass">
+              <img
+                src="~/assets/images/two.png"
+                :alt="$t('teacher.teach')"
+                class="card-icon"
+              />
+              <span class="card-label">{{ $t("teacher.teach") }}</span>
+            </div>
 
-          <!-- 作业 -->
-          <div class="action-card" @click="handleGoToTask">
-            <img src="~/assets/images/three.png" :alt="$t('teacher.homework')" class="card-icon" />
-            <span class="card-label">{{ $t('teacher.homework') }}</span>
-          </div>
+            <!-- 作业 -->
+            <div class="action-card" @click="handleGoToTask">
+              <img
+                src="~/assets/images/three.png"
+                :alt="$t('teacher.homework')"
+                class="card-icon"
+              />
+              <span class="card-label">{{ $t("teacher.homework") }}</span>
+            </div>
+          </template>
         </div>
 
         <!-- 下方内容区 -->
         <div class="bottom-section">
-          <!-- 左侧：授课记录 -->
-          <div class="lesson-record">
-            <!-- 有授课记录时显示 -->
-            <template v-if="teachList.length > 0">
-              <div class="section-header">
-                <span class="section-title">{{ $t('teacher.teachingRecord') }}</span>
-                <MSelect 
-                  v-model="selectedClassId" 
-                  :options="classOptions" 
-                  value-key="value" 
-                  label-key="label"
-                  :placeholder="$t('teacher.selectClass')"
-                  class="class-select"
-                />
-              </div>
-              
-              <div class="course-select-container" @mouseenter="showCoursePopover = true" @mouseleave="showCoursePopover = false">
-                <MSelect 
-                  v-model="selectedCourseId" 
-                  :options="courseOptions" 
-                  value-key="value" 
-                  label-key="label"
-                  :placeholder="$t('teacher.selectCourse')"
-                  class="course-select"
-                />
-                <Transition name="fade">
-                  <div v-if="showCoursePopover && selectedCourse?.courseName" class="course-tooltip">
-                    {{ selectedCourse?.courseName }}
-                    <div class="tooltip-arrow"></div>
+          <!-- 骨架屏状态 -->
+          <template v-if="pageLoading">
+            <div class="lesson-record">
+              <el-skeleton animated :rows="0">
+                <template #template>
+                  <div
+                    style="
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      margin-bottom: 12px;
+                    "
+                  >
+                    <el-skeleton-item variant="text" style="width: 80px" />
+                    <el-skeleton-item
+                      variant="rect"
+                      style="width: 120px; height: 32px; border-radius: 4px"
+                    />
                   </div>
-                </Transition>
-              </div>
-              
-              <div class="lesson-card" @click="goToCourse">
-                <img 
-                  v-if="selectedCourse?.courseCoverUrl" 
-                  :src="selectedCourse.courseCoverUrl" 
-                  :alt="$t('common.courseCover')" 
-                  class="lesson-cover"
-                />
-                <div v-else class="lesson-cover lesson-cover-placeholder"></div>
-              </div>
-            </template>
-            <!-- 无授课记录时显示 -->
-            <template v-else>
-              <div class="section-header">
-                <span class="section-title">{{ $t('teacher.teachingRecord') }}</span>
-              </div>
-              <div class="empty-record">{{ $t('teacher.noTeachingRecord') }}</div>
-            </template>
-          </div>
-          
-          <!-- 中间：章节列表 -->
-          <div class="chapter-section">
-            <div class="section-header">
-              <div class="login-btn-wrapper" @mouseenter="showLoginPopover = true" @mouseleave="showLoginPopover = false">
-                <MButton size="medium" class="quick-login-btn" @click="handleQuickLoginBtnClick">
-                  {{ quickLoginCode ? $t('teacher.viewLoginStatus') : $t('teacher.studentQuickLogin') }}
-                </MButton>
-                <!-- 气泡弹窗 -->
-                <div v-show="showLoginPopover" class="login-popover">
-                  <div class="popover-arrow"></div>
-                  <div class="popover-content">
-                    <!-- 未开启快捷登录时显示提示 -->
-                    <template v-if="!quickLoginCode">
-                      <div class="popover-tip">{{ $t('teacher.quickLoginTip') }}</div>
-                    </template>
-                    <!-- 已开启快捷登录时显示详情 -->
-                    <template v-else>
-                      <div class="popover-title">{{ selectedClassName }}</div>
-                      <div class="popover-expire">（{{ $t('teacher.validFor2Hours') }}{{ quickLoginExpire }}{{ $t('teacher.expire') }}）</div>
-                      <div class="popover-info-card">
-                        <div class="popover-info-text">
-                          <div>{{ $t('teacher.classCode') }}{{ quickLoginCode }}</div>
-                          <div>{{ $t('teacher.unifiedPassword') }}{{ quickLoginPwd }}</div>
-                        </div>
-                        <button class="copy-btn" @click="copyCode">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                          </svg>
-                          {{ $t('common.copy') }}
-                        </button>
-                      </div>
-                    </template>
-                  </div>
-                </div>
-              </div>
+                  <el-skeleton-item
+                    variant="rect"
+                    style="
+                      width: 100%;
+                      height: 32px;
+                      border-radius: 4px;
+                      margin-bottom: 12px;
+                    "
+                  />
+                  <el-skeleton-item
+                    variant="rect"
+                    style="width: 100%; height: 200px; border-radius: 8px"
+                  />
+                </template>
+              </el-skeleton>
             </div>
-            <div class="chapter-grid-wrapper">
-              <div class="chapter-grid">
-                <div 
-                  v-for="chapter in chapterList" 
-                  :key="chapter.chapterId" 
-                  class="chapter-item"
-                  :class="{ 'is-selected': selectedChapterId === chapter.chapterId }"
-                  @click="selectedChapterId = chapter.chapterId"
+            <div class="chapter-section" style="overflow: hidden">
+              <el-skeleton animated :rows="0">
+                <template #template>
+                  <div style="margin-bottom: 16px">
+                    <el-skeleton-item
+                      variant="rect"
+                      style="width: 140px; height: 36px; border-radius: 6px"
+                    />
+                  </div>
+                  <div class="chapter-grid">
+                    <div v-for="i in 3" :key="i" class="chapter-item">
+                      <el-skeleton-item
+                        variant="rect"
+                        style="width: 100%; height: 180px; border-radius: 8px"
+                      />
+                    </div>
+                  </div>
+                </template>
+              </el-skeleton>
+            </div>
+          </template>
+          <!-- 真实内容 -->
+          <template v-else>
+            <!-- 左侧：授课记录 -->
+            <div class="lesson-record">
+              <!-- 有授课记录时显示 -->
+              <template v-if="teachList.length > 0">
+                <div class="section-header">
+                  <span class="section-title">{{ $t("teacher.teachingRecord") }}</span>
+                  <MSelect
+                    v-model="selectedClassId"
+                    :options="classOptions"
+                    value-key="value"
+                    label-key="label"
+                    :placeholder="$t('teacher.selectClass')"
+                    class="class-select"
+                  />
+                </div>
+
+                <div
+                  class="course-select-container"
+                  @mouseenter="showCoursePopover = true"
+                  @mouseleave="showCoursePopover = false"
                 >
-                  <div class="chapter-card">
-                    <span 
-                      class="status-tag"
-                      :class="{
-                        'status-ended': getChapterStatus(chapter) === 0,
-                        'status-not-started': getChapterStatus(chapter) === 1,
-                        'status-last': getChapterStatus(chapter) === 2,
-                        'status-ongoing': getChapterStatus(chapter) === 3
-                      }"
+                  <MSelect
+                    v-model="selectedCourseId"
+                    :options="courseOptions"
+                    value-key="value"
+                    label-key="label"
+                    :placeholder="$t('teacher.selectCourse')"
+                    class="course-select"
+                  />
+                  <Transition name="fade">
+                    <div
+                      v-if="showCoursePopover && selectedCourse?.courseName"
+                      class="course-tooltip"
                     >
-                      {{ getChapterStatusText(chapter) }}
-                    </span>
-                    <span class="chapter-name" v-html="formatChapterName(chapter.chapterName)"></span>
-                    <div class="chapter-actions">
-                      <button class="action-btn teach-btn" @click.stop="goToTeach(chapter)">
-                        {{ chapter.teachStatus === 1 ? $t('teacher.backToClassroom') : (chapter.teachStatus === 2 ? $t('teacher.classAgain') : $t('teacher.goToClass')) }}
-                      </button>
-                      <button v-if="chapter.teachStatus !== 1" class="action-btn prepare-btn" @click.stop="goToPrepare(chapter)">
-                        {{ chapter.teachStatus === 2 ? $t('teacher.continuePrepare') : $t('teacher.goToPrepare') }}
-                      </button>
+                      {{ selectedCourse?.courseName }}
+                      <div class="tooltip-arrow"></div>
+                    </div>
+                  </Transition>
+                </div>
+
+                <div class="lesson-card" @click="goToCourse">
+                  <img
+                    v-if="selectedCourse?.courseCoverUrl"
+                    :src="selectedCourse.courseCoverUrl"
+                    :alt="$t('common.courseCover')"
+                    class="lesson-cover"
+                  />
+                  <div v-else class="lesson-cover lesson-cover-placeholder"></div>
+                </div>
+              </template>
+              <!-- 无授课记录时显示 -->
+              <template v-else>
+                <div class="section-header">
+                  <span class="section-title">{{ $t("teacher.teachingRecord") }}</span>
+                </div>
+                <div class="empty-record">{{ $t("teacher.noTeachingRecord") }}</div>
+              </template>
+            </div>
+
+            <!-- 中间：章节列表 -->
+            <div class="chapter-section">
+              <div class="section-header">
+                <div
+                  class="login-btn-wrapper"
+                  @mouseenter="showLoginPopover = true"
+                  @mouseleave="showLoginPopover = false"
+                >
+                  <MButton
+                    size="medium"
+                    class="quick-login-btn"
+                    @click="handleQuickLoginBtnClick"
+                  >
+                    {{
+                      quickLoginCode
+                        ? $t("teacher.viewLoginStatus")
+                        : $t("teacher.studentQuickLogin")
+                    }}
+                  </MButton>
+                  <!-- 气泡弹窗 -->
+                  <div v-show="showLoginPopover" class="login-popover">
+                    <div class="popover-arrow"></div>
+                    <div class="popover-content">
+                      <!-- 未开启快捷登录时显示提示 -->
+                      <template v-if="!quickLoginCode">
+                        <div class="popover-tip">{{ $t("teacher.quickLoginTip") }}</div>
+                      </template>
+                      <!-- 已开启快捷登录时显示详情 -->
+                      <template v-else>
+                        <div class="popover-title">{{ selectedClassName }}</div>
+                        <div class="popover-expire">
+                          （{{ $t("teacher.validFor2Hours") }}{{ quickLoginExpire
+                          }}{{ $t("teacher.expire") }}）
+                        </div>
+                        <div class="popover-info-card">
+                          <div class="popover-info-text">
+                            <div>{{ $t("teacher.classCode") }}{{ quickLoginCode }}</div>
+                            <div>
+                              {{ $t("teacher.unifiedPassword") }}{{ quickLoginPwd }}
+                            </div>
+                          </div>
+                          <button class="copy-btn" @click="copyCode">
+                            <svg
+                              width="14"
+                              height="14"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                            >
+                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                              <path
+                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+                              />
+                            </svg>
+                            {{ $t("common.copy") }}
+                          </button>
+                        </div>
+                      </template>
                     </div>
                   </div>
                 </div>
-                <div v-if="chapterList.length === 0" class="empty-chapter">{{ $t('teacher.noChapter') }}</div>
+              </div>
+              <div class="chapter-grid-wrapper">
+                <div class="chapter-grid">
+                  <div
+                    v-for="chapter in chapterList"
+                    :key="chapter.chapterId"
+                    class="chapter-item"
+                    :class="{ 'is-selected': selectedChapterId === chapter.chapterId }"
+                    @click="selectedChapterId = chapter.chapterId"
+                  >
+                    <div class="chapter-card">
+                      <span
+                        class="status-tag"
+                        :class="{
+                          'status-ended': getChapterStatus(chapter) === 0,
+                          'status-not-started': getChapterStatus(chapter) === 1,
+                          'status-last': getChapterStatus(chapter) === 2,
+                          'status-ongoing': getChapterStatus(chapter) === 3,
+                        }"
+                      >
+                        {{ getChapterStatusText(chapter) }}
+                      </span>
+                      <span class="chapter-name">{{
+                        formatChapterName(chapter.chapterName)
+                      }}</span>
+                      <div class="chapter-actions">
+                        <button
+                          class="action-btn teach-btn"
+                          @click.stop="goToTeach(chapter)"
+                        >
+                          {{
+                            chapter.teachStatus === 1
+                              ? $t("teacher.backToClassroom")
+                              : chapter.teachStatus === 2
+                              ? $t("teacher.classAgain")
+                              : $t("teacher.goToClass")
+                          }}
+                        </button>
+                        <button
+                          v-if="chapter.teachStatus !== 1"
+                          class="action-btn prepare-btn"
+                          @click.stop="goToPrepare(chapter)"
+                        >
+                          {{
+                            chapter.teachStatus === 2
+                              ? $t("teacher.continuePrepare")
+                              : $t("teacher.goToPrepare")
+                          }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="chapterList.length === 0" class="empty-chapter">
+                    {{ $t("teacher.noChapter") }}
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
+          </template>
         </div>
       </section>
 
       <!-- 右侧边栏 -->
       <aside class="right-sidebar">
-        <!-- 玛塔工具中心 -->
-        <div class="sidebar-card">
-          <div class="sidebar-header">
-            <span class="sidebar-title">{{ $t('teacher.mataToolCenter') }}</span>
-            <img src="~/assets/images/diandian.png" alt="more" class="more-icon" @click="goToToolCenter" />
+        <template v-if="pageLoading">
+          <!-- 工具中心骨架 -->
+          <div class="sidebar-card">
+            <el-skeleton animated :rows="0">
+              <template #template>
+                <div class="sidebar-header">
+                  <el-skeleton-item variant="text" style="width: 100px" />
+                </div>
+                <div class="tool-list">
+                  <div v-for="i in 3" :key="i" class="tool-item">
+                    <el-skeleton-item
+                      variant="rect"
+                      style="width: 90px; height: 90px; border-radius: 8px"
+                    />
+                    <el-skeleton-item
+                      variant="text"
+                      style="width: 50px; margin-top: 8px"
+                    />
+                  </div>
+                </div>
+              </template>
+            </el-skeleton>
           </div>
-          <div class="tool-list">
-            <div class="tool-item" @click="handleOpenTool('vincibot')">
-              <div class="tool-icon">
-                <img src="../assets/images/tool1.png" alt="VinciBot" />
-              </div>
-              <span class="tool-name">VinciBot</span>
-            </div>
-            
-            <div class="tool-item" @click="handleOpenTool('nous')">
-              <div class="tool-icon">
-                <img src="../assets/images/tool2.png" alt="Nous" />
-              </div>
-              <span class="tool-name">Nous</span>
-            </div>
-               <div class="tool-item">
-              <div class="tool-icon">
-                <img src="../assets/images/tool3.png" alt="Nous" />
-              </div>
-              <span class="tool-name">MatataCode</span>
-            </div>
+          <!-- AI 实践中心骨架 -->
+          <div class="sidebar-card">
+            <el-skeleton animated :rows="0">
+              <template #template>
+                <div class="sidebar-header">
+                  <el-skeleton-item variant="text" style="width: 100px" />
+                </div>
+                <div class="tool-list">
+                  <div v-for="i in 4" :key="i" class="tool-item">
+                    <el-skeleton-item
+                      variant="rect"
+                      style="width: 90px; height: 90px; border-radius: 8px"
+                    />
+                    <el-skeleton-item
+                      variant="text"
+                      style="width: 50px; margin-top: 8px"
+                    />
+                  </div>
+                </div>
+              </template>
+            </el-skeleton>
           </div>
-        </div>
-
-        <!-- AI实践中心 -->
-        <div class="sidebar-card">
-          <div class="sidebar-header">
-            <span class="sidebar-title">{{ $t('teacher.aiPracticeCenter') }}</span>
-            <img src="~/assets/images/diandian.png" alt="more" class="more-icon" />
-          </div>
-          <div class="tool-list">
-            <div class="tool-item" @click="handleOpenAIModal('imageClassModel')">
-              <div class="tool-icon">
-                <img src="~/assets/images/1.svg" alt="图像分类" />
-              </div>
-              <span class="tool-name">{{ $t('ai.imageClassModel') }}</span>
-            </div>
-            <div class="tool-item" @click="handleOpenAIModal('gestureClassModel')">
-              <div class="tool-icon">
-                <img src="~/assets/images/2.svg" alt="手势分类" />
-              </div>
-              <span class="tool-name">{{ $t('ai.gestureClassModel') }}</span>
-            </div>
-            <div class="tool-item" @click="handleOpenAIModal('voiceClassModel')">
-              <div class="tool-icon">
-                <img src="~/assets/images/3.svg" alt="语音分类" />
-              </div>
-              <span class="tool-name">{{ $t('ai.voiceClassModel') }}</span>
-            </div>
-            <div class="tool-item" @click="handleOpenAIModal('poseClassModel')">
-              <div class="tool-icon">
-                <img src="~/assets/images/4.svg" alt="姿态分类" />
-              </div>
-              <span class="tool-name">{{ $t('ai.poseClassModel') }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- AI 项目名称输入弹窗 -->
-        <div v-if="showAIModal" class="modal-overlay" @click.self="showAIModal = false">
-          <div class="modal-content">
-            <div class="modal-header">
-              <span class="modal-title">{{ $t('ai.createProject') }}</span>
-              <button class="close-btn" @click="showAIModal = false">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div class="modal-body">
-              <div class="form-item">
-                <span class="form-label">{{ $t('ai.modelName') }}</span>
-                <input 
-                  v-model="aiModelName" 
-                  type="text" 
-                  class="form-input" 
-                  :placeholder="$t('ai.inputModelName')"
-                  @keyup.enter="handleAIConfirm"
+          <!-- 信息栏骨架 -->
+          <div class="info-section">
+            <el-skeleton animated :rows="0">
+              <template #template>
+                <el-skeleton-item
+                  variant="text"
+                  style="width: 60px; margin-bottom: 12px"
                 />
+                <div class="info-grid">
+                  <div v-for="i in 4" :key="i" class="info-card">
+                    <el-skeleton-item
+                      variant="text"
+                      style="width: 60px; margin-bottom: 8px"
+                    />
+                    <el-skeleton-item variant="text" style="width: 40px; height: 28px" />
+                  </div>
+                </div>
+              </template>
+            </el-skeleton>
+          </div>
+        </template>
+        <template v-else>
+          <!-- 玛塔工具中心 -->
+          <div class="sidebar-card">
+            <div class="sidebar-header">
+              <span class="sidebar-title">{{ $t("teacher.mataToolCenter") }}</span>
+              <img
+                src="~/assets/images/diandian.png"
+                alt="more"
+                class="more-icon"
+                @click="goToToolCenter"
+              />
+            </div>
+            <div class="tool-list">
+              <div class="tool-item" @click="handleOpenTool('vincibot')">
+                <div class="tool-icon">
+                  <img src="../assets/images/tool1.png" alt="VinciBot" />
+                </div>
+                <span class="tool-name">VinciBot</span>
+              </div>
+
+              <div class="tool-item" @click="handleOpenTool('nous')">
+                <div class="tool-icon">
+                  <img src="../assets/images/tool2.png" alt="Nous" />
+                </div>
+                <span class="tool-name">Nous</span>
+              </div>
+              <div class="tool-item" @click="handleOpenTool('talemap')">
+                <div class="tool-icon">
+                  <img src="../assets/images/too4.png" alt="Nous" />
+                </div>
+                <span class="tool-name">MatataCode(TaleMap)</span>
               </div>
             </div>
-            <div class="modal-footer">
-              <button class="btn-cancel" @click="showAIModal = false">{{ $t('common.cancel') }}</button>
-              <button class="btn-confirm" @click="handleAIConfirm">{{ $t('common.confirm') }}</button>
-            </div>
           </div>
-        </div>
 
-        <!-- 信息栏 -->
-        <div class="info-section">
-          <div class="sidebar-title mb-3">{{ $t('teacher.infoBar') }}</div>
-          <div class="info-grid">
-            <div class="info-card">
-              <div class="info-label">{{ $t('teacher.classCount') }}</div>
-              <div class="info-value">8</div>
+          <!-- AI实践中心 -->
+          <div class="sidebar-card">
+            <div class="sidebar-header">
+              <span class="sidebar-title">{{ $t("teacher.aiPracticeCenter") }}</span>
+              <img src="~/assets/images/diandian.png" alt="more" class="more-icon" />
             </div>
-            <div class="info-card">
-              <div class="info-label">{{ $t('teacher.submittedWorks') }}</div>
-              <div class="info-value">1208</div>
-            </div>
-            <div class="info-card">
-              <div class="info-label">{{ $t('teacher.teachingHours') }}</div>
-              <div class="info-value">50</div>
-            </div>
-            <div class="info-card">
-              <div class="info-label">{{ $t('teacher.studentCount') }}</div>
-              <div class="info-value">80</div>
+            <div class="tool-list">
+              <div class="tool-item" @click="handleOpenAIModal('imageClassModel')">
+                <div class="tool-icon">
+                  <img src="~/assets/images/1.svg" alt="图像分类" />
+                </div>
+                <span class="tool-name">{{ $t("ai.imageClassModel") }}</span>
+              </div>
+              <div class="tool-item" @click="handleOpenAIModal('gestureClassModel')">
+                <div class="tool-icon">
+                  <img src="~/assets/images/2.svg" alt="手势分类" />
+                </div>
+                <span class="tool-name">{{ $t("ai.gestureClassModel") }}</span>
+              </div>
+              <div class="tool-item" @click="handleOpenAIModal('voiceClassModel')">
+                <div class="tool-icon">
+                  <img src="~/assets/images/3.svg" alt="语音分类" />
+                </div>
+                <span class="tool-name">{{ $t("ai.voiceClassModel") }}</span>
+              </div>
+              <div class="tool-item" @click="handleOpenAIModal('poseClassModel')">
+                <div class="tool-icon">
+                  <img src="~/assets/images/4.svg" alt="姿态分类" />
+                </div>
+                <span class="tool-name">{{ $t("ai.poseClassModel") }}</span>
+              </div>
             </div>
           </div>
-        </div>
+
+          <!-- AI 项目名称输入弹窗 -->
+          <div v-if="showAIModal" class="modal-overlay" @click.self="showAIModal = false">
+            <div class="modal-content">
+              <div class="modal-header">
+                <span class="modal-title">{{ $t("ai.createProject") }}</span>
+                <button class="close-btn" @click="showAIModal = false">
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div class="modal-body">
+                <div class="form-item">
+                  <span class="form-label">{{ $t("ai.modelName") }}</span>
+                  <input
+                    v-model="aiModelName"
+                    type="text"
+                    class="form-input"
+                    :placeholder="$t('ai.inputModelName')"
+                    @keyup.enter="handleAIConfirm"
+                  />
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button class="btn-cancel" @click="showAIModal = false">
+                  {{ $t("common.cancel") }}
+                </button>
+                <button class="btn-confirm" @click="handleAIConfirm">
+                  {{ $t("common.confirm") }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 信息栏 -->
+          <div class="info-section">
+            <div class="sidebar-title mb-3">{{ $t("teacher.infoBar") }}</div>
+            <div class="info-grid">
+              <div class="info-card">
+                <div class="info-label">{{ $t("teacher.classCount") }}</div>
+                <div class="info-value">8</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">{{ $t("teacher.submittedWorks") }}</div>
+                <div class="info-value">1208</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">{{ $t("teacher.teachingHours") }}</div>
+                <div class="info-value">50</div>
+              </div>
+              <div class="info-card">
+                <div class="info-label">{{ $t("teacher.studentCount") }}</div>
+                <div class="info-value">80</div>
+              </div>
+            </div>
+          </div>
+        </template>
       </aside>
     </div>
 
     <!-- 开课设置弹窗 -->
-    <StartClassModal 
+    <StartClassModal
       v-model:visible="showStartClassModal"
       :class-list="startClassData.classList"
       :course-list="startClassData.courseList"
@@ -297,34 +535,49 @@
       :show-footer="false"
     >
       <div class="quick-login-modal">
-        <div class="modal-tip">{{ $t('teacher.selectClassTip') }}</div>
-        
-        <div v-if="quickLoginLoading" class="loading-state">{{ $t('common.loading') }}</div>
-        
+        <div class="modal-tip">{{ $t("teacher.selectClassTip") }}</div>
+
+        <div v-if="quickLoginLoading" class="loading-state">
+          {{ $t("common.loading") }}
+        </div>
+
         <div v-else class="class-list">
-          <div 
-            v-for="item in quickLoginClassList" 
+          <div
+            v-for="item in quickLoginClassList"
             :key="item.classId"
             class="class-item"
             :class="{ 'is-selected': selectedQuickLoginClassId === item.classId }"
             @click="selectedQuickLoginClassId = item.classId"
           >
             <span class="class-name">{{ item.className }}</span>
-            <svg v-if="selectedQuickLoginClassId === item.classId" class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="3">
-              <polyline points="20 6 9 17 4 12"/>
+            <svg
+              v-if="selectedQuickLoginClassId === item.classId"
+              class="check-icon"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#FF9900"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12" />
             </svg>
           </div>
-          <div v-if="quickLoginClassList.length === 0" class="empty-state">{{ $t('teacher.noClass') }}</div>
+          <div v-if="quickLoginClassList.length === 0" class="empty-state">
+            {{ $t("teacher.noClass") }}
+          </div>
         </div>
-        
+
         <div class="modal-actions">
-          <MButton @click="showQuickLoginModal = false">{{ $t('common.cancel') }}</MButton>
-          <MButton 
+          <MButton @click="showQuickLoginModal = false">{{
+            $t("common.cancel")
+          }}</MButton>
+          <MButton
             class="confirm-btn"
             :disabled="!selectedQuickLoginClassId"
             @click="handleQuickLoginConfirm"
           >
-            {{ $t('common.create') }}
+            {{ $t("common.create") }}
           </MButton>
         </div>
       </div>
@@ -339,54 +592,80 @@
       :show-close="true"
     >
       <div class="quick-login-result">
-        <div class="result-title">{{ $t('teacher.quickLoginMethod') }}</div>
+        <div class="result-title">{{ $t("teacher.quickLoginMethod") }}</div>
         <div class="result-class-name">{{ quickLoginResultData.className }}</div>
-        <div class="result-expire">（{{ $t('teacher.validFor2Hours') }}{{ quickLoginResultData.expirationDate }}{{ $t('teacher.expire') }}）</div>
-        
+        <div class="result-expire">
+          （{{ $t("teacher.validFor2Hours") }}{{ quickLoginResultData.expirationDate
+          }}{{ $t("teacher.expire") }}）
+        </div>
+
         <div class="result-info-card">
           <div class="info-row">
-            <span>{{ $t('teacher.classCode') }}{{ quickLoginResultData.classCode }}</span>
+            <span>{{ $t("teacher.classCode") }}{{ quickLoginResultData.classCode }}</span>
           </div>
           <div class="info-row">
-            <span>{{ $t('teacher.unifiedPassword') }}{{ quickLoginResultData.classCodePwd }}</span>
+            <span
+              >{{ $t("teacher.unifiedPassword")
+              }}{{ quickLoginResultData.classCodePwd }}</span
+            >
           </div>
           <button class="copy-btn-inline" @click="copyQuickLoginInfo">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
             </svg>
-            {{ $t('common.copy') }}
+            {{ $t("common.copy") }}
           </button>
         </div>
-        
+
         <div class="result-actions">
           <MButton class="view-login-btn" @click="goToClassPage">
-            {{ $t('teacher.viewLoginStatus') }}
+            {{ $t("teacher.viewLoginStatus") }}
           </MButton>
         </div>
       </div>
     </MModal>
 
     <!-- 工具 iframe 弹窗 -->
-    <div v-if="showToolIframeModal" class="iframe-modal-overlay" @click.self="closeToolIframeModal">
+    <div
+      v-if="showToolIframeModal"
+      class="iframe-modal-overlay"
+      @click.self="closeToolIframeModal"
+    >
       <div class="iframe-modal-container">
         <div class="iframe-modal-header">
           <span class="iframe-modal-title">{{ currentToolName }}</span>
           <button class="iframe-close-btn" @click="closeToolIframeModal">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
         <div class="iframe-modal-body">
           <div v-if="toolIframeLoading" class="iframe-loading">
             <div class="loading-spinner"></div>
-            <span class="loading-text">{{ $t('common.loading') }}</span>
+            <span class="loading-text">{{ $t("common.loading") }}</span>
           </div>
-          <iframe 
-            :src="currentToolUrl" 
-            class="tool-iframe" 
+          <iframe
+            :src="currentToolUrl"
+            class="tool-iframe"
             :class="{ hidden: toolIframeLoading }"
-            frameborder="0" 
+            frameborder="0"
             allowfullscreen
             allow="camera; microphone"
             @load="onToolIframeLoad"
@@ -398,57 +677,68 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch } from 'vue'
-import { useTeacher } from '~/composables/api/useTeacher'
-import { useI18n } from 'vue-i18n'
+import { ref, reactive, computed, watch } from "vue";
+import { useTeacher } from "~/composables/api/useTeacher";
+import { useI18n } from "vue-i18n";
+import { ElMessage } from "element-plus";
 
-const { t: $t, locale } = useI18n()
-const router = useRouter()
+const { t: $t, locale } = useI18n();
+const router = useRouter();
 
 definePageMeta({
-  layout: 'sidebar'
-})
+  layout: "sidebar",
+});
 
-const { getClassListNoPage, getCourseMenuTree, getTeachChapterList, beginClass, getTeachList, getQuickLoginInfo } = useTeacher()
+const {
+  getClassListNoPage,
+  getCourseMenuTree,
+  getTeachChapterList,
+  beginClass,
+  getTeachList,
+  getQuickLoginInfo,
+} = useTeacher();
 
 const goToLessons = () => {
-  router.push('/lessons')
-}
+  router.push("/lessons");
+};
 
 // 点击课程封面跳转到课程详情
 const goToCourse = () => {
   if (selectedCourseId.value) {
-    navigateTo(`/system/course/${selectedCourseId.value}`)
+    navigateTo(`/system/course/${selectedCourseId.value}`);
   }
-}
+};
 
 // 复制班级码
 const copyCode = () => {
-  const text = `${$t('teacher.classCode')}${quickLoginCode.value}\n${$t('teacher.unifiedPassword')}${quickLoginPwd.value}`
-  navigator.clipboard.writeText(text)
-  alert($t('teacher.copied'))
-}
+  const text = `${$t("teacher.classCode")}${quickLoginCode.value}\n${$t(
+    "teacher.unifiedPassword"
+  )}${quickLoginPwd.value}`;
+  navigator.clipboard.writeText(text);
+  alert($t("teacher.copied"));
+};
 
 // 授课记录数据
 interface CourseItem {
-  courseId: string
-  courseName: string
-  courseCoverUrl: string
+  courseId: string;
+  courseName: string;
+  courseCoverUrl: string;
 }
 
-// 使用 useAsyncData 加载授课记录
-const { data: teachList } = await useAsyncData(
-  'teacher-teach-list',
+// 使用 useAsyncData 加载授课记录（lazy 模式，先显示骨架屏）
+const { data: teachList, pending: teachListPending } = useAsyncData(
+  "teacher-teach-list",
   async () => {
-    const data = await getTeachList()
-    return data
+    const data = await getTeachList();
+    return data;
   },
   {
+    lazy: true,
     // 默认空数组
     default: () => [],
     // 数据转换
     transform: (data: any) => {
-      if (!Array.isArray(data)) return []
+      if (!Array.isArray(data)) return [];
       return data.map((item: any) => ({
         classId: String(item.classId),
         className: item.className,
@@ -458,522 +748,594 @@ const { data: teachList } = await useAsyncData(
           .map((course: any) => ({
             courseId: String(course.courseId),
             courseName: course.courseName,
-            courseCoverUrl: course.courseCoverUrl || ''
-          }))
-      }))
-    }
+            courseCoverUrl: course.courseCoverUrl || "",
+          })),
+      }));
+    },
   }
-)
+);
 
-const selectedClassId = ref<string | null>(null)
-const selectedCourseId = ref<string | null>(null)
-const selectedChapterId = ref<string | null>(null)
-const showCoursePopover = ref(false)
+const selectedClassId = ref<string | null>(null);
+const selectedCourseId = ref<string | null>(null);
+const selectedChapterId = ref<string | null>(null);
+const showCoursePopover = ref(false);
 
 // 章节列表数据
 interface ChapterItem {
-  chapterId: string
-  chapterName: string
-  teachStatus: number
-  isLatestTeach: number
+  chapterId: string;
+  chapterName: string;
+  teachStatus: number;
+  isLatestTeach: number;
 }
-const chapterList = ref<ChapterItem[]>([])
+const chapterList = ref<ChapterItem[]>([]);
 
 // 加载章节列表
 const loadChapterList = async () => {
   if (!selectedCourseId.value || !selectedClassId.value) {
-    chapterList.value = []
-    return
+    chapterList.value = [];
+    return;
   }
-  
+
   try {
-    const data = await getTeachChapterList(selectedCourseId.value, selectedClassId.value)
+    const data = await getTeachChapterList(selectedCourseId.value, selectedClassId.value);
     if (data && Array.isArray(data)) {
       chapterList.value = data.map((c: any) => ({
         chapterId: String(c.chapterId),
         chapterName: c.chapterName,
         teachStatus: c.teachStatus ?? 0,
-        isLatestTeach: c.isLatestTeach ?? 0
-      }))
+        isLatestTeach: c.isLatestTeach ?? 0,
+      }));
     } else {
-      chapterList.value = []
+      chapterList.value = [];
     }
   } catch (error) {
-    console.error('加载章节列表失败:', error)
-    chapterList.value = []
+    console.error("加载章节列表失败:", error);
+    chapterList.value = [];
   }
-}
+};
 
 // 监听 teachList 变化，自动选中第一个班级
-watch(teachList, (list) => {
-  if (list.length > 0 && list[0] && !selectedClassId.value) {
-    selectedClassId.value = list[0].classId
-  }
-}, { immediate: true })
+watch(
+  teachList,
+  (list) => {
+    if (list.length > 0 && list[0] && !selectedClassId.value) {
+      selectedClassId.value = list[0].classId;
+    }
+  },
+  { immediate: true }
+);
 
 // 班级切换时，重置课程选择并默认选中第一个课程
-watch(selectedClassId, (newClassId) => {
-  if (newClassId) {
-    const selectedClass = teachList.value.find(item => item.classId === newClassId)
-    if (selectedClass?.courseList && selectedClass.courseList.length > 0) {
-      const firstCourse = selectedClass.courseList[0]
-      selectedCourseId.value = firstCourse?.courseId || null
-      console.log('班级切换，选中课程:', firstCourse?.courseId, firstCourse?.courseName)
+watch(
+  selectedClassId,
+  (newClassId) => {
+    if (newClassId) {
+      const selectedClass = teachList.value.find((item) => item.classId === newClassId);
+      if (selectedClass?.courseList && selectedClass.courseList.length > 0) {
+        const firstCourse = selectedClass.courseList[0];
+        selectedCourseId.value = firstCourse?.courseId || null;
+        console.log(
+          "班级切换，选中课程:",
+          firstCourse?.courseId,
+          firstCourse?.courseName
+        );
+      } else {
+        selectedCourseId.value = null;
+        console.log("班级切换，没有课程");
+      }
     } else {
-      selectedCourseId.value = null
-      console.log('班级切换，没有课程')
+      selectedCourseId.value = null;
     }
-  } else {
-    selectedCourseId.value = null
-  }
-}, { immediate: true })
+  },
+  { immediate: true }
+);
 
 // 监听课程变化，加载章节列表
-watch(selectedCourseId, (newCourseId) => {
-  console.log('课程变化:', newCourseId)
-  loadChapterList()
-}, { immediate: true })
+watch(
+  selectedCourseId,
+  (newCourseId) => {
+    console.log("课程变化:", newCourseId);
+    loadChapterList();
+  },
+  { immediate: true }
+);
 
 // 快捷登录相关
-const showLoginPopover = ref(false)
+const showLoginPopover = ref(false);
 
-// 使用 useAsyncData 加载快捷登录信息
-const { data: quickLoginInfo, refresh: refreshQuickLoginInfo } = await useAsyncData(
-  'teacher-quick-login',
+// 使用 useAsyncData 加载快捷登录信息（lazy 模式）
+const { data: quickLoginInfo, refresh: refreshQuickLoginInfo } = useAsyncData(
+  "teacher-quick-login",
   async () => {
-    const data = await getQuickLoginInfo()
-    return data
+    const data = await getQuickLoginInfo();
+    return data;
   },
   {
+    lazy: true,
     default: () => ({
-      classCode: '',
-      classCodePwd: '',
-      expirationDate: ''
+      classCode: "",
+      classCodePwd: "",
+      expirationDate: "",
     }),
     transform: (data: any) => ({
-      classCode: data?.classCode || '',
-      classCodePwd: data?.classCodePwd || '',
-      expirationDate: data?.expirationDate || ''
-    })
+      classCode: data?.classCode || "",
+      classCodePwd: data?.classCodePwd || "",
+      expirationDate: data?.expirationDate || "",
+    }),
   }
-)
+);
+
+// 页面加载状态（最少显示 500ms 骨架屏，避免闪烁）
+const minLoadingDone = ref(false);
+onMounted(() => {
+  setTimeout(() => {
+    minLoadingDone.value = true;
+  }, 500);
+});
+const pageLoading = computed(() => !minLoadingDone.value || teachListPending.value);
 
 // 从 quickLoginInfo 中解构出各个字段（保持响应式）
-const quickLoginCode = computed(() => quickLoginInfo.value.classCode)
-const quickLoginPwd = computed(() => quickLoginInfo.value.classCodePwd)
-const quickLoginExpire = computed(() => quickLoginInfo.value.expirationDate)
+const quickLoginCode = computed(() => quickLoginInfo.value.classCode);
+const quickLoginPwd = computed(() => quickLoginInfo.value.classCodePwd);
+const quickLoginExpire = computed(() => quickLoginInfo.value.expirationDate);
 
 // 工具 iframe 弹窗相关
-const showToolIframeModal = ref(false)
-const currentToolUrl = ref('')
-const currentToolName = ref('')
-const toolIframeLoading = ref(true)
+const showToolIframeModal = ref(false);
+const currentToolUrl = ref("");
+const currentToolName = ref("");
+const toolIframeLoading = ref(true);
 
 const toolUrls: Record<string, { url: string; nameKey: string }> = {
-  vincibot: { url: 'https://vinci.matatastudio.com/', nameKey: 'teacher.vincibot' },
-  nous: { url: 'https://nous.matatastudio.com/', nameKey: 'teacher.nous' }
-}
+  vincibot: { url: "https://vinci.matatastudio.com/", nameKey: "teacher.vincibot" },
+  nous: { url: "https://nous.matatastudio.com/", nameKey: "teacher.nous" },
+  talemap: {
+    url:
+      "https://www.mediafire.com/file_premium/rz1j080mpbsdhus/MatataCode-TaleMap-v1.0.0-win-x64.exe/file",
+    nameKey: "teacher.talemap",
+  },
+};
 
 // 打开工具 iframe
 const handleOpenTool = (toolId: string) => {
-  const tool = toolUrls[toolId]
+  const tool = toolUrls[toolId];
   if (tool) {
-    let url = tool.url
+    let url = tool.url;
     // 动态添加语言参数
-    if (toolId === 'vincibot') {
-      const lang = locale.value === 'zh' ? 'zh-CN' : 'en'
-      url = `${url}?lang=${lang}`
-    } else if (toolId === 'nous') {
-      const lang = locale.value === 'zh' ? 'zh' : 'en'
-      url = `${url}?lang=${lang}`
+    if (toolId === "vincibot") {
+      const lang = locale.value === "zh" ? "zh-CN" : "en";
+      url = `${url}?lang=${lang}&ch=aiedu`;
+    } else if (toolId === "nous") {
+      const lang = locale.value === "zh" ? "zh" : "en";
+      url = `${url}?lang=${lang}&ch=aiedu`;
+    } else if (toolId === "talemap") {
+      window.open(url, "_blank");
+      return;
     }
 
-    currentToolUrl.value = url
-    currentToolName.value = $t(tool.nameKey)
-    toolIframeLoading.value = true
-    showToolIframeModal.value = true
+    currentToolUrl.value = url;
+    currentToolName.value = $t(tool.nameKey);
+    toolIframeLoading.value = true;
+    showToolIframeModal.value = true;
   }
-}
+};
 
 // AI 弹窗逻辑
-const showAIModal = ref(false)
-const aiModelName = ref('')
-const currentAIKey = ref('')
+const showAIModal = ref(false);
+const aiModelName = ref("");
+const currentAIKey = ref("");
 
 const handleOpenAIModal = (key: string) => {
-  currentAIKey.value = key
-  aiModelName.value = ''
-  showAIModal.value = true
-}
+  currentAIKey.value = key;
+  aiModelName.value = "";
+  showAIModal.value = true;
+};
 
 const handleAIConfirm = () => {
-  if (!aiModelName.value.trim()) return
+  if (!aiModelName.value.trim()) return;
 
-  const token = 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ7XCJ0b2tlblR5cGVcIjpcImFjY2Vzc190b2tlblwiLFwidXNlcklkXCI6MTE1MzIsXCJ1c2VybmFtZVwiOlwiMzI4NzI1Nzk0QHFxLmNvbVwifSIsImV4cCI6MTc3MDQzODM0MSwiaWF0IjoxNzY3ODQ2MzQxNDU0LCJqdGkiOiI0YzBmYWQ1ZC1mYjVjLTRjMTMtOTUwNi1kOGVlOGI0YWUzMTAifQ.MKTjQtiuXvbl1TDvp3AF8j0qllvMX-Hr6wwqjkzKW3LpUlM7A882MhYX78l2DoqrxrRPQ1gAzm8uZ_anCgzlrg'
+  const token =
+    "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ7XCJ0b2tlblR5cGVcIjpcImFjY2Vzc190b2tlblwiLFwidXNlcklkXCI6MTE1MzIsXCJ1c2VybmFtZVwiOlwiMzI4NzI1Nzk0QHFxLmNvbVwifSIsImV4cCI6MTc3MDQzODM0MSwiaWF0IjoxNzY3ODQ2MzQxNDU0LCJqdGkiOiI0YzBmYWQ1ZC1mYjVjLTRjMTMtOTUwNi1kOGVlOGI0YWUzMTAifQ.MKTjQtiuXvbl1TDvp3AF8j0qllvMX-Hr6wwqjkzKW3LpUlM7A882MhYX78l2DoqrxrRPQ1gAzm8uZ_anCgzlrg";
   const typeMap: Record<string, number> = {
-    'imageClassModel': 1,
-    'gestureClassModel': 2,
-    'voiceClassModel': 3,
-    'poseClassModel': 4
-  }
-  const type = typeMap[currentAIKey.value] || 1
-  const lang = locale.value === 'zh' ? 'zh' : 'en'
-  const url = `https://pre.matatalab.com/?token=${token}&type=${type}&projectName=${aiModelName.value}&lang=${lang}`
-  
-  currentToolUrl.value = url
-  
-  const titleMap: Record<string, string> = {
-     'imageClassModel': $t('ai.imageClassModel'),
-     'gestureClassModel': $t('ai.gestureClassModel'),
-     'voiceClassModel': $t('ai.voiceClassModel'),
-     'poseClassModel': $t('ai.poseClassModel'),
-  }
+    imageClassModel: 1,
+    gestureClassModel: 2,
+    voiceClassModel: 3,
+    poseClassModel: 4,
+  };
+  const type = typeMap[currentAIKey.value] || 1;
+  const lang = locale.value === "zh" ? "zh" : "en";
+  const url = `https://pre.matatalab.com/?token=${token}&type=${type}&projectName=${aiModelName.value}&lang=${lang}`;
 
-  currentToolName.value = titleMap[currentAIKey.value] || ''
-  toolIframeLoading.value = true
-  showToolIframeModal.value = true
-  
-  showAIModal.value = false
-}
+  currentToolUrl.value = url;
+
+  const titleMap: Record<string, string> = {
+    imageClassModel: $t("ai.imageClassModel"),
+    gestureClassModel: $t("ai.gestureClassModel"),
+    voiceClassModel: $t("ai.voiceClassModel"),
+    poseClassModel: $t("ai.poseClassModel"),
+  };
+
+  currentToolName.value = titleMap[currentAIKey.value] || "";
+  toolIframeLoading.value = true;
+  showToolIframeModal.value = true;
+
+  showAIModal.value = false;
+};
 
 // iframe 加载完成
 const onToolIframeLoad = () => {
-  toolIframeLoading.value = false
-}
+  toolIframeLoading.value = false;
+};
 
 // 关闭工具 iframe 弹窗
 const closeToolIframeModal = () => {
-  showToolIframeModal.value = false
-  currentToolUrl.value = ''
-  currentToolName.value = ''
-  toolIframeLoading.value = true
-}
+  showToolIframeModal.value = false;
+  currentToolUrl.value = "";
+  currentToolName.value = "";
+  toolIframeLoading.value = true;
+};
 
 // 跳转到工具中心
 const goToToolCenter = () => {
-  navigateTo('/system/tool')
-}
+  navigateTo("/system/tool");
+};
 
 // 快捷登录弹窗
-const showQuickLoginModal = ref(false)
-const quickLoginClassList = ref<{ classId: string; className: string }[]>([])
-const selectedQuickLoginClassId = ref<string | null>(null)
-const quickLoginLoading = ref(false)
+const showQuickLoginModal = ref(false);
+const quickLoginClassList = ref<{ classId: string; className: string }[]>([]);
+const selectedQuickLoginClassId = ref<string | null>(null);
+const quickLoginLoading = ref(false);
 
 // 快捷登录结果弹窗
-const showQuickLoginResultModal = ref(false)
+const showQuickLoginResultModal = ref(false);
 const quickLoginResultData = ref({
-  className: '',
-  classCode: '',
-  classCodePwd: '',
-  expirationDate: ''
-})
+  className: "",
+  classCode: "",
+  classCodePwd: "",
+  expirationDate: "",
+});
 
 // 打开快捷登录弹窗
 const openQuickLoginModal = async () => {
-  showQuickLoginModal.value = true
-  quickLoginLoading.value = true
-  selectedQuickLoginClassId.value = null
-  
+  showQuickLoginModal.value = true;
+  quickLoginLoading.value = true;
+  selectedQuickLoginClassId.value = null;
+
   try {
-    const data = await getClassListNoPage()
+    const data = await getClassListNoPage();
     if (data && Array.isArray(data)) {
       quickLoginClassList.value = data.map((item: any) => ({
         classId: String(item.classId || item.id),
-        className: item.className
-      }))
+        className: item.className,
+      }));
     } else {
-      quickLoginClassList.value = []
+      quickLoginClassList.value = [];
     }
   } catch (error) {
-    console.error('获取班级列表失败:', error)
-    quickLoginClassList.value = []
+    console.error("获取班级列表失败:", error);
+    quickLoginClassList.value = [];
   } finally {
-    quickLoginLoading.value = false
+    quickLoginLoading.value = false;
   }
-}
+};
 
 // 确认创建快捷登录
-const { createQuickLogin } = useTeacher()
+const { createQuickLogin } = useTeacher();
 const handleQuickLoginConfirm = async () => {
-  if (!selectedQuickLoginClassId.value) return
-  
+  if (!selectedQuickLoginClassId.value) return;
+
   try {
-    const result = await createQuickLogin(selectedQuickLoginClassId.value)
-    showQuickLoginModal.value = false
-    
+    const result = await createQuickLogin(selectedQuickLoginClassId.value);
+    showQuickLoginModal.value = false;
+
     // 获取选中的班级名称
-    const selectedClass = quickLoginClassList.value.find(c => c.classId === selectedQuickLoginClassId.value)
-    
+    const selectedClass = quickLoginClassList.value.find(
+      (c) => c.classId === selectedQuickLoginClassId.value
+    );
+
     // 设置结果数据并显示结果弹窗
     quickLoginResultData.value = {
-      className: selectedClass?.className || '',
-      classCode: result?.classCode || '',
-      classCodePwd: result?.classCodePwd || '',
-      expirationDate: result?.expirationDate || ''
-    }
-    showQuickLoginResultModal.value = true
-    
+      className: selectedClass?.className || "",
+      classCode: result?.classCode || "",
+      classCodePwd: result?.classCodePwd || "",
+      expirationDate: result?.expirationDate || "",
+    };
+    showQuickLoginResultModal.value = true;
+
     // 刷新快捷登录信息
-    await refreshQuickLoginInfo()
+    await refreshQuickLoginInfo();
   } catch (error) {
-    console.error('创建快捷登录失败:', error)
+    console.error("创建快捷登录失败:", error);
   }
-}
+};
 
 // 复制班级码信息
 const copyQuickLoginInfo = () => {
-  const text = `${$t('teacher.classCode')}${quickLoginResultData.value.classCode}\n${$t('teacher.unifiedPassword')}${quickLoginResultData.value.classCodePwd}`
-  navigator.clipboard.writeText(text)
-  alert($t('teacher.copied'))
-}
+  const text = `${$t("teacher.classCode")}${quickLoginResultData.value.classCode}\n${$t(
+    "teacher.unifiedPassword"
+  )}${quickLoginResultData.value.classCodePwd}`;
+  navigator.clipboard.writeText(text);
+  alert($t("teacher.copied"));
+};
 
 // 跳转到班级管理页面
 const goToClassPage = () => {
-  showQuickLoginResultModal.value = false
-  navigateTo('/system/class')
-}
+  showQuickLoginResultModal.value = false;
+  navigateTo("/system/class");
+};
 
 // 快捷登录按钮点击处理
 const handleQuickLoginBtnClick = () => {
   if (quickLoginCode.value) {
     // 已开启快捷登录，跳转到班级管理页面
-    navigateTo('/system/class')
+    navigateTo("/system/class");
   } else {
     // 未开启，打开选择班级弹窗
-    openQuickLoginModal()
+    openQuickLoginModal();
   }
-}
+};
 
 // 当前选中的班级名称
 const selectedClassName = computed(() => {
-  const selectedClass = teachList.value.find(item => item.classId === selectedClassId.value)
-  return selectedClass?.className || ''
-})
+  const selectedClass = teachList.value.find(
+    (item) => item.classId === selectedClassId.value
+  );
+  return selectedClass?.className || "";
+});
 
 // 班级选项
 const classOptions = computed(() => {
-  return teachList.value.map(item => ({
+  return teachList.value.map((item) => ({
     value: item.classId,
-    label: item.className
-  }))
-})
+    label: item.className,
+  }));
+});
 
 // 当前选中班级的课程列表
 const courseOptions = computed(() => {
-  const selectedClass = teachList.value.find(item => item.classId === selectedClassId.value)
-  if (!selectedClass || !selectedClass.courseList) return []
+  const selectedClass = teachList.value.find(
+    (item) => item.classId === selectedClassId.value
+  );
+  if (!selectedClass || !selectedClass.courseList) return [];
   return selectedClass.courseList.map((course: CourseItem) => ({
     value: course.courseId,
-    label: course.courseName
-  }))
-})
+    label: course.courseName,
+  }));
+});
 
 // 当前选中的课程信息（用于显示封面）
 const selectedCourse = computed(() => {
-  const selectedClass = teachList.value.find(item => item.classId === selectedClassId.value)
-  if (!selectedClass || !selectedClass.courseList) return null
-  return selectedClass.courseList.find((course: CourseItem) => course.courseId === selectedCourseId.value)
-})
-
+  const selectedClass = teachList.value.find(
+    (item) => item.classId === selectedClassId.value
+  );
+  if (!selectedClass || !selectedClass.courseList) return null;
+  return selectedClass.courseList.find(
+    (course: CourseItem) => course.courseId === selectedCourseId.value
+  );
+});
 
 // 获取章节状态：0-已结束, 1-未开始, 2-上节课, 3-开课中
 const getChapterStatus = (chapter: ChapterItem) => {
-  if (chapter.teachStatus === 0) return 1 // 未开始
-  if (chapter.teachStatus === 1) return 3 // 开课中
+  if (chapter.teachStatus === 0) return 1; // 未开始
+  if (chapter.teachStatus === 1) return 3; // 开课中
   if (chapter.teachStatus === 2) {
     // 已结束，判断是否是上节课
-    if (chapter.isLatestTeach === 1) return 2 // 上节课
-    return 0 // 已结束
+    if (chapter.isLatestTeach === 1) return 2; // 上节课
+    return 0; // 已结束
   }
-  return 1 // 默认未开始
-}
+  return 1; // 默认未开始
+};
 
 // 获取章节状态文本
 const getChapterStatusText = (chapter: ChapterItem) => {
-  const status = getChapterStatus(chapter)
+  const status = getChapterStatus(chapter);
   switch (status) {
-    case 0: return $t('teacher.ended')
-    case 1: return $t('teacher.notStarted')
-    case 2: return $t('teacher.lastClass')
-    case 3: return $t('teacher.ongoing')
-    default: return $t('teacher.notStarted')
+    case 0:
+      return $t("teacher.ended");
+    case 1:
+      return $t("teacher.notStarted");
+    case 2:
+      return $t("teacher.lastClass");
+    case 3:
+      return $t("teacher.ongoing");
+    default:
+      return $t("teacher.notStarted");
   }
-}
+};
 
 // 格式化章节名称：将 "-" 替换为换行，不显示 "-"
 const formatChapterName = (name: string) => {
-  if (!name) return ''
+  if (!name) return "";
   // 按 "-" 分割，过滤空字符串，用 <br> 连接
-  const parts = name.split('-').map(p => p.trim()).filter(p => p)
-  return parts.join('<br>')
-}
+  const parts = name
+    .split("-")
+    .map((p) => p.trim())
+    .filter((p) => p);
+  return parts.join("<br>");
+};
 
 // 去上课 - 从授课记录直接进入课堂
 const goToTeach = async (chapter: ChapterItem) => {
-  if (!selectedClassId.value || !selectedCourseId.value) return
-  
-  const currentClassId = selectedClassId.value
-  const courseId = selectedCourseId.value
-  const chapterId = chapter.chapterId
-  
+  if (!selectedClassId.value || !selectedCourseId.value) return;
+
+  const currentClassId = selectedClassId.value;
+  const courseId = selectedCourseId.value;
+  const chapterId = chapter.chapterId;
+
   // 如果是开课中状态，直接跳转，不调用 beginClass 接口
   if (chapter.teachStatus === 1) {
-    navigateTo(`/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`)
-    return
+    navigateTo(
+      `/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`
+    );
+    return;
   }
-  
+
   // 未开课或已结束，调用接口开课
   try {
-    await beginClass({ 
-      classId: currentClassId, 
-      courseId, 
-      chapterId, 
-      peerId: currentClassId 
-    })
-    console.log('开始上课成功')
-    navigateTo(`/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`)
+    await beginClass({
+      classId: currentClassId,
+      courseId,
+      chapterId,
+      peerId: currentClassId,
+    });
+    console.log("开始上课成功");
+    navigateTo(
+      `/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`
+    );
   } catch (error: any) {
-    console.error('开始上课失败:', error)
+    console.error("开始上课失败:", error);
   }
-}
+};
 
 // 去备课
 const goToPrepare = (chapter: ChapterItem) => {
-  if (!selectedCourseId.value) return
-  navigateTo(`/system/course/prepare/${selectedCourseId.value}?chapterId=${chapter.chapterId}`)
-}
+  if (!selectedCourseId.value) return;
+  navigateTo(
+    `/system/course/prepare/${selectedCourseId.value}?chapterId=${chapter.chapterId}`
+  );
+};
 
 // 开课设置弹窗
-const showStartClassModal = ref(false)
-const startClassModalRef = ref<any>(null)
+const showStartClassModal = ref(false);
+const startClassModalRef = ref<any>(null);
 const startClassData = reactive({
   classList: [] as { classId: string; className: string }[],
   courseList: [] as { courseId: string; courseName: string }[],
-  courseTree: [] as { menuId: string | null; menuName: string; courseList: { courseId: string; courseName: string }[] }[],
-  initialCourseId: '',
-  initialChapterId: ''
-})
+  courseTree: [] as {
+    menuId: string | null;
+    menuName: string;
+    courseList: { courseId: string; courseName: string }[];
+  }[],
+  initialCourseId: "",
+  initialChapterId: "",
+});
 
 // 去授课 - 打开开课弹窗
 const handleGoToClass = async () => {
   // 清空初始值
-  startClassData.initialCourseId = ''
-  startClassData.initialChapterId = ''
+  startClassData.initialCourseId = "";
+  startClassData.initialChapterId = "";
 
   // 并行调用两个独立的接口
-  try { 
+  try {
     const [classListRes, courseTreeRes] = await Promise.all([
       getClassListNoPage(),
-      getCourseMenuTree()
-    ])
+      getCourseMenuTree(),
+    ]);
 
     // 设置班级列表
     if (classListRes && Array.isArray(classListRes)) {
       startClassData.classList = classListRes.map((item: any) => ({
         classId: String(item.classId || item.id),
-        className: item.className
-      }))
+        className: item.className,
+      }));
     } else {
-      startClassData.classList = []
+      startClassData.classList = [];
     }
 
     // 设置课程列表（从分组结构中提取所有课程）
     // 设置课程树形结构
     if (courseTreeRes && Array.isArray(courseTreeRes)) {
       // 递归提取所有课程（用于扁平列表兼容）
-      const extractAllCourses = (nodes: any[]): { courseId: string; courseName: string }[] => {
-        let courses: { courseId: string; courseName: string }[] = []
+      const extractAllCourses = (
+        nodes: any[]
+      ): { courseId: string; courseName: string }[] => {
+        let courses: { courseId: string; courseName: string }[] = [];
         nodes.forEach((node: any) => {
           // 提取当前节点的课程
           if (node.courseList && Array.isArray(node.courseList)) {
             node.courseList.forEach((course: any) => {
               courses.push({
                 courseId: String(course.courseId),
-                courseName: course.courseName
-              })
-            })
+                courseName: course.courseName,
+              });
+            });
           }
           // 递归提取子节点的课程
           if (node.children && Array.isArray(node.children)) {
-            courses = courses.concat(extractAllCourses(node.children))
+            courses = courses.concat(extractAllCourses(node.children));
           }
-        })
-        return courses
-      }
+        });
+        return courses;
+      };
 
       // 设置树形结构（保持原始结构）
-      startClassData.courseTree = courseTreeRes
+      startClassData.courseTree = courseTreeRes;
 
       // 设置扁平列表（兼容）
-      startClassData.courseList = extractAllCourses(courseTreeRes)
+      startClassData.courseList = extractAllCourses(courseTreeRes);
     } else {
-      startClassData.courseTree = []
-      startClassData.courseList = []
+      startClassData.courseTree = [];
+      startClassData.courseList = [];
     }
   } catch (error) {
-    console.error('获取开课设置失败:', error)
-    startClassData.classList = []
-    startClassData.courseTree = []
-    startClassData.courseList = []
+    console.error("获取开课设置失败:", error);
+    startClassData.classList = [];
+    startClassData.courseTree = [];
+    startClassData.courseList = [];
   }
 
   // 打开弹窗
-  showStartClassModal.value = true
-}
+  showStartClassModal.value = true;
+};
 //跳转到作业
 const handleGoToTask = () => {
-    router.push('/taskmanagement')
-}
+  router.push("/taskmanagement");
+};
 
 // 班级切换
 const handleClassChange = (classId: string) => {
   // 清空已选章节
   if (startClassModalRef.value) {
-    startClassModalRef.value.setChapterList([])
+    startClassModalRef.value.setChapterList([]);
   }
-}
+};
 
 // 课程切换时加载章节列表
 const handleCourseChange = async (courseId: string, classId: string) => {
   try {
-    const data = await getTeachChapterList(courseId, classId)
+    const data = await getTeachChapterList(courseId, classId);
     if (data && startClassModalRef.value) {
       const chapters = (Array.isArray(data) ? data : []).map((c: any) => ({
         chapterId: String(c.chapterId),
         chapterName: c.chapterName,
-        isLastClass: c.isLastClass || false
-      }))
-      startClassModalRef.value.setChapterList(chapters)
+        isLastClass: c.isLastClass || false,
+      }));
+      startClassModalRef.value.setChapterList(chapters);
     }
   } catch (error) {
-    console.error('加载章节列表失败:', error)
+    console.error("加载章节列表失败:", error);
     if (startClassModalRef.value) {
-      startClassModalRef.value.setChapterList([])
+      startClassModalRef.value.setChapterList([]);
     }
   }
-}
+};
 
 // 确认开课
-const handleStartClassConfirm = async (data: { classId: string; courseId: string; chapterId: string }) => {
-  console.log('开课数据:', data)
-  
-  const peerId = data.classId
-  
+const handleStartClassConfirm = async (data: {
+  classId: string;
+  courseId: string;
+  chapterId: string;
+}) => {
+  console.log("开课数据:", data);
+
+  const peerId = data.classId;
+
   try {
-    await beginClass({ 
-      classId: data.classId, 
-      courseId: data.courseId, 
-      chapterId: data.chapterId, 
-      peerId 
-    })
-    console.log('开始上课成功')
+    await beginClass({
+      classId: data.classId,
+      courseId: data.courseId,
+      chapterId: data.chapterId,
+      peerId,
+    });
+    console.log("开始上课成功");
     // 接口成功，跳转到上课页面，from=teacher 标识从教师首页进入
-    navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}&from=teacher`)
+    navigateTo(
+      `/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}&from=teacher`
+    );
   } catch (error: any) {
-    console.error('开始上课失败:', error)
+    console.error("开始上课失败:", error);
   }
-}
+};
 </script>
 
 <style scoped>
@@ -1073,7 +1435,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .quick-login-btn {
-  background: #FF9900 !important;
+  background: #ff9900 !important;
   color: white !important;
   border: none !important;
   padding: 10px 24px !important;
@@ -1082,7 +1444,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .quick-login-btn:hover {
-  background: #E68A00 !important;
+  background: #e68a00 !important;
 }
 
 .login-popover {
@@ -1172,13 +1534,13 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   gap: 4px;
   background: none;
   border: none;
-  color: #3EAEFF;
+  color: #3eaeff;
   font-size: 13px;
   cursor: pointer;
 }
 
 .copy-btn:hover {
-  color: #5BC0FF;
+  color: #5bc0ff;
 }
 
 /* 授课记录 */
@@ -1186,7 +1548,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   flex-shrink: 0;
   width: 240px;
   padding-right: 24px;
-  border-right: 1px solid #E5E5E5;
+  border-right: 1px solid #e5e5e5;
 }
 
 .lesson-record .section-header {
@@ -1261,7 +1623,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .modal-header {
-  background: #FF9900;
+  background: #ff9900;
   padding: 16px 24px;
   display: flex;
   align-items: center;
@@ -1309,7 +1671,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 .form-input {
   flex: 1;
   height: 40px;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 4px;
   padding: 0 12px;
   font-size: 14px;
@@ -1318,7 +1680,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .form-input:focus {
-  border-color: #FF9900;
+  border-color: #ff9900;
 }
 
 .modal-footer {
@@ -1329,7 +1691,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .btn-confirm {
-  background: #FF9900;
+  background: #ff9900;
   color: white;
   border: none;
   border-radius: 4px;
@@ -1341,13 +1703,13 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .btn-confirm:hover {
-  background: #E68A00;
+  background: #e68a00;
 }
 
 .btn-cancel {
   background: white;
   color: #666;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 4px;
   width: 120px;
   height: 40px;
@@ -1362,8 +1724,14 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 @keyframes modalFadeIn {
-  from { opacity: 0; transform: scale(0.95); }
-  to { opacity: 1; transform: scale(1); }
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .lesson-card {
@@ -1389,7 +1757,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .lesson-cover-placeholder {
-  background: linear-gradient(135deg, #F5A67D 0%, #E8956A 100%);
+  background: linear-gradient(135deg, #f5a67d 0%, #e8956a 100%);
 }
 
 .course-select {
@@ -1430,7 +1798,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   width: 100%;
   height: 180px;
   background: white;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 8px;
   margin-bottom: 6px;
   position: relative;
@@ -1444,12 +1812,12 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .chapter-card:hover {
-  border-color: #D9D9D9;
+  border-color: #d9d9d9;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .chapter-item.is-selected .chapter-card {
-  border-color: #FF9900;
+  border-color: #ff9900;
   box-shadow: 0 4px 12px rgba(255, 153, 0, 0.2);
 }
 
@@ -1468,15 +1836,15 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .status-not-started {
-  background: #3EAEFF;
+  background: #3eaeff;
 }
 
 .status-last {
-  background: #FF9900;
+  background: #ff9900;
 }
 
 .status-ongoing {
-  background: #52C41A;
+  background: #52c41a;
 }
 
 .chapter-name {
@@ -1513,22 +1881,22 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .teach-btn {
-  background: #FF9900;
+  background: #ff9900;
   color: white;
 }
 
 .teach-btn:hover {
-  background: #E68A00;
+  background: #e68a00;
 }
 
 .prepare-btn {
   background: white;
-  color: #FF9900;
-  border: 1px solid #FF9900;
+  color: #ff9900;
+  border: 1px solid #ff9900;
 }
 
 .prepare-btn:hover {
-  background: #FFF7E6;
+  background: #fff7e6;
 }
 
 .empty-chapter {
@@ -1551,7 +1919,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 .sidebar-card {
   height: 250px;
   background: white;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 12px;
   padding: 16px 20px;
   flex-shrink: 0;
@@ -1623,7 +1991,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 
 .info-card {
   background: white;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 8px;
   padding: 16px;
 }
@@ -1646,31 +2014,31 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
     width: 400px;
     gap: 14px;
   }
-  
+
   .sidebar-card {
     height: 200px;
   }
-  
+
   .tool-icon {
     width: 70px;
     height: 70px;
   }
-  
+
   .card-icon {
     width: 120px;
     height: 120px;
   }
-  
+
   .action-card {
     padding: 20px 28px;
     height: 280px;
   }
-  
+
   .class-grid {
     grid-template-columns: repeat(4, 100px);
     gap: 24px;
   }
-  
+
   .class-card {
     width: 100px;
     height: 130px;
@@ -1682,23 +2050,22 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   .action-card {
     height: 200px;
   }
-  
+
   .card-icon {
     width: 80px;
     height: 80px;
     margin-bottom: 10px;
   }
-  
+
   .sidebar-card {
     height: 140px;
   }
-  
+
   .tool-icon {
     width: 50px;
     height: 50px;
   }
 
-  
   .top-cards {
     gap: 20px;
     margin-bottom: 16px;
@@ -1710,35 +2077,35 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
     width: 320px;
     gap: 20px;
   }
-  
+
   .sidebar-card {
     height: 160px;
   }
-  
+
   .tool-icon {
     width: 56px;
     height: 56px;
   }
-  
+
   .card-icon {
     width: 100px;
     height: 100px;
   }
-  
+
   .action-card {
     padding: 16px 24px;
   }
-  
+
   .class-grid {
     grid-template-columns: repeat(3, 90px);
     gap: 20px;
   }
-  
+
   .class-card {
     width: 90px;
     height: 115px;
   }
-  
+
   .info-value {
     font-size: 24px;
   }
@@ -1750,34 +2117,34 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
     min-height: calc(100vh - 70px);
     overflow-y: auto;
   }
-  
+
   .main-content {
     flex-direction: column;
     height: auto;
   }
-  
+
   .right-sidebar {
     width: 100%;
     flex-direction: row;
     flex-wrap: wrap;
     gap: 16px;
   }
-  
+
   .sidebar-card {
     flex: 1;
     min-width: 280px;
     height: 180px;
   }
-  
+
   .info-section {
     width: 100%;
   }
-  
+
   .class-grid {
     grid-template-columns: repeat(4, 100px);
     gap: 24px;
   }
-  
+
   .class-card {
     width: 100px;
     height: 130px;
@@ -1790,21 +2157,21 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
     gap: 16px;
     justify-content: center;
   }
-  
+
   .action-card {
     padding: 14px 20px;
   }
-  
+
   .card-icon {
     width: 80px;
     height: 80px;
   }
-  
+
   .bottom-section {
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .class-grid {
     grid-template-columns: repeat(2, 100px);
     gap: 16px;
@@ -1838,7 +2205,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 8px;
   margin-bottom: 12px;
   cursor: pointer;
@@ -1850,13 +2217,13 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .class-item:hover {
-  border-color: #FF9900;
-  background: #FFF9F0;
+  border-color: #ff9900;
+  background: #fff9f0;
 }
 
 .class-item.is-selected {
-  border-color: #FF9900;
-  background: #FFF9F0;
+  border-color: #ff9900;
+  background: #fff9f0;
 }
 
 .class-name {
@@ -1881,21 +2248,21 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #E5E5E5;
+  border-top: 1px solid #e5e5e5;
 }
 
 .confirm-btn {
-  background: #FF9900 !important;
+  background: #ff9900 !important;
   color: white !important;
   border: none !important;
 }
 
 .confirm-btn:hover:not(:disabled) {
-  background: #E68A00 !important;
+  background: #e68a00 !important;
 }
 
 .confirm-btn:disabled {
-  background: #FFD699 !important;
+  background: #ffd699 !important;
   cursor: not-allowed;
 }
 
@@ -1925,7 +2292,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .result-info-card {
-  background: #F5F5F5;
+  background: #f5f5f5;
   border-radius: 8px;
   padding: 16px 20px;
   text-align: left;
@@ -1951,13 +2318,13 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   gap: 4px;
   background: none;
   border: none;
-  color: #3EAEFF;
+  color: #3eaeff;
   font-size: 13px;
   cursor: pointer;
 }
 
 .copy-btn-inline:hover {
-  color: #1890FF;
+  color: #1890ff;
 }
 
 .result-actions {
@@ -1965,7 +2332,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .view-login-btn {
-  background: #FF9900 !important;
+  background: #ff9900 !important;
   color: white !important;
   border: none !important;
   padding: 10px 40px !important;
@@ -1973,7 +2340,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .view-login-btn:hover {
-  background: #E68A00 !important;
+  background: #e68a00 !important;
 }
 
 /* 工具 iframe 弹窗样式 */
@@ -2003,8 +2370,8 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
   align-items: center;
   justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid #E5E5E5;
-  background: #FAFAFA;
+  border-bottom: 1px solid #e5e5e5;
+  background: #fafafa;
 }
 
 .iframe-modal-title {
@@ -2028,7 +2395,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 }
 
 .iframe-close-btn:hover {
-  background: #F0F0F0;
+  background: #f0f0f0;
   color: #666;
 }
 
@@ -2063,8 +2430,8 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 .loading-spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid #F0F0F0;
-  border-top-color: #FF9900;
+  border: 4px solid #f0f0f0;
+  border-top-color: #ff9900;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -2096,5 +2463,18 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 .tool-item .tool-name {
   font-size: 12px;
   color: #666;
+}
+
+/* 骨架屏卡片样式 */
+.skeleton-card {
+  pointer-events: none;
+}
+
+/* 骨架屏到内容的淡入过渡 */
+.fade-enter-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from {
+  opacity: 0;
 }
 </style>

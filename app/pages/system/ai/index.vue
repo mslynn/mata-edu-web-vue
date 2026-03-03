@@ -14,6 +14,27 @@
 
     <!-- 内容区 -->
     <div class="content-area">
+      <!-- 骨架屏 -->
+      <template v-if="pageLoading">
+        <div v-for="i in 4" :key="i" class="section">
+          <el-skeleton animated :rows="0">
+            <template #template>
+              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px">
+                <el-skeleton-item variant="rect" style="width: 22px; height: 22px; border-radius: 4px" />
+                <el-skeleton-item variant="text" style="width: 80px; height: 20px" />
+                <el-skeleton-item variant="text" style="width: 160px; height: 16px" />
+              </div>
+              <div style="display: flex; gap: 16px">
+                <div v-for="j in 5" :key="j" style="flex: 0 0 207px">
+                  <el-skeleton-item variant="rect" style="width: 100%; height: 155px; border-radius: 12px 12px 0 0" />
+                  <el-skeleton-item variant="text" style="width: 80%; height: 16px; margin: 14px auto; display: block" />
+                </div>
+              </div>
+            </template>
+          </el-skeleton>
+        </div>
+      </template>
+      <template v-else>
       <!-- AIGC 区块 (已移除内容，暂隐藏) -->
       <div class="section" v-if="aigcItems.length > 0">
         <div class="section-header">
@@ -219,6 +240,7 @@
           </button>
         </div>
       </div>
+      </template>
       </div>
 
 
@@ -286,6 +308,9 @@ definePageMeta({
 
 const router = useRouter()
 const { locale, t } = useI18n()
+
+// 页面骨架屏（最少显示 300ms）
+const pageLoading = ref(true)
 
 interface AICardItem {
   key: string
@@ -471,6 +496,9 @@ const onIframeLoad = () => {
 }
 
 onMounted(() => {
+  setTimeout(() => {
+    pageLoading.value = false
+  }, 300)
   nextTick(() => {
     checkAllArrows()
   })
@@ -595,6 +623,7 @@ onUnmounted(() => {
   -ms-overflow-style: none;
   scrollbar-width: none;
   flex: 1;
+  padding: 8px 0;
 }
 
 .card-grid-scroll::-webkit-scrollbar {

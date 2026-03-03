@@ -125,63 +125,56 @@
             <div class="h-full w-full flex flex-col">
               
               <!-- Cards Grid (Free Creation / Tools) - Only show when task not issued -->
-              <div v-if="selectedTaskKey === 'free_creation' && !isTaskIssued" class="w-full min-h-full flex flex-col justify-center items-center p-8 text-center max-w-5xl mx-auto">
-                  <div class="mb-8 text-gray-500 space-y-3 max-w-2xl mx-auto">
-                     <div class="text-lg font-medium text-gray-700">{{ $t('taskManagement.description1') }}</div>
-                     <div>{{ $t('taskManagement.description2') }}</div>
-                     <div class="text-xs text-orange-500/80 bg-orange-50 py-2 px-4 rounded-full inline-block mt-4">{{ $t('taskManagement.disclaimer') }}</div>
-                  </div>
+              <div v-if="isFreeCodingLikeTask && !isTaskIssued" class="h-full w-full bg-[#F3F3F3] flex flex-col items-center px-6 pt-6 text-center">
+                <div class="text-[#444] leading-[1.35] mb-6">
+                  <div class="text-[16px] font-medium">{{ $t('taskManagement.description1') }}</div>
+                  <div class="text-[16px] font-medium">{{ $t('taskManagement.description2') }}</div>
+                </div>
 
-                  <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full px-4">
-                    <div 
-                        v-for="(editor, index) in editorsList" 
-                        :key="index"
-                        class="bg-white rounded-2xl transition-all duration-300 overflow-hidden group cursor-pointer border relative"
-                        :class="selectedEditor === editor.id 
-                          ? 'border-[#FF9900] shadow-xl ring-4 ring-[#FF9900]/10 -translate-y-2' 
-                          : 'border-gray-100 shadow-md hover:shadow-xl hover:-translate-y-2 hover:border-gray-200'"
-                        @click="selectedEditor = editor.id"
+                <div class="w-full max-w-[720px] flex flex-wrap justify-center gap-x-10 gap-y-6">
+                  <div
+                    v-for="editor in editorsList"
+                    :key="editor.id"
+                    class="flex flex-col items-center"
+                  >
+                    <div
+                      class="w-[190px] rounded-[14px] overflow-hidden cursor-pointer border transition-all duration-200 bg-white"
+                      :class="selectedEditor === editor.id ? 'border-[#2EA9DF] shadow-[0_8px_20px_rgba(46,169,223,0.2)]' : 'border-[#BDBDBD] hover:border-[#95CAE3]'"
+                      @click="selectedEditor = editor.id"
                     >
-                      <div class="aspect-video bg-gradient-to-br from-gray-50 to-gray-100 relative items-center justify-center flex group-hover:from-gray-100 group-hover:to-gray-200 transition-colors">
-                         <!-- Decorative elements -->
-                         <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#ddd_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                         
-                         <!-- Label text placeholder -->
-                         <div class="relative z-10 flex flex-col items-center">
-                            <div class="w-16 h-16 rounded-2xl bg-white shadow-sm flex items-center justify-center mb-3 text-2xl font-bold text-gray-400">
-                                {{ editor.name.charAt(0) }}
-                            </div>
-                         </div>
+                      <div class="h-[128px] bg-[#F5F5F5] flex items-center justify-center">
+                        <img :src="editor.cover" :alt="editor.name" class="w-[72px] h-[72px] object-contain" />
                       </div>
-                      
-                      <div class="p-4 flex flex-col items-center">
-                        <h3 class="font-bold text-gray-800 text-lg mb-2 group-hover:text-[#FF9900] transition-colors">{{ editor.name }}</h3>
-                        <div class="text-sm text-gray-500 mb-4 line-clamp-2 px-2 h-10">{{ editor.desc }}</div>
-                        
-                        <label class="flex items-center gap-3 cursor-pointer select-none">
-                            <div 
-                                class="w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300"
-                                :class="selectedEditor === editor.id ? 'border-[#FF9900] bg-[#FF9900]' : 'border-gray-300 bg-transparent group-hover:border-gray-400'"
-                            >
-                                <svg v-if="selectedEditor === editor.id" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                            </div>
-                            <span class="font-medium transition-colors" :class="selectedEditor === editor.id ? 'text-[#FF9900]' : 'text-gray-600 group-hover:text-gray-900'">{{ $t('taskManagement.pushToStudents') }}</span>
-                         </label>
+                      <div class="h-[56px] bg-[#EAEAEA] px-3 flex items-center justify-center">
+                        <div class="text-[16px] leading-[1.15] text-[#3B3B3B] whitespace-pre-line">{{ editor.name }}</div>
                       </div>
                     </div>
+
+                    <label class="mt-2.5 flex items-center gap-1.5 cursor-pointer select-none" @click.stop="selectedEditor = editor.id">
+                      <div
+                        class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+                        :class="selectedEditor === editor.id ? 'border-[#2EA9DF] bg-[#2EA9DF]' : 'border-[#BDBDBD] bg-white'"
+                      >
+                        <svg v-if="selectedEditor === editor.id" width="12" height="12" viewBox="0 0 24 24" fill="none">
+                          <path d="M5 12l4 4 10-10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      </div>
+                      <span class="text-[14px] text-[#666]">{{ $t('taskManagement.pushToStudents') }}</span>
+                    </label>
                   </div>
-                
-                  <div class="mt-10 pb-8">
-                    <MButton 
-                        type="primary"
-                        class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] shadow-md shadow-orange-500/20 active:scale-95 transition-all"
-                        :class="{ '!bg-gray-200 !text-gray-400 !shadow-none !cursor-not-allowed hover:!bg-gray-200': !selectedEditor }"
-                        :disabled="!selectedEditor"
-                        @click="openIssueModal"
-                    >
-                        {{ $t('taskManagement.issueTask') }}
-                    </MButton>
-                  </div>
+                </div>
+
+                <div class="mt-6 pb-4">
+                  <MButton
+                    type="primary"
+                    class="!bg-[#2EA9DF] !text-white hover:!bg-[#1e9bd3] !h-9 !px-6 !text-[14px] shadow-md active:scale-95 transition-all"
+                    :class="{ '!bg-gray-200 !text-gray-400 !shadow-none !cursor-not-allowed hover:!bg-gray-200': !selectedEditor || freeCodingIssuing }"
+                    :disabled="!selectedEditor || freeCodingIssuing"
+                    @click="handleFreeCodingIssue"
+                  >
+                    {{ $t('taskManagement.issueTask') }}
+                  </MButton>
+                </div>
               </div>
 
             <!-- Task Issued View (for AI Chat) -->
@@ -198,8 +191,8 @@
                   </div>
 
                   <div class="flex items-center gap-3">
-                     <!-- Custom Exercise Actions -->
-                     <template v-if="isCustomExercise">
+                     <!-- Exercise Actions -->
+                     <template v-if="isExerciseTask">
                          <!-- Batch Mode: Only show Cancel button -->
                          <template v-if="isBatchMode">
                             <MButton 
@@ -280,8 +273,8 @@
                          </template>
                      </template>
 
-                     <!-- Upload Task Actions: View Details, Withdraw, Refresh -->
-                     <template v-else-if="isUploadTask">
+                     <!-- Upload / AI Practice Task Actions: View Details, Withdraw, Refresh -->
+                     <template v-else-if="isUploadTask || isFreeCodingLikeTask || isAiPracticeTask">
                          <!-- View Details -->
                          <MButton 
                             type="primary" 
@@ -361,7 +354,7 @@
                <!-- Table -->
                <div class="flex-1 flex flex-col min-h-0 bg-white">
                   <!-- Blue Hint Bar for Upload Tasks -->
-                  <div v-if="isUploadTask && isTaskIssued" class="mx-6 mt-4 px-4 py-2.5 bg-[#E6F7FF] border border-[#91D5FF] rounded-md flex items-center gap-2">
+                  <div v-if="(isUploadTask || isFreeCodingLikeTask) && isTaskIssued" class="mx-6 mt-4 px-4 py-2.5 bg-[#E6F7FF] border border-[#91D5FF] rounded-md flex items-center gap-2">
                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" class="text-[#1890FF] shrink-0">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                         <path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -384,7 +377,7 @@
                         :data="groupTaskData" 
                         class="rounded-lg overflow-hidden border border-gray-100 task-student-table"
                         :show-index="true"
-                        :selectable="isBatchMode && isCustomExercise"
+                        :selectable="isBatchMode && isExerciseTask"
                         :selected-keys="selectedRowKeys"
                         :selectable-filter="batchSelectableFilter"
                         @select="handleTableSelect"
@@ -483,7 +476,7 @@
                      <template #cell-action="{ row }">
                         <div class="flex items-center justify-center gap-2">
                            <!-- Custom Exercise: 查看 + 打回重做 -->
-                           <template v-if="isCustomExercise && row.submissionStatus === 'submitted'">
+                           <template v-if="isExerciseTask && row.submissionStatus === 'submitted'">
                               <button 
                                  class="px-3 py-1 text-xs text-[#FF9900] border border-[#FF9900] rounded hover:bg-[#FFF7E6] transition-colors"
                                  @click="handleViewAndGrade(row)"
@@ -498,7 +491,7 @@
                               </button>
                            </template>
                            <!-- Free Coding: 查看并评分 -->
-                           <template v-else-if="isFreeCoding && row.submissionStatus === 'submitted'">
+                           <template v-else-if="isFreeCodingLikeTask && row.submissionStatus === 'submitted'">
                               <button 
                                  class="px-4 py-1.5 text-sm text-gray-600 border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                                  @click="handleViewAndScore(row)"
@@ -534,7 +527,7 @@
                   </div>
 
                   <!-- Batch Operation Footer Bar -->
-                  <div v-if="isBatchMode && isCustomExercise" class="shrink-0 border-t border-gray-200 bg-white px-6 py-3 flex items-center justify-between">
+                  <div v-if="isBatchMode && isExerciseTask" class="shrink-0 border-t border-gray-200 bg-white px-6 py-3 flex items-center justify-between">
                      <div class="flex items-center gap-4">
                         <label class="flex items-center gap-2 cursor-pointer text-sm text-gray-600">
                            <div 
@@ -605,6 +598,7 @@
                  
                  <MButton 
                     class="!bg-white !text-gray-600 border !border-gray-200 hover:!bg-gray-50 px-8 py-2.5 shadow-sm active:scale-95 transition-all"
+                    @click="handleViewTaskDetail"
                  >
                     {{ $t('taskManagement.viewDetails') }}
                  </MButton>
@@ -620,8 +614,8 @@
        v-model="showIssueModal"
        :class-name="currentClassName"
        :task-name="currentTaskLabel"
-       :has-ai-settings="!isUploadTask && !isCustomExercise"
-       :is-free-coding="isFreeCoding"
+       :has-ai-settings="!isUploadTask && !isExerciseTask"
+       :is-free-coding="isFreeCodingLikeTask"
        :editor-name="selectedEditor"
        @confirm-group="handleIssueGroup"
        @confirm-student="handleIssueStudent"
@@ -679,6 +673,8 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
+import tool1Cover from '~/assets/images/tool1.png'
+import tool5Cover from '~/assets/images/tool5.png'
 const { t } = useI18n()
 const router = useRouter()
 const taskApi = taskmanagementcenterApi()
@@ -819,13 +815,34 @@ const fetchTaskList = async () => {
     taskListData.value = data || []
     // 默认展开所有分类
     expandedKeys.value = taskListData.value.map((c: any) => `category_${c.resourceCategory}`)
-    // 默认选中第一个任务
-    if (taskListData.value.length > 0 && taskListData.value[0].resourceList?.length > 0) {
+    // 优先保持当前选中的任务；不存在时再回退到第一个
+    const currentKey = String(selectedTaskKey.value || '')
+    let matchedTask: any = null
+    if (currentKey) {
+      for (const category of taskListData.value) {
+        const found = (category.resourceList || []).find((r: any) => String(r.resourceId) === currentKey)
+        if (found) {
+          matchedTask = found
+          break
+        }
+      }
+    }
+
+    if (matchedTask) {
+      selectedTaskKey.value = matchedTask.resourceId
+      if (isIssuedDistributeType(matchedTask.distributeType)) {
+        fetchStudentTaskList()
+      } else {
+        groupTaskData.value = []
+      }
+    } else if (taskListData.value.length > 0 && taskListData.value[0].resourceList?.length > 0) {
       selectedTaskKey.value = taskListData.value[0].resourceList[0].resourceId
       // 如果该任务已下发，加载学生任务列表
       const firstTask = taskListData.value[0].resourceList[0]
-      if (firstTask.distributeType !== null && firstTask.distributeType !== undefined) {
+      if (isIssuedDistributeType(firstTask.distributeType)) {
         fetchStudentTaskList()
+      } else {
+        groupTaskData.value = []
       }
     } else {
       selectedTaskKey.value = ''
@@ -838,9 +855,13 @@ const fetchTaskList = async () => {
 }
 
 const handleNodeSelect = (node: any) => {
+  // 分类节点仅用于展开，不作为任务项选择
+  if (node?.children !== undefined) {
+    return
+  }
   selectedTaskKey.value = node.id
   // 如果任务已下发，加载学生任务列表；否则清空
-  if (node.distributeType !== null && node.distributeType !== undefined) {
+  if (isIssuedDistributeType(node.distributeType)) {
     fetchStudentTaskList()
   } else {
     groupTaskData.value = []
@@ -860,14 +881,29 @@ const handleNodeExpand = (key: string | number, expanded: boolean) => {
 import { ElMessage } from 'element-plus'
 
 // --- Main Content Data & State ---
-const selectedEditor = ref('ucode4')
+const selectedEditor = ref('vincibot')
 const showIssueModal = ref(false)
+const freeCodingIssuing = ref(false)
+const distributeTypeOverrides = ref<Record<string, number>>({})
+
+const setDistributeTypeOverride = (resourceId: string | number, distributeType: number) => {
+  distributeTypeOverrides.value[String(resourceId)] = distributeType
+}
+
+const clearDistributeTypeOverride = (resourceId: string | number) => {
+  delete distributeTypeOverrides.value[String(resourceId)]
+}
+
+const isIssuedDistributeType = (distributeType: any) => {
+  const dt = Number(distributeType)
+  return dt === 1 || dt === 2
+}
 
 // 根据接口返回的 distributeType 判断任务是否已下发
 // distributeType: 1=学生, 2=小组, null=未下发
 const isTaskIssued = computed({
   get: () => {
-    return selectedTask.value?.distributeType !== null && selectedTask.value?.distributeType !== undefined
+    return isIssuedDistributeType(selectedTask.value?.distributeType)
   },
   set: () => {
     // 下发后重新加载任务列表即可
@@ -875,16 +911,15 @@ const isTaskIssued = computed({
 })
 
 const issueTypeFromApi = computed(() => {
-  const dt = selectedTask.value?.distributeType
+  const dt = Number(selectedTask.value?.distributeType)
   if (dt === 2) return 'group'
   if (dt === 1) return 'student'
   return 'group'
 })
 
 const editorsList = computed(() => [
-  { id: 'ucode4', name: 'uCode4', desc: 'AI编程教育' },
-  { id: 'python', name: 'uPython', desc: 'Python编程' },
-  { id: 'ucode', name: 'uCode', desc: 'uCode' }
+  { id: 'vincibot', name: 'Matatacode\n(VinciBot)', cover: tool1Cover },
+  { id: 'nous', name: 'Matatacode\n(Nous)', cover: tool5Cover }
 ])
 
 const handleCustomTask = () => {
@@ -917,13 +952,63 @@ const openIssueModal = () => {
   showIssueModal.value = true
 }
 
+// 统一解析当前任务可用的资源ID，兼容不同字段命名
+function resolveSelectedResourceId(): string | null {
+  const task = selectedTask.value as any
+  const candidates = [task?.resourceId, task?.id, task?.taskId, selectedTaskKey.value]
+  for (const candidate of candidates) {
+    if (candidate === null || candidate === undefined) continue
+    const value = String(candidate).trim()
+    if (!value || value.startsWith('category_')) continue
+    return value
+  }
+  return null
+}
+
+const handleFreeCodingIssue = async () => {
+  if (freeCodingIssuing.value) return
+  const resourceId = resolveSelectedResourceId()
+  const classId = filters.value.class
+  if (!resourceId) {
+    console.warn('[taskmanagement] 缺少可用 resourceId，当前任务数据：', selectedTask.value)
+    ElMessage.warning(t('taskManagement.noDataSelectedTip'))
+    return
+  }
+  if (classId === null || classId === undefined || String(classId).trim() === '') {
+    ElMessage.warning(t('taskManagement.selectClass'))
+    return
+  }
+  freeCodingIssuing.value = true
+  try {
+    await taskApi.bindDistributer({
+      classId: String(classId),
+      resourceId: String(resourceId),
+      distributeType: 1
+    })
+    setDistributeTypeOverride(String(resourceId), 1)
+    ElMessage.success(t('taskManagement.issueTaskSuccess'))
+    await fetchTaskList()
+    await fetchStudentTaskList()
+  } catch (error: any) {
+    ElMessage.error(error.message || t('taskManagement.issueTaskFailed'))
+  } finally {
+    freeCodingIssuing.value = false
+  }
+}
+
 const handleIssueGroup = async () => {
+  const resourceId = resolveSelectedResourceId()
+  if (!resourceId) {
+    ElMessage.warning(t('taskManagement.noDataSelectedTip'))
+    return
+  }
   try {
     await taskApi.bindDistributer({
       classId: String(filters.value.class || ''),
-      resourceId: String(selectedTaskKey.value),
+      resourceId,
       distributeType: 2
     })
+    setDistributeTypeOverride(resourceId, 2)
     showIssueModal.value = false
     ElMessage.success(t('taskManagement.issueTaskSuccess'))
     // 重新加载任务列表，让 distributeType 从接口更新
@@ -935,12 +1020,18 @@ const handleIssueGroup = async () => {
 }
 
 const handleIssueStudent = async () => {
+  const resourceId = resolveSelectedResourceId()
+  if (!resourceId) {
+    ElMessage.warning(t('taskManagement.noDataSelectedTip'))
+    return
+  }
   try {
     await taskApi.bindDistributer({
       classId: String(filters.value.class || ''),
-      resourceId: String(selectedTaskKey.value),
+      resourceId,
       distributeType: 1
     })
+    setDistributeTypeOverride(resourceId, 1)
     showIssueModal.value = false
     ElMessage.success(t('taskManagement.issueTaskSuccess'))
     // 重新加载任务列表，让 distributeType 从接口更新
@@ -973,6 +1064,10 @@ const studentTaskColumns = computed(() => [
   { key: 'qaStatus', title: t('taskManagement.qaPushStatus'), align: 'center' as const, width: '130px' },
   { key: 'action', title: t('common.operation'), align: 'center' as const, width: '100px' }
 ])
+
+// AI实践任务列：去掉“已推送答疑助手”
+const aiPracticeStudentColumns = computed(() => studentTaskColumns.value.filter((col: any) => col.key !== 'qaStatus'))
+const aiPracticeGroupColumns = computed(() => groupTaskColumns.value.filter((col: any) => col.key !== 'qaStatus'))
 
 // Student Task Columns for Custom Exercise (matching screenshot)
 const customExerciseColumns = computed(() => [
@@ -1009,16 +1104,40 @@ const uploadTaskGroupColumns = computed(() => [
 
 // 获取当前选中任务的完整数据
 const selectedTask = computed(() => {
+  const currentKey = String(selectedTaskKey.value)
   for (const category of taskListData.value) {
-    const found = (category.resourceList || []).find((r: any) => r.resourceId === selectedTaskKey.value)
-    if (found) return { ...found, resourceCategory: category.resourceCategory }
+    const found = (category.resourceList || []).find((r: any) => String(r.resourceId) === currentKey)
+    if (found) {
+      const rid = String(found.resourceId)
+      const overrideDt = distributeTypeOverrides.value[rid]
+      return {
+        ...found,
+        distributeType: overrideDt === 1 || overrideDt === 2 ? overrideDt : found.distributeType,
+        resourceCategory: category.resourceCategory
+      }
+    }
   }
   return null
 })
 
-// Check if current task is a custom exercise (resourceCategory: 10)
+// 自定义练习题类型（resourceCategory: 11）
 const isCustomExercise = computed(() => {
-  return selectedTask.value?.resourceCategory === 10
+  return Number(selectedTask.value?.resourceCategory) === 11
+})
+
+// 随堂练习类型（resourceCategory: 6）
+const isClassExercise = computed(() => {
+  return Number(selectedTask.value?.resourceCategory) === 6
+})
+
+// 练习题统一类型（自定义练习题 + 随堂练习）
+const isExerciseTask = computed(() => {
+  return isCustomExercise.value || isClassExercise.value
+})
+
+// AI实践任务（resourceCategory: 10）
+const isAiPracticeTask = computed(() => {
+  return Number(selectedTask.value?.resourceCategory) === 10
 })
 
 // Check if current task is upload task
@@ -1029,8 +1148,15 @@ const isUploadTask = computed(() => {
 
 // Check if current task is free coding
 const isFreeCoding = computed(() => {
-  // TODO: 根据实际 resourceCategory 判断自由编程类型
-  return false
+  // 自由编程类型（resourceCategory: 12）
+  return Number(selectedTask.value?.resourceCategory) === 12
+})
+const isStudentCodingTask = computed(() => {
+  // 学生编程任务类型（resourceCategory: 7）
+  return Number(selectedTask.value?.resourceCategory) === 7
+})
+const isFreeCodingLikeTask = computed(() => {
+  return isFreeCoding.value || isStudentCodingTask.value
 })
 
 const issueType = computed({
@@ -1040,13 +1166,17 @@ const issueType = computed({
   }
 })
 const currentColumns = computed(() => {
-  // Custom Exercise uses special columns
-  if (isCustomExercise.value) {
+  // Exercise tasks use special columns
+  if (isExerciseTask.value) {
     return customExerciseColumns.value
   }
   // Upload Task (Personal Upload / Free Coding) uses upload columns
-  if (isUploadTask.value) {
+  if (isUploadTask.value || isFreeCodingLikeTask.value) {
     return issueType.value === 'group' ? uploadTaskGroupColumns.value : uploadTaskStudentColumns.value
+  }
+  // AI实践任务：隐藏“已推送答疑助手”列
+  if (isAiPracticeTask.value) {
+    return issueType.value === 'group' ? aiPracticeGroupColumns.value : aiPracticeStudentColumns.value
   }
   const baseCols = issueType.value === 'group' ? groupTaskColumns.value : studentTaskColumns.value
   return baseCols
@@ -1061,7 +1191,7 @@ const submissionFilterOptions = computed(() => {
     { label: t('taskManagement.unsubmitted'), value: 'unsubmitted' }
   ]
   // Upload tasks have additional "resubmitted" option
-  if (isUploadTask.value) {
+  if (isUploadTask.value || isFreeCodingLikeTask.value) {
     options.push({ label: t('taskManagement.resubmitted'), value: 'resubmitted' })
   }
   return options
@@ -1103,9 +1233,10 @@ const scoreToStars = (score: number | null, totalScore: number | null): number =
 
 // 加载学生任务列表
 const fetchStudentTaskList = async () => {
-  if (!selectedTaskKey.value) return
+  const resourceId = resolveSelectedResourceId()
+  if (!resourceId) return
   try {
-    const data = await taskApi.getStudentTaskList({ resourceId: String(selectedTaskKey.value) })
+    const data = await taskApi.getStudentTaskList({ resourceId })
     groupTaskData.value = (data || []).map((item: any) => ({
       id: item.taskId,
       studentName: item.studentName,
@@ -1131,7 +1262,7 @@ const showWithdrawModal = ref(false)
 // Exercise Detail Modal State
 const showExerciseDetailModal = ref(false)
 const viewTaskId = ref<string | null>(null)
-const currentResourceId = computed(() => selectedTask.value?.resourceId ? String(selectedTask.value.resourceId) : null)
+const currentResourceId = computed(() => resolveSelectedResourceId())
 
 // View and Score Modal State
 const showViewScoreModal = ref(false)
@@ -1248,12 +1379,18 @@ const confirmReturnToRedo = async () => {
 }
 
 const handleWithdrawConfirm = async () => {
+  const resourceId = resolveSelectedResourceId()
+  if (!resourceId) {
+    ElMessage.warning(t('taskManagement.noDataSelectedTip'))
+    return
+  }
   try {
     await taskApi.bindWithdrawr({
       classId: String(filters.value.class || ''),
-      resourceId: String(selectedTaskKey.value),
+      resourceId,
       distributeType: issueTypeFromApi.value === 'group' ? 2 : 1
     })
+    clearDistributeTypeOverride(resourceId)
     ElMessage.success(t('taskManagement.withdrawSuccess'))
     // 撤回后重新加载任务列表，让 distributeType 从接口更新
     await fetchTaskList()

@@ -20,7 +20,10 @@
       <img src="~/assets/images/bg.png" alt="背景插图" class="object-contain" />
     </div>
     <!-- 右侧登录表单 -->
-    <div class="flex-1 pt-[104px] px-10 flex flex-col relative">
+    <div
+      class="flex-1 px-10 flex flex-col relative min-h-0"
+      :class="loginType === 'trial' ? 'pt-[72px]' : 'pt-[104px]'"
+    >
       <!-- 语言切换器 -->
       <div class="absolute top-4 right-4 z-20">
         <LanguageSwitcher />
@@ -102,7 +105,7 @@
         </Transition>
       </div>
       <!-- 体验账号申请表单 -->
-      <div v-else-if="loginType === 'trial'">
+      <div v-else-if="loginType === 'trial'" class="flex-1 min-h-0 overflow-y-auto pr-1">
         <TrialAccountForm 
           ref="trialFormRef"
           @submit="handleTrialSubmit"
@@ -111,7 +114,8 @@
       <!-- 登录/提交按钮（除了忘记密码外都显示） -->
       <client-only v-if="loginType !== 'forgotPassword'">
         <button
-          class="w-full py-3 mt-4 bg-[#FFA54D] border border-solid border-gray-300 rounded-[40px] text-white text-base font-medium cursor-pointer transition-colors"
+          class="w-full py-3 bg-[#FFA54D] border border-solid border-gray-300 rounded-[40px] text-white text-base font-medium cursor-pointer transition-colors shrink-0"
+          :class="isTrialMode ? 'mt-4 mb-4' : 'mt-4'"
           @click="handleLogin"
         >
           {{ isTrialMode ? t('auth.submit') : t('auth.login') }}
@@ -220,7 +224,10 @@ const loginType = ref<
   "campus" | "phonenumber" | "classcode" | "trial" | "forgotPassword"
 >("campus");
 const isTrialMode = computed(() => loginType.value === "trial");
-const trialFormRef = ref<{ handleSubmit: () => void } | null>(null);
+const trialFormRef = ref<{
+  handleSubmit: () => void;
+  setFieldError: (field: "smsCode", message: string) => void;
+} | null>(null);
 const agreed = ref(false);
 const countdown = ref(0);
 const showAgreementRequiredModal = ref(false);
@@ -420,7 +427,7 @@ const handleLogout = () => {
 const handleTrialSubmit = async (data: any) => {
   console.log("体验账号申请数据:", data);
   try {
-    await applyTrialAccount(
+    const res = await applyTrialAccount(
       data.name,
       data.phonenumber,
       data.smsCode,
@@ -428,12 +435,27 @@ const handleTrialSubmit = async (data: any) => {
       data.purposes.join(','),   // purpose: 多选转为逗号分隔字符串
       data.products.join(',')    // product: 多选转为逗号分隔字符串
     );
-    console.log('✅ 申请提交成功');
 
-    loginType.value = "campus";
+    if (res?.code === 200) {
+      console.log('✅ 申请提交成功');
+      loginType.value = "campus";
+      return;
+    }
+
+    const errorMsg = res?.msg || "申请提交失败，请重试";
+    if (errorMsg.includes("验证码")) {
+      trialFormRef.value?.setFieldError("smsCode", errorMsg);
+    } else {
+      ElMessage.error(errorMsg);
+    }
   } catch (error: any) {
     console.error('❌ 申请提交失败:', error);
-   // ElMessage.error(error?.data?.msg || error?.message || "申请提交失败，请重试");
+    const errorMsg = error?.data?.msg || error?.message || "申请提交失败，请重试";
+    if (errorMsg.includes("验证码")) {
+      trialFormRef.value?.setFieldError("smsCode", errorMsg);
+      return;
+    }
+    ElMessage.error(errorMsg);
   }
 };
 // 忘记密码提交

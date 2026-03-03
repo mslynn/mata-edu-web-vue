@@ -123,6 +123,9 @@
             <input 
               v-model="teacherForm.phone" 
               type="tel" 
+              inputmode="numeric"
+              :maxlength="phoneMaxLength"
+              @input="handlePhoneInput"
               :placeholder="$t('schoolAdmin.inputAdminPhone')"
               class="flex-1 px-2 py-3 text-sm text-[#4D4D4D] placeholder-[#999] outline-none bg-transparent rounded-r-full"
             />
@@ -338,14 +341,29 @@ const showTransferTeacherModal = ref(false)
 const isEditTeacher = ref(false)
 const teacherForm = reactive({ id: '', teacherName: '', phone: '', countryCode: '86' })
 const countryCodeRef = ref<any>(null)
+const phoneMaxLength = ref(11)
 const deleteTeacherConfirmText = ref('')
 const deleteTeacherIds = ref<string[]>([])
 const resetTeacherConfirmText = ref('')
 const resetTeacherIds = ref<string[]>([])
 
+const getPhoneMaxLength = (countryCode: string) => {
+  const countries = countryCodeRef.value?.countries || []
+  const matched = countries.find((country: any) => country.code === countryCode)
+  return Number(matched?.maxLength) || 11
+}
+
+const handlePhoneInput = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value
+    .replace(/\D/g, '')
+    .slice(0, phoneMaxLength.value)
+  teacherForm.phone = value
+}
+
 // 国家区号变更
 const handleCountryChange = (country: any) => {
-  console.log('选择了国家:', country.name, '+' + country.code)
+  phoneMaxLength.value = Number(country?.maxLength) || 11
+  teacherForm.phone = (teacherForm.phone || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
 }
 
 // 转让相关
@@ -427,6 +445,7 @@ const handleCreateAdmin = () => {
   teacherForm.teacherName = ''
   teacherForm.phone = ''
   teacherForm.countryCode = '86'
+  phoneMaxLength.value = getPhoneMaxLength(teacherForm.countryCode)
   showTeacherModal.value = true
 }
 
@@ -435,8 +454,9 @@ const handleEditTeacher = (row: any) => {
   isEditTeacher.value = true
   teacherForm.id = row.userId
   teacherForm.teacherName = row.nickName
-  teacherForm.phone = row.phonenumber
   teacherForm.countryCode = row.countryCode || '86'
+  phoneMaxLength.value = getPhoneMaxLength(teacherForm.countryCode)
+  teacherForm.phone = (row.phonenumber || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
   showTeacherModal.value = true
 }
 

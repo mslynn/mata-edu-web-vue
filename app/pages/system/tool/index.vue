@@ -4,6 +4,32 @@
     <h1 class="page-title">{{ t('tool.pageTitle') }}</h1>
     
     <div class="tool-grid">
+      <!-- 骨架屏 -->
+      <template v-if="pageLoading">
+        <div v-for="i in 5" :key="i" class="tool-card">
+          <el-skeleton animated :rows="0">
+            <template #template>
+              <div class="tool-content">
+                <div class="tool-left">
+                  <el-skeleton-item variant="rect" style="width: 70px; height: 70px; border-radius: 16px; margin-bottom: 10px" />
+                  <el-skeleton-item variant="text" style="width: 60px" />
+                </div>
+                <div class="tool-right">
+                  <el-skeleton-item variant="text" style="width: 100%; margin-bottom: 10px" />
+                  <el-skeleton-item variant="text" style="width: 100%; margin-bottom: 10px" />
+                  <el-skeleton-item variant="text" style="width: 70%" />
+                </div>
+              </div>
+              <div class="tool-actions">
+                <el-skeleton-item variant="rect" style="width: 100px; height: 34px; border-radius: 6px" />
+                <el-skeleton-item variant="rect" style="width: 100px; height: 34px; border-radius: 6px" />
+              </div>
+            </template>
+          </el-skeleton>
+        </div>
+      </template>
+      <!-- 真实内容 -->
+      <template v-else>
       <div v-for="tool in toolList" :key="tool.id" class="tool-card">
         <div class="tool-content">
           <!-- 左侧图标和名称 -->
@@ -50,6 +76,7 @@
           </button>
         </div>
       </div>
+      </template>
     </div>
 
     <!-- iframe 弹窗 -->
@@ -97,6 +124,14 @@ definePageMeta({
 })
 
 const { t, locale } = useI18n()
+
+// 页面骨架屏（最少显示 300ms）
+const pageLoading = ref(true)
+onMounted(() => {
+  setTimeout(() => {
+    pageLoading.value = false
+  }, 300)
+})
 
 interface Tool {
   id: string
@@ -205,6 +240,9 @@ const handleCreate = (tool: Tool) => {
       const lang = locale.value === 'zh' ? 'zh' : 'en'
       url = `${url}?lang=${lang}`
     }
+
+    const separator = url.includes('?') ? '&' : '?'
+    url = `${url}${separator}ch=aiedu`
 
     currentIframeUrl.value = url
     currentToolName.value = tool.name.replace('<br/>', ' ')

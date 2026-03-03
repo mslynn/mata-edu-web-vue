@@ -170,9 +170,11 @@ export const useTeacher = () => {
     }
   };
   // 重置密码
-  const resetPassword = async (ids: string[]) => {
+  const resetPassword = async (ids: string[], password?: string) => {
     try {
-      const response = await http.post("/system/student/reset", { ids });
+      const payload = password ? { ids, password } : { ids };
+      const headers = password ? { isEncrypt: "true" } : {};
+      const response = await http.post("/system/student/reset", payload, headers);
       if (response.code !== 200) {
         throw new Error(response.msg || "重置密码失败");
       }
@@ -196,9 +198,11 @@ export const useTeacher = () => {
   };
 
   // 删除学生
-  const removeStudent = async (ids: string[]) => {
+  const removeStudent = async (ids: string[], password?: string) => {
     try {
-      const response = await http.del(`/system/student/${ids.join(",")}`);
+      const response = password
+        ? await http.request(`/system/student/${ids.join(",")}`, { method: "DELETE", params: { password } })
+        : await http.del(`/system/student/${ids.join(",")}`);
       if (response.code !== 200) {
         throw new Error(response.msg || "删除学生失败");
       }
@@ -429,9 +433,11 @@ export const useTeacher = () => {
     }
   };
   //删除小组
-  const deleteGroup = async (ids: string[]) => {
+  const deleteGroup = async (ids: string[], password?: string) => {
     try {
-      const response = await http.del(`/system/team/${ids.join(",")}`);
+      const response = password
+        ? await http.request(`/system/team/${ids.join(",")}`, { method: "DELETE", params: { password } })
+        : await http.del(`/system/team/${ids.join(",")}`);
       return response.data;
     } catch (error: any) {
       throw error;

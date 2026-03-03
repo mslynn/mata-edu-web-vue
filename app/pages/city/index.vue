@@ -9,7 +9,7 @@
         <!-- 搜索栏 -->
         <div class="flex items-center justify-between mb-4">
           <!-- 搜索框 -->
-          <div class="w-[240px]">
+          <div class="w-[320px] max-w-full">
             <MInput
               v-model="searchKeyword"
               :placeholder="$t('city.searchAdminPlaceholder')"
