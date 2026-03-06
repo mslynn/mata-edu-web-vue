@@ -45,7 +45,10 @@
         />
         <button 
           class="send-code-btn"
-          :class="{ 'is-counting': countdown > 0 }"
+          :class="[
+            { 'is-counting': countdown > 0 },
+            'bg-primary text-white'
+          ]"
           :disabled="countdown > 0" 
           @click="handleSendCode"
         >
@@ -65,6 +68,8 @@
         <input 
           :type="showPassword ? 'text' : 'password'"
           v-model="formData.password"
+          minlength="6"
+          maxlength="30"
           @input="clearError('password')"
           :placeholder="t('auth.newPassword')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
@@ -101,6 +106,8 @@
         <input 
           :type="showConfirmPassword ? 'text' : 'password'"
           v-model="formData.confirmPassword"
+          minlength="6"
+          maxlength="30"
           @input="clearError('confirmPassword')"
           :placeholder="t('auth.confirmNewPassword')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
@@ -139,6 +146,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useAuth } from '~/composables/api/useAuth'
 
 const { $i18n } = useNuxtApp()
@@ -221,6 +229,7 @@ const handleSendCode = async () => {
     console.log('📤 重置密码-发送验证码:', phone)
     await getSmsCode(phone)
     console.log('✅ 验证码发送成功')
+    ElMessage.success(t('auth.codeSendSuccess'))
     
     // 开始60s倒计时
     countdown.value = 60
@@ -264,12 +273,12 @@ const handleSubmit = () => {
     hasError = true
   }
   
-  // 校验新密码（8-16位，必须包含数字+大小写字母）
-  const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,16}$/
+  // 校验新密码长度（6-30位）
+  const password = formData.password || ''
   if (!formData.password.trim()) {
     errors.password = t('auth.newPassword')
     hasError = true
-  } else if (!passwordRegex.test(formData.password)) {
+  } else if (password.length < 6 || password.length > 30) {
     errors.password = t('auth.passwordRule')
     hasError = true
   }

@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-base font-medium text-gray-800">{{ $t('school.schoolManage') }}</h1>
         <div class="text-gray-600 text-sm">
-          {{ $t('school.schoolCount') }}：{{ total }}
+          {{ $t('school.schoolCount') }}：{{ total }}个
         </div>
       </div>
 

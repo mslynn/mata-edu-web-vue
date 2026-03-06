@@ -121,6 +121,17 @@
         </div>
       </div>
     </div>
+
+    <button
+      v-if="showBackToClassroomEntry"
+      class="back-classroom-entry"
+      @click="goBackToClassroom"
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      <span>返回课堂</span>
+    </button>
   </div>
 </template>
 
@@ -137,6 +148,9 @@ const config = useRuntimeConfig()
 const { logout } = useAuth()
 const { getStudentList } = student()
 const router = useRouter()
+const STUDENT_ONGOING_CLASSROOM_KEY = 'student_ongoing_classroom'
+const STUDENT_PAUSE_AUTO_ENTER_KEY = 'student_pause_auto_enter_classroom'
+const STUDENT_CLASS_TIMER_STATE_KEY = 'student_classroom_timer_state'
 
 const learningCenterData = reactive({
   chapterName: '暂无',
@@ -151,6 +165,7 @@ const classInfo = ref({
   className: '',
   teacherPeerId: ''  // 教师的 PeerJS ID
 })
+const showBackToClassroomEntry = ref(false)
 
 // WebSocket 连接
 let notifyWs: WebSocket | null = null
@@ -168,10 +183,87 @@ const loadLearningCenterData = async () => {
   }
 }
 
+const getStoredClassroomInfo = () => {
+  if (typeof window === 'undefined') return null
+  const stored = localStorage.getItem(STUDENT_ONGOING_CLASSROOM_KEY)
+  if (!stored) return null
+  try {
+    const parsed = JSON.parse(stored)
+    const expireAt = Number(parsed?.expireAt || 0)
+    if (expireAt && expireAt < Date.now()) {
+      localStorage.removeItem(STUDENT_ONGOING_CLASSROOM_KEY)
+      localStorage.removeItem(STUDENT_CLASS_TIMER_STATE_KEY)
+      return null
+    }
+    return parsed
+  } catch {
+    localStorage.removeItem(STUDENT_ONGOING_CLASSROOM_KEY)
+    localStorage.removeItem(STUDENT_CLASS_TIMER_STATE_KEY)
+    return null
+  }
+}
+
+const updateBackToClassroomEntry = () => {
+  showBackToClassroomEntry.value = !!getStoredClassroomInfo()
+}
+
+const saveOngoingClassroom = (classId = '', teacherPeerId = '') => {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(
+    STUDENT_ONGOING_CLASSROOM_KEY,
+    JSON.stringify({
+      classId: String(classId || ''),
+      teacherPeerId: String(teacherPeerId || ''),
+      expireAt: Date.now() + 2 * 60 * 60 * 1000
+    })
+  )
+  updateBackToClassroomEntry()
+}
+
+const clearOngoingClassroom = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STUDENT_ONGOING_CLASSROOM_KEY)
+  updateBackToClassroomEntry()
+}
+
+const clearClassTimerState = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STUDENT_CLASS_TIMER_STATE_KEY)
+}
+
+const isPauseAutoEnterClassroom = () => {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(STUDENT_PAUSE_AUTO_ENTER_KEY) === '1'
+}
+
+const setPauseAutoEnterClassroom = (paused: boolean) => {
+  if (typeof window === 'undefined') return
+  if (paused) {
+    localStorage.setItem(STUDENT_PAUSE_AUTO_ENTER_KEY, '1')
+  } else {
+    localStorage.removeItem(STUDENT_PAUSE_AUTO_ENTER_KEY)
+  }
+}
+
+const buildStudentClassroomPath = (info?: { classId?: string; teacherPeerId?: string }) => {
+  const search = new URLSearchParams()
+  if (info?.classId) search.set('classId', String(info.classId))
+  if (info?.teacherPeerId) search.set('teacherPeerId', String(info.teacherPeerId))
+  const query = search.toString()
+  return query ? `/student/classroom?${query}` : '/student/classroom'
+}
+
+const goBackToClassroom = () => {
+  const info = getStoredClassroomInfo()
+  setPauseAutoEnterClassroom(false)
+  router.push(buildStudentClassroomPath(info || undefined))
+}
+
 // 连接 WebSocket 监听上课通知
 onMounted(() => {
   connectNotifyWebSocket()
   loadLearningCenterData()
+  updateBackToClassroomEntry()
 })
 
 onUnmounted(() => {
@@ -216,14 +308,22 @@ const connectNotifyWebSocket = () => {
       // 处理上课通知 - 直接跳转到课堂
       if (message.type === 'CLASS_BEGIN') {
         console.log('[学生端首页] 收到上课通知，直接进入课堂！')
-        
-        // 直接跳转到课堂页面，不带参数
-        router.push('/student/classroom')
+        const classId = String(message.classId || '')
+        const teacherPeerId = String(message.peerId || message.teacherPeerId || '')
+        saveOngoingClassroom(classId, teacherPeerId)
+        if (isPauseAutoEnterClassroom()) {
+          console.log('[学生端首页] 当前为手动返回首页，暂停自动进入课堂')
+          return
+        }
+        router.push(buildStudentClassroomPath({ classId, teacherPeerId }))
       }
       
       // 处理下课通知
       if (message.type === 'CLASS_END') {
         console.log('[学生端] 收到下课通知')
+        clearOngoingClassroom()
+        clearClassTimerState()
+        setPauseAutoEnterClassroom(false)
         ElMessage.info('老师已下课')
       }
     } catch (e) {
@@ -249,6 +349,9 @@ const handleLogout = () => {
     notifyWs.close()
     notifyWs = null
   }
+  clearOngoingClassroom()
+  clearClassTimerState()
+  setPauseAutoEnterClassroom(false)
   logout()
 }
 </script>
@@ -264,6 +367,32 @@ const handleLogout = () => {
   display: flex;
     width: 95%;
     margin: 0 auto;
+}
+
+.back-classroom-entry {
+  position: fixed;
+  left: 24px;
+  bottom: 24px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 20px;
+  background: #ff9900;
+  color: #fff;
+  font-size: 14px;
+  box-shadow: 0 8px 20px rgba(255, 153, 0, 0.28);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.back-classroom-entry:hover {
+  background: #e68a00;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(255, 153, 0, 0.36);
 }
 
 /* 左侧面板 585x581 */

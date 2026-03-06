@@ -849,7 +849,7 @@
       @recall="(ids) => updateCoursewareSentStatus(ids, false)"
     />
 
-    <!-- 下课确认弹窗 -->
+   <!-- 学生管理弹窗 -->
     <StudentManageModal
       :visible="showStudentManageModal"
       :class-id="route.query.classId as string"
@@ -1030,6 +1030,7 @@ import { useTeacher } from "~/composables/api/useTeacher";
 import { taskmanagementcenterApi } from "~/composables/api/taskmanagement";
 import { ElMessage } from "~/components/ui";
 import { useI18n } from "vue-i18n";
+import { scoreToStars } from "~/utils/star-rating";
 
 import docIcon from "~/assets/images/doc.png";
 import pptIcon from "~/assets/images/ppt.png";
@@ -1048,7 +1049,7 @@ const { t } = useI18n();
 const route = useRoute();
 const config = useRuntimeConfig();
 const taskApi = taskmanagementcenterApi();
-const { endClass } = useTeacher();
+const { endClass, stopQuickLogin } = useTeacher();
 const { getQuickLoginInfo } = useTeacher();
 
 const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
@@ -1535,22 +1536,6 @@ const filteredTaskData = computed(() => {
 const submittedCount = computed(() => groupTaskData.value.filter((item) => isSubmittedStatus(item.submissionStatus)).length);
 const unsubmittedCount = computed(() => groupTaskData.value.filter((item) => !isSubmittedStatus(item.submissionStatus)).length);
 
-const scoreToStars = (score: number | null, totalScore: number | null): number => {
-  if (score === null || totalScore === null || totalScore === 0) return 0;
-  const rate = Math.round((score / totalScore) * 100);
-  if (rate <= 0) return 0;
-  if (rate <= 10) return 0.5;
-  if (rate <= 20) return 1;
-  if (rate <= 30) return 1.5;
-  if (rate <= 40) return 2;
-  if (rate <= 50) return 2.5;
-  if (rate <= 60) return 3;
-  if (rate <= 70) return 3.5;
-  if (rate <= 80) return 4;
-  if (rate <= 90) return 4.5;
-  return 5;
-};
-
 const groupTaskColumns = computed(() => [
   { key: "groupName", title: t("taskManagement.groupName"), align: "center" as const, width: "150px" },
   { key: "leader", title: t("taskManagement.leader"), align: "center" as const, width: "100px" },
@@ -1684,9 +1669,10 @@ const handleSelectAllCheckbox = () => {
 
 const fetchStudentTaskList = async () => {
   const resourceId = resolveSelectedResourceId();
-  if (!resourceId) return;
+  const classId = String(route.query.classId || "");
+  if (!resourceId || !classId) return;
   try {
-    const data = await taskApi.getStudentTaskList({ resourceId });
+    const data = await taskApi.getStudentTaskList({ resourceId, classId });
     groupTaskData.value = (data || []).map((item: any, index: number) => {
       const status = Number(item.status);
       const submissionStatus =
@@ -2109,6 +2095,13 @@ const confirmEndClass = async () => {
       chapterId,
       peerId: teacherPeerId.value,
     });
+    if (classId) {
+      try {
+        await stopQuickLogin(classId);
+      } catch (error) {
+        console.error("停用快捷登录失败:", error);
+      }
+    }
     // 璋冭瘯鏃ュ織
     showEndClassModal.value = false
     const classKey = `class_start_${classId}_${chapterId}`;

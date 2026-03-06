@@ -263,6 +263,7 @@ import { ElMessage } from "element-plus";
 import { student } from "~/composables/api/student";
 import StudentTaskAnswerModal from "~/components/student/StudentTaskAnswerModal.vue";
 import StarRating from "~/components/ui/StarRating.vue";
+import { normalizeRatePercent, percentToStars, scoreToStars } from "~/utils/star-rating";
 
 definePageMeta({ layout: "default" });
 
@@ -380,30 +381,6 @@ const selectedTaskReviewStatus = computed(() => {
   return isSelectedTaskSubmitted.value ? "已提交" : "未提交";
 });
 
-const normalizeRatePercent = (value: any): number | null => {
-  if (value === null || value === undefined) return null;
-  const text = String(value).trim().replace("%", "");
-  if (!text) return null;
-  const num = Number(text);
-  if (Number.isNaN(num)) return null;
-  const rate = num > 0 && num <= 1 ? num * 100 : num;
-  return Math.max(0, Math.min(100, rate));
-};
-
-const rateToStars = (rate: number): number => {
-  if (rate <= 0) return 0;
-  if (rate <= 10) return 0.5;
-  if (rate <= 20) return 1;
-  if (rate <= 30) return 1.5;
-  if (rate <= 40) return 2;
-  if (rate <= 50) return 2.5;
-  if (rate <= 60) return 3;
-  if (rate <= 70) return 3.5;
-  if (rate <= 80) return 4;
-  if (rate <= 90) return 4.5;
-  return 5;
-};
-
 const selectedTaskScoreStar = computed(() => {
   const raw = selectedTask.value?.raw || {};
   const directRate =
@@ -414,17 +391,10 @@ const selectedTaskScoreStar = computed(() => {
     normalizeRatePercent(raw?.correctPercent);
 
   if (directRate !== null) {
-    return rateToStars(directRate);
+    return percentToStars(directRate);
   }
 
-  const score = Number(raw?.score);
-  const totalScore = Number(raw?.totalScore);
-  if (Number.isNaN(score) || Number.isNaN(totalScore) || totalScore <= 0) {
-    return 0;
-  }
-
-  const rate = Math.round((score / totalScore) * 100);
-  return rateToStars(rate);
+  return scoreToStars(raw?.score, raw?.totalScore);
 });
 
 const firstNonEmptyString = (...values: any[]) => {
@@ -437,27 +407,7 @@ const firstNonEmptyString = (...values: any[]) => {
 };
 
 const normalizeTaskStatus = (item: any): TaskStatus => {
-  const statusNum = Number(
-    item?.taskStatus ?? item?.chapterStatus ?? item?.commitStatus ?? item?.status
-  );
-  if (statusNum === 0 || statusNum === 1) return statusNum;
-  if (statusNum === 2) return 0;
-  if (statusNum === 3) return 1;
-
-  const submissionStatus = firstNonEmptyString(item?.submissionStatus).toLowerCase();
-  if (submissionStatus === "submitted") return 1;
-  if (submissionStatus === "unsubmitted") return 0;
-
-  const statusText = firstNonEmptyString(
-    item?.taskStatusName,
-    item?.taskStatusText,
-    item?.statusName,
-    item?.status
-  ).toLowerCase();
-  if (statusText.includes("已") || statusText.includes("完成") || statusText.includes("done")) return 1;
-  if (statusText.includes("部分") || statusText.includes("partial")) return 0;
-  if (statusText.includes("未") || statusText.includes("un")) return 0;
-  return 0;
+  return Number(item?.status ?? item?.taskStatus) === 1 ? 1 : 0;
 };
 
 const categoryNameMap: Record<number, string> = {
@@ -482,24 +432,12 @@ const taskStatusClass = (status: TaskStatus) => {
 };
 
 const normalizeTaskItem = (item: any, index: number, fallbackCategory?: number): TaskItem => {
-  const key = firstNonEmptyString(
-    item?.taskId,
-    item?.taskid,
-    item?.taskID,
-    item?.resourceId,
-    item?.id,
-    `${index}`
-  );
-  // 下发/开始任务必须使用任务列表返回的 taskId，不能回退到其它字段
-  const taskId = firstNonEmptyString(item?.taskId, item?.taskid, item?.taskID);
-  // 左侧子级：优先使用 taskName，resourceName 仅兜底
-  const menuName =
-    firstNonEmptyString(item?.taskName, item?.resourceName, item?.fileName, item?.name) || "-";
-  // 右侧名称：优先使用内层 taskName
-  const taskName =
-    firstNonEmptyString(item?.taskName, item?.resourceName, item?.fileName, item?.name) || "-";
+  const taskId = String(item?.taskId || "");
+  const key = taskId || `task_${index}`;
+  const taskName = String(item?.taskName || "-");
+  const menuName = taskName;
   const status = normalizeTaskStatus(item);
-  const resourceCategory = Number(item?.resourceCategory ?? item?.category ?? fallbackCategory ?? -1);
+  const resourceCategory = Number(item?.resourceCategory ?? fallbackCategory ?? -1);
 
   return {
     key,
@@ -513,44 +451,25 @@ const normalizeTaskItem = (item: any, index: number, fallbackCategory?: number):
 };
 
 const normalizeTaskGroupList = (data: any): TaskGroup[] => {
-  const list = Array.isArray(data)
-    ? data
-    : Array.isArray(data?.records)
-      ? data.records
-      : Array.isArray(data?.rows)
-        ? data.rows
-        : Array.isArray(data?.list)
-          ? data.list
-          : [];
+  if (!Array.isArray(data)) return [];
 
-  if (list.length === 0) return [];
-
-  if (
-    list.some(
-      (item: any) =>
-        Array.isArray(item?.resourceList) ||
-        Array.isArray(item?.taskList) ||
-        Array.isArray(item?.tasklist)
-    )
-  ) {
-    return list
+  const hasGroupedTaskList = data.some(
+    (group: any) => Array.isArray(group?.taskList) || Array.isArray(group?.resourceList)
+  );
+  if (hasGroupedTaskList) {
+    return data
       .map((group: any, index: number) => {
         const category = Number(group?.resourceCategory ?? -1);
-        const groupName =
-          firstNonEmptyString(group?.resourceName, group?.groupName, getCategoryName(category)) ||
-          `任务分组${index + 1}`;
-        const rawItems = Array.isArray(group?.resourceList)
-          ? group.resourceList
-          : Array.isArray(group?.taskList)
-            ? group.taskList
-            : Array.isArray(group?.tasklist)
-              ? group.tasklist
+        const groupName = String(group?.resourceName || getCategoryName(category) || `任务分组${index + 1}`);
+        const taskList = Array.isArray(group?.taskList)
+          ? group.taskList
+          : Array.isArray(group?.resourceList)
+            ? group.resourceList
             : [];
-        const items = rawItems.map((task: any, taskIndex: number) =>
-          normalizeTaskItem(task, taskIndex, category)
-        );
+        const items = taskList.map((task: any, taskIndex: number) => normalizeTaskItem(task, taskIndex, category));
+
         return {
-          key: firstNonEmptyString(group?.resourceCategory, groupName, `${index}`),
+          key: `cat_${category}_${index}`,
           name: groupName,
           items,
         };
@@ -558,20 +477,17 @@ const normalizeTaskGroupList = (data: any): TaskGroup[] => {
       .filter((group: TaskGroup) => group.items.length > 0);
   }
 
-  const groupedMap = new Map<string, TaskGroup>();
-  list.forEach((item: any, index: number) => {
-    const normalizedTask = normalizeTaskItem(item, index);
-    const category = Number(item?.resourceCategory ?? normalizedTask.resourceCategory ?? -1);
-    const groupKey = `cat_${category}`;
-    // 扁平数据分支：父级优先使用接口 resourceName，再回退到分类文案
-    const groupName =
-      firstNonEmptyString(item?.resourceName, item?.groupName, getCategoryName(category)) ||
-      getCategoryName(category);
-
-    if (!groupedMap.has(groupKey)) {
-      groupedMap.set(groupKey, { key: groupKey, name: groupName, items: [] });
+  const groupedMap = new Map<number, TaskGroup>();
+  data.forEach((item: any, index: number) => {
+    const category = Number(item?.resourceCategory ?? -1);
+    if (!groupedMap.has(category)) {
+      groupedMap.set(category, {
+        key: `cat_${category}`,
+        name: String(item?.resourceName || getCategoryName(category)),
+        items: [],
+      });
     }
-    groupedMap.get(groupKey)!.items.push(normalizedTask);
+    groupedMap.get(category)!.items.push(normalizeTaskItem(item, index, category));
   });
 
   return [...groupedMap.values()].filter((group) => group.items.length > 0);

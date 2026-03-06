@@ -10,6 +10,8 @@
         <input 
           type="text" 
           :value="modelValue.username"
+          minlength="6"
+          maxlength="30"
           @input="handleInput('username', $event)"
           :placeholder="t('auth.pleaseInputAccount')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"
@@ -28,6 +30,8 @@
         <input 
           :type="showPassword ? 'text' : 'password'"
           :value="modelValue.password"
+          minlength="6"
+          maxlength="30"
           @input="handleInput('password', $event)"
           :placeholder="t('auth.pleaseInputPassword')"
           class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"

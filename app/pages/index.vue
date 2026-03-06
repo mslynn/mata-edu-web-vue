@@ -224,6 +224,8 @@ const loginType = ref<
   "campus" | "phonenumber" | "classcode" | "trial" | "forgotPassword"
 >("campus");
 const isTrialMode = computed(() => loginType.value === "trial");
+const ACCOUNT_PASSWORD_MIN_LENGTH = 6;
+const ACCOUNT_PASSWORD_MAX_LENGTH = 30;
 const trialFormRef = ref<{
   handleSubmit: () => void;
   setFieldError: (field: "smsCode", message: string) => void;
@@ -312,17 +314,35 @@ const handleLogin = async () => {
     // 校园账号登录
     campusErrors.value.username = false;
     campusErrors.value.password = false;
+    const username = (campusForm.value.username || "").trim();
+    const password = campusForm.value.password || "";
     
-    if (!campusForm.value.username || !campusForm.value.password) {
-      if (!campusForm.value.username) campusErrors.value.username = true;
-      if (!campusForm.value.password) campusErrors.value.password = true;
+    if (!username || !password) {
+      if (!username) campusErrors.value.username = true;
+      if (!password) campusErrors.value.password = true;
+      return;
+    }
+
+    if (
+      username.length < ACCOUNT_PASSWORD_MIN_LENGTH ||
+      username.length > ACCOUNT_PASSWORD_MAX_LENGTH
+    ) {
+      ElMessage.warning(t("auth.accountLengthRule"));
+      return;
+    }
+
+    if (
+      password.length < ACCOUNT_PASSWORD_MIN_LENGTH ||
+      password.length > ACCOUNT_PASSWORD_MAX_LENGTH
+    ) {
+      ElMessage.warning(t("auth.passwordRule"));
       return;
     }
     try {
       isNavigating.value = true;
       const result = await login(
-        campusForm.value.username,
-        campusForm.value.password,
+        username,
+        password,
         'password'
       );
       console.log("✅ 登录结果:", result);
@@ -386,19 +406,29 @@ const handleLogin = async () => {
     // 班级码登录
     classCodeErrors.value.classCode = false;
     classCodeErrors.value.classPassword = false;
+    const classCode = (classCodeForm.value.classCode || "").trim();
+    const classPassword = classCodeForm.value.classPassword || "";
     
-    if (!classCodeForm.value.classCode || !classCodeForm.value.classPassword) {
-      if (!classCodeForm.value.classCode)
+    if (!classCode || !classPassword) {
+      if (!classCode)
         classCodeErrors.value.classCode = true;
-      if (!classCodeForm.value.classPassword)
+      if (!classPassword)
         classCodeErrors.value.classPassword = true;
+      return;
+    }
+
+    if (
+      classPassword.length < ACCOUNT_PASSWORD_MIN_LENGTH ||
+      classPassword.length > ACCOUNT_PASSWORD_MAX_LENGTH
+    ) {
+      ElMessage.warning(t("auth.passwordRule"));
       return;
     }
     try {
       isNavigating.value = true;
       const result = await classCodeLogin(
-        classCodeForm.value.classCode,
-        classCodeForm.value.classPassword
+        classCode,
+        classPassword
       );
       console.log('✅ 班级码登录结果:', result);
       
@@ -465,6 +495,7 @@ const handleForgotPasswordSubmit = async (data: any) => {
     let res =  await resetPassword(data.phone, data.code, data.password);
     console.log('✅ 密码重置结果', res);
     if (res.code === 200) {
+      ElMessage.success(t('auth.resetPasswordSuccess'));
       loginType.value = "campus";
     } else {
     //  ElMessage.error(res.msg || "密码重置失败，请重试");

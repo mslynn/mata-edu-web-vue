@@ -28,6 +28,8 @@
           <input 
             :type="showPassword ? 'text' : 'password'"
             :value="modelValue.classPassword"
+            minlength="6"
+            maxlength="30"
             @input="handleInput('classPassword', $event)"
             :placeholder="t('auth.pleaseInputPassword')"
             class="flex-1 border-none outline-none text-sm text-[#808080] placeholder-[#CCCCCC] bg-transparent"

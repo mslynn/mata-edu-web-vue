@@ -215,8 +215,13 @@
           <!-- Tab 切换 - 固定 -->
           <div class="mb-4 flex-shrink-0 flex items-center justify-between gap-4 min-w-0">
             <MTabs v-model="activeTab" :tabs="tabList" class="flex-shrink-0" @change="handleTabChange" />
-            <span class="text-xs sm:text-sm text-gray-500 whitespace-nowrap flex-shrink-0">{{
-              $t('user.studentCount') }}<span class="text-[#FF9900] font-medium ml-1">{{ studentList.length }}</span></span>
+            <span class="text-xs sm:text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
+              {{ activeTab === 'student' ? $t('class.studentCount') : $t('class.groupCount') }}
+              <span class="text-[#FF9900] font-medium ml-1">
+                {{ activeTab === 'student' ? studentList.length : groupList.length }}
+              </span>
+              {{ activeTab === 'student' ? $t('class.person') : $t('class.groupUnit') }}
+            </span>
           </div>
 
           <!-- 学生管理 Tab -->
@@ -361,6 +366,11 @@
                       <span class="tooltip-arrow"></span>
                     </div>
                   </div>
+                </template>
+                <template #loginStatus="{ row }">
+                  <span :class="Number(row.loginStatus) === 1 ? 'text-[#52C41A]' : 'text-[#999999]'">
+                    {{ Number(row.loginStatus) === 1 ? $t('class.loggedIn') : $t('class.notLoggedIn') }}
+                  </span>
                 </template>
                 <template #action="{ row }">
                   <div class="flex items-center justify-center gap-1 lg:gap-2 whitespace-nowrap">
@@ -694,6 +704,8 @@
           <input
             v-model="deleteTeacherPassword"
             :type="showDeleteTeacherPassword ? 'text' : 'password'"
+            minlength="6"
+            maxlength="30"
             :placeholder="t('user.pleaseInputTeacherPassword')"
             class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
           />
@@ -741,6 +753,8 @@
           <input
             v-model="resetTeacherPassword"
             :type="showResetTeacherPassword ? 'text' : 'password'"
+            minlength="6"
+            maxlength="30"
             :placeholder="t('user.pleaseInputTeacherPassword')"
             class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
           />
@@ -1052,6 +1066,8 @@
           <input
             v-model="batchResetPassword"
             :type="showBatchResetPassword ? 'text' : 'password'"
+            minlength="6"
+            maxlength="30"
             :placeholder="t('user.pleaseInputTeacherPassword')"
             class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
           />
@@ -1099,6 +1115,8 @@
           <input
             v-model="batchDeletePassword"
             :type="showBatchDeletePassword ? 'text' : 'password'"
+            minlength="6"
+            maxlength="30"
             :placeholder="t('user.pleaseInputTeacherPassword')"
             class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
           />
@@ -1368,6 +1386,12 @@ const { t } = useI18n();
 const route = useRoute();
 const { user } = useAuth();
 const schoolUserApi = useSchoolUser()
+const PASSWORD_MIN_LENGTH = 6
+const PASSWORD_MAX_LENGTH = 30
+const isPasswordLengthValid = (value: string) => {
+  const length = (value || '').trim().length
+  return length >= PASSWORD_MIN_LENGTH && length <= PASSWORD_MAX_LENGTH
+}
 
 // 当前用户名称
 const currentUserName = computed(() => user.value?.nickName || user.value?.userName || "");
@@ -1680,6 +1704,10 @@ const handleConfirmDeleteTeacher = async () => {
     ElMessage.warning(t('user.pleaseInputTeacherPassword'))
     return
   }
+  if (isBatchDeleteTeacher.value && !isPasswordLengthValid(deleteTeacherPassword.value)) {
+    ElMessage.warning(t('auth.passwordRule'))
+    return
+  }
   try {
     if (isBatchDeleteTeacher.value) {
       await schoolUserApi.deleteTeacher(deleteTeacherIds.value, deleteTeacherPassword.value)
@@ -1714,6 +1742,10 @@ const handleConfirmResetTeacher = async () => {
   // 批量重置需要验证密码
   if (isBatchResetTeacher.value && !resetTeacherPassword.value.trim()) {
     ElMessage.warning(t('user.pleaseInputTeacherPassword'))
+    return
+  }
+  if (isBatchResetTeacher.value && !isPasswordLengthValid(resetTeacherPassword.value)) {
+    ElMessage.warning(t('auth.passwordRule'))
     return
   }
   try {
@@ -1855,6 +1887,16 @@ const tableColumns = computed(() => [
   { key: "studentName", title: t('class.studentName'), minWidth: "120px" },
   { key: "studentNumber", title: t('class.studentAccount'), minWidth: "150px" },
   { key: "createTime", title: t('class.createTime'), minWidth: "150px" },
+  ...(isCurrentClassQuickLogin.value
+    ? [
+        {
+          key: "loginStatus",
+          title: t("class.loginStatus"),
+          width: "140px",
+          align: "center" as const,
+        },
+      ]
+    : []),
   { key: "action", title: t('common.operation'), width: "220px", align: "center" as const },
 ]);
 
@@ -2022,7 +2064,7 @@ const loadGradeOptions = async () => {
     const data = await getGradeDict();
     gradeOptions.value = (data || []).map((item: any) => ({
       label: item.gradeName,
-      value: item.grade,
+      value: String(item.grade),
     }));
   } catch (error) {
     console.error("获取年级字典失败:", error);
@@ -2295,6 +2337,10 @@ const handleConfirmBatchDelete = async () => {
     ElMessage.warning(t('user.pleaseInputTeacherPassword'));
     return;
   }
+  if (!isPasswordLengthValid(batchDeletePassword.value)) {
+    ElMessage.warning(t('auth.passwordRule'));
+    return;
+  }
   try {
     await removeStudent(selectedStudentIds.value.map(String), batchDeletePassword.value);
     ElMessage.success(t('class.deletedStudents', { count: selectedStudentIds.value.length }));
@@ -2343,6 +2389,10 @@ const selectedStudentNames = computed(() => studentList.value.filter((s) => sele
 const handleConfirmBatchResetPassword = async () => {
   if (!batchResetPassword.value.trim()) {
     ElMessage.warning(t('user.pleaseInputTeacherPassword'));
+    return;
+  }
+  if (!isPasswordLengthValid(batchResetPassword.value)) {
+    ElMessage.warning(t('auth.passwordRule'));
     return;
   }
   try {

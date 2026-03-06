@@ -461,7 +461,7 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input v-model="passwordForm.oldPassword" :type="showOldPassword ? 'text' : 'password'" :placeholder="$t('personalCenter.oldPassword')" />
+                            <input v-model="passwordForm.oldPassword" :type="showOldPassword ? 'text' : 'password'" minlength="6" maxlength="30" :placeholder="$t('personalCenter.oldPassword')" />
                             <button type="button" class="password-eye-btn" @click="showOldPassword = !showOldPassword">
                                 <svg v-if="showOldPassword" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -481,7 +481,7 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input v-model="passwordForm.newPassword" :type="showNewPassword ? 'text' : 'password'" :placeholder="$t('personalCenter.newPasswordPlaceholder')" />
+                            <input v-model="passwordForm.newPassword" :type="showNewPassword ? 'text' : 'password'" minlength="6" maxlength="30" :placeholder="$t('personalCenter.newPasswordPlaceholder')" />
                             <button type="button" class="password-eye-btn" @click="showNewPassword = !showNewPassword">
                                 <svg v-if="showNewPassword" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -501,7 +501,7 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input v-model="passwordForm.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" :placeholder="$t('personalCenter.confirmNewPassword')" />
+                            <input v-model="passwordForm.confirmPassword" :type="showConfirmPassword ? 'text' : 'password'" minlength="6" maxlength="30" :placeholder="$t('personalCenter.confirmNewPassword')" />
                             <button type="button" class="password-eye-btn" @click="showConfirmPassword = !showConfirmPassword">
                                 <svg v-if="showConfirmPassword" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -541,7 +541,7 @@
                                 <rect x="3" y="11" width="18" height="11" rx="2" />
                                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                             </svg>
-                            <input v-model="deleteAccountPassword" :type="showDeletePassword ? 'text' : 'password'" :placeholder="$t('personalCenter.inputAccountPassword')" />
+                            <input v-model="deleteAccountPassword" :type="showDeletePassword ? 'text' : 'password'" minlength="6" maxlength="30" :placeholder="$t('personalCenter.inputAccountPassword')" />
                             <button class="toggle-password" @click="showDeletePassword = !showDeletePassword">
                                 <svg v-if="showDeletePassword" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -673,19 +673,20 @@ const passwordErrors = ref({
 const validatePassword = () => {
     let isValid = true
     passwordErrors.value = { oldPassword: '', newPassword: '', confirmPassword: '' }
-    
-    // 密码格式正则：8-16位，必须包含数字、大写字母、小写字母
-    const passwordRegex = /^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])[a-zA-Z0-9]{8,16}$/
+    const isPasswordLengthValid = (value: string) => value.length >= 6 && value.length <= 30
     
     if (!passwordForm.value.oldPassword) {
         passwordErrors.value.oldPassword = t('personalCenter.pleaseInputOldPassword')
+        isValid = false
+    } else if (!isPasswordLengthValid(passwordForm.value.oldPassword)) {
+        passwordErrors.value.oldPassword = t('personalCenter.passwordFormatError')
         isValid = false
     }
     
     if (!passwordForm.value.newPassword) {
         passwordErrors.value.newPassword = t('personalCenter.pleaseInputPassword')
         isValid = false
-    } else if (!passwordRegex.test(passwordForm.value.newPassword)) {
+    } else if (!isPasswordLengthValid(passwordForm.value.newPassword)) {
         passwordErrors.value.newPassword = t('personalCenter.passwordFormatError')
         isValid = false
     } else if (passwordForm.value.newPassword === passwordForm.value.oldPassword) {
@@ -695,6 +696,9 @@ const validatePassword = () => {
     
     if (!passwordForm.value.confirmPassword) {
         passwordErrors.value.confirmPassword = t('personalCenter.pleaseInputConfirmPassword')
+        isValid = false
+    } else if (!isPasswordLengthValid(passwordForm.value.confirmPassword)) {
+        passwordErrors.value.confirmPassword = t('personalCenter.passwordFormatError')
         isValid = false
     } else if (passwordForm.value.confirmPassword !== passwordForm.value.newPassword) {
         passwordErrors.value.confirmPassword = t('personalCenter.passwordNotMatch')
@@ -739,6 +743,10 @@ const handleDeleteAccount = async () => {
     deleteAccountError.value = ''
     if (!deleteAccountPassword.value) {
         deleteAccountError.value = t('personalCenter.pleaseInputPassword')
+        return
+    }
+    if (deleteAccountPassword.value.length < 6 || deleteAccountPassword.value.length > 30) {
+        deleteAccountError.value = t('personalCenter.passwordFormatError')
         return
     }
     

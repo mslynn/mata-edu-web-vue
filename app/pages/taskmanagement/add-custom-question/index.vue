@@ -278,6 +278,8 @@ interface BlankItem {
 interface MatchItem {
   type: 'text' | 'image'
   content: string
+  image?: string
+  imageUrl?: string
 }
 
 interface Question {
@@ -407,12 +409,16 @@ const transformApiToQuestion = (apiQuestion: any): Question => {
     const targetItems = (apiQuestion.options || []).filter((opt: any) => opt.groupType === 'target')
     
     question.leftItems = sourceItems.map((opt: any) => ({
-      type: 'text' as const,
-      content: opt.optionText || ''
+      type: opt.imageOssId ? 'image' as const : 'text' as const,
+      content: opt.optionText || '',
+      image: opt.imageOssId || undefined,
+      imageUrl: opt.imageUrl || undefined
     }))
     question.rightItems = targetItems.map((opt: any) => ({
-      type: 'text' as const,
-      content: opt.optionText || ''
+      type: opt.imageOssId ? 'image' as const : 'text' as const,
+      content: opt.optionText || '',
+      image: opt.imageOssId || undefined,
+      imageUrl: opt.imageUrl || undefined
     }))
     
     // 解析答案匹配关系
@@ -544,8 +550,8 @@ const validateQuestion = (question: Question) => {
       isValid = false
     }
     // 检查左右列表是否有空内容
-    const hasEmptyLeft = (question.leftItems || []).some(item => item.type === 'text' && !item.content?.trim())
-    const hasEmptyRight = (question.rightItems || []).some(item => item.type === 'text' && !item.content?.trim())
+    const hasEmptyLeft = (question.leftItems || []).some(item => item.type === 'image' ? !item.image : !item.content?.trim())
+    const hasEmptyRight = (question.rightItems || []).some(item => item.type === 'image' ? !item.image : !item.content?.trim())
     if (hasEmptyLeft || hasEmptyRight) {
       isValid = false
     }
@@ -690,20 +696,32 @@ const transformQuestionToApi = (question: Question, index: number) => {
     const rightItems = question.rightItems || []
     
     result.options = [
-      ...leftItems.map((item, i) => ({
-        tempId: `opt_${index}_L${i}`,
-        optionLabel: `L${i + 1}`,
-        optionText: item.content,
-        groupType: 'source',
-        sequence: i + 1
-      })),
-      ...rightItems.map((item, i) => ({
-        tempId: `opt_${index}_R${i}`,
-        optionLabel: `R${i + 1}`,
-        optionText: item.content,
-        groupType: 'target',
-        sequence: i + 1
-      }))
+      ...leftItems.map((item, i) => {
+        const option: any = {
+          tempId: `opt_${index}_L${i}`,
+          optionLabel: `L${i + 1}`,
+          optionText: item.content || '',
+          groupType: 'source',
+          sequence: i + 1
+        }
+        if (item.type === 'image' && item.image) {
+          option.imageOssId = item.image
+        }
+        return option
+      }),
+      ...rightItems.map((item, i) => {
+        const option: any = {
+          tempId: `opt_${index}_R${i}`,
+          optionLabel: `R${i + 1}`,
+          optionText: item.content || '',
+          groupType: 'target',
+          sequence: i + 1
+        }
+        if (item.type === 'image' && item.image) {
+          option.imageOssId = item.image
+        }
+        return option
+      })
     ]
     
     result.answers = (question.matchAnswers || [])

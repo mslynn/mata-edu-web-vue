@@ -26,8 +26,8 @@
               <!-- 已登录标签 -->
               <span v-if="student.loginStatus === 1" class="online-tag">已登录</span>
               <div class="student-info">
-                <p class="info-row"><span class="label">姓名：</span><span class="value">{{ student.studentName }}</span></p>
-                <p class="info-row"><span class="label">账号：</span><span class="value">{{ student.studentNumber }}</span></p>
+                <p class="info-row"><span class="value">{{ student.studentName }}</span></p>
+                <p class="info-row"><span class="value">{{ student.studentNumber }}</span></p>
               </div>
             </div>
           </div>
@@ -226,6 +226,7 @@ const confirmLogin = () => {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  align-items: center;
 }
 
 .info-row {
@@ -233,6 +234,7 @@ const confirmLogin = () => {
   color: #666;
   margin: 0;
   display: flex;
+  justify-content: center;
 }
 
 .info-row .label {
@@ -242,6 +244,7 @@ const confirmLogin = () => {
 
 .info-row .value {
   color: #333;
+  text-align: center;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

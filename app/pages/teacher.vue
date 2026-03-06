@@ -1145,12 +1145,14 @@ const getChapterStatusText = (chapter: ChapterItem) => {
 // 格式化章节名称：将 "-" 替换为换行，不显示 "-"
 const formatChapterName = (name: string) => {
   if (!name) return "";
-  // 按 "-" 分割，过滤空字符串，用 <br> 连接
-  const parts = name
+  // 兼容后端返回的 "<br>" 字符串，统一按纯文本换行显示
+  const normalizedName = String(name).replace(/<br\s*\/?>/gi, "\n");
+  // 按 "-" 分割，过滤空字符串，用换行连接
+  const parts = normalizedName
     .split("-")
     .map((p) => p.trim())
     .filter((p) => p);
-  return parts.join("<br>");
+  return parts.join("\n");
 };
 
 // 去上课 - 从授课记录直接进入课堂
@@ -1852,6 +1854,7 @@ const handleStartClassConfirm = async (data: {
   color: #333;
   text-align: center;
   word-break: break-word;
+  white-space: pre-line;
   line-height: 1.4;
   display: flex;
   flex-direction: column;

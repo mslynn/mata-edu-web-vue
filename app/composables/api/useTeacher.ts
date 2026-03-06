@@ -155,6 +155,9 @@ export const useTeacher = () => {
   const deleteClass = async (id: string) => {
     try {
       const response = await http.del(`/system/class/${id}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "删除班级失败");
+      }
       return response.data;
     } catch (error: any) {
       throw error;

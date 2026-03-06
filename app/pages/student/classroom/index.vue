@@ -2,6 +2,11 @@
   <div class="student-classroom">
     <!-- 顶部导航栏 -->
     <header class="classroom-header">
+      <button class="header-back-btn" @click="handleBack" aria-label="返回学生首页">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
       <div class="header-center">
         <span class="student-name">{{ studentName }}</span>
         <span class="class-name">{{ className || '课堂学习' }}</span>
@@ -212,6 +217,9 @@ definePageMeta({ layout: 'blank' })
 
 const config = useRuntimeConfig()
 const route = useRoute()
+const STUDENT_ONGOING_CLASSROOM_KEY = 'student_ongoing_classroom'
+const STUDENT_PAUSE_AUTO_ENTER_KEY = 'student_pause_auto_enter_classroom'
+const STUDENT_CLASS_TIMER_STATE_KEY = 'student_classroom_timer_state'
 
 // 信令服务器地址（用于接收 CLASS_BEGIN）
 const signalingUrl =
@@ -226,6 +234,31 @@ const showClassEndModal = ref(false) // 下课弹窗
 const showFullscreenModal = ref(false) // 全屏管控弹窗
 const showResourceModal = ref(false) // 课程资源弹窗
 const showKickoutModal = ref(false) // 被踢出弹窗
+
+// 保存/清理课堂状态（用于学生首页“返回课堂”入口）
+const saveOngoingClassroom = () => {
+  if (typeof window === 'undefined') return
+  const payload = {
+    classId: String(currentClassId.value || ''),
+    teacherPeerId: String(currentTeacherPeerId.value || ''),
+    expireAt: Date.now() + 2 * 60 * 60 * 1000
+  }
+  localStorage.setItem(STUDENT_ONGOING_CLASSROOM_KEY, JSON.stringify(payload))
+}
+
+const clearOngoingClassroom = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STUDENT_ONGOING_CLASSROOM_KEY)
+}
+
+const setPauseAutoEnterClassroom = (paused: boolean) => {
+  if (typeof window === 'undefined') return
+  if (paused) {
+    localStorage.setItem(STUDENT_PAUSE_AUTO_ENTER_KEY, '1')
+  } else {
+    localStorage.removeItem(STUDENT_PAUSE_AUTO_ENTER_KEY)
+  }
+}
 
 // 生成固定的学生 peerId（使用用户ID区分不同学生）
 const getStudentPeerId = (classId: string) => {
@@ -326,6 +359,70 @@ const currentTeacherPeerId = ref((route.query.teacherPeerId as string) || '')
 // 上课计时
 const classTime = ref(0)
 let classTimer: ReturnType<typeof setInterval> | null = null
+
+const clearClassTimerState = () => {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(STUDENT_CLASS_TIMER_STATE_KEY)
+}
+
+const getOrCreateClassStartAt = (classId: string) => {
+  const now = Date.now()
+  if (typeof window === 'undefined') return now
+
+  try {
+    const stored = localStorage.getItem(STUDENT_CLASS_TIMER_STATE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      const storedClassId = String(parsed?.classId || '')
+      const startAt = Number(parsed?.startAt || 0)
+      if (
+        storedClassId === String(classId || '') &&
+        Number.isFinite(startAt) &&
+        startAt > 0
+      ) {
+        return startAt
+      }
+    }
+  } catch {
+    // ignore parse error and rewrite state
+  }
+
+  localStorage.setItem(
+    STUDENT_CLASS_TIMER_STATE_KEY,
+    JSON.stringify({
+      classId: String(classId || ''),
+      startAt: now
+    })
+  )
+  return now
+}
+
+const syncClassTime = (startAt: number) => {
+  classTime.value = Math.max(0, Math.floor((Date.now() - startAt) / 1000))
+}
+
+const startClassTimer = (classId: string) => {
+  if (!classId) return
+  const startAt = getOrCreateClassStartAt(classId)
+  syncClassTime(startAt)
+  if (classTimer) {
+    clearInterval(classTimer)
+  }
+  classTimer = setInterval(() => {
+    syncClassTime(startAt)
+  }, 1000)
+}
+
+const stopClassTimer = (removeState = false) => {
+  if (classTimer) {
+    clearInterval(classTimer)
+    classTimer = null
+  }
+  if (removeState) {
+    clearClassTimerState()
+    classTime.value = 0
+  }
+}
 // 组件是否已卸载
 let isUnmounted = false
 
@@ -471,16 +568,13 @@ const connectNotifyWebSocket = () => {
         currentClassId.value = classId
         classStarted.value = true
         
-        // 开始计时
-        if (!classTimer) {
-          classTimer = setInterval(() => {
-            classTime.value++
-          }, 1000)
-        }
+        // 开始计时（基于开课时间戳回算，返回首页再进来也不会重置）
+        startClassTimer(classId)
         
         if (teacherPeerId) {
           currentTeacherPeerId.value = teacherPeerId
         }
+        saveOngoingClassroom()
 
         // 如果 PeerJS 还没初始化或没连接，现在初始化
         if (!peerJS.isConnected.value || !peerJS.peer.value) {
@@ -503,10 +597,9 @@ const connectNotifyWebSocket = () => {
       if (message.type === 'CLASS_END') {
         console.log('[学生课堂] 收到下课通知!')
         classStarted.value = false
-        if (classTimer) {
-          clearInterval(classTimer)
-          classTimer = null
-        }
+        clearOngoingClassroom()
+        setPauseAutoEnterClassroom(false)
+        stopClassTimer(true)
         peerJS.destroy()
         // 显示下课弹窗
         showClassEndModal.value = true
@@ -702,6 +795,13 @@ const toggleFullscreen = async () => {
 
 // 返回
 const handleBack = () => {
+  if (classStarted.value) {
+    saveOngoingClassroom()
+    setPauseAutoEnterClassroom(true)
+  } else {
+    clearOngoingClassroom()
+    setPauseAutoEnterClassroom(false)
+  }
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -713,6 +813,9 @@ const handleBack = () => {
 // 下课确认
 const handleClassEndConfirm = () => {
   showClassEndModal.value = false
+  clearOngoingClassroom()
+  setPauseAutoEnterClassroom(false)
+  stopClassTimer(true)
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -724,6 +827,9 @@ const handleClassEndConfirm = () => {
 // 被踢出确认
 const handleKickoutConfirm = () => {
   showKickoutModal.value = false
+  clearOngoingClassroom()
+  setPauseAutoEnterClassroom(false)
+  stopClassTimer(true)
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -756,19 +862,17 @@ onMounted(async () => {
 
   // 先连接通知 WebSocket
   connectNotifyWebSocket()
+  // 已在课堂内，恢复自动进课堂能力
+  setPauseAutoEnterClassroom(false)
 
   // 如果有 classId，初始化 PeerJS 并开始计时
   if (currentClassId.value) {
     const success = await initializePeerJS(currentClassId.value)
     if (success) {
       classStarted.value = true
-      
-      // 开始计时
-      if (!classTimer) {
-        classTimer = setInterval(() => {
-          classTime.value++
-        }, 1000)
-      }
+      saveOngoingClassroom()
+      // 开始计时（若之前返回过首页，会沿用已有起始时间）
+      startClassTimer(currentClassId.value)
       
       // 如果有老师的 PeerId，延迟2秒后尝试连接老师请求屏幕分享
       if (currentTeacherPeerId.value) {
@@ -787,10 +891,7 @@ onUnmounted(() => {
     notifyWs.close()
     notifyWs = null
   }
-  if (classTimer) {
-    clearInterval(classTimer)
-    classTimer = null
-  }
+  stopClassTimer(false)
   peerJS.destroy()
 })
 </script>
@@ -810,6 +911,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   padding: 0 16px;
+  position: relative;
 }
 
 .header-center {
@@ -834,6 +936,28 @@ onUnmounted(() => {
 
 .class-time {
   font-family: monospace;
+}
+
+.header-back-btn {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 30px;
+  height: 30px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.header-back-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
 }
 
 .classroom-body {

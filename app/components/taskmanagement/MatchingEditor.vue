@@ -73,12 +73,18 @@
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ item.content?.length || 0 }}/20</span>
                 </div>
                 <!-- 图片上传 -->
-                <button v-else class="px-3 py-1.5 bg-[#FF9900] text-white text-sm rounded hover:bg-[#e68a00] inline-flex items-center gap-1">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                  </svg>
-                  {{ $t('customExercise.uploadImage') }}
-                </button>
+                <div v-else class="w-[280px]">
+                  <ImageUploader
+                    :oss-id="item.image"
+                    :image-url="item.imageUrl"
+                    :size="60"
+                    button-style="outline"
+                    :show-tip="false"
+                    :upload-fn="uploadOSS"
+                    @update:oss-id="item.image = $event"
+                    @update:image-url="item.imageUrl = $event"
+                  />
+                </div>
                 <!-- 删除按钮 -->
                 <button 
                   class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity shrink-0"
@@ -132,12 +138,18 @@
                   <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ item.content?.length || 0 }}/20</span>
                 </div>
                 <!-- 图片上传 -->
-                <button v-else class="px-3 py-1.5 bg-[#FF9900] text-white text-sm rounded hover:bg-[#e68a00] inline-flex items-center gap-1">
-                  <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
-                  </svg>
-                  {{ $t('customExercise.uploadImage') }}
-                </button>
+                <div v-else class="w-[280px]">
+                  <ImageUploader
+                    :oss-id="item.image"
+                    :image-url="item.imageUrl"
+                    :size="60"
+                    button-style="outline"
+                    :show-tip="false"
+                    :upload-fn="uploadOSS"
+                    @update:oss-id="item.image = $event"
+                    @update:image-url="item.imageUrl = $event"
+                  />
+                </div>
                 <!-- 删除按钮 -->
                 <button 
                   class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity shrink-0"
@@ -241,6 +253,8 @@ import ImageUploader from '../ui/ImageUploader.vue'
 interface MatchItem {
   type: 'text' | 'image'
   content: string
+  image?: string
+  imageUrl?: string
 }
 
 interface Question {
@@ -290,12 +304,22 @@ const rightOptions = computed(() => {
 
 const hasEmptyLeftItem = computed(() => {
   const items = localQuestion.value.leftItems || []
-  return items.some(item => item.type === 'text' && !item.content?.trim())
+  return items.some(item => {
+    if (item.type === 'image') {
+      return !item.image
+    }
+    return !item.content?.trim()
+  })
 })
 
 const hasEmptyRightItem = computed(() => {
   const items = localQuestion.value.rightItems || []
-  return items.some(item => item.type === 'text' && !item.content?.trim())
+  return items.some(item => {
+    if (item.type === 'image') {
+      return !item.image
+    }
+    return !item.content?.trim()
+  })
 })
 
 const isListCountEqual = computed(() => {

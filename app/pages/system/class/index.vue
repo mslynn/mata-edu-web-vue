@@ -96,7 +96,7 @@
             }}
             <span class="text-[#FF9900] font-medium ml-1">
               {{ activeTab === "student" ? studentList.length : groupList.length
-              }}{{ activeTab === "student" ? $t("user.person") : $t("user.groupUnit") }}
+              }}{{ activeTab === "student" ? $t("class.person") : $t("class.groupUnit") }}
             </span>
           </span>
         </div>
@@ -201,10 +201,13 @@
               <button
                 :class="[
                   'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  activeAction === 'batch'
+                  isCurrentClassQuickLogin
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    : activeAction === 'batch'
                     ? 'bg-[#FF9900] text-white'
                     : 'bg-[#E5E5E5] text-[#4D4D4D]',
                 ]"
+                :disabled="isCurrentClassQuickLogin"
                 @click="handleBatchAction"
               >
                 {{
@@ -308,6 +311,19 @@
                     <span class="tooltip-arrow"></span>
                   </div>
                 </div>
+              </template>
+              <template #loginStatus="{ row }">
+                <span
+                  :class="
+                    Number(row.loginStatus) === 1 ? 'text-[#52C41A]' : 'text-[#999999]'
+                  "
+                >
+                  {{
+                    Number(row.loginStatus) === 1
+                      ? $t('class.loggedIn')
+                      : $t('class.notLoggedIn')
+                  }}
+                </span>
               </template>
               <template #action="{ row }">
                 <div class="flex items-center justify-center gap-1 whitespace-nowrap">
@@ -1096,6 +1112,8 @@
           <input
             v-model="batchResetPassword"
             :type="showBatchResetPassword ? 'text' : 'password'"
+            minlength="6"
+            maxlength="30"
             :placeholder="t('user.pleaseInputTeacherPassword')"
             class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
           />
@@ -1193,6 +1211,8 @@
           <input
             v-model="batchDeletePassword"
             :type="showBatchDeletePassword ? 'text' : 'password'"
+            minlength="6"
+            maxlength="30"
             :placeholder="t('user.pleaseInputTeacherPassword')"
             class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
           />
@@ -1811,6 +1831,8 @@
             <input
               v-model="batchDeleteGroupPassword"
               :type="showBatchDeleteGroupPassword ? 'text' : 'password'"
+              minlength="6"
+              maxlength="30"
               :placeholder="t('user.pleaseInputTeacherPassword')"
               class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
             />
@@ -1895,11 +1917,26 @@ definePageMeta({
 const route = useRoute();
 const { t } = useI18n();
 const { user } = useAuth();
+const PASSWORD_MIN_LENGTH = 6;
+const PASSWORD_MAX_LENGTH = 30;
+const isPasswordLengthValid = (value: string) => {
+  const length = (value || "").trim().length;
+  return length >= PASSWORD_MIN_LENGTH && length <= PASSWORD_MAX_LENGTH;
+};
 
 // 当前用户名称
-const currentUserName = computed(
-  () => user.value?.nickName || user.value?.userName || ""
-);
+const currentUserName = computed(() => {
+  const currentUser = user.value || {};
+  return (
+    currentUser.nickName ||
+    currentUser.userName ||
+    currentUser.nickname ||
+    currentUser.nick_name ||
+    currentUser.user_name ||
+    currentUser.username ||
+    ""
+  );
+});
 const {
   getGradeDict,
   getClassList,
@@ -1970,6 +2007,16 @@ const tableColumns = computed(() => [
   { key: "studentName", title: t("class.studentName"), minWidth: "100px" },
   { key: "studentNumber", title: t("class.studentAccount"), minWidth: "120px" },
   { key: "createTime", title: t("class.createTime"), minWidth: "130px" },
+  ...(isCurrentClassQuickLogin.value
+    ? [
+        {
+          key: "loginStatus",
+          title: t("class.loginStatus"),
+          width: "140px",
+          align: "center" as const,
+        },
+      ]
+    : []),
   {
     key: "action",
     title: t("common.operation"),
@@ -2488,8 +2535,33 @@ const handleCreateAction = () => {
   showCreateModal.value = true;
 };
 
+// 检查当前班级是否有学生（搜索状态下兜底查全量）
+const checkCurrentClassHasStudents = async () => {
+  const classId = selectedClass.value?.id;
+  if (!classId) return false;
+
+  // 未搜索时，直接使用当前列表
+  if (!searchKeyword.value?.trim()) {
+    return studentList.value.length > 0;
+  }
+
+  // 搜索状态下，补查一次全量，避免“有学生但当前搜索为空”被误判
+  try {
+    const data = await getStudentList({ classId });
+    return Array.isArray(data) ? data.length > 0 : !!data?.length;
+  } catch (error) {
+    console.error("检查班级学生数据失败:", error);
+    return studentList.value.length > 0;
+  }
+};
+
 // 快捷登录or停用快捷登录
 const handleQuickLogin = async () => {
+  if (!selectedClass.value?.id) {
+    ElMessage.warning(t("class.noStudentDataPleaseCreate"));
+    return;
+  }
+
   if (isCurrentClassQuickLogin.value) {
     // 当前班级已启用，点击停用
     try {
@@ -2502,6 +2574,14 @@ const handleQuickLogin = async () => {
       console.error("停用快捷登录失败:", error);
     }
   } else if (!isOtherClassQuickLogin.value) {
+    const hasStudents = await checkCurrentClassHasStudents();
+    if (!hasStudents) {
+      ElMessage.warning(t("class.noStudentDataPleaseCreate"));
+      addStudentMode.value = "manual";
+      createForm.name = "";
+      showCreateModal.value = true;
+      return;
+    }
     // 没有其他班级启用，打开弹窗
     showQuickLoginModal.value = true;
   }
@@ -2510,7 +2590,7 @@ const handleQuickLogin = async () => {
 // 确认创建快捷登录
 const handleConfirmQuickLogin = async () => {
   if (!selectedClass.value?.id) {
-    ElMessage.error(t("class.pleaseSelectClassFirst"));
+    ElMessage.warning(t("class.noStudentDataPleaseCreate"));
     return;
   }
   try {
@@ -2553,12 +2633,46 @@ const checkQuickLoginStatus = async (classId: string) => {
 };
 
 // 复制到剪贴板
+const fallbackCopyText = (text: string) => {
+  if (typeof document === "undefined") return false;
+  const textarea = document.createElement("textarea");
+  textarea.value = text;
+  textarea.setAttribute("readonly", "true");
+  textarea.style.position = "fixed";
+  textarea.style.left = "-9999px";
+  textarea.style.top = "-9999px";
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  let copied = false;
+  try {
+    copied = document.execCommand("copy");
+  } catch (error) {
+    copied = false;
+  }
+  document.body.removeChild(textarea);
+  return copied;
+};
+
 const copyToClipboard = async (text?: string) => {
   if (!text) return;
   try {
-    await navigator.clipboard.writeText(text);
-    ElMessage.success(t("common.copySuccess"));
+    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      ElMessage.success(t("common.copySuccess"));
+      return;
+    }
+    if (fallbackCopyText(text)) {
+      ElMessage.success(t("common.copySuccess"));
+      return;
+    }
+    ElMessage.error(t("common.copyFailed"));
   } catch (error) {
+    if (fallbackCopyText(text)) {
+      ElMessage.success(t("common.copySuccess"));
+      return;
+    }
+    console.error("复制失败:", error);
     ElMessage.error(t("common.copyFailed"));
   }
 };
@@ -2587,6 +2701,12 @@ const handleRefreshQuickLogin = async () => {
 
 // 导出
 const handleExport = async () => {
+  // 导出前仅根据当前学生列表判断
+  if (studentList.value.length === 0) {
+    ElMessage.warning(t("class.noStudentDataPleaseCreate"));
+    return;
+  }
+
   try {
     ElMessage.info(t("common.exporting"));
     // 文件名格式：年级+班级+学生账号信息.xlsx
@@ -2602,7 +2722,17 @@ const handleExport = async () => {
 };
 
 // 批量操作
-const handleBatchAction = () => {
+const handleBatchAction = async () => {
+  if (isCurrentClassQuickLogin.value) {
+    return;
+  }
+
+  const hasStudents = await checkCurrentClassHasStudents();
+  if (!hasStudents) {
+    ElMessage.warning(t("class.noStudentDataPleaseCreate"));
+    return;
+  }
+
   if (activeAction.value === "batch") {
     activeAction.value = null;
     selectedStudentIds.value = [];
@@ -2659,6 +2789,10 @@ const closeBatchDeleteModal = () => {
 const handleConfirmBatchDelete = async () => {
   if (!batchDeletePassword.value.trim()) {
     ElMessage.warning(t("user.pleaseInputTeacherPassword"));
+    return;
+  }
+  if (!isPasswordLengthValid(batchDeletePassword.value)) {
+    ElMessage.warning(t("auth.passwordRule"));
     return;
   }
   try {
@@ -2759,6 +2893,10 @@ const selectedStudentNames = computed(() => {
 const handleConfirmBatchResetPassword = async () => {
   if (!batchResetPassword.value.trim()) {
     ElMessage.warning(t("user.pleaseInputTeacherPassword"));
+    return;
+  }
+  if (!isPasswordLengthValid(batchResetPassword.value)) {
+    ElMessage.warning(t("auth.passwordRule"));
     return;
   }
   try {
@@ -3014,7 +3152,8 @@ const handleCreateStudent = async () => {
       return;
     }
   } else {
-    ElMessage.success("批量导入成功");
+    ElMessage.warning("请先点击“导入学生信息”完成批量导入");
+    return;
   }
   showCreateModal.value = false;
   // 重置表单
@@ -3215,6 +3354,10 @@ const closeDeleteGroupModal = () => {
 const handleConfirmDeleteGroup = async () => {
   if (isBatchDeleteGroup.value && !batchDeleteGroupPassword.value.trim()) {
     ElMessage.warning(t("user.pleaseInputTeacherPassword"));
+    return;
+  }
+  if (isBatchDeleteGroup.value && !isPasswordLengthValid(batchDeleteGroupPassword.value)) {
+    ElMessage.warning(t("auth.passwordRule"));
     return;
   }
   try {

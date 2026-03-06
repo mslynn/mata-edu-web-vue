@@ -146,7 +146,7 @@
                                     <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
                                 </div>
                                 <!-- 学校可见的课程不显示删除按钮（coursePermission: 0=仅自己可见，1=全校老师可见） -->
-                                <div v-if="course.coursePermission !== 1" class="tooltip-wrapper group relative">
+                                <div v-if="activeSubCategory !== 'public' && Number(course.coursePermission) !== 1" class="tooltip-wrapper group relative">
                                     <button
                                         class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-red-50"
                                         @click.prevent="handleDeleteCourse(course)">
@@ -652,6 +652,12 @@ const loadCourseList = async () => {
             courseList.value = data.map((item: any) => {
                 // 共享课程：createBy 等于当前用户ID则可编辑，否则可添加
                 const isOwner = String(item.createBy) === String(currentUserId.value)
+                const permissionRaw = item.coursePermission ?? item.permission
+                const permissionValue = permissionRaw === 'public'
+                    ? 1
+                    : permissionRaw === 'private'
+                        ? 0
+                        : Number(permissionRaw)
                 return {
                     id: item.courseId,
                     name: item.courseName,
@@ -666,6 +672,7 @@ const loadCourseList = async () => {
                     createByName: item.createByName || item.nickName || '',
                     isOwner, // 是否是自己创建的
                     canAdd: !isOwner, // 不是自己创建的才能添加
+                    coursePermission: Number.isFinite(permissionValue) ? permissionValue : 0,
                 }
             })
         } else {

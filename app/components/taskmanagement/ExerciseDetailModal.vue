@@ -63,20 +63,20 @@
                       <!-- 单选圆圈 -->
                       <span v-if="q.questionType === 'single' || q.questionType === 'judge'" 
                         class="w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center"
-                        :class="isStudentSelected(q, opt.tempId) 
+                        :class="isStudentSelected(q, opt) 
                           ? 'border-[#FF9900]' 
                           : 'border-gray-300'"
                       >
-                        <span v-if="isStudentSelected(q, opt.tempId)" class="w-2 h-2 rounded-full bg-[#FF9900]"></span>
+                        <span v-if="isStudentSelected(q, opt)" class="w-2 h-2 rounded-full bg-[#FF9900]"></span>
                       </span>
                       <!-- 多选方框 -->
                       <span v-else 
                         class="w-4 h-4 rounded-sm border-2 shrink-0 flex items-center justify-center"
-                        :class="isStudentSelected(q, opt.tempId) 
+                        :class="isStudentSelected(q, opt) 
                           ? 'border-[#FF9900]' 
                           : 'border-gray-300'"
                       >
-                        <svg v-if="isStudentSelected(q, opt.tempId)" class="w-2.5 h-2.5 text-[#FF9900]" viewBox="0 0 10 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg v-if="isStudentSelected(q, opt)" class="w-2.5 h-2.5 text-[#FF9900]" viewBox="0 0 10 8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                           <path d="M1 4L3.5 6.5L9 1"/>
                         </svg>
                       </span>
@@ -99,13 +99,25 @@
                   <div v-else-if="q.questionType === 'connect'" class="ml-4">
                     <div class="flex gap-12">
                       <div class="space-y-2">
-                        <div v-for="(opt, oIdx) in getSourceOptions(q)" :key="oIdx" class="text-sm text-gray-700">
-                          {{ opt.optionLabel }}. {{ opt.optionText }}
+                        <div v-for="(opt, oIdx) in getSourceOptions(q)" :key="oIdx" class="flex items-center gap-2 text-sm text-gray-700 min-h-8">
+                          <span>{{ getConnectDisplayLabel(q, opt) }}.</span>
+                          <span v-if="opt.optionText">{{ opt.optionText }}</span>
+                          <img
+                            v-if="opt.imageUrl"
+                            :src="opt.imageUrl"
+                            class="max-w-[120px] max-h-[80px] rounded border border-gray-100"
+                          />
                         </div>
                       </div>
                       <div class="space-y-2">
-                        <div v-for="(opt, oIdx) in getTargetOptions(q)" :key="oIdx" class="text-sm text-gray-700">
-                          {{ opt.optionLabel }}. {{ opt.optionText }}
+                        <div v-for="(opt, oIdx) in getTargetOptions(q)" :key="oIdx" class="flex items-center gap-2 text-sm text-gray-700 min-h-8">
+                          <span>{{ getConnectDisplayLabel(q, opt) }}.</span>
+                          <span v-if="opt.optionText">{{ opt.optionText }}</span>
+                          <img
+                            v-if="opt.imageUrl"
+                            :src="opt.imageUrl"
+                            class="max-w-[120px] max-h-[80px] rounded border border-gray-100"
+                          />
                         </div>
                       </div>
                     </div>
@@ -207,13 +219,14 @@ const toggleAnalysis = (index: number) => {
 }
 
 // 判断学生是否选了该选项
-const isStudentSelected = (q: any, tempId: string) => {
+const isStudentSelected = (q: any, opt: any) => {
   const sa = q.studentAnswer
   if (!sa) return false
+  const candidateIds = getOptionKeyCandidates(opt)
   // 单选/判断
-  if (sa.optionId === tempId) return true
+  if (candidateIds.includes(String(sa.optionId || ''))) return true
   // 多选
-  if (sa.optionIds && sa.optionIds.includes(tempId)) return true
+  if (sa.optionIds && sa.optionIds.some((id: any) => candidateIds.includes(String(id)))) return true
   return false
 }
 
@@ -225,17 +238,71 @@ const getStudentBlankAnswer = (q: any, blankIndex: number) => {
   return found?.text || ''
 }
 
+const getOptionKeyCandidates = (opt: any): string[] => {
+  return [
+    opt?.tempId,
+    opt?.optionId,
+    opt?.id
+  ].filter(Boolean).map((id: any) => String(id))
+}
+
+const sortOptionsBySequence = (options: any[]) => {
+  return [...(options || [])].sort((a: any, b: any) => {
+    const seqA = Number(a?.sequence ?? 0)
+    const seqB = Number(b?.sequence ?? 0)
+    return seqA - seqB
+  })
+}
+
+const toLowerAlphabetLabel = (index: number) => {
+  if (index < 0) return ''
+  let n = index + 1
+  let result = ''
+  while (n > 0) {
+    n -= 1
+    result = String.fromCharCode(97 + (n % 26)) + result
+    n = Math.floor(n / 26)
+  }
+  return result
+}
+
+const getOptionIndexInList = (list: any[], opt: any) => {
+  const optIds = getOptionKeyCandidates(opt)
+  return list.findIndex((item: any) => {
+    const itemIds = getOptionKeyCandidates(item)
+    return itemIds.some((id: string) => optIds.includes(id))
+  })
+}
+
 const getSourceOptions = (q: any) => {
-  return (q.options || []).filter((o: any) => o.groupType === 'source')
+  return sortOptionsBySequence((q.options || []).filter((o: any) => o.groupType === 'source'))
 }
 
 const getTargetOptions = (q: any) => {
-  return (q.options || []).filter((o: any) => o.groupType === 'target')
+  return sortOptionsBySequence((q.options || []).filter((o: any) => o.groupType === 'target'))
+}
+
+const getConnectDisplayLabel = (q: any, opt: any) => {
+  const groupType = String(opt?.groupType || '').toLowerCase()
+  if (groupType === 'source') {
+    const idx = getOptionIndexInList(getSourceOptions(q), opt)
+    return idx >= 0 ? String(idx + 1) : String(opt?.optionLabel || '')
+  }
+  if (groupType === 'target') {
+    const idx = getOptionIndexInList(getTargetOptions(q), opt)
+    return idx >= 0 ? toLowerAlphabetLabel(idx) : String(opt?.optionLabel || '')
+  }
+  return String(opt?.optionLabel || '')
 }
 
 const getOptionLabel = (q: any, tempId: string) => {
-  const opt = (q.options || []).find((o: any) => o.tempId === tempId)
-  return opt ? opt.optionLabel : ''
+  const optionId = String(tempId || '')
+  const opt = (q.options || []).find((o: any) => getOptionKeyCandidates(o).includes(optionId))
+  if (!opt) return ''
+  if (q.questionType === 'connect') {
+    return getConnectDisplayLabel(q, opt)
+  }
+  return opt.optionLabel
 }
 
 const getCorrectAnswerText = (q: any) => {

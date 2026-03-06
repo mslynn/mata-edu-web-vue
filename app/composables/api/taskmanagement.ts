@@ -280,7 +280,7 @@ export const taskmanagementcenterApi = () => {
     }
   };
   //查询学生任务列表
-  const getStudentTaskList = async (data: { resourceId: string }) => {
+  const getStudentTaskList = async (data: { resourceId: string, classId: string; }) => {
     try {
       const response = await http.get("/system/task/list", data);
       if (response.code !== 200) {

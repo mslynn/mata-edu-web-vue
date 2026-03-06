@@ -46,6 +46,20 @@
   animation: field-error-in 0.25s ease-out;
 }
 
+/* 屏蔽浏览器自带密码显隐按钮，避免与自定义眼睛图标叠加 */
+.login-form input[type="password"]::-ms-reveal,
+.login-form input[type="password"]::-ms-clear,
+.login-form input[type="text"]::-ms-clear {
+  display: none;
+}
+
+.login-form input[type="password"]::-webkit-credentials-auto-fill-button,
+.login-form input[type="password"]::-webkit-textfield-decoration-container {
+  visibility: hidden;
+  display: none !important;
+  pointer-events: none;
+}
+
 @keyframes field-error-in {
   0% {
     opacity: 0;

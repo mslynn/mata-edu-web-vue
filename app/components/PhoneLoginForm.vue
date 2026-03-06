@@ -66,6 +66,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import type { Country } from './CountryCodeSelector.vue'
 import { useAuth } from '~/composables/api/useAuth'
 
@@ -164,6 +165,7 @@ const handleSendCode = async () => {
     console.log('📤 发送验证码:', { phonenumber: phone })
     await getSmsCode(phone)
     console.log('✅ 验证码发送成功')
+    ElMessage.success(t('auth.codeSendSuccess'))
     
     // 发送验证码事件
     emit('send-code')

@@ -44,8 +44,17 @@
             <div v-else-if="questions.length > 0" class="task-answer-question-list">
               <section v-for="(question, index) in questions" :key="question.id" class="task-answer-question">
                 <h3 v-if="question.type !== 'blank'" class="task-answer-question-title">
-                  {{ index + 1 }}. {{ question.title }}
+                  <span>{{ index + 1 }}. {{ question.title }}</span>
+                  <span
+                    v-if="question.score !== null && question.score !== undefined"
+                    class="task-answer-question-score"
+                  >
+                    {{ question.score }}分
+                  </span>
                 </h3>
+                <div v-if="question.imageUrl" class="task-answer-question-image-wrap">
+                  <img :src="question.imageUrl" class="task-answer-question-image" alt="题目图片" />
+                </div>
 
                 <div
                   v-if="question.type === 'single' || question.type === 'judge'"
@@ -64,7 +73,16 @@
                       :value="option.id"
                       :disabled="readonly"
                     />
-                    <span class="task-answer-option-text">{{ option.label }}. {{ option.text || "-" }}</span>
+                    <div class="task-answer-option-content">
+                      <span class="task-answer-option-text">{{ option.label }}.</span>
+                      <span v-if="option.text" class="task-answer-option-text">{{ option.text }}</span>
+                      <img
+                        v-if="option.imageUrl"
+                        :src="option.imageUrl"
+                        class="task-answer-option-image"
+                        alt="选项图片"
+                      />
+                    </div>
                   </label>
                 </div>
 
@@ -81,7 +99,16 @@
                       :value="option.id"
                       :disabled="readonly"
                     />
-                    <span class="task-answer-option-text">{{ option.label }}. {{ option.text || "-" }}</span>
+                    <div class="task-answer-option-content">
+                      <span class="task-answer-option-text">{{ option.label }}.</span>
+                      <span v-if="option.text" class="task-answer-option-text">{{ option.text }}</span>
+                      <img
+                        v-if="option.imageUrl"
+                        :src="option.imageUrl"
+                        class="task-answer-option-image"
+                        alt="选项图片"
+                      />
+                    </div>
                   </label>
                 </div>
 
@@ -94,7 +121,7 @@
                     <span v-if="part.text" class="task-answer-blank-text">{{ part.text }}</span>
                     <input
                       v-if="part.blankIndex"
-                      v-model="blankAnswers[question.id][part.blankIndex]"
+                      v-model="ensureBlankAnswers(question.id)[part.blankIndex]"
                       class="task-answer-blank-inline-input"
                       type="text"
                       :placeholder="`第${part.blankIndex}空`"
@@ -135,7 +162,22 @@
                         :key="`source_${question.id}_${source.id}`"
                         class="task-answer-connect-row"
                       >
-                        <span class="task-answer-connect-label">{{ source.text || source.label }}</span>
+                        <div class="task-answer-connect-content">
+                          <img
+                            v-if="source.imageUrl"
+                            :src="source.imageUrl"
+                            class="task-answer-connect-image"
+                            alt="连线题选项图片"
+                            @load="handleConnectAssetLoaded"
+                            @error="handleConnectAssetLoaded"
+                          />
+                          <span
+                            v-if="source.text || !source.imageUrl"
+                            class="task-answer-connect-label"
+                          >
+                            {{ source.text || source.label }}
+                          </span>
+                        </div>
                         <button
                           type="button"
                           class="task-answer-connect-dot task-answer-connect-dot--source"
@@ -187,7 +229,22 @@
                             class="task-answer-connect-dot-core"
                           ></span>
                         </button>
-                        <span class="task-answer-connect-label">{{ target.text || target.label }}</span>
+                        <div class="task-answer-connect-content">
+                          <img
+                            v-if="target.imageUrl"
+                            :src="target.imageUrl"
+                            class="task-answer-connect-image"
+                            alt="连线题选项图片"
+                            @load="handleConnectAssetLoaded"
+                            @error="handleConnectAssetLoaded"
+                          />
+                          <span
+                            v-if="target.text || !target.imageUrl"
+                            class="task-answer-connect-label"
+                          >
+                            {{ target.text || target.label }}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -219,18 +276,23 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { student, type StudentTaskAnswer } from "~/composables/api/student";
 import { taskmanagementcenterApi } from "~/composables/api/taskmanagement";
 import StarRating from "~/components/ui/StarRating.vue";
+import { normalizeRatePercent, percentToStars, scoreToStars } from "~/utils/star-rating";
 
 interface QuestionOption {
   id: string;
   label: string;
   text: string;
   groupType: string;
+  image?: string;
+  imageUrl?: string;
 }
 
 interface QuestionItem {
   id: string;
   title: string;
   type: "single" | "multiple" | "judge" | "blank" | "connect";
+  imageUrl?: string;
+  score?: number | null;
   blankCount: number;
   options: QuestionOption[];
   raw: any;
@@ -288,6 +350,7 @@ const connectAnswers = reactive<Record<string, Record<string, string>>>({});
 const connectBoardRefs = reactive<Record<string, HTMLElement | null>>({});
 const connectPointRefs = reactive<Record<string, HTMLElement | null>>({});
 const connectLayoutVersion = ref(0);
+const connectBoardResizeObserver = ref<ResizeObserver | null>(null);
 const connectDragState = reactive<ConnectDragState>({
   active: false,
   questionId: "",
@@ -365,7 +428,15 @@ const normalizeOption = (option: any, index: number): QuestionOption => {
     label: label || String.fromCharCode(65 + index),
     text: firstNonEmptyString(option?.optionText, option?.text, option?.content, option?.name),
     groupType: firstNonEmptyString(option?.groupType).toLowerCase(),
+    image: firstNonEmptyString(option?.imageOssId, option?.ossId, option?.image),
+    imageUrl: firstNonEmptyString(option?.imageUrl, option?.optionImageUrl, option?.imgUrl, option?.url),
   };
+};
+
+const normalizeQuestionScore = (value: any): number | null => {
+  const score = Number(value);
+  if (Number.isNaN(score)) return null;
+  return score;
 };
 
 const normalizeQuestions = (data: any): QuestionItem[] => {
@@ -382,12 +453,14 @@ const normalizeQuestions = (data: any): QuestionItem[] => {
         id: firstIdString(question?.questionId, question?.id, question?.tempId, index + 1),
         title: firstNonEmptyString(question?.questionName, question?.title, question?.name, "未命名题目"),
         type: normalizeQuestionType(question?.questionType ?? question?.type),
+        imageUrl: firstNonEmptyString(question?.imageUrl, question?.questionImageUrl, question?.imgUrl),
+        score: normalizeQuestionScore(question?.score ?? question?.questionScore),
         blankCount: blankCount > 0 ? blankCount : 1,
         options: (Array.isArray(question?.options) ? question.options : []).map(normalizeOption),
         raw: question,
       };
     })
-    .filter((question) => !!question.id);
+    .filter((question: QuestionItem) => !!question.id);
 };
 
 const clearRecord = (target: Record<string, any>) => {
@@ -471,30 +544,6 @@ const displayTitle = computed(() => {
   );
 });
 
-const normalizeRatePercent = (value: any): number | null => {
-  if (value === null || value === undefined) return null;
-  const text = String(value).trim().replace("%", "");
-  if (!text) return null;
-  const num = Number(text);
-  if (Number.isNaN(num)) return null;
-  const rate = num > 0 && num <= 1 ? num * 100 : num;
-  return Math.max(0, Math.min(100, rate));
-};
-
-const rateToStars = (rate: number): number => {
-  if (rate <= 0) return 0;
-  if (rate <= 10) return 0.5;
-  if (rate <= 20) return 1;
-  if (rate <= 30) return 1.5;
-  if (rate <= 40) return 2;
-  if (rate <= 50) return 2.5;
-  if (rate <= 60) return 3;
-  if (rate <= 70) return 3.5;
-  if (rate <= 80) return 4;
-  if (rate <= 90) return 4.5;
-  return 5;
-};
-
 const studentDisplayName = computed(() => {
   return firstNonEmptyString(
     detailData.value?.taskInfo?.studentName,
@@ -516,17 +565,10 @@ const studentScoreStars = computed(() => {
     normalizeRatePercent(rootData?.accuracyRate);
 
   if (directRate !== null) {
-    return rateToStars(directRate);
+    return percentToStars(directRate);
   }
 
-  const score = Number(taskInfo?.score ?? rootData?.score);
-  const totalScore = Number(taskInfo?.totalScore ?? rootData?.totalScore);
-  if (Number.isNaN(score) || Number.isNaN(totalScore) || totalScore <= 0) {
-    return 0;
-  }
-
-  const rate = Math.round((score / totalScore) * 100);
-  return rateToStars(rate);
+  return scoreToStars(taskInfo?.score ?? rootData?.score, taskInfo?.totalScore ?? rootData?.totalScore);
 });
 
 const showStudentMeta = computed(() => {
@@ -564,13 +606,41 @@ const refreshConnectLayout = () => {
   connectLayoutVersion.value += 1;
 };
 
+const scheduleConnectLayoutRefresh = () => {
+  refreshConnectLayout();
+  if (typeof window !== "undefined") {
+    window.requestAnimationFrame(() => {
+      refreshConnectLayout();
+      window.requestAnimationFrame(() => {
+        refreshConnectLayout();
+      });
+    });
+  }
+};
+
+const handleConnectAssetLoaded = () => {
+  scheduleConnectLayoutRefresh();
+};
+
 const setConnectBoardRef = (questionId: string, element: HTMLElement | null) => {
+  const previousElement = connectBoardRefs[questionId];
   if (element) {
-    if (connectBoardRefs[questionId] !== element) {
+    if (previousElement !== element) {
+      if (previousElement && connectBoardResizeObserver.value) {
+        connectBoardResizeObserver.value.unobserve(previousElement);
+      }
       connectBoardRefs[questionId] = element;
+      if (connectBoardResizeObserver.value) {
+        connectBoardResizeObserver.value.observe(element);
+      }
+      scheduleConnectLayoutRefresh();
     }
-  } else if (connectBoardRefs[questionId]) {
+  } else if (previousElement) {
+    if (connectBoardResizeObserver.value) {
+      connectBoardResizeObserver.value.unobserve(previousElement);
+    }
     delete connectBoardRefs[questionId];
+    scheduleConnectLayoutRefresh();
   }
 };
 
@@ -769,14 +839,14 @@ const fetchTaskDetail = async () => {
     questions.value = normalizeQuestions(detailData.value);
     fillAnswerStateFromDetail();
     await nextTick();
-    refreshConnectLayout();
+    scheduleConnectLayoutRefresh();
   } catch (error: any) {
     console.error("获取任务题目失败", error);
     ElMessage.error(error?.message || "获取任务题目失败");
     detailData.value = null;
     questions.value = [];
     clearAnswerState();
-    refreshConnectLayout();
+    scheduleConnectLayoutRefresh();
   } finally {
     loading.value = false;
   }
@@ -915,16 +985,31 @@ const handleSubmit = async () => {
 };
 
 const handleWindowResize = () => {
-  refreshConnectLayout();
+  scheduleConnectLayoutRefresh();
 };
 
 onMounted(() => {
   window.addEventListener("resize", handleWindowResize);
+  if (typeof window !== "undefined" && "ResizeObserver" in window) {
+    connectBoardResizeObserver.value = new ResizeObserver(() => {
+      scheduleConnectLayoutRefresh();
+    });
+    Object.values(connectBoardRefs).forEach((element) => {
+      if (element) {
+        connectBoardResizeObserver.value?.observe(element);
+      }
+    });
+  }
+  scheduleConnectLayoutRefresh();
 });
 
 onBeforeUnmount(() => {
   finishConnectDrag();
   window.removeEventListener("resize", handleWindowResize);
+  if (connectBoardResizeObserver.value) {
+    connectBoardResizeObserver.value.disconnect();
+    connectBoardResizeObserver.value = null;
+  }
 });
 
 watch(
@@ -938,7 +1023,7 @@ watch(
       detailData.value = null;
       questions.value = [];
       clearAnswerState();
-      refreshConnectLayout();
+      scheduleConnectLayoutRefresh();
       return;
     }
     fetchTaskDetail();
@@ -1077,6 +1162,41 @@ watch(
   font-size: 28px;
   font-weight: 500;
   line-height: 1.3;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.task-answer-question-score {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #ffbb66;
+  background: #fff6e8;
+  color: #ff8f00;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.task-answer-question-image-wrap {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.task-answer-question-image {
+  display: block;
+  width: min(100%, 760px);
+  height: auto;
+  border-radius: 10px;
+  border: 1px solid #dbe3eb;
+  object-fit: contain;
+  background: #ffffff;
 }
 
 .task-answer-option-list {
@@ -1092,11 +1212,78 @@ watch(
   gap: 10px;
 }
 
+.task-answer-option-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .task-answer-input {
+  appearance: none;
+  -webkit-appearance: none;
   width: 18px;
   height: 18px;
-  accent-color: #ff9900;
+  margin: 0;
+  display: inline-block;
+  position: relative;
+  flex-shrink: 0;
+  border: 2px solid #9ca3af;
+  background: #ffffff;
   cursor: pointer;
+}
+
+.task-answer-input[type="radio"] {
+  border-radius: 999px;
+}
+
+.task-answer-input[type="checkbox"] {
+  border-radius: 4px;
+}
+
+.task-answer-input:checked {
+  border-color: #ff9900;
+  background: #ff9900;
+}
+
+.task-answer-input[type="radio"]::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.15s ease;
+}
+
+.task-answer-input[type="radio"]:checked::after {
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.task-answer-input[type="checkbox"]::after {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #ffffff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.15s ease;
+}
+
+.task-answer-input[type="checkbox"]:checked::after {
+  transform: rotate(45deg) scale(1);
+}
+
+.task-answer-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .task-answer-option-text {
@@ -1104,6 +1291,17 @@ watch(
   font-size: 22px;
   font-weight: 400;
   line-height: 1.3;
+}
+
+.task-answer-option-image {
+  width: auto;
+  height: auto;
+  max-width: 220px;
+  max-height: 140px;
+  border-radius: 8px;
+  border: 1px solid #dbe3eb;
+  object-fit: contain;
+  background: #ffffff;
 }
 
 .task-answer-blank-inline {
@@ -1151,6 +1349,7 @@ watch(
   background: #eef2f6;
   padding: 18px 22px;
   user-select: none;
+  overflow-x: auto;
 }
 
 .task-answer-connect-svg {
@@ -1176,21 +1375,24 @@ watch(
   position: relative;
   z-index: 1;
   display: flex;
-  gap: 64px;
+  align-items: flex-start;
+  gap: 110px;
+  width: min(100%, 920px);
 }
 
 .task-answer-connect-column {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
 
 .task-answer-connect-row {
-  min-height: 44px;
+  min-height: 52px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 12px;
 }
 
@@ -1203,6 +1405,21 @@ watch(
   font-size: 22px;
   font-weight: 400;
   line-height: 1.25;
+}
+
+.task-answer-connect-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.task-answer-connect-image {
+  width: 150px;
+  height: 110px;
+  border-radius: 8px;
+  border: 1px solid #dbe3eb;
+  object-fit: contain;
+  background: #ffffff;
 }
 
 .task-answer-connect-dot {
@@ -1269,12 +1486,17 @@ watch(
   height: 40px;
   border: none;
   border-radius: 8px;
-  background: linear-gradient(180deg, #67df79 0%, #43cf72 100%);
+  background: #ff9900;
   color: #ffffff;
   font-size: 16px;
   font-weight: 500;
   line-height: 1;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.task-answer-submit:hover:not(:disabled) {
+  background: #e68a00;
 }
 
 .task-answer-submit:disabled {
@@ -1326,14 +1548,35 @@ watch(
     font-size: 22px;
   }
 
+  .task-answer-question-score {
+    height: 24px;
+    min-width: 44px;
+    padding: 0 8px;
+    font-size: 14px;
+  }
+
+  .task-answer-question-image {
+    width: min(100%, 520px);
+  }
+
   .task-answer-option-text {
     font-size: 18px;
+  }
+
+  .task-answer-option-image {
+    max-width: 150px;
+    max-height: 100px;
   }
 
   .task-answer-blank-index,
   .task-answer-blank-text,
   .task-answer-connect-label {
     font-size: 16px;
+  }
+
+  .task-answer-connect-image {
+    width: 120px;
+    height: 90px;
   }
 
   .task-answer-blank-inline-input {
@@ -1347,11 +1590,12 @@ watch(
   }
 
   .task-answer-connect-columns {
-    gap: 22px;
+    gap: 36px;
+    width: 100%;
   }
 
   .task-answer-connect-row {
-    min-height: 36px;
+    min-height: 42px;
   }
 
   .task-answer-connect-dot {

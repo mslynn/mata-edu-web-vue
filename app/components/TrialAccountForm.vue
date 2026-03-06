@@ -12,9 +12,10 @@
         <input
           v-model="formData.name"
           type="text"
+          maxlength="10"
           :placeholder="t('auth.name')"
           class="form-input"
-          @input="clearError('name')"
+          @input="handleNameInput"
         />
       </div>
       <p v-if="errors.name" class="error-msg">{{ errors.name }}</p>
@@ -71,9 +72,10 @@
         <input
           v-model="formData.organizationName"
           type="text"
+          maxlength="20"
           :placeholder="t('auth.organizationName')"
           class="form-input"
-          @input="clearError('organizationName')"
+          @input="handleOrganizationNameInput"
         />
       </div>
       <p v-if="errors.organizationName" class="error-msg">
@@ -195,11 +197,21 @@ const setFieldError = (field: keyof typeof errors, message: string) => {
   errors[field] = message;
 };
 
+const handleNameInput = () => {
+  formData.name = formData.name.slice(0, 10);
+  clearError("name");
+};
+
 const handlePhoneInput = () => {
   formData.phonenumber = formData.phonenumber
     .replace(/\D/g, "")
     .slice(0, phoneMaxLength.value);
   clearError("phonenumber");
+};
+
+const handleOrganizationNameInput = () => {
+  formData.organizationName = formData.organizationName.slice(0, 20);
+  clearError("organizationName");
 };
 
 const handleSmsCodeInput = () => {
@@ -261,9 +273,14 @@ const handleSendCode = async () => {
 
 const handleSubmit = () => {
   let hasError = false;
+  const name = formData.name.trim();
+  const organizationName = formData.organizationName.trim();
 
-  if (!formData.name.trim()) {
+  if (!name) {
     errors.name = t("auth.pleaseInputName");
+    hasError = true;
+  } else if (name.length > 10) {
+    errors.name = t("auth.nameLengthLimit");
     hasError = true;
   }
 
@@ -284,8 +301,11 @@ const handleSubmit = () => {
     hasError = true;
   }
 
-  if (!formData.organizationName.trim()) {
+  if (!organizationName) {
     errors.organizationName = t("auth.pleaseInputOrganization");
+    hasError = true;
+  } else if (organizationName.length > 20) {
+    errors.organizationName = t("auth.organizationLengthLimit");
     hasError = true;
   }
 
@@ -301,7 +321,11 @@ const handleSubmit = () => {
 
   if (hasError) return;
 
-  emit("submit", { ...formData });
+  emit("submit", {
+    ...formData,
+    name,
+    organizationName,
+  });
 };
 
 // 暴露方法给父组件调用
