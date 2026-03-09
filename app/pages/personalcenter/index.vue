@@ -608,8 +608,13 @@ const accountId = computed(() => userProfile.value?.user?.userName || '')
 const phone = computed(() => userProfile.value?.user?.phonenumber || '')
 const avatarUrl = computed(() => userProfile.value?.user?.avatar || '')
 const roleName = computed(() => userProfile.value?.user?.roleName || '')
+const isCityOrDistrictAdmin = computed(() => {
+    const roleKey = user.value?.role_key || userProfile.value?.user?.roleKey || userProfile.value?.user?.role_key
+    const currentRoleName = user.value?.role_name || userProfile.value?.user?.roleName || userProfile.value?.user?.role_name
+    return roleKey === 'city_admin' || roleKey === 'district_admin' || currentRoleName === '市管理员' || currentRoleName === '区管理员'
+})
 
-const activeTab = ref('works')
+const activeTab = ref(isCityOrDistrictAdmin.value ? 'settings' : 'works')
 const activeTool = ref('uCode4')
 const activeFilter = ref('all')
 const searchKeyword = ref('')
@@ -1166,10 +1171,17 @@ const currentToolLabel = computed(() => {
     return tool ? tool.label : 'uCode4'
 })
 
-const tabs = computed(() => [
-    { value: 'works', label: t('personalCenter.myWorks') },
-    { value: 'settings', label: t('personalCenter.accountSettings') }
-])
+const tabs = computed(() => {
+    if (isCityOrDistrictAdmin.value) {
+        return [
+            { value: 'settings', label: t('personalCenter.accountSettings') }
+        ]
+    }
+    return [
+        { value: 'works', label: t('personalCenter.myWorks') },
+        { value: 'settings', label: t('personalCenter.accountSettings') }
+    ]
+})
 
 const tools = [
     { value: 'uCode4', label: 'uCode4' },
@@ -1186,6 +1198,11 @@ const filters = computed(() => [
 
 // 获取作品列表
 const loadWorksList = async () => {
+    if (isCityOrDistrictAdmin.value) {
+        worksList.value = []
+        pagination.value.total = 0
+        return
+    }
     try {
         worksLoading.value = true
         const res = await getProfileopus(
@@ -1206,12 +1223,22 @@ const loadWorksList = async () => {
 
 // 监听工具切换、筛选条件变化
 watch([activeTool, searchKeyword], () => {
+    if (isCityOrDistrictAdmin.value) return
     pagination.value.pageNum = 1
     loadWorksList()
 })
 
+watch(isCityOrDistrictAdmin, (isAdmin) => {
+    if (!isAdmin) return
+    activeTab.value = 'settings'
+    showUploadModal.value = false
+    worksList.value = []
+    pagination.value.total = 0
+})
+
 // 分页变化
 const handlePageChange = () => {
+    if (isCityOrDistrictAdmin.value) return
     loadWorksList()
 }
 
@@ -1226,9 +1253,11 @@ const loadUserProfile = async () => {
 }
 
 // 初始化加载
-onMounted(() => {
-    loadUserProfile()
-    loadWorksList()
+onMounted(async () => {
+    await loadUserProfile()
+    if (!isCityOrDistrictAdmin.value) {
+        loadWorksList()
+    }
 })
 
 // Filter works by status

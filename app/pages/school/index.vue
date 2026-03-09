@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-base font-medium text-gray-800">{{ $t('school.schoolManage') }}</h1>
         <div class="text-gray-600 text-sm">
-          {{ $t('school.schoolCount') }}：{{ total }}个
+          {{ $t('school.schoolCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}个</span>
         </div>
       </div>
 
@@ -126,15 +126,21 @@
           </div>
           <div class="flex">
             <span class="text-[#4D4D4D] w-26 flex-shrink-0">{{ $t('school.adminCount') }}</span>
-            <span class="text-[#4D4D4D]">{{ currentSchool?.schoolAdminCount ?? '-' }}</span>
+            <span :class="currentSchool?.schoolAdminCount == null ? 'text-[#4D4D4D]' : 'text-[#FF9900] font-medium'">
+              {{ currentSchool?.schoolAdminCount ?? '-' }}
+            </span>
           </div>
           <div class="flex">
             <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.teacherCount') }}</span>
-            <span class="text-[#4D4D4D]">{{ currentSchool?.teacherCount ?? '-' }}</span>
+            <span :class="currentSchool?.teacherCount == null ? 'text-[#4D4D4D]' : 'text-[#FF9900] font-medium'">
+              {{ currentSchool?.teacherCount ?? '-' }}
+            </span>
           </div>
           <div class="flex">
             <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.studentCount') }}</span>
-            <span class="text-[#4D4D4D]">{{ currentSchool?.studentCount ?? '-' }}</span>
+            <span :class="currentSchool?.studentCount == null ? 'text-[#4D4D4D]' : 'text-[#FF9900] font-medium'">
+              {{ currentSchool?.studentCount ?? '-' }}
+            </span>
           </div>
         </div>
         
@@ -262,7 +268,7 @@ const fetchSchoolList = async () => {
   loading.value = true
   try {
     const res = await getSchooleList({
-      numberName: searchKeyword.value?.trim() || undefined,
+      nickPhone: searchKeyword.value?.trim() || undefined,
       pageNum: currentPage.value,
       pageSize: pageSize.value
     })

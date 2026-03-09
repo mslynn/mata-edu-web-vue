@@ -17,15 +17,15 @@ export const districtAdmin = () => {
 
   //获取学校列表
   const getSchooleList = async (params?: {
-    numberName?: string;
+    nickPhone?: string;
     pageNum?: number;
     pageSize?: number;
   }) => {
     try {
       const queryParams: Record<string, any> = {};
 
-      if (params?.numberName) {
-        queryParams['params[numberName]'] = params.numberName
+      if (params?.nickPhone) {
+        queryParams["params[numberName]"] = params.nickPhone;
       }
       if (params?.pageNum) {
         queryParams.pageNum = params.pageNum;

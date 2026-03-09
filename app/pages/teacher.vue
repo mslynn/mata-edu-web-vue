@@ -505,7 +505,7 @@
               </div>
               <div class="info-card">
                 <div class="info-label">{{ $t("teacher.studentCount") }}</div>
-                <div class="info-value">80</div>
+                <div class="info-value info-value--highlight">80</div>
               </div>
             </div>
           </div>
@@ -1162,12 +1162,11 @@ const goToTeach = async (chapter: ChapterItem) => {
   const currentClassId = selectedClassId.value;
   const courseId = selectedCourseId.value;
   const chapterId = chapter.chapterId;
+  const classroomUrl = `/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher&autoQuickLogin=1`;
 
-  // 如果是开课中状态，直接跳转，不调用 beginClass 接口
+  // 如果是开课中状态，直接跳转
   if (chapter.teachStatus === 1) {
-    navigateTo(
-      `/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`
-    );
+    navigateTo(classroomUrl);
     return;
   }
 
@@ -1180,9 +1179,7 @@ const goToTeach = async (chapter: ChapterItem) => {
       peerId: currentClassId,
     });
     console.log("开始上课成功");
-    navigateTo(
-      `/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher`
-    );
+    navigateTo(classroomUrl);
   } catch (error: any) {
     console.error("开始上课失败:", error);
   }
@@ -1330,9 +1327,8 @@ const handleStartClassConfirm = async (data: {
       peerId,
     });
     console.log("开始上课成功");
-    // 接口成功，跳转到上课页面，from=teacher 标识从教师首页进入
     navigateTo(
-      `/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}&from=teacher`
+      `/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}&from=teacher&autoQuickLogin=1`
     );
   } catch (error: any) {
     console.error("开始上课失败:", error);
@@ -2009,6 +2005,10 @@ const handleStartClassConfirm = async (data: {
   font-size: 28px;
   font-weight: 500;
   color: #666;
+}
+
+.info-value--highlight {
+  color: #FF9900;
 }
 
 /* 响应式 */

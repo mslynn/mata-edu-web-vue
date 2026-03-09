@@ -17,7 +17,7 @@ export const cityAdmin = () => {
 
   //获取区管理人员列表
   const getCityAdminList = async (params?: {
-    nickName?: string;
+    nickPhone?: string;
     phonenumber?: number;
     pageNum?: number;
     pageSize?: number;
@@ -25,8 +25,8 @@ export const cityAdmin = () => {
     try {
       const queryParams: Record<string, any> = {};
 
-      if (params?.nickName) {
-        queryParams.nickName = params.nickName;
+      if (params?.nickPhone) {
+        queryParams["params[nickPhone]"] = params.nickPhone;
       }
       if (params?.phonenumber) {
         queryParams.phonenumber = params.phonenumber;

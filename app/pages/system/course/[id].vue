@@ -448,7 +448,6 @@ const handleCourseChange = async (courseId: string, classId: string) => {
 const handleStartClassConfirm = async (data: { classId: string; courseId: string; chapterId: string }) => {
   console.log('开课数据:', data)
 
-  // 先调用开始上课接口
   const { beginClass } = useTeacher()
   const peerId = data.classId
 
@@ -460,11 +459,10 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
       peerId
     })
     console.log('开始上课成功')
-    // 接口成功，跳转到上课页面
-    navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}`)
+
+    navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}&autoQuickLogin=1`)
   } catch (error: any) {
     console.error('开始上课失败:', error)
-    // ElMessage.error(error.message || '开始上课失败')
   }
 }
 

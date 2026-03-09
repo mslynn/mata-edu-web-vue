@@ -7,7 +7,7 @@
           {{ $t("city.districtManage") }}
         </h1>
         <div class="text-gray-600 text-sm">
-          {{ $t("city.adminCount") }}：{{ total }}个
+          {{ $t("city.adminCount") }}：<span class="text-[#FF9900] font-medium">{{ total }}个</span>
         </div>
       </div>
 
@@ -140,19 +140,25 @@
             <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{
               $t("city.schoolCount")
             }}</span>
-            <span class="text-[#4D4D4D]">{{ currentAdmin?.schoolCount ?? "-" }}</span>
+            <span :class="currentAdmin?.schoolCount == null ? 'text-[#4D4D4D]' : 'text-[#FF9900] font-medium'">
+              {{ currentAdmin?.schoolCount ?? "-" }}
+            </span>
           </div>
           <div class="flex">
             <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{
               $t("city.teacherCount")
             }}</span>
-            <span class="text-[#4D4D4D]">{{ currentAdmin?.teacherCount ?? "-" }}</span>
+            <span :class="currentAdmin?.teacherCount == null ? 'text-[#4D4D4D]' : 'text-[#FF9900] font-medium'">
+              {{ currentAdmin?.teacherCount ?? "-" }}
+            </span>
           </div>
           <div class="flex">
             <span class="text-[#4D4D4D] w-20 flex-shrink-0">{{
               $t("city.studentCount")
             }}</span>
-            <span class="text-[#4D4D4D]">{{ currentAdmin?.studentCount ?? "-" }}</span>
+            <span :class="currentAdmin?.studentCount == null ? 'text-[#4D4D4D]' : 'text-[#FF9900] font-medium'">
+              {{ currentAdmin?.studentCount ?? "-" }}
+            </span>
           </div>
         </div>
 
@@ -349,7 +355,7 @@ const fetchList = async () => {
   loading.value = true;
   try {
     const res = await getCityAdminList({
-      nickName: searchKeyword.value.trim() || undefined,
+      nickPhone: searchKeyword.value.trim() || undefined,
       pageNum: currentPage.value,
       pageSize: pageSize.value,
     });

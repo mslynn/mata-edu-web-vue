@@ -146,11 +146,15 @@ export const useSchoolUser = () => {
   };
 
   // 重置教师密码
-  const resetTeacherPassword = async (ids: string[], password?: string) => {
+  const resetTeacherPassword = async (ids: string[], password?: string, orgId?: string) => {
     try {
       // 始终加密
       const headers = { 'isEncrypt': 'true' }
-      const response = await http.post("/system/user/reset", { ids, password }, headers);
+      const payload: Record<string, any> = { ids, password };
+      if (orgId) {
+        payload.orgId = orgId;
+      }
+      const response = await http.post("/system/user/reset", payload, headers);
       if (response.code !== 200) {
         throw new Error(response.msg || "重置密码失败");
       }
@@ -213,9 +217,13 @@ export const useSchoolUser = () => {
   };
 
   // 获取教师统一密码
-  const getTeacherPassword = async () => {
+  const getTeacherPassword = async (orgId?: string) => {
     try {
-      const response = await http.get("/system/org/getPwd");
+      const params: Record<string, any> = {};
+      if (orgId) {
+        params.orgId = orgId;
+      }
+      const response = await http.get("/system/org/getPwd", params);
       if (response.code !== 200) {
         throw new Error(response.msg || "获取教师统一密码失败");
       }

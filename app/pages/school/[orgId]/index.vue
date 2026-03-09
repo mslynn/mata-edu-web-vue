@@ -9,7 +9,7 @@
           <span>{{ $t('schoolAdmin.title') }}</span>
         </div>
         <div class="text-gray-600 text-sm">
-          {{ $t('schoolAdmin.adminCount') }}：{{ total }}{{ $t('schoolAdmin.person') }}
+          {{ $t('schoolAdmin.adminCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}{{ $t('schoolAdmin.person') }}</span>
         </div>
       </div>
 
@@ -52,11 +52,6 @@
             class="admin-table">
             <template #action="{ row }">
               <div class="flex items-center justify-center gap-2 whitespace-nowrap">
-                <button
-                  class="px-3 py-1 text-xs border rounded transition-colors text-[#4D4D4D] border-[#E5E5E5] hover:bg-[#FFF8F0]"
-                  @click="handleTransferTeacherClass(row)">
-                  {{ $t('schoolAdmin.classTransfer') }}
-                </button>
                 <button
                   class="px-3 py-1 text-xs border rounded transition-colors text-[#4D4D4D] border-[#E5E5E5] hover:bg-[#FFF8F0]"
                   @click="handleResetTeacherPassword(row)">
@@ -200,93 +195,13 @@
       </div>
     </MModal>
 
-    <!-- 班级转让弹窗 -->
-    <MModal v-model="showTransferTeacherModal" custom-width="500px" :show-footer="false" :show-close="false"
-      content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-          @click="showTransferTeacherModal = false">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('schoolAdmin.classTransfer') }}</h3>
-
-        <!-- 搜索框 -->
-        <div class="mb-4">
-          <MInput v-model="transferTeacherSearch" :placeholder="$t('schoolAdmin.searchTransferTeacher')" clearable>
-            <template #suffix>
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </template>
-          </MInput>
-        </div>
-
-        <!-- 教师列表表格 -->
-        <div class="border border-gray-200 rounded-lg mb-4 max-h-[200px] overflow-auto">
-          <table class="w-full text-sm">
-            <thead class="bg-gray-50 sticky top-0">
-              <tr>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('common.serialNumber') }}</th>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('schoolAdmin.name') }}</th>
-                <th class="px-3 py-2 text-left text-[#4D4D4D] font-medium">{{ $t('schoolAdmin.account') }}</th>
-                <th class="px-3 py-2 text-center text-[#4D4D4D] font-medium">{{ $t('schoolAdmin.select') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(teacher, index) in filteredTransferTeachers" :key="teacher.userId"
-                class="border-t border-gray-100">
-                <td class="px-3 py-2 text-[#4D4D4D]">{{ index + 1 }}</td>
-                <td class="px-3 py-2 text-[#4D4D4D]">{{ teacher.nickName }}</td>
-                <td class="px-3 py-2 text-[#4D4D4D]">{{ teacher.userName }}</td>
-                <td class="px-3 py-2 text-center">
-                  <label class="custom-checkbox" @click="handleSelectTransferTeacher(teacher.userId)">
-                    <span 
-                      class="checkbox-box"
-                      :class="{ checked: transferTeacherForm.targetTeacherId === teacher.userId }"
-                    >
-                      <svg v-if="transferTeacherForm.targetTeacherId === teacher.userId" class="checkbox-icon" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
-                        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
-                      </svg>
-                    </span>
-                  </label>
-                </td>
-              </tr>
-              <tr v-if="filteredTransferTeachers.length === 0">
-                <td colspan="4" class="px-3 py-4 text-center text-gray-400">{{ $t('schoolAdmin.noTransferableTeacher') }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- 选择班级 -->
-        <div class="mb-4">
-          <p class="text-sm text-[#4D4D4D] mb-3">{{ $t('schoolAdmin.selectTransferClass') }}</p>
-          <div class="space-y-3">
-            <MSelect v-model="transferClassForm.gradeId" :options="transferGradeOptions" :placeholder="$t('schoolAdmin.grade')"
-              @change="handleTransferGradeChange" />
-            <MSelect v-model="transferClassForm.classId" :options="transferClassOptions" :placeholder="$t('schoolAdmin.class')" value-key="id"
-              label-key="name" />
-          </div>
-        </div>
-
-        <div class="flex items-center justify-center gap-4 mt-6">
-          <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showTransferTeacherModal = false">{{ $t('common.cancel') }}</button>
-          <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="handleConfirmTransferTeacher">{{ $t('common.confirm') }}</button>
-        </div>
-      </div>
-    </MModal>
   </div>
 </template>
 
 <script setup lang="ts">
 import { districtAdmin } from '~/composables/api/districtAdmin'
 
-import { useSchoolUser, type Teacher } from '~/composables/api/useSchoolUser'
+import { useSchoolUser } from '~/composables/api/useSchoolUser'
 import { useTeacher } from '~/composables/api/useTeacher'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
@@ -327,7 +242,7 @@ const teacherTableColumns = computed(() => [
   { key: 'userName', title: t('schoolAdmin.account'), minWidth: '120px' },
   { key: 'phonenumber', title: t('schoolAdmin.phone'), minWidth: '120px' },
   { key: 'createTime', title: t('school.createTime'), minWidth: '160px' },
-  { key: 'action', title: t('common.operation'), width: '320px', align: 'center' as const }
+  { key: 'action', title: t('common.operation'), width: '240px', align: 'center' as const }
 ])
 
 // 表格数据
@@ -337,7 +252,6 @@ const tableData = ref<any[]>([])
 const showTeacherModal = ref(false)
 const showDeleteTeacherModal = ref(false)
 const showResetTeacherModal = ref(false)
-const showTransferTeacherModal = ref(false)
 const isEditTeacher = ref(false)
 const teacherForm = reactive({ id: '', teacherName: '', phone: '', countryCode: '86' })
 const countryCodeRef = ref<any>(null)
@@ -366,28 +280,6 @@ const handleCountryChange = (country: any) => {
   teacherForm.phone = (teacherForm.phone || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
 }
 
-// 转让相关
-const transferTeacherForm = reactive({ teacherId: '', teacherName: '', targetTeacherId: '' as string | null })
-const transferTeacherOptions = ref<Teacher[]>([])
-const transferTeacherSearch = ref('')
-const transferClassForm = reactive({ gradeId: '', classId: '' })
-const transferClassOptions = ref<any[]>([])
-const transferGradeOptions = ref<any[]>([])
-
-const filteredTransferTeachers = computed(() => {
-  // 过滤掉当前正在转让的教师（不能转让给自己）
-  let list = transferTeacherOptions.value.filter(t => t.userId !== transferTeacherForm.teacherId)
-  
-  // 搜索过滤
-  if (transferTeacherSearch.value) {
-    const keyword = transferTeacherSearch.value.toLowerCase()
-    list = list.filter(t =>
-      t.nickName?.toLowerCase().includes(keyword) || t.userName?.toLowerCase().includes(keyword)
-    )
-  }
-  return list
-})
-
 // 获取学校信息
 // const fetchSchoolInfo = async () => {
 //   try {
@@ -401,7 +293,7 @@ const filteredTransferTeachers = computed(() => {
 // 获取教师统一密码（使用班级管理的学生密码接口）
 const fetchTeacherPassword = async () => {
   try {
-    const pwd = await getStudentPassword()
+    const pwd = await getStudentPassword(orgId.value)
     teacherPassword.value = pwd || 'xxxxxxxx'
   } catch (error) {
     console.error('获取教师密码失败', error)
@@ -524,91 +416,10 @@ const handleResetTeacherPassword = (row: any) => {
 
 const handleConfirmResetTeacher = async () => {
   try {
-    await schoolUserApi.resetTeacherPassword(resetTeacherIds.value)
+    await schoolUserApi.resetTeacherPassword(resetTeacherIds.value, undefined, orgId.value)
     ElMessage.success(t('schoolAdmin.resetPasswordSuccess'))
     showResetTeacherModal.value = false
   } catch (error: any) { ElMessage.error(error.message || t('schoolAdmin.resetPasswordFailed')) }
-}
-
-// 班级转让
-const handleTransferTeacherClass = async (row: any) => {
-  transferTeacherForm.teacherId = row.userId
-  transferTeacherForm.teacherName = row.nickName
-  transferTeacherForm.targetTeacherId = null
-  transferTeacherSearch.value = ''
-  transferClassForm.gradeId = ''
-  transferClassForm.classId = ''
-  transferClassOptions.value = []
-  transferGradeOptions.value = []
-
-  // 获取用户列表用于班级转让
-  try {
-    const userList = await schoolUserApi.getUserList()
-    console.log(userList, 'userList----获取用户列表用于班级转让')
-    transferTeacherOptions.value = userList || []
-  } catch (error) {
-    transferTeacherOptions.value = []
-  }
-
-  // 获取当前教师的年级列表
-  try {
-    const gradeList = await schoolUserApi.transferGrade(row.userId, orgId.value)
-    transferGradeOptions.value = (gradeList || []).map((g: any) => ({
-      label: g.gradeName,
-      value: g.grade
-    }))
-  } catch (error) {
-    transferGradeOptions.value = []
-  }
-
-  showTransferTeacherModal.value = true
-}
-
-const handleSelectTransferTeacher = (userId: string) => {
-  transferTeacherForm.targetTeacherId = userId
-}
-
-const handleTransferGradeChange = async (gradeId: string | number | null) => {
-  if (!gradeId) return
-  if (!transferTeacherForm.teacherId) return
-  
-  transferClassForm.classId = ''
-  transferClassOptions.value = []
-  try {
-    // 根据原老师和年级获取班级列表（要转让的班级）
-    const classList = await schoolUserApi.transferClassList({
-      teacherId: transferTeacherForm.teacherId,
-      grade: String(gradeId),
-      schoolId: orgId.value
-    })
-    transferClassOptions.value = (classList || []).map((c: any) => ({
-      id: c.classId || c.id,
-      name: c.className || c.name
-    }))
-  } catch (error) {
-    // 错误由全局处理
-    transferClassOptions.value = []
-  }
-}
-
-const handleConfirmTransferTeacher = async () => {
-  if (!transferTeacherForm.targetTeacherId) { ElMessage.warning(t('schoolAdmin.pleaseSelectTeacher')); return }
-  if (!transferClassForm.classId) { ElMessage.warning(t('schoolAdmin.pleaseSelectClass')); return }
-  try {
-    const selectedClass = transferClassOptions.value.find((c: any) => c.id === transferClassForm.classId)
-    await schoolUserApi.transferClass({
-      teacherId: transferTeacherForm.teacherId,  // 原老师（班级要被转走的）
-      targetTeacherId: transferTeacherForm.targetTeacherId as string,  // 目标老师（接收班级的）
-      classId: transferClassForm.classId,
-      schoolId: orgId.value,
-      className: selectedClass?.name || ''
-    })
-    ElMessage.success(t('schoolAdmin.transferSuccess'))
-    showTransferTeacherModal.value = false
-    fetchTeacherList()
-  } catch (error: any) { 
-    // 错误由全局处理
-  }
 }
 
 // 导出

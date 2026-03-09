@@ -15,19 +15,21 @@
           <p class="modal-tip">如你的账号已经登录，请告知教师帮忙踢人处理</p>
 
           <!-- 学生列表 -->
-          <div class="student-grid">
-            <div 
-              v-for="student in studentList" 
-              :key="student.id"
-              class="student-card"
-              :class="{ 'is-online': student.loginStatus === 1, 'is-disabled': student.loginStatus === 1 }"
-              @click="handleSelectStudent(student)"
-            >
-              <!-- 已登录标签 -->
-              <span v-if="student.loginStatus === 1" class="online-tag">已登录</span>
-              <div class="student-info">
-                <p class="info-row"><span class="value">{{ student.studentName }}</span></p>
-                <p class="info-row"><span class="value">{{ student.studentNumber }}</span></p>
+          <div class="student-grid-wrapper">
+            <div class="student-grid">
+              <div 
+                v-for="student in studentList" 
+                :key="student.id"
+                class="student-card"
+                :class="{ 'is-online': student.loginStatus === 1, 'is-disabled': student.loginStatus === 1 }"
+                @click="handleSelectStudent(student)"
+              >
+                <!-- 已登录标签 -->
+                <span v-if="student.loginStatus === 1" class="online-tag">已登录</span>
+                <div class="student-info">
+                  <p class="info-row"><span class="value">{{ student.studentName }}</span></p>
+                  <p class="info-row"><span class="value">{{ student.studentNumber }}</span></p>
+                </div>
               </div>
             </div>
           </div>
@@ -131,13 +133,14 @@ const confirmLogin = () => {
 
 .modal-container {
   position: relative;
-  width: 90%;
-  max-width: 900px;
+  width: 900px;
   max-height: 80vh;
   background: #FFFFFF;
   border-radius: 8px;
   padding: 40px 50px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .corner-decoration {
@@ -154,30 +157,28 @@ const confirmLogin = () => {
   font-weight: 600;
   color: #333;
   margin-bottom: 16px;
+  flex-shrink: 0;
 }
 
 .modal-tip {
   font-size: 14px;
   color: #999;
   margin-bottom: 24px;
+  flex-shrink: 0;
+}
+
+.student-grid-wrapper {
+  flex: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .student-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-}
-
-@media (max-width: 768px) {
-  .student-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 480px) {
-  .student-grid {
-    grid-template-columns: 1fr;
-  }
+  padding-right: 4px;
 }
 
 .student-card {
@@ -186,8 +187,13 @@ const confirmLogin = () => {
   border: 1px dashed #D9D9D9;
   border-radius: 8px;
   padding: 16px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .student-card:hover {

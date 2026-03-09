@@ -128,16 +128,30 @@
 
 ### 基础 UI 组件
 
-- `app/components/ui/*`：`MButton`、`MInput`、`MSelect`、`MTable`、`MModal`、`MPagination`、`StarRating` 等
+- `app/components/ui/MButton.vue`：通用按钮组件，支持 `primary/default/danger/text` 四种风格、三档尺寸和禁用态
+- `app/components/ui/MInput.vue`：通用输入框，支持前后缀插槽、清空按钮、错误态，以及 `focus/blur/enter` 事件
+- `app/components/ui/MSelect.vue`：自定义下拉选择器，支持搜索过滤、点击/悬停展开、`Teleport` 浮层定位和自定义选项渲染
+- `app/components/ui/MTable.vue`：表格组件，支持加载遮罩、斑马纹、序号列、复选选择、整表全选和单元格插槽扩展
+- `app/components/ui/MModal.vue`：通用弹窗，支持标题/内容/底部按钮插槽、尺寸控制、遮罩关闭、`Esc` 关闭和多弹窗栈管理
+- `app/components/ui/MPagination.vue`：分页组件，支持总数展示、每页条数切换、省略页码和页码跳转
+- `app/components/ui/MTabs.vue`：标签切换组件，适合登录页或列表页的状态切换，支持徽标数和等宽铺满
+- `app/components/ui/MTooltip.vue`：轻量提示浮层，鼠标悬停展示，支持上/下/左/右四个方向
+- `app/components/ui/MTree.vue`：递归树形组件，支持节点展开收起、当前选中态，以及节点图标/操作区插槽
+- `app/components/ui/MFilterPopover.vue`：悬停式筛选浮层，常用于表头或工具栏里的快速筛选选项切换
+- `app/components/ui/ImageUploader.vue`：图片上传组件，封装文件类型/大小校验、上传中状态、缩略图预览、重新上传和删除
+- `app/components/ui/ImagePreviewModal.vue`：图片预览弹窗，配合 `ImageUploader` 使用，用于放大查看上传结果
+- `app/components/ui/StarRating.vue`：星级评分组件，支持只读展示和可编辑评分，支持半星选择
+- `app/components/ui/MMessage.ts`：函数式全局消息提示，提供 `success/error/warning/info` 四类反馈
+- `app/components/ui/index.ts`：UI 组件导出入口，目前主要统一导出 `ElMessage`
 
 ### 登录与认证组件
 
-- `CampusLoginForm.vue`
-- `PhoneLoginForm.vue`
-- `ClassCodeLoginForm.vue`
-- `ForgotPasswordForm.vue`
-- `TrialAccountForm.vue`
-- `CountryCodeSelector.vue`
+- `app/components/CampusLoginForm.vue`：账号密码登录表单，负责用户名/密码输入、错误态回填，以及“忘记密码”入口触发
+- `app/components/PhoneLoginForm.vue`：手机号验证码登录表单，集成区号选择、手机号格式校验、验证码发送倒计时，并支持切回密码登录
+- `app/components/ClassCodeLoginForm.vue`：班级码登录表单，输入班级码和班级密码，用于快捷进入特定班级场景
+- `app/components/ForgotPasswordForm.vue`：重置密码表单，串起手机号校验、短信验证码、新密码与确认密码校验，最终向父组件提交重置数据
+- `app/components/TrialAccountForm.vue`：试用账号申请表单，收集姓名、手机号、验证码、学校/机构名称、试用目的和感兴趣产品，并暴露提交校验方法给父组件调用
+- `app/components/CountryCodeSelector.vue`：国家/地区区号选择器，内置搜索、常用区号列表和手机号规则校验，被手机号登录、忘记密码、试用申请等表单复用
 
 ## 4.5 组合式函数与 API 封装（composables）
 

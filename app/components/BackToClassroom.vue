@@ -52,10 +52,13 @@ const userRole = ref<string | null>(null)
 // 课堂已结束弹窗
 const showExpiredModal = ref(false)
 
+const canShowBackToClass = computed(() => {
+  return userRole.value === 'teacher' || userRole.value === 'school_admin'
+})
+
 // 是否显示按钮（排除课堂页面和登录页面）
 const showButton = computed(() => {
-  // 只有老师才显示
-  if (userRole.value !== 'teacher') return false
+  if (!canShowBackToClass.value) return false
   // 课堂页面不显示
   if (route.path.includes('/system/classroom/')) return false
   // 登录页面不显示（首页、根路径）
@@ -84,7 +87,7 @@ const closeExpiredModal = () => {
 
 // 从接口获取开课中的课堂
 const fetchOngoingClass = async () => {
-  if (userRole.value !== 'teacher') {
+  if (!canShowBackToClass.value) {
     ongoingClass.value = null
     return
   }

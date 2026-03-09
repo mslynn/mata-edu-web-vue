@@ -683,7 +683,7 @@
         <!-- 关闭按钮 -->
         <button
           class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-          @click="showCreateModal = false"
+          @click="createForm.name = ''; showCreateModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -766,7 +766,7 @@
         <div class="flex items-center justify-center gap-4 mt-auto pt-4">
           <button
             class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showCreateModal = false"
+            @click="createForm.name = ''; showCreateModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
@@ -841,6 +841,25 @@
           >
             {{ $t("common.confirm") }}
           </button>
+        </div>
+      </div>
+    </MModal>
+
+    <!-- 创建班级成功提示弹窗 -->
+    <MModal v-model="showClassCreatedTip" custom-width="381px" :show-footer="false" :show-close="false" content-class="!p-0">
+      <div class="p-6 relative flex flex-col">
+        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showClassCreatedTip = false">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <p class="text-center text-[#4D4D4D] mb-6">{{ $t('class.classCreatedTip') }}</p>
+        <div class="flex items-center justify-center gap-4">
+          <button class="w-[120px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            @click="showClassCreatedTip = false">{{ $t('common.cancel') }}</button>
+          <button class="w-[120px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            @click="showClassCreatedTip = false; addStudentMode = 'manual'; createForm.name = ''; showCreateModal = true">{{ $t('class.addStudentBtn') }}</button>
         </div>
       </div>
     </MModal>
@@ -1213,6 +1232,7 @@
             :type="showBatchDeletePassword ? 'text' : 'password'"
             minlength="6"
             maxlength="30"
+            autocomplete="new-password"
             :placeholder="t('user.pleaseInputTeacherPassword')"
             class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
           />
@@ -1443,6 +1463,16 @@
         </div>
       </div>
     </MModal>
+
+    <DisableQuickLoginModal
+      v-model="showDisableQuickLoginModal"
+      :title="$t('studentManage.disableQuickLoginTitle')"
+      :content="$t('studentManage.disableQuickLoginContent')"
+      :tip="$t('studentManage.disableQuickLoginTip')"
+      :cancel-text="$t('common.cancel')"
+      :confirm-text="$t('common.confirm')"
+      @confirm="handleConfirmDisableQuickLogin"
+    />
 
     <!-- 创建/编辑小组弹窗 -->
     <MModal
@@ -2156,6 +2186,9 @@ const isAllGroupSelected = computed(() => {
 //   return members.map((s) => s.studentName || s.name).join("、");
 // };
 
+// 创建班级成功后提示弹窗
+const showClassCreatedTip = ref(false);
+
 // 创建学生弹窗
 const showCreateModal = ref(false);
 const addStudentMode = ref<"batch" | "manual">("batch");
@@ -2181,6 +2214,7 @@ const deletingClass = ref<any>(null);
 
 // 快捷登录弹窗
 const showQuickLoginModal = ref(false);
+const showDisableQuickLoginModal = ref(false);
 const isQuickLoginEnabled = ref(false); // 快捷登录是否已启用
 const quickLoginData = ref<{
   classCode?: string;
@@ -2273,6 +2307,16 @@ const isAllSelected = computed(() => {
 type ActionType = "create" | "quickLogin" | "export" | "batch" | null;
 const activeAction = ref<ActionType>(null);
 
+const exitStudentBatchMode = () => {
+  activeAction.value = null;
+  selectedStudentIds.value = [];
+};
+
+const exitGroupBatchMode = () => {
+  groupActiveAction.value = null;
+  selectedGroupIds.value = [];
+};
+
 // ===== 事件处理 =====
 
 // 选择全部班级
@@ -2294,13 +2338,15 @@ const loadGradeOptions = async () => {
   }
 };
 // 加载班级列表
-const loadClassList = async () => {
+const loadClassList = async (
+  targetClassId?: string,
+  createdClassMeta?: { className?: string; grade?: string | number | null }
+) => {
   loading.value = true;
   try {
     let data = await getClassList();
-    console.log(data, "班级列表");
-    // 转换成树形结构
-    treeData.value = (data || []).map((item: any) => ({
+    const gradeList = data?.my || data || [];
+    treeData.value = (gradeList).map((item: any) => ({
       id: `grade_${item.grade}`,
       name: item.gradeName,
       grade: item.grade,
@@ -2314,17 +2360,53 @@ const loadClassList = async () => {
       })),
     }));
 
-    // 默认选中第一个年级的第一个班级
-    if (treeData.value.length > 0 && treeData.value[0].children?.length > 0) {
-      const firstGrade = treeData.value[0];
-      const firstClass = firstGrade.children[0];
-      selectedClass.value = firstClass;
-      // 展开第一个年级
-      if (!expandedKeys.value.includes(firstGrade.id)) {
-        expandedKeys.value.push(firstGrade.id);
+    // 尝试选中指定班级，否则选第一个
+    let targetClass: any = null;
+    let targetGrade: any = null;
+    if (targetClassId) {
+      for (const grade of treeData.value) {
+        const found = grade.children?.find((cls: any) => String(cls.id) === String(targetClassId));
+        if (found) {
+          targetClass = found;
+          targetGrade = grade;
+          break;
+        }
       }
-      // 加载第一个班级的学生列表和小组列表
-      loadStudentList(firstClass.id, activeTab.value === "student");
+    }
+    if (!targetClass && createdClassMeta?.className && createdClassMeta?.grade !== null && createdClassMeta?.grade !== undefined) {
+      const targetGradeValue = String(createdClassMeta.grade);
+      const targetClassName = createdClassMeta.className.trim();
+      for (const grade of treeData.value) {
+        if (String(grade.grade) !== targetGradeValue) continue;
+        const candidates = Array.isArray(grade.children) ? [...grade.children].reverse() : [];
+        const found = candidates.find(
+          (cls: any) => String(cls.name || "").trim() === targetClassName
+        );
+        if (found) {
+          targetClass = found;
+          targetGrade = grade;
+          break;
+        }
+      }
+    }
+    if (!targetClass && treeData.value.length > 0 && treeData.value[0].children?.length > 0) {
+      targetGrade = treeData.value[0];
+      targetClass = targetGrade.children[0];
+    }
+    if (targetClass && targetGrade) {
+      const isNewClass = selectedClass.value?.id !== targetClass.id;
+      selectedClass.value = targetClass;
+      if (isNewClass) {
+        activeAction.value = null;
+        selectedStudentIds.value = [];
+        groupActiveAction.value = null;
+        selectedGroupIds.value = [];
+        searchKeyword.value = "";
+      }
+      if (!expandedKeys.value.includes(targetGrade.id)) {
+        expandedKeys.value.push(targetGrade.id);
+      }
+      loadStudentList(targetClass.id, activeTab.value === "student");
       loadGroupList(activeTab.value === "group");
     }
   } catch (error) {
@@ -2402,12 +2484,15 @@ const handleTreeSelect = (node: any) => {
   if (!node.children) {
     const isNewClass = selectedClass.value?.id !== node.id;
     selectedClass.value = node;
-    // 切换班级时清空列表，防止看到上一个班级的数据
     if (isNewClass) {
       studentList.value = [];
       groupList.value = [];
+      activeAction.value = null;
+      selectedStudentIds.value = [];
+      groupActiveAction.value = null;
+      selectedGroupIds.value = [];
+      searchKeyword.value = "";
     }
-    // 同时加载两份数据，当前 Tab 显示 Loading，另一个 Tab 静默加载
     loadStudentList(node.id, activeTab.value === "student");
     loadGroupList(activeTab.value === "group");
   }
@@ -2504,12 +2589,25 @@ const handleConfirmCreateClass = async () => {
       ElMessage.success(t("common.editSuccess"));
     } else {
       // 创建班级
-      await createClass({
+      const createdClassMeta = {
+        className: createClassForm.className,
+        grade: createClassForm.gradeId,
+      };
+      const newClassData = await createClass({
         className: createClassForm.className,
         grade: Number(createClassForm.gradeId),
         gradeName: selectedGrade?.label || "",
       });
       ElMessage.success(t("common.createSuccess"));
+      const newClassId = newClassData?.classId || newClassData?.id;
+      await loadClassList(newClassId ? String(newClassId) : undefined, createdClassMeta);
+      showCreateClassModal.value = false;
+      isEditClass.value = false;
+      editingClassId.value = null;
+      createClassForm.gradeId = null;
+      createClassForm.className = "";
+      showClassCreatedTip.value = true;
+      return;
     }
     // 刷新班级列表
     loadClassList();
@@ -2563,27 +2661,32 @@ const handleQuickLogin = async () => {
   }
 
   if (isCurrentClassQuickLogin.value) {
-    // 当前班级已启用，点击停用
-    try {
-      await stopQuickLogin(selectedClass.value.id);
-      isQuickLoginEnabled.value = false;
-      quickLoginClassId.value = null;
-      quickLoginData.value = {};
-      ElMessage.info(t("class.quickLoginDisabled"));
-    } catch (error) {
-      console.error("停用快捷登录失败:", error);
-    }
+    showDisableQuickLoginModal.value = true;
   } else if (!isOtherClassQuickLogin.value) {
     const hasStudents = await checkCurrentClassHasStudents();
     if (!hasStudents) {
       ElMessage.warning(t("class.noStudentDataPleaseCreate"));
-      addStudentMode.value = "manual";
-      createForm.name = "";
-      showCreateModal.value = true;
       return;
     }
-    // 没有其他班级启用，打开弹窗
     showQuickLoginModal.value = true;
+  }
+};
+
+const handleConfirmDisableQuickLogin = async () => {
+  if (!selectedClass.value?.id) {
+    showDisableQuickLoginModal.value = false;
+    return;
+  }
+
+  try {
+    await stopQuickLogin(selectedClass.value.id);
+    isQuickLoginEnabled.value = false;
+    quickLoginClassId.value = null;
+    quickLoginData.value = {};
+    showDisableQuickLoginModal.value = false;
+    ElMessage.info(t("class.quickLoginDisabled"));
+  } catch (error) {
+    console.error("停用快捷登录失败:", error);
   }
 };
 
@@ -2723,6 +2826,12 @@ const handleExport = async () => {
 
 // 批量操作
 const handleBatchAction = async () => {
+  if (activeAction.value === "batch") {
+    exitStudentBatchMode();
+    ElMessage.info(t("class.exitBatchMode"));
+    return;
+  }
+
   if (isCurrentClassQuickLogin.value) {
     return;
   }
@@ -2733,14 +2842,8 @@ const handleBatchAction = async () => {
     return;
   }
 
-  if (activeAction.value === "batch") {
-    activeAction.value = null;
-    selectedStudentIds.value = [];
-    ElMessage.info(t("class.exitBatchMode"));
-  } else {
-    activeAction.value = "batch";
-    ElMessage.info(t("class.enterBatchMode"));
-  }
+  activeAction.value = "batch";
+  ElMessage.info(t("class.enterBatchMode"));
 };
 
 // 学生选择
@@ -2796,11 +2899,10 @@ const handleConfirmBatchDelete = async () => {
     return;
   }
   try {
+    const selectedCount = selectedStudentIds.value.length;
     await removeStudent(selectedStudentIds.value.map(String), batchDeletePassword.value);
-    ElMessage.success(
-      t("class.deletedStudents", { count: selectedStudentIds.value.length })
-    );
-    selectedStudentIds.value = [];
+    ElMessage.success(t("class.deletedStudents", { count: selectedCount }));
+    exitStudentBatchMode();
     // 刷新学生列表
     loadStudentList();
   } catch (error) {
@@ -2839,14 +2941,14 @@ const handleConfirmBatchTransfer = async () => {
   );
 
   try {
+    const selectedCount = selectedStudentIds.value.length;
     await transferClass({
       ids: selectedStudentIds.value.map(String),
       classId: batchTransferForm.classId as string,
       teacherId: targetClass?.teacherId || "",
     });
-    ElMessage.success(
-      t("class.transferredStudents", { count: selectedStudentIds.value.length })
-    );
+    ElMessage.success(t("class.transferredStudents", { count: selectedCount }));
+    exitStudentBatchMode();
     // 刷新学生列表
     loadStudentList();
   } catch (error) {
@@ -2870,7 +2972,7 @@ const handleBatchResetPassword = () => {
     ElMessage.warning(t("class.noStudentSelected"));
     return;
   }
-  batchResetPassword.value = "";
+  batchResetPassword.value = studentPassword.value || "";
   showBatchResetPassword.value = false;
   showBatchResetPasswordModal.value = true;
 };
@@ -3135,14 +3237,15 @@ const handleCreateStudent = async () => {
       ElMessage.error("请先选择班级");
       return;
     }
-    if (!createForm.name) {
-      ElMessage.error("请填写学生姓名");
+    const studentName = createForm.name.trim();
+    if (!studentName) {
+      ElMessage.warning("请填写学生姓名");
       return;
     }
     try {
       await addStudent({
         classId: selectedClass.value.id,
-        studentName: createForm.name,
+        studentName,
       });
       ElMessage.success("创建学生成功");
       // 刷新学生列表
@@ -3152,7 +3255,9 @@ const handleCreateStudent = async () => {
       return;
     }
   } else {
-    ElMessage.warning("请先点击“导入学生信息”完成批量导入");
+    createForm.name = "";
+    addStudentMode.value = "batch";
+    showCreateModal.value = false;
     return;
   }
   showCreateModal.value = false;
@@ -3365,7 +3470,7 @@ const handleConfirmDeleteGroup = async () => {
       // 批量删除
       await deleteGroup(selectedGroupIds.value, batchDeleteGroupPassword.value);
       //  ElMessage.success(t('common.batchDeleteSuccess'));
-      selectedGroupIds.value = [];
+      exitGroupBatchMode();
     } else {
       // 单个删除
       if (deletingGroup.value?.id) {
@@ -3383,8 +3488,7 @@ const handleConfirmDeleteGroup = async () => {
 // 小组批量操作
 const handleGroupBatchAction = () => {
   if (groupActiveAction.value === "batch") {
-    groupActiveAction.value = null;
-    selectedGroupIds.value = [];
+    exitGroupBatchMode();
   } else {
     groupActiveAction.value = "batch";
   }
@@ -3424,8 +3528,7 @@ const handleGroupSelectAllToggle = (e: Event) => {
 
 // 清除小组选择
 const handleClearGroupSelection = () => {
-  groupActiveAction.value = null;
-  selectedGroupIds.value = [];
+  exitGroupBatchMode();
 };
 
 // Tab 切换处理

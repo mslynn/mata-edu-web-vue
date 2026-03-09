@@ -360,9 +360,13 @@ export const useTeacher = () => {
   };
 
   // 获取学生统一密码
-  const getStudentPassword = async () => {
+  const getStudentPassword = async (orgId?: string) => {
     try {
-      const response = await http.get("/system/org/getPwd");
+      const params: Record<string, any> = {};
+      if (orgId) {
+        params.orgId = orgId;
+      }
+      const response = await http.get("/system/org/getPwd", params);
       if (response.code !== 200) {
         throw new Error(response.msg || "获取学生统一密码失败");
       }
@@ -421,6 +425,9 @@ export const useTeacher = () => {
   }) => {
     try {
       const response = await http.post("/system/team", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "新增小组失败");
+      }
       return response.data;
     } catch (error: any) {
       throw error;

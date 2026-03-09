@@ -55,6 +55,7 @@
                       v-if="item.type === 'menu'"
                       class="menu-header" 
                       :style="{ paddingLeft: (item.level * 16 + 16) + 'px' }"
+                      :title="item.name"
                       @click="toggleMenu(item.key)"
                     >
                       <svg 
@@ -77,9 +78,10 @@
                       class="list-item course-item"
                       :class="{ active: selectedCourse?.courseId === item.course.courseId }"
                       :style="{ paddingLeft: (item.level * 16 + 16) + 'px' }"
+                      :title="item.course.courseName"
                       @click="selectCourse(item.course)"
                     >
-                      {{ item.course.courseName }}
+                      <span class="item-text">{{ item.course.courseName }}</span>
                     </div>
                   </template>
                 </template>
@@ -90,9 +92,10 @@
                     :key="course.courseId" 
                     class="list-item"
                     :class="{ active: selectedCourse?.courseId === course.courseId }"
+                    :title="course.courseName"
                     @click="selectCourse(course)"
                   >
-                    {{ course.courseName }}
+                    <span class="item-text">{{ course.courseName }}</span>
                   </div>
                 </template>
               </div>
@@ -107,6 +110,7 @@
                   :key="chapter.chapterId" 
                   class="list-item"
                   :class="{ active: selectedChapter?.chapterId === chapter.chapterId }"
+                  :title="chapter.chapterName"
                   @click="selectChapter(chapter)"
                 >
                   <span class="item-text">{{ chapter.chapterName }}</span>
@@ -403,15 +407,22 @@ defineExpose({ setChapterList })
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 24px;
   z-index: 1000;
 }
 
 .modal-container {
   position: relative;
-  width: 580px;
+  width: min(880px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
   background: #FFFFFF;
-  border-radius: 8px;
-  padding: 24px 28px 28px;
+  border: 1px solid #F2E6D6;
+  border-radius: 20px;
+  padding: 28px 28px 24px;
+  box-shadow: 0 24px 60px rgba(24, 24, 24, 0.18);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .close-btn {
@@ -426,6 +437,12 @@ defineExpose({ setChapterList })
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 999px;
+  transition: background 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #F7F2EA;
 }
 
 .close-btn:hover svg path {
@@ -434,9 +451,10 @@ defineExpose({ setChapterList })
 
 .modal-title {
   text-align: center;
-  font-size: 17px;
-  font-weight: 600;
-  color: #333;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: #2F2417;
   margin-bottom: 24px;
 }
 
@@ -450,24 +468,32 @@ defineExpose({ setChapterList })
   display: flex;
   align-items: center;
   gap: 12px;
+  min-height: 56px;
   padding: 12px 16px;
-  background: #FFFFFF;
-  border: 1px dashed #D9D9D9;
-  border-radius: 6px;
+  background: linear-gradient(180deg, #FFFDF9 0%, #FFF8EF 100%);
+  border: 1px solid #E8D8C0;
+  border-radius: 14px;
   cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 
 .class-select:hover {
-  border-color: #BFBFBF;
+  border-color: #FFB54A;
+  box-shadow: 0 10px 22px rgba(255, 153, 0, 0.08);
 }
 
 .select-text {
   flex: 1;
   font-size: 14px;
-  color: #333;
+  min-width: 0;
+  color: #2F2417;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .arrow-icon {
+  flex-shrink: 0;
   transition: transform 0.2s;
 }
 
@@ -481,76 +507,92 @@ defineExpose({ setChapterList })
   left: 0;
   right: 0;
   background: white;
-  border: 1px solid #E5E5E5;
-  border-radius: 6px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  max-height: 200px;
+  border: 1px solid #F0E3CF;
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(24, 24, 24, 0.12);
+  max-height: 240px;
   overflow-y: auto;
+  padding: 8px;
   z-index: 10;
 }
 
 .dropdown-item {
-  padding: 10px 16px;
+  padding: 10px 14px;
   font-size: 14px;
   color: #333;
   cursor: pointer;
+  border-radius: 10px;
 }
 
 .dropdown-item:hover {
-  background: #F5F5F5;
+  background: #FFF4E3;
 }
 
 .dropdown-item.active {
   color: #FF9900;
-  background: #FFF7E6;
+  background: #FFF1D7;
 }
 
 /* 选择区域 */
 .selection-area {
-  display: flex;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
   margin-bottom: 24px;
-  height: 300px;
+  height: min(360px, calc(100vh - 300px));
+  min-height: 300px;
 }
 
 .selection-column {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0;
   min-height: 0;
+  border: 1px solid #F0E5D3;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #FFFCF7 0%, #FFF7EC 100%);
+  overflow: hidden;
 }
 
 .column-header {
-  padding: 12px 16px;
+  padding: 14px 16px 12px;
   font-size: 14px;
-  color: #666;
-  background: #FAFAFA;
-  border-radius: 6px 6px 0 0;
+  font-weight: 600;
+  color: #6E5334;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84) 0%, rgba(255, 246, 231, 0.95) 100%);
+  border-bottom: 1px solid #F0E5D3;
 }
 
 .column-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  background: #FAFAFA;
-  border-radius: 0 0 6px 6px;
+  background: transparent;
+  padding: 8px;
 }
 
 .list-item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  gap: 12px;
+  min-width: 0;
+  padding: 12px 14px;
   font-size: 14px;
-  color: #333;
+  color: #3F3121;
   cursor: pointer;
+  border-radius: 12px;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .list-item:hover {
-  background: #F0F0F0;
+  background: #FFF0D9;
 }
 
 .list-item.active {
   color: #FF9900;
+  background: #FFF2DF;
+  font-weight: 600;
 }
 
 /* 树形菜单样式 */
@@ -558,21 +600,23 @@ defineExpose({ setChapterList })
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 16px;
+  min-width: 0;
+  padding: 12px 14px;
   font-size: 14px;
-  color: #333;
+  color: #3F3121;
   font-weight: 500;
   cursor: pointer;
-  background: #FAFAFA;
+  border-radius: 12px;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .menu-header:hover {
-  background: #F5F5F5;
+  background: #FFF0D9;
 }
 
 .expand-icon {
   transition: transform 0.2s;
-  color: #999;
+  color: #AA8C68;
   flex-shrink: 0;
 }
 
@@ -582,14 +626,19 @@ defineExpose({ setChapterList })
 
 .menu-name {
   flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .course-item {
-  background: #FFFFFF;
+  background: transparent;
 }
 
 .item-text {
   flex: 1;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -610,38 +659,43 @@ defineExpose({ setChapterList })
   display: flex;
   justify-content: center;
   gap: 16px;
+  padding-top: 4px;
 }
 
 .btn-cancel,
 .btn-confirm {
-  min-width: 100px;
-  height: 40px;
+  min-width: 112px;
+  height: 44px;
   padding: 0 28px;
-  border-radius: 6px;
+  border-radius: 12px;
   font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
 }
 
 .btn-cancel {
   background: #FFFFFF;
-  border: 1px dashed #D9D9D9;
+  border: 1px solid #E3D5C0;
   color: #666;
 }
 
 .btn-cancel:hover {
   border-color: #FF9900;
   color: #FF9900;
+  background: #FFF8EE;
 }
 
 .btn-confirm {
   background: #FF9900;
   border: none;
   color: white;
+  box-shadow: 0 10px 24px rgba(255, 153, 0, 0.24);
 }
 
 .btn-confirm:hover {
   background: #E68A00;
+  transform: translateY(-1px);
 }
 
 /* 动画 */
@@ -653,6 +707,43 @@ defineExpose({ setChapterList })
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 12px;
+  }
+
+  .modal-container {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    padding: 20px 16px 16px;
+    border-radius: 18px;
+  }
+
+  .modal-title {
+    font-size: 22px;
+    margin-bottom: 20px;
+  }
+
+  .selection-area {
+    grid-template-columns: 1fr;
+    height: auto;
+    min-height: 0;
+  }
+
+  .selection-column {
+    min-height: 220px;
+  }
+
+  .modal-footer {
+    gap: 12px;
+  }
+
+  .btn-cancel,
+  .btn-confirm {
+    flex: 1;
+  }
 }
 
 /* 提示弹窗 */

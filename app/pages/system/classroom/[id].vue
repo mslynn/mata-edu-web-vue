@@ -125,7 +125,7 @@
       <div
         v-if="showLoginTip"
         class="login-tip-panel"
-        :class="{ collapsed: loginTipCollapsed }"
+        :class="{ collapsed: loginTipCollapsed, 'over-modal': showStudentManageModal }"
       >
         <div class="tip-header">
           <div class="tip-header-left">
@@ -853,8 +853,9 @@
     <StudentManageModal
       :visible="showStudentManageModal"
       :class-id="route.query.classId as string"
-      @close="showStudentManageModal = false"
-      @quick-login-change="loadQuickLoginInfo"
+      :initial-quick-login-data="quickLoginDataForModal"
+      @close="showStudentManageModal = false; quickLoginDataForModal = undefined"
+      @quick-login-change="handleQuickLoginChange"
     />
 
     <TaskIssueModal
@@ -1049,7 +1050,7 @@ const { t } = useI18n();
 const route = useRoute();
 const config = useRuntimeConfig();
 const taskApi = taskmanagementcenterApi();
-const { endClass, stopQuickLogin } = useTeacher();
+const { endClass, stopQuickLogin, createQuickLogin } = useTeacher();
 const { getQuickLoginInfo } = useTeacher();
 
 const signalingUrl = (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
@@ -1092,6 +1093,15 @@ const showStudentManageModal = ref(false);
 // 下课确认弹窗
 const showEndClassModal = ref(false);
 
+// 传给学生管理弹窗的快捷登录数据
+const quickLoginDataForModal = ref<{ classCode: string; classCodePwd: string; expirationDate: string } | undefined>();
+
+type QuickLoginInfo = {
+  classCode: string;
+  classCodePwd?: string;
+  expirationDate?: string;
+};
+
 // 学生快捷登录提示
 const showLoginTip = ref(true);
 const loginTipCollapsed = ref(false);
@@ -1099,25 +1109,65 @@ const classCode = ref("");
 const loginPassword = ref("");
 const expireTime = ref("");
 
+const applyQuickLoginInfo = (data?: QuickLoginInfo | null) => {
+  if (data && data.classCode) {
+    classCode.value = data.classCode || "";
+    loginPassword.value = data.classCodePwd || "";
+    expireTime.value = data.expirationDate || "";
+    showLoginTip.value = true;
+    return;
+  }
+
+  classCode.value = "";
+  loginPassword.value = "";
+  expireTime.value = "";
+  showLoginTip.value = false;
+};
+
 // 加载快捷登录信息
 const loadQuickLoginInfo = async () => {
   try {
     const data = await getQuickLoginInfo();
-    if (data && data.classCode) {
-      classCode.value = data.classCode || "";
-      loginPassword.value = data.classCodePwd || "";
-      expireTime.value = data.expirationDate || "";
-      showLoginTip.value = true;
-    } else {
-      // 没有班级码，隐藏快捷登录提示
-      classCode.value = "";
-      loginPassword.value = "";
-      expireTime.value = "";
-      showLoginTip.value = false;
-    }
+    applyQuickLoginInfo(data);
   } catch (error) {
     console.error('加载快捷登录信息失败:', error)
     showLoginTip.value = false;
+  }
+};
+
+const handleQuickLoginChange = (data?: QuickLoginInfo | null) => {
+  if (data === null) {
+    applyQuickLoginInfo(null);
+    return;
+  }
+
+  if (data?.classCode) {
+    applyQuickLoginInfo(data);
+    loginTipCollapsed.value = false;
+    return;
+  }
+
+  loadQuickLoginInfo();
+};
+
+// 自动开启快捷登录（从开课流程进入时）
+const autoEnableQuickLogin = async () => {
+  const classId = route.query.classId as string;
+  if (!classId) return;
+  try {
+    const data = await createQuickLogin(classId);
+    if (data && data.classCode) {
+      applyQuickLoginInfo(data);
+      loginTipCollapsed.value = false;
+      quickLoginDataForModal.value = {
+        classCode: data.classCode,
+        classCodePwd: data.classCodePwd || "",
+        expirationDate: data.expirationDate || "",
+      };
+      showStudentManageModal.value = true;
+    }
+  } catch (error) {
+    console.error("自动开启快捷登录失败:", error);
   }
 };
 
@@ -2175,8 +2225,13 @@ onMounted(async () => {
     classTime.value++;
   }, 1000);
 
-  // 加载快捷登录信息
-  loadQuickLoginInfo();
+  // 加载快捷登录信息（autoQuickLogin=1 时自动开启）
+  if (route.query.autoQuickLogin === '1') {
+    showLoginTip.value = false;
+    autoEnableQuickLogin();
+  } else {
+    loadQuickLoginInfo();
+  }
 
   // 加载课件列表
   loadResourceList();
@@ -3208,6 +3263,10 @@ onUnmounted(() => {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
   z-index: 100;
   overflow: hidden;
+}
+
+.login-tip-panel.over-modal {
+  z-index: 1101;
 }
 
 .tip-header {

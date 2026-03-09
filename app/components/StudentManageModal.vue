@@ -327,60 +327,15 @@
   </div>
 
   <!-- 停用快捷登录弹窗 -->
-  <MModal
+  <DisableQuickLoginModal
     v-model="showDisableQuickLoginModal"
-    custom-width="420px"
-    :show-footer="false"
-    :show-close="false"
-    content-class="!p-0"
-  >
-    <div class="p-6 relative">
-      <button
-        class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
-        @click="showDisableQuickLoginModal = false"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M6 18L18 6M6 6l12 12"
-          />
-        </svg>
-      </button>
-      <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
-        {{ t("studentManage.disableQuickLoginTitle") }}
-      </h3>
-      <p class="text-center text-[#4D4D4D] mb-6">
-        {{ t("studentManage.disableQuickLoginContent") }}
-      </p>
-      <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-          />
-        </svg>
-        <span>{{ t("studentManage.disableQuickLoginTip") }}</span>
-      </div>
-      <div class="flex items-center justify-center gap-4">
-        <button
-          class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-          @click="showDisableQuickLoginModal = false"
-        >
-          {{ t("common.cancel") }}
-        </button>
-        <button
-          class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-          @click="handleConfirmDisableQuickLogin"
-        >
-          {{ t("common.confirm") }}
-        </button>
-      </div>
-    </div>
-  </MModal>
+    :title="t('studentManage.disableQuickLoginTitle')"
+    :content="t('studentManage.disableQuickLoginContent')"
+    :tip="t('studentManage.disableQuickLoginTip')"
+    :cancel-text="t('common.cancel')"
+    :confirm-text="t('common.confirm')"
+    @confirm="handleConfirmDisableQuickLogin"
+  />
 
   <!-- 启用快捷登录弹窗 -->
   <MModal
@@ -863,11 +818,22 @@ interface Group {
 const props = defineProps<{
   visible: boolean;
   classId?: string;
+  initialQuickLoginData?: {
+    classCode: string;
+    classCodePwd: string;
+    expirationDate: string;
+  };
 }>();
+
+type QuickLoginChangePayload = {
+  classCode: string;
+  classCodePwd: string;
+  expirationDate: string;
+};
 
 const emit = defineEmits<{
   close: [];
-  quickLoginChange: [];
+  quickLoginChange: [data?: QuickLoginChangePayload | null];
 }>();
 
 const {
@@ -938,6 +904,11 @@ const originalMembers = ref<any[]>([]);
 const memberSearchKeyword = ref("");
 const selectedMemberIds = ref<string[]>([]);
 const availableStudents = ref<any[]>([]);
+
+const exitGroupBatchMode = () => {
+  groupActiveAction.value = null;
+  selectedGroupIds.value = [];
+};
 
 const groupForm = reactive({
   id: "",
@@ -1087,7 +1058,7 @@ const handleConfirmDisableQuickLogin = async () => {
     expireTime.value = "";
     showDisableQuickLoginModal.value = false;
     ElMessage.success("已停用快捷登录");
-    emit("quickLoginChange");
+    emit("quickLoginChange", null);
   } catch (error: any) {
     ElMessage.error(error.message || "停用失败");
   }
@@ -1097,11 +1068,21 @@ const handleConfirmDisableQuickLogin = async () => {
 const handleConfirmEnableQuickLogin = async () => {
   if (!props.classId) return;
   try {
-    await createQuickLogin(props.classId);
+    const data = await createQuickLogin(props.classId);
     showEnableQuickLoginModal.value = false;
     ElMessage.success("已启用快捷登录");
-    // 重新加载快捷登录信息
-    await loadQuickLoginInfo();
+    if (data && data.classCode) {
+      classCode.value = data.classCode;
+      loginPassword.value = data.classCodePwd || "";
+      expireTime.value = data.expirationDate || "";
+      quickLoginEnabled.value = true;
+      emit("quickLoginChange", {
+        classCode: data.classCode,
+        classCodePwd: data.classCodePwd || "",
+        expirationDate: data.expirationDate || "",
+      });
+      return;
+    }
     emit("quickLoginChange");
   } catch (error: any) {
     ElMessage.error(error.message || "启用失败");
@@ -1307,7 +1288,7 @@ const handleConfirmDeleteGroup = async () => {
   try {
     if (isBatchDeleteGroup.value) {
       await deleteGroup(selectedGroupIds.value);
-      selectedGroupIds.value = [];
+      exitGroupBatchMode();
     } else {
       if (deletingGroup.value?.id) {
         await deleteGroup([deletingGroup.value.id]);
@@ -1324,8 +1305,7 @@ const handleConfirmDeleteGroup = async () => {
 // 小组批量操作
 const handleGroupBatchAction = () => {
   if (groupActiveAction.value === "batch") {
-    groupActiveAction.value = null;
-    selectedGroupIds.value = [];
+    exitGroupBatchMode();
   } else {
     groupActiveAction.value = "batch";
   }
@@ -1368,7 +1348,14 @@ watch(
     if (val) {
       loadStudents();
       loadGroups();
-      loadQuickLoginInfo();
+      if (props.initialQuickLoginData?.classCode) {
+        classCode.value = props.initialQuickLoginData.classCode;
+        loginPassword.value = props.initialQuickLoginData.classCodePwd || "";
+        expireTime.value = props.initialQuickLoginData.expirationDate || "";
+        quickLoginEnabled.value = true;
+      } else {
+        loadQuickLoginInfo();
+      }
     }
   }
 );
