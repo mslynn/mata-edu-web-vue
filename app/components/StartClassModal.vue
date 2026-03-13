@@ -46,7 +46,7 @@
             <!-- 左侧：课程树形列表 -->
             <div class="selection-column">
               <div class="column-header">{{ t('teacher.pleaseSelectCourse') }}</div>
-              <div class="column-list">
+              <div ref="courseListRef" class="column-list">
                 <!-- 渲染扁平化的树形结构 -->
                 <template v-if="flattenedTree.length > 0">
                   <template v-for="item in flattenedTree" :key="item.key">
@@ -77,6 +77,7 @@
                       v-else-if="item.type === 'course' && item.course"
                       class="list-item course-item"
                       :class="{ active: selectedCourse?.courseId === item.course.courseId }"
+                      :data-course-id="item.course.courseId"
                       :style="{ paddingLeft: (item.level * 16 + 16) + 'px' }"
                       :title="item.course.courseName"
                       @click="selectCourse(item.course)"
@@ -92,6 +93,7 @@
                     :key="course.courseId" 
                     class="list-item"
                     :class="{ active: selectedCourse?.courseId === course.courseId }"
+                    :data-course-id="course.courseId"
                     :title="course.courseName"
                     @click="selectCourse(course)"
                   >
@@ -157,7 +159,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 const { t } = useI18n()
@@ -215,6 +217,7 @@ const selectedChapter = ref<ChapterItem | null>(null)
 const chapterList = ref<ChapterItem[]>([])
 const confirmData = ref<{ classId: string; courseId: string; chapterId: string } | null>(null)
 const expandedMenus = ref<Set<string>>(new Set())
+const courseListRef = ref<HTMLElement | null>(null)
 
 // 扁平化树形结构
 const flattenedTree = computed(() => {
@@ -282,6 +285,27 @@ const toggleMenu = (menuKey: string) => {
   }
 }
 
+const scrollSelectedCourseIntoView = async () => {
+  if (!selectedCourse.value?.courseId) {
+    return
+  }
+
+  await nextTick()
+
+  const courseListEl = courseListRef.value
+  if (!courseListEl) {
+    return
+  }
+
+  const selectedCourseEl = courseListEl.querySelector<HTMLElement>(
+    `[data-course-id="${selectedCourse.value.courseId}"]`
+  )
+
+  selectedCourseEl?.scrollIntoView({
+    block: 'center'
+  })
+}
+
 const selectClass = (cls: ClassItem) => {
   selectedClass.value = cls
   showClassDropdown.value = false
@@ -294,6 +318,7 @@ const selectClass = (cls: ClassItem) => {
 const selectCourse = (course: CourseItem) => {
   selectedCourse.value = course
   selectedChapter.value = null
+  void scrollSelectedCourseIntoView()
   if (selectedClass.value) {
     emit('course-change', course.courseId, selectedClass.value.classId)
   }
@@ -382,6 +407,7 @@ watch(() => props.courseList, (list) => {
       : list[0]
     if (course) {
       selectedCourse.value = course
+      void scrollSelectedCourseIntoView()
       if (selectedClass.value) {
         emit('course-change', course.courseId, selectedClass.value.classId)
       }
@@ -395,6 +421,15 @@ watch(chapterList, (list) => {
     selectedChapter.value = list[0] || null
   }
 })
+
+watch(
+  () => selectedCourse.value?.courseId,
+  () => {
+    if (props.visible) {
+      void scrollSelectedCourseIntoView()
+    }
+  }
+)
 
 defineExpose({ setChapterList })
 </script>

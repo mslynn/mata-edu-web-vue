@@ -14,7 +14,7 @@
                 <div class="user-avatar">
                     <img v-if="avatarUrl" :src="avatarUrl" alt="" />
                     <img v-else src="~/assets/images/avatar.png" alt="" />
-                    <span class="role-tag">{{ $t('personalCenter.teacher') }}</span>
+                    <span class="role-tag">{{ displayRoleName }}</span>
                 </div>
                 <div class="user-info">
                     <div class="user-name">{{ userName }}</div>
@@ -607,7 +607,32 @@ const schoolName = computed(() => userProfile.value?.user?.orgName || '')
 const accountId = computed(() => userProfile.value?.user?.userName || '')
 const phone = computed(() => userProfile.value?.user?.phonenumber || '')
 const avatarUrl = computed(() => userProfile.value?.user?.avatar || '')
-const roleName = computed(() => userProfile.value?.user?.roleName || '')
+const displayRoleName = computed(() => {
+    const roleKey = user.value?.role_key || userProfile.value?.user?.roleKey || userProfile.value?.user?.role_key || ''
+    const currentRoleName = user.value?.role_name || userProfile.value?.user?.roleName || userProfile.value?.user?.role_name || ''
+
+    if (roleKey === 'city_admin' || currentRoleName === '市管理员' || currentRoleName === '市级管理员') {
+        return t('personalCenter.cityAdmin')
+    }
+
+    if (roleKey === 'district_admin' || roleKey === 'district' || currentRoleName === '区管理员' || currentRoleName === '区级管理员') {
+        return t('personalCenter.districtAdmin')
+    }
+
+    if (roleKey === 'school_admin' || roleKey === 'school' || currentRoleName === '校管理员' || currentRoleName === '学校管理员' || currentRoleName === '校级管理员') {
+        return t('personalCenter.schoolAdmin')
+    }
+
+    if (roleKey === 'student' || currentRoleName === '学生') {
+        return t('personalCenter.student')
+    }
+
+    if (roleKey === 'teacher' || currentRoleName === '教师') {
+        return t('personalCenter.teacher')
+    }
+
+    return currentRoleName || t('personalCenter.anonymous')
+})
 const isCityOrDistrictAdmin = computed(() => {
     const roleKey = user.value?.role_key || userProfile.value?.user?.roleKey || userProfile.value?.user?.role_key
     const currentRoleName = user.value?.role_name || userProfile.value?.user?.roleName || userProfile.value?.user?.role_name
@@ -738,7 +763,7 @@ const handleSavePassword = async () => {
             }
         }, 1000)
     } catch (error: any) {
-        ElMessage.error(error.message || t('personalCenter.changePasswordFailed'))
+        console.error('修改密码失败:', error)
     } finally {
         uploading.value = false
     }
@@ -848,7 +873,7 @@ const openEditModal = async (opusId: string) => {
         
         showUploadModal.value = true
     } catch (error: any) {
-        ElMessage.error(error.message || t('personalCenter.getDetailFailed'))
+        console.error('获取作品详情失败:', error)
     } finally {
         uploading.value = false
     }
@@ -870,7 +895,7 @@ const confirmDeleteWork = async () => {
         deleteWorkId.value = ''
         loadWorksList()
     } catch (error: any) {
-        ElMessage.error(error.message || t('personalCenter.deleteFailed'))
+        console.error('删除作品失败:', error)
     } finally {
         uploading.value = false
     }
@@ -1154,7 +1179,7 @@ const handleSubmitWork = async () => {
         // 刷新列表
         loadWorksList()
     } catch (error: any) {
-        ElMessage.error(error.message || t('personalCenter.submitFailed'))
+        console.error('提交作品失败:', error)
     } finally {
         uploading.value = false
     }

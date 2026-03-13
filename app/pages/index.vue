@@ -468,6 +468,7 @@ const handleTrialSubmit = async (data: any) => {
 
     if (res?.code === 200) {
       console.log('✅ 申请提交成功');
+      ElMessage.success(res?.msg || "申请已提交，我们将尽快与您联系");
       loginType.value = "campus";
       return;
     }

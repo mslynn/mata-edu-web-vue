@@ -186,6 +186,17 @@ export const useTeacher = () => {
       throw error;
     }
   };
+  //查询年级班级列表（排除指定班级)
+  const getGradeClassList = async (classId?: string) => {
+    try {
+      const response = await http.get(`/system/class/grade/exclude/${classId}`) ;
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询年级班级列表列表失败");
+      }
+      return response.data;
+    } catch (error: any) {      throw error;
+    }
+  }
   //移班
   const transferClass = async (data: {
     ids: string[];
@@ -659,5 +670,6 @@ export const useTeacher = () => {
     getCoursewareList,
     sendCourseware,
     withdrawSend,
+    getGradeClassList,
   };
 };

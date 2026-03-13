@@ -293,10 +293,10 @@ export const taskmanagementcenterApi = () => {
     }
   };
   //查看任务文件详情（练习题）
-  const getExerciseDetail = async (resourceId: string) => {
+  const getExerciseDetail = async (exerciseId: string) => {
     try {
       const response = await http.get(
-        `/system/task/exercise/detail/${resourceId}`,
+        `/system/task/exercise/detail/${exerciseId}`,
       );
       if (response.code !== 200) {
         throw new Error(response.msg || "查看任务文件详情（练习题）失败");

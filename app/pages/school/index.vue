@@ -4,8 +4,8 @@
       <!-- 页面标题和学校数量（白色卡片外面） -->
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-base font-medium text-gray-800">{{ $t('school.schoolManage') }}</h1>
-        <div class="text-gray-600 text-sm">
-          {{ $t('school.schoolCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}个</span>
+        <div class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap">
+          {{ $t('school.schoolCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>个</span>
         </div>
       </div>
 
@@ -17,7 +17,7 @@
           <div class="w-[240px]">
             <MInput 
               v-model="searchKeyword" 
-              :placeholder="$t('school.searchPlaceholder')"
+              placeholder="请输入学校名称或编号"
               clearable
               @enter="handleSearch"
               @clear="handleSearch"
@@ -113,7 +113,7 @@
             <span class="text-[#4D4D4D]">{{ currentSchool?.orgName || '-' }}</span>
           </div>
           <div class="flex">
-            <span class="text-[#4D4D4D] w-24 flex-shrink-0">{{ $t('school.schoolNumberLabel') }}</span>
+            <span class="text-[#4D4D4D] w-24 flex-shrink-0">编号：</span>
             <span class="text-[#4D4D4D]">{{ currentSchool?.orgNumber || '-' }}</span>
           </div>
           <div class="flex">
@@ -242,7 +242,7 @@ const loading = ref(false)
 // 表格列配置
 const columns = computed(() => [
   { key: 'orgName', title: t('school.schoolName'), minWidth: '150px', align: 'center' as const },
-  { key: 'orgNumber', title: t('school.schoolNumber'), minWidth: '100px', align: 'center' as const },
+  { key: 'orgNumber', title: '编号', minWidth: '100px', align: 'center' as const },
   { key: 'createTime', title: t('school.createTime'), minWidth: '150px', align: 'center' as const },
   { key: 'actions', title: t('school.operation'), minWidth: '280px', align: 'center' as const }
 ])
@@ -342,7 +342,7 @@ const handleConfirmEditSchool = async () => {
     // 刷新列表
     fetchSchoolList()
   } catch (error: any) {
-    ElMessage.error(error.message || t('school.updateFailed'))
+    console.error('更新学校信息失败:', error)
   } finally {
     editSchoolLoading.value = false
   }

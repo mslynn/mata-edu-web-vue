@@ -1,8 +1,11 @@
 <template>
-  <div class="student-task-page flex-1 flex flex-col overflow-hidden">
+  <div
+    class="student-task-page flex-1 flex flex-col overflow-hidden"
+    :class="{ 'student-task-page--embedded': embedded }"
+  >
     <div class="task-shell flex-1 overflow-hidden">
-      <div class="task-header">
-        <div class="header-left">
+      <div class="task-header" :class="{ 'task-header--embedded': embedded }">
+        <div v-if="!embedded" class="header-left">
           <button class="back-btn" @click="goBack">
             <svg
               class="w-5 h-5 text-[#6B7280]"
@@ -28,8 +31,8 @@
           <span v-else class="chapter-name">{{ currentChapterName }}</span>
         </div>
 
-        <div class="header-title">我的任务</div>
-        <div class="header-right"></div>
+        <div class="header-title">{{ embedded ? "课堂任务" : "我的任务" }}</div>
+        <div v-if="!embedded" class="header-right"></div>
       </div>
 
       <div class="task-body">
@@ -267,6 +270,28 @@ import { normalizeRatePercent, percentToStars, scoreToStars } from "~/utils/star
 
 definePageMeta({ layout: "default" });
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+    courseId?: string;
+    chapterId?: string;
+    chapterName?: string;
+    refreshToken?: number;
+  }>(),
+  {
+    embedded: false,
+    courseId: "",
+    chapterId: "",
+    chapterName: "",
+    refreshToken: 0,
+  }
+);
+
+const emit = defineEmits<{
+  close: [];
+  updated: [];
+}>();
+
 type TaskStatus = 0 | 1;
 
 interface ChapterItem {
@@ -307,12 +332,22 @@ const activeTaskName = ref("");
 const taskAnswerReadonly = ref(false);
 const exerciseStep = ref<1 | 2>(1);
 
+const embedded = computed(() => props.embedded);
+
 const courseId = computed(() => {
+  if (props.courseId) return String(props.courseId);
   const value = route.query.courseId;
   return Array.isArray(value) ? String(value[0] || "") : String(value || "");
 });
 
+const chapterIdFromSource = computed(() => {
+  if (props.chapterId) return String(props.chapterId);
+  const value = route.query.chapterId;
+  return Array.isArray(value) ? String(value[0] || "") : String(value || "");
+});
+
 const chapterNameFromQuery = computed(() => {
+  if (props.chapterName) return String(props.chapterName);
   const value = route.query.chapterName;
   return Array.isArray(value) ? String(value[0] || "") : String(value || "");
 });
@@ -547,16 +582,13 @@ const loadTaskList = async (chapterId: string) => {
     console.error("获取学生任务列表失败", error);
     taskGroups.value = [];
     selectedTaskKey.value = "";
-    ElMessage.error(error?.message || "获取学生任务列表失败");
   } finally {
     taskListLoading.value = false;
   }
 };
 
 const loadPageData = async () => {
-  const queryChapterId = Array.isArray(route.query.chapterId)
-    ? String(route.query.chapterId[0] || "")
-    : String(route.query.chapterId || "");
+  const queryChapterId = chapterIdFromSource.value;
 
   // 左侧菜单数据以 getStudentTaskList 为准，优先使用外部传入的 chapterId
   currentChapterId.value = queryChapterId;
@@ -597,15 +629,17 @@ const selectChapter = async (chapter: ChapterItem) => {
   currentChapterId.value = chapter.id;
   selectedTaskKey.value = "";
 
-  await router.replace({
-    path: "/student/task",
-    query: {
-      ...route.query,
-      courseId: courseId.value || undefined,
-      chapterId: chapter.id,
-      chapterName: chapter.name,
-    },
-  });
+  if (!embedded.value) {
+    await router.replace({
+      path: "/student/task",
+      query: {
+        ...route.query,
+        courseId: courseId.value || undefined,
+        chapterId: chapter.id,
+        chapterName: chapter.name,
+      },
+    });
+  }
 
   await loadTaskList(chapter.id);
 };
@@ -625,6 +659,7 @@ const handleTaskSubmitted = async () => {
   if (!currentChapterId.value) return;
   exerciseStep.value = 1;
   await loadTaskList(currentChapterId.value);
+  emit("updated");
 };
 
 const handleViewDetail = () => {
@@ -695,13 +730,16 @@ const handleDoTask = async () => {
     ElMessage.success("任务已开始");
   } catch (error: any) {
     console.error("开始任务失败", error);
-    ElMessage.error(error?.message || "开始任务失败");
   } finally {
     doingTask.value = false;
   }
 };
 
 const goBack = () => {
+  if (embedded.value) {
+    emit("close");
+    return;
+  }
   router.back();
 };
 
@@ -715,11 +753,30 @@ watch(
     exerciseStep.value = 1;
   }
 );
+
+watch(
+  () => [courseId.value, chapterIdFromSource.value, chapterNameFromQuery.value],
+  () => {
+    loadPageData();
+  }
+);
+
+watch(
+  () => props.refreshToken,
+  async () => {
+    if (!embedded.value || !currentChapterId.value) return;
+    await loadTaskList(currentChapterId.value);
+  }
+);
 </script>
 
 <style scoped>
 .student-task-page {
   height: calc(100vh - 70px);
+}
+
+.student-task-page--embedded {
+  height: 100%;
 }
 
 .task-shell {
@@ -740,6 +797,10 @@ watch(
   margin-bottom: 8px;
 }
 
+.task-header--embedded {
+  justify-content: center;
+}
+
 .header-left {
   width: 280px;
   display: flex;
@@ -755,6 +816,10 @@ watch(
   font-size: 20px;
   line-height: 1;
   font-weight: 600;
+}
+
+.task-header--embedded .header-title {
+  flex: initial;
 }
 
 .header-right {

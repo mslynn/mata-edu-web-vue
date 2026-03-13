@@ -89,15 +89,17 @@
         <div class="mb-4 flex-shrink-0 relative">
           <MTabs v-model="activeTab" :tabs="tabList" @change="handleTabChange" />
           <span
-            class="absolute top-1/2 -translate-y-1/2 right-[3%] text-xs sm:text-sm text-gray-500 whitespace-nowrap"
+            class="absolute top-1/2 -translate-y-1/2 right-[3%] inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap"
           >
             {{
               activeTab === "student" ? $t("class.studentCount") : $t("class.groupCount")
             }}
             <span class="text-[#FF9900] font-medium ml-1">
-              {{ activeTab === "student" ? studentList.length : groupList.length
-              }}{{ activeTab === "student" ? $t("class.person") : $t("class.groupUnit") }}
+              {{ activeTab === "student" ? studentList.length : groupList.length }}
             </span>
+            <span>{{
+              activeTab === "student" ? $t("class.person") : $t("class.groupUnit")
+            }}</span>
           </span>
         </div>
 
@@ -457,7 +459,7 @@
                 v-model="groupSearchKeyword"
                 :placeholder="$t('class.searchGroupPlaceholder')"
                 clearable
-                class="w-[200px] xl:w-[270px]"
+                class="w-[220px] xl:w-[280px]"
                 @enter="handleGroupSearch"
                 @clear="handleGroupSearch"
               >
@@ -525,7 +527,7 @@
             >
               <template #teamName="{ row }">
                 <div class="tooltip-wrapper group relative">
-                  <span class="truncate block max-w-[60px]">{{
+                  <span class="truncate block max-w-[100px]">{{
                     row.teamName || "-"
                   }}</span>
                   <div v-if="row.teamName" class="tooltip-content">
@@ -567,7 +569,7 @@
               </template>
               <template #createTime="{ row }">
                 <div class="tooltip-wrapper group relative">
-                  <span class="truncate block max-w-[140px]">{{
+                  <span class="block whitespace-nowrap min-w-[152px]">{{
                     row.createTime || "-"
                   }}</span>
                   <div v-if="row.createTime" class="tooltip-content">
@@ -755,6 +757,7 @@
               v-model="createForm.name"
               :placeholder="$t('class.studentName')"
               class="w-[275px]"
+              maxlength="10"
             />
             <p class="text-sm text-gray-400">
               {{ $t("class.studentDefaultPasswordIs") }}{{ studentPassword }}
@@ -1005,7 +1008,7 @@
         <div class="space-y-4 px-2">
           <MSelect
             v-model="transferForm.gradeId"
-            :options="gradeOptions"
+            :options="transferGradeOptions"
             :placeholder="$t('class.selectGrade')"
             @update:model-value="handleTransferGradeChange"
           />
@@ -1334,7 +1337,7 @@
         <div class="space-y-4 px-2">
           <MSelect
             v-model="batchTransferForm.gradeId"
-            :options="gradeOptions"
+            :options="transferGradeOptions"
             :placeholder="$t('class.selectGrade')"
             @update:model-value="handleBatchTransferGradeChange"
           />
@@ -1515,6 +1518,7 @@
               <MInput
                 v-model="groupForm.name"
                 :placeholder="$t('class.pleaseInputGroupName')"
+                maxlength="10"
                 style="flex: 1; max-width: 320px"
               />
             </div>
@@ -1970,7 +1974,7 @@ const currentUserName = computed(() => {
 const {
   getGradeDict,
   getClassList,
-  getClassByGrade,
+  getGradeClassList,
   createClass,
   updateClass,
   deleteClass,
@@ -2068,11 +2072,11 @@ const groupActiveAction = ref<GroupActionType>(null);
 
 // 小组表格列配置
 const groupTableColumns = computed(() => [
-  { key: "teamName", title: t("class.groupName"), minWidth: "80px" },
+  { key: "teamName", title: t("class.groupName"), minWidth: "120px" },
   { key: "leaderName", title: t("class.groupLeader"), minWidth: "60px" },
   { key: "members", title: t("class.groupMembers"), minWidth: "100px" },
   { key: "remarks", title: t("class.groupRemarks"), minWidth: "100px" },
-  { key: "createTime", title: t("class.createTime"), minWidth: "120px" },
+  { key: "createTime", title: t("class.createTime"), minWidth: "170px" },
   {
     key: "action",
     title: t("common.operation"),
@@ -2205,7 +2209,7 @@ const editingClassId = ref<string | null>(null); // 编辑中的班级ID
 const createClassForm = reactive({
   gradeId: null as string | null,
   className: "",
-  teacherName: "", // 老师名称，禁用输入
+  teacherName: "",
 });
 
 // 删除班级确认弹窗
@@ -2255,6 +2259,7 @@ const transferForm = reactive({
   teacherId: null as string | null, // 选中班级的teacherId
 });
 const transferClassList = ref<any[]>([]); // 移班弹窗的班级列表
+const transferGradeClassData = ref<any[]>([]);
 
 // 删除学生确认弹窗
 const showDeleteStudentModal = ref(false);
@@ -2284,6 +2289,12 @@ const newPassword = ref("");
 
 // 年级选项
 const gradeOptions = ref<{ label: string; value: string }[]>([]);
+const transferGradeOptions = computed(() =>
+  transferGradeClassData.value.map((item: any) => ({
+    label: item.gradeName,
+    value: String(item.grade),
+  }))
+);
 
 // 老师选项
 const teacherOptions = [
@@ -2516,7 +2527,7 @@ const handleEditClass = (node: any) => {
   createClassForm.gradeId = String(node.grade) || null;
   createClassForm.className = node.name || "";
   createClassForm.teacherName =
-    node.teacherName || selectedClass.value?.teacherName || "";
+    node.teacherName || selectedClass.value?.teacherName || currentUserName.value || "";
   showCreateClassModal.value = true;
 };
 
@@ -2628,8 +2639,28 @@ const handleSearch = () => {
   loadStudentList();
 };
 
+const noClassDataWarning = "当前无班级数据，请先创建班级";
+const noStudentDataWarning = "当前无学生数据，请先创建学生";
+
+const hasAnyClassData = computed(() =>
+  treeData.value.some(
+    (grade: any) => Array.isArray(grade.children) && grade.children.length > 0
+  )
+);
+
+const ensureClassDataReady = () => {
+  if (hasAnyClassData.value) {
+    return true;
+  }
+  ElMessage.warning(noClassDataWarning);
+  return false;
+};
+
 // 创建学生 - 始终打开弹窗，不参与互斥切换
 const handleCreateAction = () => {
+  if (!ensureClassDataReady()) {
+    return;
+  }
   showCreateModal.value = true;
 };
 
@@ -2653,19 +2684,39 @@ const checkCurrentClassHasStudents = async () => {
   }
 };
 
-// 快捷登录or停用快捷登录
-const handleQuickLogin = async () => {
-  if (!selectedClass.value?.id) {
-    ElMessage.warning(t("class.noStudentDataPleaseCreate"));
-    return;
+const ensureStudentActionReady = async (options?: {
+  openCreateModalOnEmptyStudent?: boolean;
+}) => {
+  if (!ensureClassDataReady()) {
+    return false;
   }
 
+  if (!selectedClass.value?.id) {
+    ElMessage.warning(t("class.pleaseSelectClassFirst"));
+    return false;
+  }
+
+  const hasStudents = await checkCurrentClassHasStudents();
+  if (hasStudents) {
+    return true;
+  }
+
+  ElMessage.warning(noStudentDataWarning);
+  if (options?.openCreateModalOnEmptyStudent) {
+    showCreateModal.value = true;
+  }
+  return false;
+};
+
+// 快捷登录or停用快捷登录
+const handleQuickLogin = async () => {
   if (isCurrentClassQuickLogin.value) {
     showDisableQuickLoginModal.value = true;
   } else if (!isOtherClassQuickLogin.value) {
-    const hasStudents = await checkCurrentClassHasStudents();
-    if (!hasStudents) {
-      ElMessage.warning(t("class.noStudentDataPleaseCreate"));
+    const canContinue = await ensureStudentActionReady({
+      openCreateModalOnEmptyStudent: true,
+    });
+    if (!canContinue) {
       return;
     }
     showQuickLoginModal.value = true;
@@ -2804,9 +2855,8 @@ const handleRefreshQuickLogin = async () => {
 
 // 导出
 const handleExport = async () => {
-  // 导出前仅根据当前学生列表判断
-  if (studentList.value.length === 0) {
-    ElMessage.warning(t("class.noStudentDataPleaseCreate"));
+  const canContinue = await ensureStudentActionReady();
+  if (!canContinue) {
     return;
   }
 
@@ -2836,9 +2886,8 @@ const handleBatchAction = async () => {
     return;
   }
 
-  const hasStudents = await checkCurrentClassHasStudents();
-  if (!hasStudents) {
-    ElMessage.warning(t("class.noStudentDataPleaseCreate"));
+  const canContinue = await ensureStudentActionReady();
+  if (!canContinue) {
     return;
   }
 
@@ -2920,7 +2969,9 @@ const handleBatchTransfer = () => {
   }
   batchTransferForm.gradeId = null;
   batchTransferForm.classId = null;
+  batchTransferClassList.value = [];
   showBatchTransferModal.value = true;
+  loadTransferGradeClassData();
 };
 
 // 确认批量移班
@@ -2959,9 +3010,11 @@ const handleConfirmBatchTransfer = async () => {
 };
 
 // 根据年级获取批量移班的班级选项
+const formatTransferClassLabel = (cls: any) => cls.teacherName ? `${cls.className}(${cls.teacherName})` : cls.className;
+
 const batchTransferClassOptions = computed(() => {
   return batchTransferClassList.value.map((cls: any) => ({
-    label: cls.className,
+    label: formatTransferClassLabel(cls),
     value: cls.id,
   }));
 });
@@ -3046,11 +3099,12 @@ const handleTransfer = (row: any) => {
   console.log(row);
   transferringStudent.value = row;
   transferForm.gradeId = null;
-  // transferForm.classId = null;
-  // transferForm.id = null;
+  transferForm.classId = null;
+  transferForm.id = null;
   transferForm.teacherId = null;
   transferClassList.value = [];
   showTransferModal.value = true;
+  loadTransferGradeClassData();
 };
 
 // 移班年级变化处理
@@ -3119,35 +3173,56 @@ const handleConfirmTransfer = async () => {
   }
 };
 
-// 根据年级加载年级列表（移班用）
-const loadTransferClassList = async (grade: string) => {
+const normalizeTransferGradeClassData = (data: any[], currentClassId?: string | null) => {
+  return (data || []).map((item: any) => ({
+    grade: item.grade,
+    gradeName: item.gradeName,
+    classList: (item.classList || [])
+      .map((cls: any) => ({
+        id: String(cls.classId || cls.id || ""),
+        className: cls.className || cls.name || "",
+        teacherId: cls.teacherId ? String(cls.teacherId) : "",
+        teacherName: cls.teacherName || "",
+      }))
+      .filter((cls: any) => cls.id && cls.id !== String(currentClassId || "")),
+  }));
+};
+
+const getTransferClassesByGrade = (grade: string) => {
+  return (
+    transferGradeClassData.value.find((item: any) => String(item.grade) === String(grade))
+      ?.classList || []
+  );
+};
+
+const loadTransferGradeClassData = async () => {
+  if (!selectedClass.value?.id) {
+    transferGradeClassData.value = [];
+    return;
+  }
   try {
-    const data = await getClassByGrade(grade);
-    console.log("班级列表API返回:", data);
-    transferClassList.value = data || [];
-    console.log("transferClassOptions:", transferClassOptions.value);
+    const data = await getGradeClassList(String(selectedClass.value.id));
+    transferGradeClassData.value = normalizeTransferGradeClassData(data, selectedClass.value.id);
   } catch (error) {
-    console.error("获取班级列表失败:", error);
-    transferClassList.value = [];
+    console.error("获取移班年级班级列表失败:", error);
+    transferGradeClassData.value = [];
   }
 };
 
+// 根据年级加载班级列表（移班用）
+const loadTransferClassList = (grade: string) => {
+  transferClassList.value = getTransferClassesByGrade(grade);
+};
+
 // 根据年级加载班级列表（批量移班用）
-const loadBatchTransferClassList = async (grade: string) => {
-  try {
-    const data = await getClassByGrade(grade);
-    console.log("batchTransferClassList:", data);
-    batchTransferClassList.value = data || [];
-  } catch (error) {
-    console.error("获取班级列表失败:", error);
-    batchTransferClassList.value = [];
-  }
+const loadBatchTransferClassList = (grade: string) => {
+  batchTransferClassList.value = getTransferClassesByGrade(grade);
 };
 
 // 根据年级获取班级选项
 const transferClassOptions = computed(() => {
   return transferClassList.value.map((cls: any) => ({
-    label: cls.className,
+    label: formatTransferClassLabel(cls),
     value: cls.id,
     teacherId: cls.teacherId,
   }));
@@ -3212,7 +3287,6 @@ const handleImportStudents = () => {
       showCreateModal.value = false;
     } catch (error: any) {
       console.error("导入失败:", error);
-      ElMessage.error(error.message || "导入失败");
     }
   };
   input.click();
@@ -3240,6 +3314,10 @@ const handleCreateStudent = async () => {
     const studentName = createForm.name.trim();
     if (!studentName) {
       ElMessage.warning("请填写学生姓名");
+      return;
+    }
+    if (studentName.length > 10) {
+      ElMessage.warning(t("auth.nameLengthLimit"));
       return;
     }
     try {
@@ -3337,7 +3415,6 @@ const handleEditGroup = async (row: any) => {
     showGroupModal.value = true;
   } catch (error) {
     console.error("获取小组成员失败:", error);
-    ElMessage.error("获取小组成员失败");
   }
 };
 
@@ -3345,6 +3422,10 @@ const handleEditGroup = async (row: any) => {
 const handleConfirmGroup = async () => {
   if (!groupForm.name.trim()) {
     ElMessage.warning("请输入小组名称");
+    return;
+  }
+  if (groupForm.name.trim().length > 10) {
+    ElMessage.warning(t("auth.nameLengthLimit"));
     return;
   }
 
@@ -3490,6 +3571,10 @@ const handleGroupBatchAction = () => {
   if (groupActiveAction.value === "batch") {
     exitGroupBatchMode();
   } else {
+    if (!groupList.value.length) {
+      ElMessage.warning("当前无小组数据，请先创建小组");
+      return;
+    }
     groupActiveAction.value = "batch";
   }
 };

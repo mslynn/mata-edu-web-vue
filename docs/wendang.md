@@ -233,6 +233,10 @@ export const useHttp = () => {
   账号：`4285lynn01`  
   密码：`mZ7x9SgR`
 
+**  编程平台线上地址**
+  <https://nous.matatastudio.com/>
+  https://vinci.matatastudio.com
+
 班级码
 班级码：75830
 统一登录密码：243686

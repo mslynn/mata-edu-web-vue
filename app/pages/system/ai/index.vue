@@ -2,13 +2,20 @@
   <div class="ai-center-page">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h1 class="page-title">{{ $t('ai.pageTitle') }}</h1>
+      <h1 class="page-title">{{ $t("ai.pageTitle") }}</h1>
       <button class="material-btn" @click="goToMaterial">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-          <path d="M3 9h18M9 21V9"/>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18M9 21V9" />
         </svg>
-        {{ $t('ai.myMaterial') }}
+        {{ $t("ai.myMaterial") }}
       </button>
     </div>
 
@@ -19,15 +26,26 @@
         <div v-for="i in 4" :key="i" class="section">
           <el-skeleton animated :rows="0">
             <template #template>
-              <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px">
-                <el-skeleton-item variant="rect" style="width: 22px; height: 22px; border-radius: 4px" />
+              <div
+                style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px"
+              >
+                <el-skeleton-item
+                  variant="rect"
+                  style="width: 22px; height: 22px; border-radius: 4px"
+                />
                 <el-skeleton-item variant="text" style="width: 80px; height: 20px" />
                 <el-skeleton-item variant="text" style="width: 160px; height: 16px" />
               </div>
               <div style="display: flex; gap: 16px">
                 <div v-for="j in 5" :key="j" style="flex: 0 0 207px">
-                  <el-skeleton-item variant="rect" style="width: 100%; height: 155px; border-radius: 12px 12px 0 0" />
-                  <el-skeleton-item variant="text" style="width: 80%; height: 16px; margin: 14px auto; display: block" />
+                  <el-skeleton-item
+                    variant="rect"
+                    style="width: 100%; height: 155px; border-radius: 12px 12px 0 0"
+                  />
+                  <el-skeleton-item
+                    variant="text"
+                    style="width: 80%; height: 16px; margin: 14px auto; display: block"
+                  />
                 </div>
               </div>
             </template>
@@ -35,235 +53,507 @@
         </div>
       </template>
       <template v-else>
-      <!-- AIGC 区块 (已移除内容，暂隐藏) -->
-      <div class="section" v-if="aigcItems.length > 0">
-        <div class="section-header">
-          <img :src="ai1Icon" class="section-icon" alt="" />
-          <span class="section-name">{{ $t('ai.aigc') }}</span>
-          <span class="section-desc">{{ $t('ai.aigcDesc') }}</span>
-        </div>
-        <div class="card-slider">
-          <button v-if="arrowState.aigc.left" class="slider-arrow slider-arrow-left" @click="scrollLeftFn('aigc')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div class="card-grid-scroll" ref="aigcList" @scroll="handleScroll('aigc')">
-            <div class="ai-card" v-for="item in aigcItems" :key="item.key" @click="handleCardClick(item)">
-              <div class="card-cover-wrapper">
-                <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
-                <div v-else class="card-cover card-cover-default"></div>
-                <!-- 即将上线 提示 -->
-                <div v-if="isComingSoon(item)" class="coming-soon-overlay">
-                  <div class="cs-content">
-                    <span class="cs-rocket">🚀</span>
-                    <span class="cs-text">{{ $t('ai.comingSoon') }}</span>
+        <!-- AIGC 区块 (已移除内容，暂隐藏) -->
+        <div class="section" v-if="aigcItems.length > 0">
+          <div class="section-header">
+            <img :src="ai1Icon" class="section-icon" alt="" />
+            <span class="section-name">{{ $t("ai.aigc") }}</span>
+            <span class="section-desc">{{ $t("ai.aigcDesc") }}</span>
+          </div>
+          <div class="card-slider">
+            <button
+              v-if="arrowState.aigc.left"
+              class="slider-arrow slider-arrow-left"
+              @click="scrollLeftFn('aigc')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <div class="card-grid-scroll" ref="aigcList" @scroll="handleScroll('aigc')">
+              <div
+                class="ai-card"
+                v-for="item in aigcItems"
+                :key="item.key"
+                @click="handleCardClick(item)"
+              >
+                <div class="card-cover-wrapper">
+                  <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
+                  <div v-else class="card-cover card-cover-default"></div>
+                  <!-- 即将上线 提示 -->
+                  <div v-if="isComingSoon(item)" class="coming-soon-overlay">
+                    <div class="cs-content">
+                      <span class="cs-rocket">🚀</span>
+                      <span class="cs-text">{{ $t("ai.comingSoon") }}</span>
+                    </div>
+                  </div>
+                  <!-- 遮罩层 -->
+                  <div v-if="item.desc" class="card-hover-overlay">
+                    <p class="hover-desc">{{ $t(item.desc || "") }}</p>
+                    <button class="hover-btn" @click.stop="handleCardClick(item)">
+                      {{ $t("ai.use") }}
+                    </button>
                   </div>
                 </div>
-                <!-- 遮罩层 -->
-                <div v-if="item.desc" class="card-hover-overlay">
-                  <p class="hover-desc">{{ $t(item.desc || '') }}</p>
-                  <button class="hover-btn" @click.stop="handleCardClick(item)">{{ $t('ai.use') }}</button>
-                </div>
+                <div class="card-name">{{ $t(item.label) }}</div>
               </div>
-              <div class="card-name">{{ $t(item.label) }}</div>
             </div>
+            <button
+              v-if="arrowState.aigc.right"
+              class="slider-arrow slider-arrow-right"
+              @click="scrollRightFn('aigc')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
-          <button v-if="arrowState.aigc.right" class="slider-arrow slider-arrow-right" @click="scrollRightFn('aigc')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
         </div>
-      </div>
 
-      <!-- 视觉智能 区块 -->
-      <div class="section">
-        <div class="section-header">
-          <img :src="ai2Icon" class="section-icon" alt="" />
-          <span class="section-name">{{ $t('ai.vision') }}</span>
-          <span class="section-desc">{{ $t('ai.visionDesc') }}</span>
-        </div>
-        <div class="card-slider">
-          <button v-if="arrowState.vision.left" class="slider-arrow slider-arrow-left" @click="scrollLeftFn('vision')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div class="card-grid-scroll" ref="visionList" @scroll="handleScroll('vision')">
-            <div class="ai-card" v-for="item in visionItems" :key="item.key" @click="handleCardClick(item)">
-              <div class="card-cover-wrapper">
-                <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
-                <div v-else class="card-cover card-cover-default"></div>
-                <!-- 即将上线 提示 -->
-                <div v-if="isComingSoon(item)" class="coming-soon-overlay">
-                  <div class="cs-content">
-                    <span class="cs-rocket">🚀</span>
-                    <span class="cs-text">{{ $t('ai.comingSoon') }}</span>
+        <!-- 视觉智能 区块 -->
+        <div class="section">
+          <div class="section-header">
+            <img :src="ai2Icon" class="section-icon" alt="" />
+            <span class="section-name">{{ $t("ai.vision") }}</span>
+            <span class="section-desc">{{ $t("ai.visionDesc") }}</span>
+          </div>
+          <div class="card-slider">
+            <button
+              v-if="arrowState.vision.left"
+              class="slider-arrow slider-arrow-left"
+              @click="scrollLeftFn('vision')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <div
+              class="card-grid-scroll"
+              ref="visionList"
+              @scroll="handleScroll('vision')"
+            >
+              <div
+                class="ai-card"
+                v-for="item in visionItems"
+                :key="item.key"
+                @click="handleCardClick(item)"
+              >
+                <div class="card-cover-wrapper">
+                  <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
+                  <div v-else class="card-cover card-cover-default"></div>
+                  <!-- 即将上线 提示 -->
+                  <div v-if="isComingSoon(item)" class="coming-soon-overlay">
+                    <div class="cs-content">
+                      <span class="cs-rocket">🚀</span>
+                      <span class="cs-text">{{ $t("ai.comingSoon") }}</span>
+                    </div>
+                  </div>
+                  <div v-if="item.desc" class="card-hover-overlay">
+                    <p class="hover-desc">{{ $t(item.desc || "") }}</p>
+                    <button class="hover-btn" @click.stop="handleCardClick(item)">
+                      {{ $t("ai.use") }}
+                    </button>
                   </div>
                 </div>
-                <div v-if="item.desc" class="card-hover-overlay">
-                  <p class="hover-desc">{{ $t(item.desc || '') }}</p>
-                  <button class="hover-btn" @click.stop="handleCardClick(item)">{{ $t('ai.use') }}</button>
-                </div>
+                <div class="card-name">{{ $t(item.label) }}</div>
               </div>
-              <div class="card-name">{{ $t(item.label) }}</div>
             </div>
+            <button
+              v-if="arrowState.vision.right"
+              class="slider-arrow slider-arrow-right"
+              @click="scrollRightFn('vision')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
-          <button v-if="arrowState.vision.right" class="slider-arrow slider-arrow-right" @click="scrollRightFn('vision')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
         </div>
-      </div>
 
-      <!-- 语言智能 区块 -->
-      <div class="section">
-        <div class="section-header">
-          <img :src="ai3Icon" class="section-icon" alt="" />
-          <span class="section-name">{{ $t('ai.language') }}</span>
-          <span class="section-desc">{{ $t('ai.languageDesc') }}</span>
-        </div>
-        <div class="card-slider">
-          <button v-if="arrowState.language.left" class="slider-arrow slider-arrow-left" @click="scrollLeftFn('language')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div class="card-grid-scroll" ref="languageList" @scroll="handleScroll('language')">
-            <div class="ai-card" v-for="item in languageItems" :key="item.key" @click="handleCardClick(item)">
-              <div class="card-cover-wrapper">
-                <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
-                <div v-else class="card-cover card-cover-default"></div>
-                <!-- 即将上线 提示 -->
-                <div v-if="isComingSoon(item)" class="coming-soon-overlay">
-                  <div class="cs-content">
-                    <span class="cs-rocket">🚀</span>
-                    <span class="cs-text">{{ $t('ai.comingSoon') }}</span>
+        <!-- 语言智能 区块 -->
+        <div class="section">
+          <div class="section-header">
+            <img :src="ai3Icon" class="section-icon" alt="" />
+            <span class="section-name">{{ $t("ai.language") }}</span>
+            <span class="section-desc">{{ $t("ai.languageDesc") }}</span>
+          </div>
+          <div class="card-slider">
+            <button
+              v-if="arrowState.language.left"
+              class="slider-arrow slider-arrow-left"
+              @click="scrollLeftFn('language')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <div
+              class="card-grid-scroll"
+              ref="languageList"
+              @scroll="handleScroll('language')"
+            >
+              <div
+                class="ai-card"
+                v-for="item in languageItems"
+                :key="item.key"
+                @click="handleCardClick(item)"
+              >
+                <div class="card-cover-wrapper">
+                  <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
+                  <div v-else class="card-cover card-cover-default"></div>
+                  <!-- 即将上线 提示 -->
+                  <div v-if="isComingSoon(item)" class="coming-soon-overlay">
+                    <div class="cs-content">
+                      <span class="cs-rocket">🚀</span>
+                      <span class="cs-text">{{ $t("ai.comingSoon") }}</span>
+                    </div>
+                  </div>
+                  <div v-if="item.desc" class="card-hover-overlay">
+                    <p class="hover-desc">{{ $t(item.desc || "") }}</p>
+                    <button class="hover-btn" @click.stop="handleCardClick(item)">
+                      {{ $t("ai.use") }}
+                    </button>
                   </div>
                 </div>
-                <div v-if="item.desc" class="card-hover-overlay">
-                  <p class="hover-desc">{{ $t(item.desc || '') }}</p>
-                  <button class="hover-btn" @click.stop="handleCardClick(item)">{{ $t('ai.use') }}</button>
-                </div>
+                <div class="card-name">{{ $t(item.label) }}</div>
               </div>
-              <div class="card-name">{{ $t(item.label) }}</div>
             </div>
+            <button
+              v-if="arrowState.language.right"
+              class="slider-arrow slider-arrow-right"
+              @click="scrollRightFn('language')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
-          <button v-if="arrowState.language.right" class="slider-arrow slider-arrow-right" @click="scrollRightFn('language')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
         </div>
-      </div>
 
-      <!-- 行为与动作识别 区块 -->
-      <div class="section section-highlight">
-        <div class="section-header">
-          <img :src="ai4Icon" class="section-icon" alt="" />
-          <span class="section-name">{{ $t('ai.behavior') }}</span>
-          <span class="section-desc">{{ $t('ai.behaviorDesc') }}</span>
-        </div>
-        <div class="card-slider">
-          <button v-if="arrowState.behavior.left" class="slider-arrow slider-arrow-left" @click="scrollLeftFn('behavior')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div class="card-grid-scroll" ref="behaviorList" @scroll="handleScroll('behavior')">
-            <div class="ai-card" v-for="item in behaviorItems" :key="item.key" @click="handleCardClick(item)">
-              <div class="card-cover-wrapper">
-                <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
-                <div v-else class="card-cover card-cover-default"></div>
-                <!-- 即将上线 提示 -->
-                <div v-if="isComingSoon(item)" class="coming-soon-overlay">
-                  <div class="cs-content">
-                    <span class="cs-rocket">🚀</span>
-                    <span class="cs-text">{{ $t('ai.comingSoon') }}</span>
+        <!-- 行为与动作识别 区块 -->
+        <div class="section section-highlight">
+          <div class="section-header">
+            <img :src="ai4Icon" class="section-icon" alt="" />
+            <span class="section-name">{{ $t("ai.behavior") }}</span>
+            <span class="section-desc">{{ $t("ai.behaviorDesc") }}</span>
+          </div>
+          <div class="card-slider">
+            <button
+              v-if="arrowState.behavior.left"
+              class="slider-arrow slider-arrow-left"
+              @click="scrollLeftFn('behavior')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <div
+              class="card-grid-scroll"
+              ref="behaviorList"
+              @scroll="handleScroll('behavior')"
+            >
+              <div
+                class="ai-card"
+                v-for="item in behaviorItems"
+                :key="item.key"
+                @click="handleCardClick(item)"
+              >
+                <div class="card-cover-wrapper">
+                  <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
+                  <div v-else class="card-cover card-cover-default"></div>
+                  <!-- 即将上线 提示 -->
+                  <div v-if="isComingSoon(item)" class="coming-soon-overlay">
+                    <div class="cs-content">
+                      <span class="cs-rocket">🚀</span>
+                      <span class="cs-text">{{ $t("ai.comingSoon") }}</span>
+                    </div>
+                  </div>
+                  <div v-if="item.desc" class="card-hover-overlay">
+                    <p class="hover-desc">{{ $t(item.desc || "") }}</p>
+                    <button class="hover-btn" @click.stop="handleCardClick(item)">
+                      {{ $t("ai.use") }}
+                    </button>
                   </div>
                 </div>
-                <div v-if="item.desc" class="card-hover-overlay">
-                  <p class="hover-desc">{{ $t(item.desc || '') }}</p>
-                  <button class="hover-btn" @click.stop="handleCardClick(item)">{{ $t('ai.use') }}</button>
-                </div>
+                <div class="card-name">{{ $t(item.label) }}</div>
               </div>
-              <div class="card-name">{{ $t(item.label) }}</div>
             </div>
+            <button
+              v-if="arrowState.behavior.right"
+              class="slider-arrow slider-arrow-right"
+              @click="scrollRightFn('behavior')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
-          <button v-if="arrowState.behavior.right" class="slider-arrow slider-arrow-right" @click="scrollRightFn('behavior')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
         </div>
-      </div>
 
-      <!-- 机器学习 区块 -->
-      <div class="section section-highlight">
-        <div class="section-header">
-          <img :src="ai5Icon" class="section-icon" alt="" />
-          <span class="section-name">{{ $t('ai.ml') }}</span>
-          <span class="section-desc">{{ $t('ai.mlDesc') }}</span>
-        </div>
-        <div class="card-slider">
-          <button v-if="arrowState.ml.left" class="slider-arrow slider-arrow-left" @click="scrollLeftFn('ml')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="15 18 9 12 15 6"/>
-            </svg>
-          </button>
-          <div class="card-grid-scroll" ref="mlList" @scroll="handleScroll('ml')">
-            <div class="ai-card" v-for="item in mlItems" :key="item.key" @click="handleCardClick(item)">
-              <div class="card-cover-wrapper">
-                <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
-                <div v-else class="card-cover card-cover-default"></div>
-                <!-- 即将上线 提示 -->
-                <div v-if="isComingSoon(item)" class="coming-soon-overlay">
-                  <div class="cs-content">
-                    <span class="cs-rocket">🚀</span>
-                    <span class="cs-text">{{ $t('ai.comingSoon') }}</span>
+        <!-- 机器学习 区块 -->
+        <div class="section section-highlight">
+          <div class="section-header">
+            <img :src="ai5Icon" class="section-icon" alt="" />
+            <span class="section-name">{{ $t("ai.ml") }}</span>
+            <span class="section-desc">{{ $t("ai.mlDesc") }}</span>
+          </div>
+          <div class="card-slider">
+            <button
+              v-if="arrowState.ml.left"
+              class="slider-arrow slider-arrow-left"
+              @click="scrollLeftFn('ml')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+            <div class="card-grid-scroll" ref="mlList" @scroll="handleScroll('ml')">
+              <div
+                class="ai-card"
+                v-for="item in mlItems"
+                :key="item.key"
+                @click="handleCardClick(item)"
+              >
+                <div class="card-cover-wrapper">
+                  <img v-if="item.cover" :src="item.cover" class="card-cover" alt="" />
+                  <div v-else class="card-cover card-cover-default"></div>
+                  <!-- 即将上线 提示 -->
+                  <div v-if="isComingSoon(item)" class="coming-soon-overlay">
+                    <div class="cs-content">
+                      <span class="cs-rocket">🚀</span>
+                      <span class="cs-text">{{ $t("ai.comingSoon") }}</span>
+                    </div>
+                  </div>
+                  <div v-if="item.desc" class="card-hover-overlay">
+                    <p class="hover-desc">{{ $t(item.desc || "") }}</p>
+                    <button class="hover-btn" @click.stop="handleCardClick(item)">
+                      {{ $t("ai.use") }}
+                    </button>
                   </div>
                 </div>
-                <div v-if="item.desc" class="card-hover-overlay">
-                  <p class="hover-desc">{{ $t(item.desc || '') }}</p>
-                  <button class="hover-btn" @click.stop="handleCardClick(item)">{{ $t('ai.use') }}</button>
-                </div>
+                <div class="card-name">{{ $t(item.label) }}</div>
               </div>
-              <div class="card-name">{{ $t(item.label) }}</div>
             </div>
+            <button
+              v-if="arrowState.ml.right"
+              class="slider-arrow slider-arrow-right"
+              @click="scrollRightFn('ml')"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
           </div>
-          <button v-if="arrowState.ml.right" class="slider-arrow slider-arrow-right" @click="scrollRightFn('ml')">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="9 18 15 12 9 6"/>
-            </svg>
-          </button>
         </div>
-      </div>
       </template>
-      </div>
+    </div>
 
+    <!-- 模型入口弹窗 -->
+    <div v-if="showModelSelectModal" class="modal-overlay" @click="closeModelSelectModal">
+      <div class="modal-content model-select-modal" @click.stop>
+        <div class="modal-header">
+          <span class="modal-title">{{
+            currentModel ? $t(currentModel.label) : ""
+          }}</span>
+          <button class="close-btn" @click="closeModelSelectModal">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M1 1l12 12M13 1l-12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body model-select-body">
+          <div class="model-select-section">
+            <div class="model-select-section-head">
+              <div>
+                <div class="model-select-section-title">
+                  {{ $t("ai.createNewModel") }}
+                </div>
+                <div class="model-select-section-desc">
+                  {{ $t("ai.createNewModelDesc") }}
+                </div>
+              </div>
+              <button
+                class="btn-confirm model-select-create-btn"
+                @click="openCreateModelModal"
+              >
+                {{ $t("ai.createProject") }}
+              </button>
+            </div>
+          </div>
+
+          <div class="model-select-section">
+            <div class="model-select-section-head model-select-section-head--stack">
+              <div class="model-select-section-title-row">
+                <div class="model-select-section-title">
+                  {{ $t("ai.myCreatedModels") }}
+                </div>
+                <span v-if="savedModels.length" class="model-select-count">{{
+                  savedModels.length
+                }}</span>
+              </div>
+              <div class="model-select-section-desc">
+                {{ $t("ai.myCreatedModelsDesc") }}
+              </div>
+            </div>
+
+            <div v-if="savedModelsLoading" class="model-list-empty">
+              {{ $t("common.loading") }}
+            </div>
+            <div v-else-if="!savedModels.length" class="model-list-empty">
+              {{ $t("ai.noCreatedModels") }}
+            </div>
+            <div v-else class="model-card-grid">
+              <div
+                v-for="item in savedModels"
+                :key="item.id"
+                class="model-card"
+                @click="handleOpenSavedModel(item)"
+              >
+                <button
+                  class="model-card-delete"
+                  type="button"
+                  @click.stop="handleDeleteSavedModel(item)"
+                >
+                  删除
+                </button>
+                <div class="model-card-cover">
+                  <img :src="getSavedModelCover(item.toolKey)" alt="" />
+                </div>
+                <div class="model-card-body">
+                  <div class="model-card-name">{{ item.name }}</div>
+                  <div class="model-card-time">
+                    {{ item.updatedAt ? formatSavedModelTime(item.updatedAt) : "-" }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer modal-footer--single">
+          <button class="btn-cancel" @click="closeModelSelectModal">
+            {{ $t("common.cancel") }}
+          </button>
+        </div>
+      </div>
+    </div>
 
     <!-- 新建模型弹窗 -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+    <div v-if="showModal" class="modal-overlay" @click="closeCreateModal">
       <div class="modal-content" @click.stop>
         <div class="modal-header">
-          <span class="modal-title">{{ $t('ai.newModelTitle', { name: currentModel ? $t(currentModel.label) : '' }) }}</span>
-          <button class="close-btn" @click="closeModal">
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M1 1l12 12M13 1l-12 12"/>
+          <span class="modal-title">{{
+            $t("ai.newModelTitle", {
+              name: currentModel ? $t(currentModel.label) : "",
+            })
+          }}</span>
+          <button class="close-btn" @click="closeCreateModal">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M1 1l12 12M13 1l-12 12" />
             </svg>
           </button>
         </div>
         <div class="modal-body">
           <div class="form-item">
-            <label class="form-label">{{ $t('ai.modelName') }}</label>
-            <input v-model="modelName" type="text" class="form-input" :placeholder="$t('ai.inputModelName')" />
+            <label class="form-label">{{ $t("ai.modelName") }}</label>
+            <input
+              v-model="modelName"
+              type="text"
+              class="form-input"
+              :placeholder="$t('ai.inputModelName')"
+            />
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn-confirm" @click="handleConfirm">{{ $t('common.confirm') }}</button>
-          <button class="btn-cancel" @click="closeModal">{{ $t('common.cancel') }}</button>
+          <button class="btn-confirm" @click="handleConfirm">
+            {{ $t("common.confirm") }}
+          </button>
+          <button class="btn-cancel" @click="closeCreateModal">
+            {{ $t("common.cancel") }}
+          </button>
         </div>
       </div>
     </div>
@@ -271,104 +561,191 @@
     <!-- Iframe 弹窗 -->
     <div v-if="showIframeModal" class="iframe-modal">
       <div class="iframe-header">
-        <span class="iframe-title">{{ currentModel ? $t(currentModel.label) : '' }} - {{ modelName }}</span>
+        <span class="iframe-title"
+          >{{ currentModel ? $t(currentModel.label) : "" }} -
+          {{ currentProjectName }}</span
+        >
         <button class="close-btn" @click="closeIframeModal">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 1l12 12M13 1l-12 12"/>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 14 14"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path d="M1 1l12 12M13 1l-12 12" />
           </svg>
         </button>
       </div>
       <div class="iframe-content">
-        <div v-if="iframeLoading" class="loading-state">{{ $t('common.loading') }}</div>
-        <iframe :src="currentIframeUrl" class="iframe-view" allow="camera; microphone" @load="onIframeLoad"></iframe>
+        <div v-if="iframeLoading" class="loading-state">
+          {{ $t("common.loading") }}
+        </div>
+        <iframe
+          ref="aiIframeRef"
+          :src="currentIframeUrl"
+          class="iframe-view"
+          allow="camera; microphone"
+          @load="onIframeLoad"
+        ></iframe>
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted } from 'vue'
-import { useI18n } from 'vue-i18n'
+import { ref, onMounted, nextTick, onUnmounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { aiAdmin } from "~/composables/api/ai";
+import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 
-import ai1Icon from '~/assets/images/ai1.png'
-import ai2Icon from '~/assets/images/ai2.png'
-import ai3Icon from '~/assets/images/ai3.png'
-import ai4Icon from '~/assets/images/ai4.png'
-import ai5Icon from '~/assets/images/ai5.png'
+import ai1Icon from "~/assets/images/ai1.png";
+import ai2Icon from "~/assets/images/ai2.png";
+import ai3Icon from "~/assets/images/ai3.png";
+import ai4Icon from "~/assets/images/ai4.png";
+import ai5Icon from "~/assets/images/ai5.png";
 
 // AIGC 卡片封面图
-import aigcCover1 from '~/assets/images/1.svg'
-import aigcCover2 from '~/assets/images/2.svg'
-import aigcCover3 from '~/assets/images/3.svg'
-import aigcCover4 from '~/assets/images/4.svg'
+import aigcCover1 from "~/assets/images/1.svg";
+import aigcCover2 from "~/assets/images/2.svg";
+import aigcCover3 from "~/assets/images/3.svg";
+import aigcCover4 from "~/assets/images/4.svg";
 
 definePageMeta({
-  layout: 'sidebar'
-})
+  layout: "sidebar",
+});
 
-const router = useRouter()
-const { locale, t } = useI18n()
+const router = useRouter();
+const { locale, t } = useI18n();
+const { getAiList, createAi, updateAi, deleteAi, ssoLogin } = aiAdmin();
+const {
+  parseMessageData,
+  getMessageType,
+  pickMessagePayload,
+  pickMessageFileName,
+  createUploadFormData,
+  toUploadFile: toSharedUploadFile,
+  uploadFileToOSS,
+  getIframeOrigin,
+  isMessageFromIframe,
+  postFileBufferToIframe,
+} = useIframeFileBridge();
 
 // 页面骨架屏（最少显示 300ms）
-const pageLoading = ref(true)
+const pageLoading = ref(true);
 
 interface AICardItem {
-  key: string
-  label: string
-  desc?: string
-  cover?: string
+  key: string;
+  label: string;
+  desc?: string;
+  cover?: string;
 }
 
+interface SavedAIModelRecord {
+  id: string;
+  toolKey: string;
+  name: string;
+  updatedAt: number;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  zipBlob: Blob;
+  ossId?: string;
+  optType?: string;
+  url?: string;
+}
+
+interface SavedAIModelListItem {
+  id: string;
+  toolKey: string;
+  name: string;
+  updatedAt: number;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  ossId?: string;
+  optType?: string;
+  url?: string;
+}
+
+const AI_MODEL_DB_NAME = "mata-ai-models-db";
+const AI_MODEL_STORE_NAME = "models";
+
 const aigcItems = ref<AICardItem[]>([
-  { key: 'aiPainting', label: 'ai.aiPainting' },
-  { key: 'aiStory', label: 'ai.aiStory' },
-  { key: 'aiSong', label: 'ai.aiSong' },
-  { key: 'aiVideo', label: 'ai.aiVideo' },
-])
+  { key: "aiPainting", label: "ai.aiPainting" },
+  { key: "aiStory", label: "ai.aiStory" },
+  { key: "aiSong", label: "ai.aiSong" },
+  { key: "aiVideo", label: "ai.aiVideo" },
+]);
 
 // 视觉智能 数据
 const visionItems = ref<AICardItem[]>([
-    { key: 'imageClassModel', label: 'ai.imageClassModel', desc: 'ai.imageClassModelDesc', cover: aigcCover1 },
-  { key: 'faceRecognition', label: 'ai.faceRecognition' },
-  { key: 'imageRecognition', label: 'ai.imageRecognition' },
+  {
+    key: "imageClassModel",
+    label: "ai.imageClassModel",
+    desc: "ai.imageClassModelDesc",
+    cover: aigcCover1,
+  },
+  { key: "faceRecognition", label: "ai.faceRecognition" },
+  { key: "imageRecognition", label: "ai.imageRecognition" },
 
-  { key: 'handwrittenDigit', label: 'ai.handwrittenDigit' },
-  { key: 'doodleRecognition', label: 'ai.doodleRecognition' },
-])
+  { key: "handwrittenDigit", label: "ai.handwrittenDigit" },
+  { key: "doodleRecognition", label: "ai.doodleRecognition" },
+]);
 
 // 语言智能 数据
 const languageItems = ref<AICardItem[]>([
-  { key: 'voiceClassModel', label: 'ai.voiceClassModel', desc: 'ai.voiceClassModelDesc', cover: aigcCover3 },
-  { key: 'speechSynthesis', label: 'ai.speechSynthesis' },
-  { key: 'smartQA', label: 'ai.smartQA' },
-  { key: 'speechTranscription', label: 'ai.speechTranscription' },
-  { key: 'speechTranscriptionPrinciple', label: 'ai.speechTranscriptionPrinciple' },
-])
+  {
+    key: "voiceClassModel",
+    label: "ai.voiceClassModel",
+    desc: "ai.voiceClassModelDesc",
+    cover: aigcCover3,
+  },
+  { key: "speechSynthesis", label: "ai.speechSynthesis" },
+  { key: "smartQA", label: "ai.smartQA" },
+  { key: "speechTranscription", label: "ai.speechTranscription" },
+  {
+    key: "speechTranscriptionPrinciple",
+    label: "ai.speechTranscriptionPrinciple",
+  },
+]);
 
 // 行为与动作识别 数据
 
 const behaviorItems = ref<AICardItem[]>([
-    { key: 'poseClassModel', label: 'ai.poseClassModel', desc: 'ai.poseClassModelDesc', cover: aigcCover4 },
-  { key: 'gestureClassModel', label: 'ai.gestureClassModel', desc: 'ai.gestureClassModelDesc', cover: aigcCover2 },
-  { key: 'poseRecognition', label: 'ai.poseRecognition' },
-  { key: 'gestureRecognition', label: 'ai.gestureRecognition' },
+  {
+    key: "poseClassModel",
+    label: "ai.poseClassModel",
+    desc: "ai.poseClassModelDesc",
+    cover: aigcCover4,
+  },
+  {
+    key: "gestureClassModel",
+    label: "ai.gestureClassModel",
+    desc: "ai.gestureClassModelDesc",
+    cover: aigcCover2,
+  },
+  { key: "poseRecognition", label: "ai.poseRecognition" },
+  { key: "gestureRecognition", label: "ai.gestureRecognition" },
 
-  { key: 'emotionRecognition', label: 'ai.emotionRecognition' },
-])
+  { key: "emotionRecognition", label: "ai.emotionRecognition" },
+]);
 
 // 机器学习 数据
 const mlItems = ref<AICardItem[]>([
-  { key: 'mlProcess', label: 'ai.mlProcess' },
-  { key: 'decisionTree', label: 'ai.decisionTree' },
-  { key: 'bigData', label: 'ai.bigData' },
-])
+  { key: "mlProcess", label: "ai.mlProcess" },
+  { key: "decisionTree", label: "ai.decisionTree" },
+  { key: "bigData", label: "ai.bigData" },
+]);
 
 // 滑动相关
-const aigcList = ref<HTMLElement | null>(null)
-const visionList = ref<HTMLElement | null>(null)
-const languageList = ref<HTMLElement | null>(null)
-const behaviorList = ref<HTMLElement | null>(null)
-const mlList = ref<HTMLElement | null>(null)
+const aigcList = ref<HTMLElement | null>(null);
+const visionList = ref<HTMLElement | null>(null);
+const languageList = ref<HTMLElement | null>(null);
+const behaviorList = ref<HTMLElement | null>(null);
+const mlList = ref<HTMLElement | null>(null);
 
 // 箭头显示状态
 const arrowState = ref({
@@ -377,28 +754,28 @@ const arrowState = ref({
   language: { left: false, right: false },
   behavior: { left: false, right: false },
   ml: { left: false, right: false },
-})
+});
 
 // 更新箭头状态
 const updateArrowState = (type: string, el: HTMLElement | null) => {
-  if (!el) return
-  const { scrollLeft, scrollWidth, clientWidth } = el
-  const canScrollLeft = scrollLeft > 5
-  const canScrollRight = scrollLeft + clientWidth < scrollWidth - 5
+  if (!el) return;
+  const { scrollLeft, scrollWidth, clientWidth } = el;
+  const canScrollLeft = scrollLeft > 5;
+  const canScrollRight = scrollLeft + clientWidth < scrollWidth - 5;
   arrowState.value[type as keyof typeof arrowState.value] = {
     left: canScrollLeft,
-    right: canScrollRight
-  }
-}
+    right: canScrollRight,
+  };
+};
 
 // 检查所有区块的箭头状态
 const checkAllArrows = () => {
-  updateArrowState('aigc', aigcList.value)
-  updateArrowState('vision', visionList.value)
-  updateArrowState('language', languageList.value)
-  updateArrowState('behavior', behaviorList.value)
-  updateArrowState('ml', mlList.value)
-}
+  updateArrowState("aigc", aigcList.value);
+  updateArrowState("vision", visionList.value);
+  updateArrowState("language", languageList.value);
+  updateArrowState("behavior", behaviorList.value);
+  updateArrowState("ml", mlList.value);
+};
 
 // 获取列表元素
 const getListEl = (type: string): HTMLElement | null => {
@@ -407,113 +784,759 @@ const getListEl = (type: string): HTMLElement | null => {
     vision: visionList.value,
     language: languageList.value,
     behavior: behaviorList.value,
-    ml: mlList.value
-  }
-  return listMap[type] || null
-}
+    ml: mlList.value,
+  };
+  return listMap[type] || null;
+};
 
 // 滚动事件处理
 const handleScroll = (type: string) => {
-  updateArrowState(type, getListEl(type))
-}
+  updateArrowState(type, getListEl(type));
+};
 
 const scrollLeftFn = (type: string) => {
-  const list = getListEl(type)
+  const list = getListEl(type);
   if (list) {
-    list.scrollBy({ left: -300, behavior: 'smooth' })
+    list.scrollBy({ left: -300, behavior: "smooth" });
   }
-}
+};
 
 const scrollRightFn = (type: string) => {
-  const list = getListEl(type)
+  const list = getListEl(type);
   if (list) {
-    list.scrollBy({ left: 300, behavior: 'smooth' })
+    list.scrollBy({ left: 300, behavior: "smooth" });
   }
-}
+};
 
 const goToMaterial = () => {
-  router.push('/system/ai/material')
-}
+  router.push("/system/ai/material");
+};
 
-const showModal = ref(false)
-const currentModel = ref<AICardItem | null>(null)
-const modelName = ref('')
+const showModelSelectModal = ref(false);
+const showModal = ref(false);
+const currentModel = ref<AICardItem | null>(null);
+const modelName = ref("");
+const currentProjectName = ref("");
+const currentEditingModelId = ref("");
+const currentToolCacheKey = ref("");
+const savedModels = ref<SavedAIModelListItem[]>([]);
+const savedModelsLoading = ref(false);
+const showIframeModal = ref(false);
+const currentIframeUrl = ref("");
+const iframeLoading = ref(true);
+const aiIframeRef = ref<HTMLIFrameElement | null>(null);
+const savedProjectZipCache = new Map<string, File>();
+const TM_ZIP_REQUEST_MESSAGE_TYPE = "request-tm-zip";
+const TM_ZIP_RESPONSE_MESSAGE_TYPE = "send-tm-zip";
+const TM_ZIP_RESOLVE_MESSAGE_TYPE = "resolve-tm-zip";
+const TM_ZIP_REQUEST_TIMEOUT = 5000;
+const isRequestingIframeClose = ref(false);
+const isHandlingTmZip = ref(false);
+let closeIframeTimer: number | null = null;
 
 const isComingSoon = (item: AICardItem) => {
-  return !['imageClassModel', 'gestureClassModel', 'voiceClassModel', 'poseClassModel'].includes(item.key)
-}
+  return ![
+    "imageClassModel",
+    "gestureClassModel",
+    "voiceClassModel",
+    "poseClassModel",
+  ].includes(item.key);
+};
 
-const handleCardClick = (item: AICardItem) => {
-  if (isComingSoon(item)) return
-  
-  currentModel.value = item
-  modelName.value = ''
-  showModal.value = true
-}
+const openAIModelDb = () => {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      reject(new Error("当前环境不支持 IndexedDB"));
+      return;
+    }
 
-const closeModal = () => {
-  showModal.value = false
-  currentModel.value = null
-  modelName.value = ''
-}
+    const request = window.indexedDB.open(AI_MODEL_DB_NAME, 1);
 
-const handleConfirm = () => {
-  if (!modelName.value.trim()) return
-  
-  const token = 'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ7XCJ0b2tlblR5cGVcIjpcImFjY2Vzc190b2tlblwiLFwidXNlcklkXCI6MTE1MzIsXCJ1c2VybmFtZVwiOlwiMzI4NzI1Nzk0QHFxLmNvbVwifSIsImV4cCI6MTc3MDQzODM0MSwiaWF0IjoxNzY3ODQ2MzQxNDU0LCJqdGkiOiI0YzBmYWQ1ZC1mYjVjLTRjMTMtOTUwNi1kOGVlOGI0YWUzMTAifQ.MKTjQtiuXvbl1TDvp3AF8j0qllvMX-Hr6wwqjkzKW3LpUlM7A882MhYX78l2DoqrxrRPQ1gAzm8uZ_anCgzlrg'
-  const typeMap: Record<string, number> = {
-    'imageClassModel': 1,
-    'gestureClassModel': 2,
-    'voiceClassModel': 3,
-    'poseClassModel': 4
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(AI_MODEL_STORE_NAME)) {
+        db.createObjectStore(AI_MODEL_STORE_NAME, { keyPath: "id" });
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("打开本地模型库失败"));
+  });
+};
+
+const loadSavedModels = async () => {
+  if (!currentModel.value) {
+    savedModels.value = [];
+    return;
   }
-  const type = typeMap[currentModel.value?.key || ''] || 1
-  const lang = locale.value === 'zh' ? 'zh' : 'en'
-  const url = `https://pre.matatalab.com/?token=${token}&type=${type}&projectName=${modelName.value}&lang=${lang}`
-  
-  currentIframeUrl.value = url
-  // Iframe title uses the modal name input or the model label
-  // currentToolName.value = currentModel.value ? t(currentModel.value.label) : '' 
-  // User didn't specify title, but let's use the model label.
-  
-  showIframeModal.value = true
-  closeModal()
-}
 
-// Iframe 逻辑
-const showIframeModal = ref(false)
-const currentIframeUrl = ref('')
-const iframeLoading = ref(true)
+  savedModelsLoading.value = true;
+
+  try {
+    const targetOptType = getAiOptTypeByToolKey(currentModel.value.key);
+    const userId = getCurrentUserId();
+    const response = await getAiList({
+      optType: targetOptType,
+      userId,
+    });
+    const list = Array.isArray(response)
+      ? response
+      : response?.rows || response?.list || response?.records || [];
+
+    savedModels.value = list
+      .filter((item: any) => !targetOptType || item.optType === targetOptType)
+      .map((item: any) => {
+        const modelName = item.optName || item.name || item.projectName || "-";
+
+        return {
+          id: String(
+            item.optId || item.id || item.aiId || item.ossId || generateAIModelId()
+          ),
+          toolKey: getToolKeyByAiOptType(item.optType) || currentModel.value?.key || "",
+          name: modelName,
+          updatedAt: normalizeAiModelTimestamp(
+            item.updateTime || item.updatedAt || item.createTime,
+            0
+          ),
+          fileName: item.fileName || getAiFileNameFromUrl(item.url, `${modelName}.zip`),
+          mimeType: item.mimeType || "application/octet-stream",
+          size: Number(item.size || 0),
+          ossId: item.ossId ? String(item.ossId) : "",
+          optType: item.optType || "",
+          url: item.url || "",
+        };
+      })
+      .sort(
+        (a: SavedAIModelListItem, b: SavedAIModelListItem) => b.updatedAt - a.updatedAt
+      );
+  } catch (error) {
+    console.error("加载AI模型列表失败:", error);
+    savedModels.value = [];
+  } finally {
+    savedModelsLoading.value = false;
+  }
+};
+
+const saveAIModelRecord = async (record: SavedAIModelRecord) => {
+  const db = await openAIModelDb();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(AI_MODEL_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(AI_MODEL_STORE_NAME);
+
+    store.put(record);
+    transaction.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    transaction.onerror = () => {
+      reject(transaction.error || new Error("保存本地模型失败"));
+    };
+  });
+};
+
+const getAIModelRecord = async (modelId: string) => {
+  const db = await openAIModelDb();
+
+  return new Promise<SavedAIModelRecord | null>((resolve, reject) => {
+    const transaction = db.transaction(AI_MODEL_STORE_NAME, "readonly");
+    const store = transaction.objectStore(AI_MODEL_STORE_NAME);
+    const request = store.get(modelId);
+
+    request.onsuccess = () =>
+      resolve((request.result as SavedAIModelRecord | undefined) || null);
+    request.onerror = () => reject(request.error || new Error("读取模型文件失败"));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () =>
+      reject(transaction.error || new Error("读取模型文件失败"));
+  });
+};
+
+const getTypeByToolKey = (toolKey: string) => {
+  const typeMap: Record<string, number> = {
+    imageClassModel: 1,
+    gestureClassModel: 2,
+    voiceClassModel: 3,
+    poseClassModel: 4,
+  };
+
+  return typeMap[toolKey] || 1;
+};
+
+const getSavedModelCover = (toolKey: string) => {
+  const coverMap: Record<string, string> = {
+    imageClassModel: aigcCover1,
+    gestureClassModel: aigcCover2,
+    voiceClassModel: aigcCover3,
+    poseClassModel: aigcCover4,
+  };
+
+  return coverMap[toolKey] || aigcCover1;
+};
+//http://192.168.0.199:8601/
+//https://pre.matatalab.com
+const getAiToolAccessToken = async () => {
+  const ssoData = await ssoLogin();
+  const accessToken = ssoData?.accessToken;
+  if (!accessToken) {
+    throw new Error("获取AI工具Token失败");
+  }
+
+  return accessToken;
+};
+
+const buildAIIframeUrl = async (toolKey: string, projectName: string) => {
+  const lang = locale.value === "zh" ? "zh" : "en";
+  const type = getTypeByToolKey(toolKey);
+  const aiToolToken = await getAiToolAccessToken();
+  return `http://192.168.0.199:8601/?token=${encodeURIComponent(
+    aiToolToken
+  )}&type=${type}&projectName=${encodeURIComponent(
+    projectName
+  )}&lang=${lang}&ch=aiedu&type2=opt`;
+};
+
+const getAIModelCacheKey = (toolKey: string, modelId: string) =>
+  `ai:${toolKey}:${modelId}`;
+
+const getAiOptTypeByToolKey = (toolKey: string) => {
+  const optTypeMap: Record<string, string> = {
+    imageClassModel: "image_cls",
+    voiceClassModel: "audio_cls",
+    poseClassModel: "pose_cls",
+    gestureClassModel: "gesture_cls",
+  };
+
+  return optTypeMap[toolKey] || "";
+};
+
+const getToolKeyByAiOptType = (optType?: string) => {
+  const toolKeyMap: Record<string, string> = {
+    image_cls: "imageClassModel",
+    audio_cls: "voiceClassModel",
+    pose_cls: "poseClassModel",
+    gesture_cls: "gestureClassModel",
+  };
+
+  return optType ? toolKeyMap[optType] || "" : "";
+};
+
+const getAiFileNameFromUrl = (url?: string, fallbackName = "project.zip") => {
+  if (!url) {
+    return fallbackName;
+  }
+
+  try {
+    const pathname = new URL(url).pathname;
+    const lastSegment = pathname.split("/").filter(Boolean).pop();
+    return lastSegment ? decodeURIComponent(lastSegment) : fallbackName;
+  } catch {
+    return fallbackName;
+  }
+};
+
+const normalizeAiModelTimestamp = (value: unknown, fallbackValue = Date.now()) => {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? fallbackValue : parsed;
+  }
+
+  return fallbackValue;
+};
+
+const getCurrentUserId = () => {
+  if (!import.meta.client) {
+    return "";
+  }
+
+  try {
+    const rawUserInfo = localStorage.getItem("user_info");
+    if (!rawUserInfo) {
+      return "";
+    }
+
+    const userInfo = JSON.parse(rawUserInfo);
+    return userInfo?.user_id || userInfo?.userId || userInfo?.id || "";
+  } catch {
+    return "";
+  }
+};
+
+const generateAIModelId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `ai-model-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
+
+const toUploadFile = (payload: unknown, fileName?: string) =>
+  toSharedUploadFile(payload, fileName);
+
+const uploadProjectFileToOSS = async (file: File) => {
+  const uploadResult = await uploadFileToOSS(file, "上传模型文件失败");
+  console.log("AI 模型文件上传响应:", uploadResult);
+  return uploadResult;
+};
+
+const parseIframeMessageData = (rawData: unknown) => parseMessageData(rawData);
+
+const postCachedZipToIframe = async () => {
+  const zipFile = currentToolCacheKey.value
+    ? savedProjectZipCache.get(currentToolCacheKey.value)
+    : null;
+  const postResult = await postFileBufferToIframe({
+    file: zipFile,
+    iframeUrl: currentIframeUrl.value,
+    iframeWindow: aiIframeRef.value?.contentWindow,
+    type: "ZIP_DATA",
+  });
+
+  if (postResult) {
+    console.log("已向 AI iframe 发送 ZIP_DATA:", {
+      cacheKey: currentToolCacheKey.value,
+      ...postResult,
+    });
+  }
+};
+
+const clearCloseIframeTimer = () => {
+  if (closeIframeTimer) {
+    window.clearTimeout(closeIframeTimer);
+    closeIframeTimer = null;
+  }
+};
+
+const finishCloseIframeModal = () => {
+  clearCloseIframeTimer();
+  isRequestingIframeClose.value = false;
+  isHandlingTmZip.value = false;
+  showIframeModal.value = false;
+  currentIframeUrl.value = "";
+  iframeLoading.value = true;
+  currentProjectName.value = "";
+  currentEditingModelId.value = "";
+  currentToolCacheKey.value = "";
+  currentModel.value = null;
+  savedModels.value = [];
+};
+
+const requestTmZipFromIframe = () => {
+  const iframeWindow = aiIframeRef.value?.contentWindow;
+  const iframeOrigin = getIframeOrigin(currentIframeUrl.value);
+  if (!iframeWindow || !iframeOrigin) {
+    return false;
+  }
+
+  const requestMessage = {
+    type: TM_ZIP_REQUEST_MESSAGE_TYPE,
+    event: TM_ZIP_REQUEST_MESSAGE_TYPE,
+    eventName: TM_ZIP_REQUEST_MESSAGE_TYPE,
+    name: TM_ZIP_REQUEST_MESSAGE_TYPE,
+  };
+
+  iframeWindow.postMessage(requestMessage, iframeOrigin);
+
+  iframeWindow.postMessage(TM_ZIP_REQUEST_MESSAGE_TYPE, iframeOrigin);
+
+  console.log("已向 AI iframe 请求 request-tm-zip:", {
+    origin: iframeOrigin,
+    cacheKey: currentToolCacheKey.value,
+    requestMessage,
+  });
+
+  return true;
+};
+
+const openAIIframe = async (tool: AICardItem, projectName: string, modelId: string) => {
+  try {
+    const iframeUrl = await buildAIIframeUrl(tool.key, projectName);
+    clearCloseIframeTimer();
+    isRequestingIframeClose.value = false;
+    isHandlingTmZip.value = false;
+    currentModel.value = tool;
+    currentProjectName.value = projectName;
+    currentEditingModelId.value = modelId;
+    currentToolCacheKey.value = getAIModelCacheKey(tool.key, modelId);
+    currentIframeUrl.value = iframeUrl;
+    iframeLoading.value = true;
+    showModelSelectModal.value = false;
+    showModal.value = false;
+    showIframeModal.value = true;
+  } catch (error) {
+    console.error("获取AI工具SSO登录信息失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "获取AI工具Token失败");
+  }
+};
+
+const formatSavedModelTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleString(locale.value === "zh" ? "zh-CN" : "en-US", {
+    hour12: false,
+  });
+};
+
+const handleIframeMessage = async (event: MessageEvent) => {
+  const iframeOrigin = getIframeOrigin(currentIframeUrl.value);
+  const sourceMatched =
+    !!aiIframeRef.value?.contentWindow &&
+    event.source === aiIframeRef.value.contentWindow;
+  const originMatched = !!iframeOrigin && event.origin === iframeOrigin;
+
+  if (isRequestingIframeClose.value) {
+    console.log("关闭阶段收到 window message:", {
+      origin: event.origin,
+      expectedOrigin: iframeOrigin,
+      sourceMatched,
+      originMatched,
+      data: event.data,
+    });
+  }
+
+  if (
+    !isMessageFromIframe({
+      event,
+      iframeWindow: aiIframeRef.value?.contentWindow,
+      iframeUrl: currentIframeUrl.value,
+    })
+  ) {
+    if (isRequestingIframeClose.value) {
+      console.warn("关闭阶段消息未通过 iframe 来源校验，已忽略:", {
+        origin: event.origin,
+        expectedOrigin: iframeOrigin,
+        sourceMatched,
+        originMatched,
+        data: event.data,
+      });
+    }
+    return;
+  }
+
+  const messageData = parseIframeMessageData(event.data) as any;
+  const messageType = getMessageType(messageData);
+  if (isRequestingIframeClose.value) {
+    console.log("收到 AI iframe 关闭阶段消息:", {
+      origin: event.origin,
+      type: messageType,
+      data: messageData,
+    });
+  }
+
+  if (messageType === TM_ZIP_RESOLVE_MESSAGE_TYPE) {
+    console.log("收到 AI iframe resolve-tm-zip 消息:", {
+      origin: event.origin,
+      data: messageData,
+    });
+    return;
+  }
+
+  if (
+    !messageData ||
+    (typeof messageData !== "object" && typeof messageData !== "string") ||
+    messageType !== TM_ZIP_RESPONSE_MESSAGE_TYPE
+  ) {
+    return;
+  }
+
+  try {
+    if (isHandlingTmZip.value) {
+      return;
+    }
+
+    isHandlingTmZip.value = true;
+    clearCloseIframeTimer();
+
+    const rawPayload = pickMessagePayload(messageData, [
+      "payload",
+      "data",
+      "file",
+      "blob",
+      "arrayBuffer",
+      "result",
+    ]);
+    const uploadFile = toUploadFile(rawPayload, pickMessageFileName(messageData));
+    if (!uploadFile) {
+      console.warn(
+        "收到 send-tm-zip 消息，但 payload 不是可上传的文件类型:",
+        messageData
+      );
+      return;
+    }
+
+    const formData = createUploadFormData(uploadFile);
+
+    const normalizedMessageData = {
+      ...messageData,
+      payload: uploadFile,
+      uploadFile,
+      formData,
+    };
+
+    let uploadResult = null;
+    try {
+      uploadResult = await uploadProjectFileToOSS(uploadFile);
+      console.log("收到 AI iframe send-tm-zip 消息并上传 OSS 成功:", {
+        ...normalizedMessageData,
+        uploadResult,
+      });
+    } catch (error) {
+      console.error("上传 AI 模型文件到 OSS 失败:", error);
+      ElMessage.error(error instanceof Error ? error.message : "上传模型文件失败");
+      return;
+    }
+
+    const ossId = uploadResult?.ossId;
+    const userId = getCurrentUserId();
+    const optType = currentModel.value
+      ? getAiOptTypeByToolKey(currentModel.value.key)
+      : "";
+    const optName = currentProjectName.value || uploadFile.name;
+    let persistedModelId = currentEditingModelId.value;
+
+    if (!ossId || !userId || !optType) {
+      console.warn("createAi 参数不完整，已跳过创建:", {
+        ossId,
+        userId,
+        optType,
+        optName,
+      });
+    } else {
+      try {
+        const createResult = await createAi({
+          optName,
+          optType,
+          userId,
+          ossId,
+        });
+        uploadResult = {
+          ...uploadResult,
+          createResult,
+        };
+        persistedModelId = String(
+          createResult?.optId || createResult?.id || currentEditingModelId.value
+        );
+        if (currentModel.value && persistedModelId) {
+          currentEditingModelId.value = persistedModelId;
+          currentToolCacheKey.value = getAIModelCacheKey(
+            currentModel.value.key,
+            persistedModelId
+          );
+        }
+        console.log("AI 模型创建成功:", createResult);
+        ElMessage.success("创建成功");
+      } catch (error) {
+        console.error("调用 createAi 失败:", error);
+      }
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("tool-send-tm-zip", {
+        detail: {
+          ...normalizedMessageData,
+          uploadResult,
+        },
+      })
+    );
+
+    if (
+      !currentModel.value ||
+      !currentEditingModelId.value ||
+      !currentProjectName.value
+    ) {
+      console.warn("AI 模型上下文不完整，已完成下载和事件派发，但未写入本地模型列表");
+      return;
+    }
+
+    if (currentToolCacheKey.value) {
+      savedProjectZipCache.set(currentToolCacheKey.value, uploadFile);
+    }
+
+    try {
+      await saveAIModelRecord({
+        id: persistedModelId,
+        toolKey: currentModel.value.key,
+        name: currentProjectName.value,
+        updatedAt: Date.now(),
+        fileName: uploadFile.name,
+        mimeType: uploadFile.type,
+        size: uploadFile.size,
+        zipBlob: uploadFile,
+        ossId: ossId ? String(ossId) : "",
+        optType,
+      });
+
+      await loadSavedModels();
+    } catch (error) {
+      console.error("保存本地模型失败:", error);
+      ElMessage.error(t("ai.modelSaveFailed"));
+    }
+  } finally {
+    isHandlingTmZip.value = false;
+    if (isRequestingIframeClose.value) {
+      finishCloseIframeModal();
+    }
+  }
+};
+
+const handleCardClick = async (item: AICardItem) => {
+  if (isComingSoon(item)) return;
+
+  currentModel.value = item;
+  modelName.value = "";
+  savedModels.value = [];
+  showModelSelectModal.value = true;
+  await loadSavedModels();
+};
+
+const closeModelSelectModal = () => {
+  showModelSelectModal.value = false;
+  currentModel.value = null;
+  modelName.value = "";
+  savedModels.value = [];
+};
+
+const openCreateModelModal = () => {
+  modelName.value = "";
+  showModelSelectModal.value = false;
+  showModal.value = true;
+};
+
+const closeCreateModal = () => {
+  showModal.value = false;
+  modelName.value = "";
+  if (currentModel.value) {
+    showModelSelectModal.value = true;
+    return;
+  }
+
+  savedModels.value = [];
+};
+
+const handleConfirm = async () => {
+  if (!currentModel.value) {
+    return;
+  }
+
+  const trimmedName = modelName.value.trim();
+  if (!trimmedName) {
+    ElMessage.warning(t("ai.inputModelName"));
+    return;
+  }
+
+  await openAIIframe(currentModel.value, trimmedName, generateAIModelId());
+};
+
+const handleOpenSavedModel = async (item: SavedAIModelListItem) => {
+  if (!currentModel.value) {
+    return;
+  }
+
+  try {
+    await updateAi({
+      optId: item.id,
+    });
+
+    const cacheKey = getAIModelCacheKey(item.toolKey, item.id);
+    const cachedFile = savedProjectZipCache.get(cacheKey);
+    if (cachedFile) {
+      await openAIIframe(currentModel.value, item.name, item.id);
+      return;
+    }
+
+    const localRecord = await getAIModelRecord(item.id);
+    if (localRecord) {
+      const localFile = new File([localRecord.zipBlob], localRecord.fileName, {
+        type: localRecord.mimeType || "application/octet-stream",
+        lastModified: localRecord.updatedAt,
+      });
+
+      savedProjectZipCache.set(cacheKey, localFile);
+      await openAIIframe(currentModel.value, item.name, item.id);
+      return;
+    }
+
+    ElMessage.error(t("ai.loadModelFailed"));
+  } catch (error) {
+    console.error("读取AI模型文件失败:", error);
+    ElMessage.error(t("ai.loadModelFailed"));
+  }
+};
+
+const handleDeleteSavedModel = async (item: SavedAIModelListItem) => {
+  try {
+    await ElMessageBox.confirm(`确认删除模型“${item.name}”吗？`, "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+  } catch {
+    return;
+  }
+
+  try {
+    await deleteAi(item.id);
+    savedModels.value = savedModels.value.filter((model) => model.id !== item.id);
+    ElMessage.success("删除成功");
+  } catch (error) {
+    console.error("删除AI模型失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "删除失败");
+  }
+};
 
 const closeIframeModal = () => {
-  showIframeModal.value = false
-  currentIframeUrl.value = ''
-  iframeLoading.value = true
-}
+  if (isRequestingIframeClose.value || isHandlingTmZip.value) {
+    return;
+  }
+
+  const requested = requestTmZipFromIframe();
+  if (!requested) {
+    finishCloseIframeModal();
+    return;
+  }
+
+  isRequestingIframeClose.value = true;
+  clearCloseIframeTimer();
+  closeIframeTimer = window.setTimeout(() => {
+    if (!isRequestingIframeClose.value) {
+      return;
+    }
+
+    console.warn("等待 AI iframe 返回 send-tm-zip 超时，已直接关闭弹窗");
+    finishCloseIframeModal();
+  }, TM_ZIP_REQUEST_TIMEOUT);
+};
 
 const onIframeLoad = () => {
-  iframeLoading.value = false
-}
+  iframeLoading.value = false;
+  window.setTimeout(() => {
+    void postCachedZipToIframe();
+  }, 300);
+};
 
 onMounted(() => {
   setTimeout(() => {
-    pageLoading.value = false
-  }, 300)
+    pageLoading.value = false;
+  }, 300);
   nextTick(() => {
-    checkAllArrows()
-  })
-  window.addEventListener('resize', checkAllArrows)
-})
+    checkAllArrows();
+  });
+  window.addEventListener("resize", checkAllArrows);
+  window.addEventListener("message", handleIframeMessage);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('resize', checkAllArrows)
-})
+  window.removeEventListener("resize", checkAllArrows);
+  window.removeEventListener("message", handleIframeMessage);
+});
 </script>
 
 <style scoped>
 .ai-center-page {
   height: calc(100vh - 70px);
-  background: #F5F5F5;
+  background: #f5f5f5;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -524,7 +1547,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 20px 30px;
-  background: #F5F5F5;
+  background: #f5f5f5;
   flex-shrink: 0;
 }
 
@@ -540,7 +1563,7 @@ onUnmounted(() => {
   gap: 6px;
   background: white;
   color: #666;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 6px;
   padding: 8px 16px;
   font-size: 13px;
@@ -549,8 +1572,8 @@ onUnmounted(() => {
 }
 
 .material-btn:hover {
-  border-color: #FF9900;
-  color: #FF9900;
+  border-color: #ff9900;
+  color: #ff9900;
 }
 
 .content-area {
@@ -564,11 +1587,11 @@ onUnmounted(() => {
   border-radius: 12px;
   padding: 24px 30px;
   margin-bottom: 24px;
-  border: 1px solid #F0F0F0;
+  border: 1px solid #f0f0f0;
 }
 
 .section-highlight {
-  background: #FFFBF5;
+  background: #fffbf5;
 }
 
 .section-header {
@@ -636,7 +1659,7 @@ onUnmounted(() => {
   height: 32px;
   border-radius: 50%;
   background: white;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -647,8 +1670,8 @@ onUnmounted(() => {
 }
 
 .slider-arrow:hover {
-  border-color: #FF9900;
-  color: #FF9900;
+  border-color: #ff9900;
+  color: #ff9900;
 }
 
 .slider-arrow-left {
@@ -666,7 +1689,7 @@ onUnmounted(() => {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   border-radius: 12px;
   overflow: hidden;
-  border: 1px solid #EDEDED;
+  border: 1px solid #ededed;
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
@@ -674,7 +1697,7 @@ onUnmounted(() => {
 .ai-card:hover {
   transform: translateY(-6px);
   box-shadow: 0 12px 20px rgba(0, 0, 0, 0.08);
-  border-color: #FF9900;
+  border-color: #ff9900;
 }
 
 .card-cover {
@@ -685,7 +1708,7 @@ onUnmounted(() => {
 }
 
 .card-cover-default {
-  background: linear-gradient(135deg, #7FDBDA 0%, #B8E994 100%);
+  background: linear-gradient(135deg, #7fdbda 0%, #b8e994 100%);
   aspect-ratio: 4/3;
 }
 
@@ -722,7 +1745,7 @@ onUnmounted(() => {
 }
 
 .hover-btn {
-  background: #FF9900;
+  background: #ff9900;
   color: white;
   border: none;
   border-radius: 20px;
@@ -734,7 +1757,7 @@ onUnmounted(() => {
 }
 
 .hover-btn:hover {
-  background: #E68A00;
+  background: #e68a00;
   transform: scale(1.05);
 }
 
@@ -744,13 +1767,13 @@ onUnmounted(() => {
   color: #333;
   text-align: center;
   padding: 14px 8px;
-  border-top: 1px solid #F0F0F0;
+  border-top: 1px solid #f0f0f0;
   background: white;
   transition: color 0.3s;
 }
 
 .ai-card:hover .card-name {
-  color: #FF9900;
+  color: #ff9900;
 }
 
 /* 响应式 */
@@ -782,6 +1805,33 @@ onUnmounted(() => {
     flex: 0 0 140px;
     width: 140px;
   }
+  .model-select-modal {
+    width: calc(100vw - 24px);
+  }
+  .model-select-body,
+  .modal-body,
+  .modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  .model-select-section-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .model-select-create-btn,
+  .btn-confirm,
+  .btn-cancel {
+    width: 100%;
+  }
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+  .model-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+  .model-card-cover {
+    height: 82px;
+  }
 }
 
 /* 弹窗样式 */
@@ -805,8 +1855,12 @@ onUnmounted(() => {
   animation: modalFadeIn 0.3s ease;
 }
 
+.model-select-modal {
+  width: 620px;
+}
+
 .modal-header {
-  background: #FF9900; /* 主题色 */
+  background: #ff9900; /* 主题色 */
   padding: 16px 24px;
   display: flex;
   align-items: center;
@@ -838,6 +1892,175 @@ onUnmounted(() => {
   padding: 40px 48px;
 }
 
+.model-select-body {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.model-select-section {
+  border: 1px solid #f0e4d0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9f0 100%);
+}
+
+.model-select-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.model-select-section-head--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.model-select-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.model-select-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.model-select-section-desc {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8a6a3f;
+}
+
+.model-select-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #fff1d9;
+  color: #ff9900;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-select-create-btn {
+  width: auto;
+  min-width: 120px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.model-card-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.model-card {
+  position: relative;
+  text-align: left;
+  border: 1px solid #f3d7a7;
+  border-radius: 14px;
+  background: white;
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.model-card:hover {
+  border-color: #ff9900;
+  box-shadow: 0 10px 18px rgba(255, 153, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.model-card-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  min-width: 52px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 77, 79, 0.92);
+  color: white;
+  font-size: 12px;
+  line-height: 28px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(-4px);
+}
+
+.model-card:hover .model-card-delete {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.model-card-delete:hover {
+  background: #ff4d4f;
+}
+
+.model-card-cover {
+  background: #f3f3f3;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.model-card-body {
+  padding: 10px 12px 12px;
+}
+
+.model-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-card-time {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #999;
+}
+
+.model-list-empty {
+  margin-top: 16px;
+  border: 1px dashed #e5d3b6;
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+  background: rgba(255, 255, 255, 0.7);
+}
+
 .form-item {
   display: flex;
   align-items: center;
@@ -854,7 +2077,7 @@ onUnmounted(() => {
 .form-input {
   flex: 1;
   height: 40px;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 4px;
   padding: 0 12px;
   font-size: 14px;
@@ -863,7 +2086,7 @@ onUnmounted(() => {
 }
 
 .form-input:focus {
-  border-color: #FF9900;
+  border-color: #ff9900;
 }
 
 .modal-footer {
@@ -873,8 +2096,12 @@ onUnmounted(() => {
   gap: 16px;
 }
 
+.modal-footer--single {
+  padding-top: 0;
+}
+
 .btn-confirm {
-  background: #FF9900;
+  background: #ff9900;
   color: white;
   border: none;
   border-radius: 4px;
@@ -886,13 +2113,13 @@ onUnmounted(() => {
 }
 
 .btn-confirm:hover {
-  background: #E68A00;
+  background: #e68a00;
 }
 
 .btn-cancel {
   background: white;
   color: #666;
-  border: 1px solid #E5E5E5;
+  border: 1px solid #e5e5e5;
   border-radius: 4px;
   width: 120px;
   height: 40px;
@@ -927,7 +2154,7 @@ onUnmounted(() => {
 
 .cs-rocket {
   font-size: 28px;
-  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .cs-text {

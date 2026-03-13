@@ -163,7 +163,7 @@ import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
 
 const props = defineProps<{
   modelValue: boolean
-  resourceId?: string | null
+  exerciseId?: string | null
   taskId?: string | null
 }>()
 
@@ -329,9 +329,9 @@ const fetchDetail = async () => {
       // 学生答题详情模式
       const data = await getTaskIdDetail(props.taskId)
       taskDetailData.value = data
-    } else if (props.resourceId) {
+    } else if (props.exerciseId) {
       // 任务文件详情模式
-      exerciseData.value = await getExerciseDetail(props.resourceId)
+      exerciseData.value = await getExerciseDetail(props.exerciseId)
     }
   } catch (error) {
     console.error('获取详情失败', error)
@@ -341,7 +341,7 @@ const fetchDetail = async () => {
 }
 
 watch(() => props.modelValue, (val) => {
-  if (val && (props.resourceId || props.taskId)) {
+  if (val && (props.exerciseId || props.taskId)) {
     fetchDetail()
   }
 })

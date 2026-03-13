@@ -27,8 +27,8 @@
           <div class="bg-[#FFFFFF] shadow-sm flex-1 flex flex-col min-h-0">
             <div v-if="myTreeData.length || otherTreeData.length" class="flex-1 overflow-y-auto p-2">
               <!-- 我的班级 -->
+              <div class="text-[15px] font-bold text-[#333] px-2 py-2">{{ $t('class.myClass') }}</div>
               <template v-if="myTreeData.length">
-                <div class="text-[15px] font-bold text-[#333] px-2 py-2">{{ $t('class.myClass') }}</div>
                 <MTree :data="myTreeData" :selected-key="selectedClass?.id" :expanded-keys="expandedKeys" label-key="name"
                   :children-key="'children'" @select="handleTreeSelect" @expand="handleTreeExpand">
                   <template #actions="{ node }">
@@ -44,9 +44,10 @@
                   </template>
                 </MTree>
               </template>
+              <p v-else class="px-2 pb-2 text-sm text-gray-400">{{ $t('teacher.noClass') }}</p>
               <!-- 其他教师班级 -->
               <template v-if="otherTreeData.length">
-                <div class="border-t border-gray-200 my-2" v-if="myTreeData.length"></div>
+                <div class="border-t border-gray-200 my-2"></div>
                 <div class="text-[15px] font-bold text-[#333] px-2 py-2">{{ $t('class.otherClass') }}</div>
                 <MTree :data="otherTreeData" :selected-key="selectedClass?.id" :expanded-keys="expandedKeys" label-key="name"
                   :children-key="'children'" @select="handleTreeSelect" @expand="handleTreeExpand">
@@ -88,9 +89,9 @@
           <!-- 顶部区域：Tab标题 + 人数 -->
           <div class="flex items-center justify-between gap-4 mb-4 flex-shrink-0 min-w-0">
             <MTabs v-model="teacherActiveTab" :tabs="teacherTabList" class="flex-shrink-0" />
-            <span class="text-sm text-gray-500 whitespace-nowrap flex-shrink-0">{{
+            <span class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap flex-shrink-0">{{
               $t('user.teacherCount') }}<span class="text-[#FF9900] font-medium ml-1">{{ teacherPagination.total
-                }}</span> <span class="text-[#FF9900] font-medium">{{ $t('schoolAdmin.person') }}</span></span>
+                }}</span> <span>{{ $t('schoolAdmin.person') }}</span></span>
           </div>
 
           <!-- 主内容区 -->
@@ -237,11 +238,12 @@
           <!-- Tab 切换 - 固定 -->
           <div class="mb-4 flex-shrink-0 flex items-center justify-between gap-4 min-w-0">
             <MTabs v-model="activeTab" :tabs="tabList" class="flex-shrink-0" @change="handleTabChange" />
-            <span class="text-xs sm:text-sm text-gray-500 whitespace-nowrap flex-shrink-0">
+            <span class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap flex-shrink-0">
               {{ activeTab === 'student' ? $t('class.studentCount') : $t('class.groupCount') }}
               <span class="text-[#FF9900] font-medium ml-1">
-                {{ activeTab === 'student' ? studentList.length : groupList.length }}{{ activeTab === 'student' ? $t('class.person') : $t('class.groupUnit') }}
+                {{ activeTab === 'student' ? studentList.length : groupList.length }}
               </span>
+              <span>{{ activeTab === 'student' ? $t('class.person') : $t('class.groupUnit') }}</span>
             </span>
           </div>
 
@@ -466,7 +468,7 @@
               <!-- 左侧：搜索框 -->
               <div class="flex items-center gap-3 w-full sm:w-auto">
                 <MInput v-model="groupSearchKeyword" :placeholder="$t('user.searchGroupPlaceholder')" clearable
-                  class="w-full sm:w-[140px] lg:w-[150px] xl:w-[180px] 3xl:w-[220px] 2xl:w-[240px]"
+                  class="w-full sm:w-[220px] lg:w-[240px] xl:w-[280px] 2xl:w-[300px]"
                   @enter="handleGroupSearch" @clear="handleGroupSearch">
                   <template #prefix>
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -505,7 +507,7 @@
                 @select="handleGroupSelect" @select-all="handleGroupSelectAll">
                 <template #teamName="{ row }">
                   <div class="tooltip-wrapper group relative">
-                    <span class="truncate block max-w-[60px]">{{ row.teamName || '-' }}</span>
+                    <span class="truncate block max-w-[100px]">{{ row.teamName || '-' }}</span>
                     <div v-if="row.teamName" class="tooltip-content">
                       {{ row.teamName }}
                       <span class="tooltip-arrow"></span>
@@ -541,7 +543,7 @@
                 </template>
                 <template #createTime="{ row }">
                   <div class="tooltip-wrapper group relative">
-                    <span class="truncate block max-w-[100px]">{{ row.createTime || '-' }}</span>
+                    <span class="block whitespace-nowrap min-w-[152px]">{{ row.createTime || '-' }}</span>
                     <div v-if="row.createTime" class="tooltip-content">
                       {{ row.createTime }}
                       <span class="tooltip-arrow"></span>
@@ -671,15 +673,19 @@
               v-model="teacherForm.teacherName" 
               type="text"
               :placeholder="$t('user.inputTeacherName')"
+              :maxlength="isEditTeacher ? undefined : 10"
               class="w-full h-[50px] px-4 border border-[#E5E5E5] rounded-full text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
             />
             <div class="flex items-center h-[50px] border border-[#E5E5E5] rounded-full bg-white">
               <div class="px-4 border-r border-[#E5E5E5] h-full flex items-center">
-                <CountryCodeSelector v-model="teacherForm.countryCode" />
+                <CountryCodeSelector ref="countryCodeRef" v-model="teacherForm.countryCode" @change="handleTeacherCountryChange" />
               </div>
               <input 
                 v-model="teacherForm.phone" 
                 type="tel" 
+                inputmode="numeric"
+                :maxlength="phoneMaxLength"
+                @input="handleTeacherPhoneInput"
                 :placeholder="$t('user.inputTeacherPhone')"
                 class="flex-1 h-full px-3 text-[15px] text-[#333] placeholder-[#999] outline-none bg-transparent rounded-r-full"
               />
@@ -932,7 +938,7 @@
         </template>
         <template v-else>
           <div class="flex flex-col items-center gap-3 flex-1">
-            <MInput v-model="createForm.name" :placeholder="t('class.studentName')" class="w-[275px]" />
+            <MInput v-model="createForm.name" :placeholder="t('class.studentName')" class="w-[275px]" maxlength="10" />
             <p class="text-sm text-gray-400">{{ $t('user.studentDefaultPasswordIs') }}{{ studentPassword }}</p>
           </div>
         </template>
@@ -1044,7 +1050,7 @@
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.transferStudent') }}</h3>
         <div class="space-y-4 px-2">
-          <MSelect v-model="transferForm.gradeId" :options="gradeOptions" :placeholder="t('class.selectGrade')"
+          <MSelect v-model="transferForm.gradeId" :options="studentTransferGradeOptions" :placeholder="t('class.selectGrade')"
             @update:model-value="handleStudentTransferGradeChange" />
           <MSelect v-model="transferForm.classId" :options="studentTransferClassOptions" :placeholder="t('class.selectClass')"
             :disabled="!transferForm.gradeId" @change="handleTransferClassChange" />
@@ -1071,7 +1077,7 @@
         </button>
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center px-4">
-          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmDeleteStudent', { name: deletingStudent?.name }) }}</p>
+          <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmDeleteStudent', { name: deletingStudent?.studentName || deletingStudent?.name || '-' }) }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
@@ -1195,7 +1201,7 @@
         <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('class.batchTransfer') }}</h3>
         <p class="text-sm text-gray-500 text-center mb-4">{{ $t('user.batchTransferTip', { count: selectedStudentIds.length }) }}</p>
         <div class="space-y-4 px-2">
-          <MSelect v-model="batchTransferForm.gradeId" :options="gradeOptions" :placeholder="t('class.selectGrade')"
+          <MSelect v-model="batchTransferForm.gradeId" :options="studentTransferGradeOptions" :placeholder="t('class.selectGrade')"
             @update:model-value="handleBatchTransferGradeChange" />
           <MSelect v-model="batchTransferForm.classId" :options="batchTransferClassOptions" :placeholder="t('class.selectClass')"
             :disabled="!batchTransferForm.gradeId" />
@@ -1282,7 +1288,7 @@
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="text-red-500">*</span>
               <span class="text-[#4D4D4D]">{{ $t('user.groupName') }}：</span>
-              <MInput v-model="groupForm.name" :placeholder="t('class.pleaseInputGroupName')" class="w-[280px]" />
+              <MInput v-model="groupForm.name" :placeholder="t('class.pleaseInputGroupName')" maxlength="10" class="w-[280px]" />
             </div>
             <div class="flex items-center gap-2 whitespace-nowrap">
               <span class="text-transparent">*</span>
@@ -1442,7 +1448,7 @@ const currentUserName = computed(() => user.value?.nickName || user.value?.userN
 const {
   getGradeDict,
   getClassList,
-  getClassByGrade,
+  getGradeClassList,
   createClass,
   updateClass,
   deleteClass,
@@ -1525,6 +1531,8 @@ const showTransferTeacherModal = ref(false)
 const isEditTeacher = ref(false)
 const addTeacherTab = ref<'import' | 'manual'>('import')
 const teacherForm = reactive({ id: '', orgId: '', teacherName: '', phone: '', countryCode: '86' })
+const countryCodeRef = ref<any>(null)
+const phoneMaxLength = ref(11)
 const deleteTeacherConfirmText = ref('')
 const deleteTeacherIds = ref<string[]>([])
 const deleteTeacherPassword = ref('')
@@ -1541,6 +1549,24 @@ const importTeacherFileName = ref('')
 const transferTeacherForm = reactive({ teacherId: '', teacherName: '', targetTeacherId: '' as string | null })
 const transferTeacherOptions = ref<Teacher[]>([])
 const transferTeacherSearch = ref('')
+
+const getPhoneMaxLength = (countryCode: string) => {
+  const countries = countryCodeRef.value?.countries || []
+  const matched = countries.find((country: any) => country.code === countryCode)
+  return Number(matched?.maxLength) || 11
+}
+
+const handleTeacherPhoneInput = (event: Event) => {
+  const value = (event.target as HTMLInputElement).value
+    .replace(/\D/g, '')
+    .slice(0, phoneMaxLength.value)
+  teacherForm.phone = value
+}
+
+const handleTeacherCountryChange = (country: any) => {
+  phoneMaxLength.value = Number(country?.maxLength) || 11
+  teacherForm.phone = (teacherForm.phone || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
+}
 
 // 班级转让教师列表列配置
 const transferTeacherColumns = computed(() => [
@@ -1592,7 +1618,8 @@ const handleTransferGradeChange = async (gradeId: string | number | null) => {
     })
     transferClassOptions.value = (classList || []).map((c: any) => ({
       id: c.classId || c.id,
-      name: c.className || c.name
+      name: c.teacherName ? `${c.className || c.name}(${c.teacherName})` : (c.className || c.name),
+      className: c.className || c.name
     }))
   } catch (error) {
     transferClassOptions.value = []
@@ -1613,7 +1640,7 @@ const fetchTeacherList = async () => {
     teacherList.value = result.list
     teacherPagination.total = result.total
   } catch (error: any) {
-    ElMessage.error(error.message || '获取教师列表失败')
+    console.error('获取教师列表失败:', error)
   } finally {
     teacherLoading.value = false
   }
@@ -1669,6 +1696,8 @@ const handleCreateTeacher = () => {
   teacherForm.id = ''
   teacherForm.teacherName = ''
   teacherForm.phone = ''
+  teacherForm.countryCode = '86'
+  phoneMaxLength.value = getPhoneMaxLength(teacherForm.countryCode)
   importTeacherFile.value = null
   importTeacherFileName.value = ''
   showTeacherModal.value = true
@@ -1678,7 +1707,9 @@ const handleEditTeacher = (row: Teacher) => {
   isEditTeacher.value = true
   teacherForm.id = row.userId
   teacherForm.teacherName = row.nickName
-  teacherForm.phone = row.phonenumber
+  teacherForm.countryCode = (row as any).countryCode || '86'
+  phoneMaxLength.value = getPhoneMaxLength(teacherForm.countryCode)
+  teacherForm.phone = (row.phonenumber || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
   showTeacherModal.value = true
 }
 
@@ -1704,16 +1735,25 @@ const triggerTeacherFileInput = () => {
 const handleConfirmTeacher = async () => {
   // 编辑模式或手动添加模式
   if (isEditTeacher.value || addTeacherTab.value === 'manual') {
-    if (!teacherForm.teacherName.trim()) { ElMessage.warning(t('user.pleaseInputTeacherName')); return }
+    const teacherName = teacherForm.teacherName.trim()
+    if (!teacherName) { ElMessage.warning(t('user.pleaseInputTeacherName')); return }
+    if (!isEditTeacher.value && teacherName.length > 10) { ElMessage.warning(t('auth.nameLengthLimit')); return }
     if (!teacherForm.phone.trim()) { ElMessage.warning(t('user.pleaseInputPhone')); return }
+    if (countryCodeRef.value) {
+      const validation = countryCodeRef.value.validatePhone(teacherForm.phone.trim())
+      if (!validation.valid) {
+        ElMessage.warning(t(validation.message))
+        return
+      }
+    }
     try {
       if (isEditTeacher.value) {
-        await schoolUserApi.updateTeacher({ userId: teacherForm.id, nickName: teacherForm.teacherName, phonenumber: teacherForm.phone })
+        await schoolUserApi.updateTeacher({ userId: teacherForm.id, nickName: teacherName, phonenumber: teacherForm.phone, countryCode: teacherForm.countryCode })
         ElMessage.success(t('common.editSuccess'))
       } else {
         // 获取第一个组织的 id 作为 orgId
         const orgId = schoolList.value?.[0]?.id || ''
-        await schoolUserApi.createTeacher({ orgId, nickName: teacherForm.teacherName, phonenumber: teacherForm.phone })
+        await schoolUserApi.createTeacher({ orgId, nickName: teacherName, phonenumber: teacherForm.phone, countryCode: teacherForm.countryCode })
         ElMessage.success(t('common.createSuccess'))
       }
       showTeacherModal.value = false
@@ -1769,7 +1809,9 @@ const handleConfirmDeleteTeacher = async () => {
       exitTeacherBatchMode()
     }
     fetchTeacherList()
-  } catch (error: any) { ElMessage.error(error.message || t('common.failed')) }
+  } catch (error: any) {
+    console.error('删除教师失败:', error)
+  }
 }
 
 const handleResetTeacherPassword = (row: Teacher) => {
@@ -1807,7 +1849,9 @@ const handleConfirmResetTeacher = async () => {
     showResetTeacherModal.value = false
     resetTeacherPassword.value = ''
     showResetTeacherPassword.value = false
-  } catch (error: any) { ElMessage.error(error.message || t('user.resetPasswordFailed')) }
+  } catch (error: any) {
+    console.error('重置教师密码失败:', error)
+  }
 }
 
 const handleImportTeacher = () => { importTeacherFile.value = null; importTeacherFileName.value = ''; showImportTeacherModal.value = true }
@@ -1855,7 +1899,9 @@ const handleConfirmImportTeacher = async () => {
     const orgId = schoolList.value?.[0]?.id || ''
     await schoolUserApi.importTeacher(importTeacherFile.value, orgId)
     ElMessage.success(t('common.importSuccess')); showImportTeacherModal.value = false; fetchTeacherList()
-  } catch (error: any) { ElMessage.error(error.message || t('common.importFailed')) }
+  } catch (error: any) {
+    console.error('导入教师失败:', error)
+  }
 }
 
 const handleTransferTeacherClass = async (row: Teacher) => {
@@ -1901,12 +1947,14 @@ const handleConfirmTransferTeacher = async () => {
       targetTeacherId: transferTeacherForm.targetTeacherId as string,  // 目标老师（接收班级的）
       classId: transferClassForm.classId,
       schoolId: schoolList.value?.[0]?.id || '',
-      className: selectedClass?.name || ''
+      className: selectedClass?.className || ''
     })
     ElMessage.success(t('user.classTransferSuccess'))
     showTransferTeacherModal.value = false
     fetchTeacherList()
-  } catch (error: any) { ElMessage.error(error.message || t('user.classTransferFailed')) }
+  } catch (error: any) {
+    console.error('转让班级失败:', error)
+  }
 }
 
 // ==================== 班级管理相关（从class页面复制） ====================
@@ -1968,11 +2016,11 @@ const groupActiveAction = ref<GroupActionType>(null);
 
 // 小组表格列配置
 const groupTableColumns = computed(() => [
-  { key: "teamName", title: t('class.groupName'), minWidth: "80px" },
+  { key: "teamName", title: t('class.groupName'), minWidth: "120px" },
   { key: "leaderName", title: t('class.groupLeader'), minWidth: "60px" },
   { key: "members", title: t('class.groupMembers'), minWidth: "100px" },
   { key: "remarks", title: t('class.groupRemarks'), minWidth: "100px" },
-  { key: "createTime", title: t('class.createTime'), minWidth: "120px" },
+  { key: "createTime", title: t('class.createTime'), minWidth: "170px" },
   { key: "action", title: t('common.operation'), width: "100px", align: "center" as const },
 ]);
 
@@ -2077,6 +2125,7 @@ const transferForm = reactive({
   teacherId: null as string | null,
 });
 const transferClassList = ref<any[]>([]);
+const studentTransferGradeClassData = ref<any[]>([]);
 
 // 删除学生确认弹窗
 const showDeleteStudentModal = ref(false);
@@ -2106,6 +2155,12 @@ const newPassword = ref("");
 
 // 年级选项
 const gradeOptions = ref<{ label: string; value: string }[]>([]);
+const studentTransferGradeOptions = computed(() =>
+  studentTransferGradeClassData.value.map((item: any) => ({
+    label: item.gradeName,
+    value: String(item.grade),
+  }))
+);
 
 // 批量选择
 const selectedStudentIds = ref<string[]>([]);
@@ -2140,7 +2195,11 @@ const loadGradeOptions = async () => {
   }
 };
 
-const buildGradeTree = (gradeList: any[], prefix: string) => {
+const buildGradeTree = (
+  gradeList: any[],
+  prefix: string,
+  isOwnedByCurrentAccount = true
+) => {
   return (gradeList || []).map((item: any) => ({
     id: `${prefix}_grade_${item.grade}`,
     name: item.gradeName,
@@ -2152,6 +2211,7 @@ const buildGradeTree = (gradeList: any[], prefix: string) => {
       teacherName: cls.teacherName,
       grade: item.grade,
       gradeName: item.gradeName,
+      isOwnedByCurrentAccount,
     })),
   }));
 };
@@ -2161,7 +2221,11 @@ const buildOtherTeacherTree = (teacherList: any[]) => {
     id: `other_teacher_${teacher.teacherId}`,
     name: teacher.teacherName,
     teacherId: teacher.teacherId,
-    children: buildGradeTree(teacher.gradeClassList || [], `other_${teacher.teacherId}`),
+    children: buildGradeTree(
+      teacher.gradeClassList || [],
+      `other_${teacher.teacherId}`,
+      false
+    ),
   }));
 };
 
@@ -2356,7 +2420,7 @@ const handleConfirmDeleteClass = async () => {
   if (!deletingClass.value) { showDeleteClassModal.value = false; return; }
   try {
     await deleteClass(deletingClass.value.id);
-    ElMessage.success(t('user.deletedClass', { name: deletingClass.value.name }));
+    ElMessage.success(t('class.deletedClass', { name: deletingClass.value.name }));
     await loadClassList();
   } catch (error) {
     console.error("删除班级失败:", error);
@@ -2416,15 +2480,93 @@ const handleConfirmCreateClass = async () => {
 };
 
 const handleSearch = () => { loadStudentList(); };
-const handleCreateAction = () => { showCreateModal.value = true; };
+const noClassDataWarning = "当前无班级数据，请先创建班级";
+const noStudentDataWarning = "当前无学生数据，请先创建学生";
+const otherAccountClassWarning = "只能对当前账号创建的班级进行操作";
+
+const hasAnyClassData = computed(() =>
+  treeData.value.some(
+    (node: any) => Array.isArray(node.children) && node.children.length > 0
+  )
+);
+
+const ensureClassDataReady = () => {
+  if (hasAnyClassData.value) {
+    return true;
+  }
+  ElMessage.warning(noClassDataWarning);
+  return false;
+};
+
+const handleCreateAction = () => {
+  if (!ensureClassDataReady()) {
+    return;
+  }
+  showCreateModal.value = true;
+};
+
+const checkCurrentClassHasStudents = async () => {
+  const classId = selectedClass.value?.id;
+  if (!classId) return false;
+
+  if (!searchKeyword.value?.trim()) {
+    return studentList.value.length > 0;
+  }
+
+  try {
+    const data = await getStudentList({ classId });
+    return Array.isArray(data) ? data.length > 0 : !!data?.length;
+  } catch (error) {
+    console.error("检查班级学生数据失败:", error);
+    return studentList.value.length > 0;
+  }
+};
+
+const ensureStudentActionReady = async (options?: {
+  openCreateModalOnEmptyStudent?: boolean;
+}) => {
+  if (!ensureClassDataReady()) {
+    return false;
+  }
+
+  if (!selectedClass.value?.id) {
+    ElMessage.warning(t('class.pleaseSelectClassFirst'));
+    return false;
+  }
+
+  const hasStudents = await checkCurrentClassHasStudents();
+  if (hasStudents) {
+    return true;
+  }
+
+  ElMessage.warning(noStudentDataWarning);
+  if (options?.openCreateModalOnEmptyStudent) {
+    showCreateModal.value = true;
+  }
+  return false;
+};
+
+const ensureSelectedClassOwnedByCurrentAccount = () => {
+  if (selectedClass.value?.isOwnedByCurrentAccount !== false) {
+    return true;
+  }
+
+  ElMessage.warning(otherAccountClassWarning);
+  return false;
+};
 
 // 快捷登录
 const handleQuickLogin = async () => {
   if (isCurrentClassQuickLogin.value) {
     showDisableQuickLoginModal.value = true;
   } else if (!isOtherClassQuickLogin.value) {
-    if (studentList.value.length === 0) {
-      ElMessage.warning(t('class.noStudentDataPleaseCreate'));
+    if (!ensureSelectedClassOwnedByCurrentAccount()) {
+      return;
+    }
+    const canContinue = await ensureStudentActionReady({
+      openCreateModalOnEmptyStudent: true,
+    });
+    if (!canContinue) {
       return;
     }
     showQuickLoginModal.value = true;
@@ -2449,6 +2591,7 @@ const handleConfirmDisableQuickLogin = async () => {
 
 const handleConfirmQuickLogin = async () => {
   if (!selectedClass.value?.id) { ElMessage.error(t('user.pleaseSelectClass')); return; }
+  if (!ensureSelectedClassOwnedByCurrentAccount()) { return; }
   try {
     const data = await createQuickLogin(selectedClass.value.id);
     quickLoginData.value = data || {};
@@ -2475,8 +2618,8 @@ const handleRefreshQuickLogin = async () => {
 };
 
 const handleExport = async () => {
-  if (studentList.value.length === 0) {
-    ElMessage.warning(t('class.noStudentDataPleaseCreate'));
+  const canContinue = await ensureStudentActionReady();
+  if (!canContinue) {
     return;
   }
   try {
@@ -2489,15 +2632,15 @@ const handleExport = async () => {
   } catch (error) { console.error("导出失败:", error); ElMessage.error(t('common.exportFailed')); }
 };
 
-const handleBatchAction = () => {
+const handleBatchAction = async () => {
   if (activeAction.value === "batch") {
     exitStudentBatchMode();
     ElMessage.info(t('user.exitBatchMode'));
     return;
   }
   if (isCurrentClassQuickLogin.value) return;
-  if (studentList.value.length === 0) {
-    ElMessage.warning(t('class.noStudentDataPleaseCreate'));
+  const canContinue = await ensureStudentActionReady();
+  if (!canContinue) {
     return;
   }
   activeAction.value = "batch";
@@ -2547,7 +2690,9 @@ const handleBatchTransfer = () => {
   if (selectedStudentIds.value.length === 0) { ElMessage.warning(t('user.noStudentSelected')); return; }
   batchTransferForm.gradeId = null;
   batchTransferForm.classId = null;
+  batchTransferClassList.value = [];
   showBatchTransferModal.value = true;
+  loadStudentTransferGradeClassData();
 };
 
 const handleConfirmBatchTransfer = async () => {
@@ -2564,7 +2709,9 @@ const handleConfirmBatchTransfer = async () => {
   finally { showBatchTransferModal.value = false; }
 };
 
-const batchTransferClassOptions = computed(() => batchTransferClassList.value.map((cls: any) => ({ label: cls.className, value: cls.id })));
+const formatStudentTransferClassLabel = (cls: any) => cls.teacherName ? `${cls.className}(${cls.teacherName})` : cls.className;
+
+const batchTransferClassOptions = computed(() => batchTransferClassList.value.map((cls: any) => ({ label: formatStudentTransferClassLabel(cls), value: cls.id })));
 
 const closeBatchResetPasswordModal = () => {
   showBatchResetPasswordModal.value = false;
@@ -2616,9 +2763,12 @@ const handleConfirmResetPassword = async () => {
 const handleTransfer = (row: any) => {
   transferringStudent.value = row;
   transferForm.gradeId = null;
+  transferForm.classId = null;
+  transferForm.id = null;
   transferForm.teacherId = null;
   transferClassList.value = [];
   showTransferModal.value = true;
+  loadStudentTransferGradeClassData();
 };
 
 const handleStudentTransferGradeChange = (grade: string | number | null) => {
@@ -2652,17 +2802,51 @@ const handleConfirmTransfer = async () => {
   finally { showTransferModal.value = false; transferringStudent.value = null; }
 };
 
-const loadTransferClassList = async (grade: string) => {
-  try { const data = await getClassByGrade(grade); transferClassList.value = data || []; }
-  catch (error) { console.error("获取班级列表失败:", error); transferClassList.value = []; }
+const normalizeStudentTransferGradeClassData = (data: any[], currentClassId?: string | null) => {
+  return (data || []).map((item: any) => ({
+    grade: item.grade,
+    gradeName: item.gradeName,
+    classList: (item.classList || [])
+      .map((cls: any) => ({
+        id: String(cls.classId || cls.id || ""),
+        className: cls.className || cls.name || "",
+        teacherId: cls.teacherId ? String(cls.teacherId) : "",
+        teacherName: cls.teacherName || "",
+      }))
+      .filter((cls: any) => cls.id && cls.id !== String(currentClassId || "")),
+  }));
 };
 
-const loadBatchTransferClassList = async (grade: string) => {
-  try { const data = await getClassByGrade(grade); batchTransferClassList.value = data || []; }
-  catch (error) { console.error("获取班级列表失败:", error); batchTransferClassList.value = []; }
+const getStudentTransferClassesByGrade = (grade: string) => {
+  return (
+    studentTransferGradeClassData.value.find((item: any) => String(item.grade) === String(grade))
+      ?.classList || []
+  );
 };
 
-const studentTransferClassOptions = computed(() => transferClassList.value.map((cls: any) => ({ label: cls.className, value: cls.id, teacherId: cls.teacherId })));
+const loadStudentTransferGradeClassData = async () => {
+  if (!selectedClass.value?.id) {
+    studentTransferGradeClassData.value = [];
+    return;
+  }
+  try {
+    const data = await getGradeClassList(String(selectedClass.value.id));
+    studentTransferGradeClassData.value = normalizeStudentTransferGradeClassData(data, selectedClass.value.id);
+  } catch (error) {
+    console.error("获取移班年级班级列表失败:", error);
+    studentTransferGradeClassData.value = [];
+  }
+};
+
+const loadTransferClassList = (grade: string) => {
+  transferClassList.value = getStudentTransferClassesByGrade(grade);
+};
+
+const loadBatchTransferClassList = (grade: string) => {
+  batchTransferClassList.value = getStudentTransferClassesByGrade(grade);
+};
+
+const studentTransferClassOptions = computed(() => transferClassList.value.map((cls: any) => ({ label: formatStudentTransferClassLabel(cls), value: cls.id, teacherId: cls.teacherId })));
 
 const handleDeleteStudent = (row: any) => { deletingStudent.value = row; showDeleteStudentModal.value = true; };
 
@@ -2706,6 +2890,7 @@ const handleCreateStudent = async () => {
     if (!selectedClass.value?.id) { ElMessage.error("请先选择班级"); return; }
     const studentName = createForm.name.trim();
     if (!studentName) { ElMessage.warning("请填写学生姓名"); return; }
+    if (studentName.length > 10) { ElMessage.warning(t('auth.nameLengthLimit')); return; }
     try {
       await addStudent({ classId: selectedClass.value.id, studentName });
       ElMessage.success("创建学生成功");
@@ -2761,11 +2946,14 @@ const handleEditGroup = async (row: any) => {
     groupForm.members = memberList.map((m: any) => ({ ...m, id: m.studentNumber }));
     originalMembers.value = JSON.parse(JSON.stringify(groupForm.members));
     showGroupModal.value = true;
-  } catch (error) { console.error("获取小组成员失败:", error); ElMessage.error("获取小组成员失败"); }
+  } catch (error) {
+    console.error("获取小组成员失败:", error);
+  }
 };
 
 const handleConfirmGroup = async () => {
   if (!groupForm.name.trim()) { ElMessage.warning("请输入小组名称"); return; }
+  if (groupForm.name.trim().length > 10) { ElMessage.warning(t('auth.nameLengthLimit')); return; }
   try {
     if (isEditGroupMode.value) {
       const currentMemberIds = groupForm.members.map((m) => m.id);
@@ -2892,7 +3080,13 @@ const handleConfirmDeleteGroup = async () => {
 
 const handleGroupBatchAction = () => {
   if (groupActiveAction.value === "batch") { exitGroupBatchMode(); }
-  else { groupActiveAction.value = "batch"; }
+  else {
+    if (!groupList.value.length) {
+      ElMessage.warning("当前无小组数据，请先创建小组")
+      return
+    }
+    groupActiveAction.value = "batch";
+  }
 };
 
 const handleBatchDeleteGroup = () => {

@@ -13,6 +13,7 @@
       :value="modelValue"
       :type="type"
       :placeholder="placeholder"
+      :maxlength="maxlength"
       :disabled="disabled"
       :readonly="readonly"
       :class="[
@@ -57,6 +58,7 @@ const props = withDefaults(defineProps<{
   modelValue: string | number
   type?: string
   placeholder?: string
+  maxlength?: string | number
   disabled?: boolean
   readonly?: boolean
   clearable?: boolean
@@ -64,6 +66,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   type: 'text',
   placeholder: '',
+  maxlength: undefined,
   disabled: false,
   readonly: false,
   clearable: false,

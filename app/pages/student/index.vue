@@ -158,12 +158,33 @@ const learningCenterData = reactive({
   unCommitTestNum: 0
 })
 
+interface StudentClassroomInfo {
+  classId?: string
+  className?: string
+  teacherPeerId?: string
+  courseId?: string
+  chapterId?: string
+  chapterName?: string
+}
+
+const firstNonEmptyString = (...values: any[]) => {
+  for (const value of values) {
+    if (value === null || value === undefined) continue
+    const text = String(value).trim()
+    if (text) return text
+  }
+  return ''
+}
+
 // 上课通知弹窗
 const showClassNotification = ref(false)
-const classInfo = ref({
+const classInfo = ref<StudentClassroomInfo>({
   classId: '',
   className: '',
-  teacherPeerId: ''  // 教师的 PeerJS ID
+  teacherPeerId: '',  // 教师的 PeerJS ID
+  courseId: '',
+  chapterId: '',
+  chapterName: ''
 })
 const showBackToClassroomEntry = ref(false)
 
@@ -207,13 +228,27 @@ const updateBackToClassroomEntry = () => {
   showBackToClassroomEntry.value = !!getStoredClassroomInfo()
 }
 
-const saveOngoingClassroom = (classId = '', teacherPeerId = '') => {
+const normalizeClassroomInfo = (
+  info?: StudentClassroomInfo,
+  fallback?: StudentClassroomInfo | null
+) => {
+  return {
+    classId: firstNonEmptyString(info?.classId, fallback?.classId),
+    className: firstNonEmptyString(info?.className, fallback?.className),
+    teacherPeerId: firstNonEmptyString(info?.teacherPeerId, fallback?.teacherPeerId),
+    courseId: firstNonEmptyString(info?.courseId, fallback?.courseId),
+    chapterId: firstNonEmptyString(info?.chapterId, fallback?.chapterId),
+    chapterName: firstNonEmptyString(info?.chapterName, fallback?.chapterName)
+  }
+}
+
+const saveOngoingClassroom = (info?: StudentClassroomInfo) => {
   if (typeof window === 'undefined') return
+  const nextInfo = normalizeClassroomInfo(info, getStoredClassroomInfo())
   localStorage.setItem(
     STUDENT_ONGOING_CLASSROOM_KEY,
     JSON.stringify({
-      classId: String(classId || ''),
-      teacherPeerId: String(teacherPeerId || ''),
+      ...nextInfo,
       expireAt: Date.now() + 2 * 60 * 60 * 1000
     })
   )
@@ -245,10 +280,14 @@ const setPauseAutoEnterClassroom = (paused: boolean) => {
   }
 }
 
-const buildStudentClassroomPath = (info?: { classId?: string; teacherPeerId?: string }) => {
+const buildStudentClassroomPath = (info?: StudentClassroomInfo) => {
   const search = new URLSearchParams()
   if (info?.classId) search.set('classId', String(info.classId))
   if (info?.teacherPeerId) search.set('teacherPeerId', String(info.teacherPeerId))
+  if (info?.className) search.set('className', String(info.className))
+  if (info?.courseId) search.set('courseId', String(info.courseId))
+  if (info?.chapterId) search.set('chapterId', String(info.chapterId))
+  if (info?.chapterName) search.set('chapterName', String(info.chapterName))
   const query = search.toString()
   return query ? `/student/classroom?${query}` : '/student/classroom'
 }
@@ -308,14 +347,21 @@ const connectNotifyWebSocket = () => {
       // 处理上课通知 - 直接跳转到课堂
       if (message.type === 'CLASS_BEGIN') {
         console.log('[学生端首页] 收到上课通知，直接进入课堂！')
-        const classId = String(message.classId || '')
-        const teacherPeerId = String(message.peerId || message.teacherPeerId || '')
-        saveOngoingClassroom(classId, teacherPeerId)
+        const nextClassInfo = normalizeClassroomInfo({
+          classId: message.classId,
+          className: message.className,
+          teacherPeerId: message.peerId || message.teacherPeerId,
+          courseId: message.courseId,
+          chapterId: message.chapterId,
+          chapterName: message.chapterName
+        }, getStoredClassroomInfo())
+        classInfo.value = nextClassInfo
+        saveOngoingClassroom(nextClassInfo)
         if (isPauseAutoEnterClassroom()) {
           console.log('[学生端首页] 当前为手动返回首页，暂停自动进入课堂')
           return
         }
-        router.push(buildStudentClassroomPath({ classId, teacherPeerId }))
+        router.push(buildStudentClassroomPath(nextClassInfo))
       }
       
       // 处理下课通知

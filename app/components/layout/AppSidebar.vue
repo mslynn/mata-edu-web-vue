@@ -100,6 +100,7 @@ const implementedPages = [
   '/system/course',
   '/system/tool',
   '/system/ai',
+  '/system/study',
   '/system/growth',
   '/system/event',
   '/system/user',

@@ -926,7 +926,7 @@
 
     <ExerciseDetailModal
       v-model="showExerciseDetailModal"
-      :resource-id="currentResourceId"
+      :exercise-id="currentExerciseId"
       :task-id="viewTaskId"
     />
 
@@ -1315,6 +1315,18 @@ function resolveSelectedResourceId(): string | null {
   return null;
 }
 
+function resolveSelectedExerciseId(): string | null {
+  const task = selectedTask.value as any;
+  const candidates = [task?.exerciseId, task?.resourceId, task?.id, task?.taskId, selectedTaskKey.value];
+  for (const candidate of candidates) {
+    if (candidate === null || candidate === undefined) continue;
+    const value = String(candidate).trim();
+    if (!value || value.startsWith("category_")) continue;
+    return value;
+  }
+  return null;
+}
+
 const handleFreeCodingIssue = async () => {
   if (freeCodingIssuing.value) return;
   const resourceId = resolveSelectedResourceId();
@@ -1343,7 +1355,7 @@ const handleFreeCodingIssue = async () => {
     await fetchTaskList();
     await fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.issueTaskFailed"));
+    console.error("自由编程任务下发失败:", error);
   } finally {
     freeCodingIssuing.value = false;
   }
@@ -1368,7 +1380,7 @@ const handleIssueGroup = async () => {
     await fetchTaskList();
     fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.issueTaskFailed"));
+    console.error("小组任务下发失败:", error);
   }
 };
 
@@ -1391,7 +1403,7 @@ const handleIssueStudent = async () => {
     await fetchTaskList();
     fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.issueTaskFailed"));
+    console.error("学生任务下发失败:", error);
   }
 };
 
@@ -1792,7 +1804,7 @@ const showWithdrawModal = ref(false);
 // Exercise Detail Modal State
 const showExerciseDetailModal = ref(false);
 const viewTaskId = ref<string | null>(null);
-const currentResourceId = computed(() => resolveSelectedResourceId());
+const currentExerciseId = computed(() => resolveSelectedExerciseId());
 
 // View and Score Modal State
 const showViewScoreModal = ref(false);
@@ -1916,7 +1928,7 @@ const confirmReturnToRedo = async () => {
     ElMessage.success(t("taskManagement.returnToRedoSuccess"));
     fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.returnToRedo"));
+    console.error("打回重做失败:", error);
   }
 };
 
@@ -1938,7 +1950,7 @@ const handleWithdrawConfirm = async () => {
     await fetchTaskList();
     groupTaskData.value = [];
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.withdrawFailed"));
+    console.error("撤回任务失败:", error);
   }
 };
 
@@ -2004,7 +2016,7 @@ const handleBatchReturnToRedo = async () => {
     exitBatchMode();
     fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.batchReturnSuccess"));
+    console.error("批量打回重做失败:", error);
   }
 };
 

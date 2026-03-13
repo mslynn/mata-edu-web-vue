@@ -3,18 +3,21 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.16:8001'
+  : 'http://192.168.0.35:8001'
 
 // 预览服务地址
 
 const previewBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://edu-view.matatastudio.com'
   : 'https://edu-view.matatastudio.com'
+  
+//编程平台iframe地址 
+const toolCreateBaseUrl = process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/'
 
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production'
   ? 'wss://test-gateway.matatastudio.com/resource/websocket'
-  : 'ws://192.168.0.16:8001/resource/websocket'
+  : 'ws://192.168.0.35:8001/resource/websocket'
 
 
 
@@ -28,7 +31,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
   devServer: {
-    host: '0.0.0.0',
+    host: 'localhost',
     port: 3001,
   },
 
@@ -40,6 +43,10 @@ export default defineNuxtConfig({
       apiBaseUrl: apiBaseUrl || 'http://192.168.0.65:8001',
       // 预览服务地址
       previewBaseUrl: previewBaseUrl || 'https://edu-view.matatastudio.com',
+      // 工具中心创建地址
+      toolCreateBaseUrl,
+      vincibotCreateUrl: process.env.NUXT_PUBLIC_VINCIBOT_CREATE_URL || toolCreateBaseUrl,
+      nousCreateUrl: process.env.NUXT_PUBLIC_NOUS_CREATE_URL || toolCreateBaseUrl,
       // WebRTC 信令服务器地址
       signalingUrl: signalingUrl || 'ws://192.168.0.59:8001/resource/websocket',
     }

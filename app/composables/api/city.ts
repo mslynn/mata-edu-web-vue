@@ -67,7 +67,9 @@ const getCityAdminDetail = async (userId: string) => {
   // 重置教师密码
   const resetCityAdminPassword = async (ids: string[]) => {
     try {
-      const response = await http.post("/system/user/reset", { ids });
+      const response = await http.post("/system/user/reset", { ids }, {
+        'isEncrypt': 'true'
+      });
       if (response.code !== 200) {
         throw new Error(response.msg || "重置区管理员密码失败");
       }
@@ -177,7 +179,7 @@ const exportCityAdminInfo = async () => {
     }
 
     // 强制使用指定的文件名
-    const filename = "区管理员列表.xlsx"; 
+    const filename = "区管理员账号信息.xlsx"; 
     
     // 下载文件
     const blob = await response.blob()

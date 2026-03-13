@@ -2,7 +2,7 @@
   <div class="tool-center-page">
     <!-- 页面标题 -->
     <h1 class="page-title">{{ t('tool.pageTitle') }}</h1>
-    
+
     <div class="tool-grid">
       <!-- 骨架屏 -->
       <template v-if="pageLoading">
@@ -11,7 +11,8 @@
             <template #template>
               <div class="tool-content">
                 <div class="tool-left">
-                  <el-skeleton-item variant="rect" style="width: 70px; height: 70px; border-radius: 16px; margin-bottom: 10px" />
+                  <el-skeleton-item variant="rect"
+                    style="width: 70px; height: 70px; border-radius: 16px; margin-bottom: 10px" />
                   <el-skeleton-item variant="text" style="width: 60px" />
                 </div>
                 <div class="tool-right">
@@ -30,52 +31,52 @@
       </template>
       <!-- 真实内容 -->
       <template v-else>
-      <div v-for="tool in toolList" :key="tool.id" class="tool-card">
-        <div class="tool-content">
-          <!-- 左侧图标和名称 -->
-          <div class="tool-left">
-            <div class="tool-icon">
-              <img :src="tool.icon" :alt="tool.name" />
+        <div v-for="tool in toolList" :key="tool.id" class="tool-card">
+          <div class="tool-content">
+            <!-- 左侧图标和名称 -->
+            <div class="tool-left">
+              <div class="tool-icon">
+                <img :src="tool.icon" :alt="tool.name" />
+              </div>
+              <div class="tool-name" v-html="tool.name"></div>
             </div>
-            <div class="tool-name" v-html="tool.name"></div>
+            <!-- 右侧描述 -->
+            <div class="tool-right">
+              <p class="tool-desc">{{ t(tool.descKey) }}</p>
+            </div>
           </div>
-          <!-- 右侧描述 -->
-          <div class="tool-right">
-            <p class="tool-desc">{{ t(tool.descKey) }}</p>
+          <!-- 底部按钮 -->
+          <div class="tool-actions">
+            <button v-if="tool.hasCreate" class="btn-primary" @click="handleCreate(tool)">
+              {{ t('tool.startCreate') }}
+            </button>
+
+            <!-- 下载客户端 (VinciBot, Nous, TaleMap) -->
+            <button v-if="tool.hasDownloadClient" class="btn-outline" @click="handleDownloadClient(tool)">
+              {{ t('tool.downloadClient') }}
+            </button>
+
+            <!-- macOS (MatataXplore) -->
+            <button v-if="tool.hasMacOS" class="btn-outline" @click="handleDownloadMacOS(tool)">
+              {{ t('tool.downloadMacOS') }}
+            </button>
+
+            <!-- Windows (MatataXplore) -->
+            <button v-if="tool.hasWindows" class="btn-outline" @click="handleDownloadWindows(tool)">
+              {{ t('tool.downloadWindows') }}
+            </button>
+
+            <!-- App Store (MatataXplore, MatataCode) -->
+            <button v-if="tool.hasAppStore" class="btn-outline" @click="handleDownloadAppStore(tool)">
+              {{ t(tool.appStoreKey || 'tool.downloadAppStore') }}
+            </button>
+
+            <!-- Google Play (MatataXplore, MatataCode) -->
+            <button v-if="tool.hasGooglePlay" class="btn-outline" @click="handleDownloadGooglePlay(tool)">
+              {{ t(tool.googlePlayKey || 'tool.downloadGooglePlay') }}
+            </button>
           </div>
         </div>
-        <!-- 底部按钮 -->
-        <div class="tool-actions">
-          <button v-if="tool.hasCreate" class="btn-primary" @click="handleCreate(tool)">
-            {{ t('tool.startCreate') }}
-          </button>
-          
-          <!-- 下载客户端 (VinciBot, Nous, TaleMap) -->
-          <button v-if="tool.hasDownloadClient" class="btn-outline" @click="handleDownloadClient(tool)">
-            {{ t('tool.downloadClient') }}
-          </button>
-
-          <!-- macOS (MatataXplore) -->
-          <button v-if="tool.hasMacOS" class="btn-outline" @click="handleDownloadMacOS(tool)">
-            {{ t('tool.downloadMacOS') }}
-          </button>
-
-          <!-- Windows (MatataXplore) -->
-          <button v-if="tool.hasWindows" class="btn-outline" @click="handleDownloadWindows(tool)">
-            {{ t('tool.downloadWindows') }}
-          </button>
-          
-          <!-- App Store (MatataXplore, MatataCode) -->
-          <button v-if="tool.hasAppStore" class="btn-outline" @click="handleDownloadAppStore(tool)">
-            {{ t(tool.appStoreKey || 'tool.downloadAppStore') }}
-          </button>
-
-          <!-- Google Play (MatataXplore, MatataCode) -->
-          <button v-if="tool.hasGooglePlay" class="btn-outline" @click="handleDownloadGooglePlay(tool)">
-            {{ t(tool.googlePlayKey || 'tool.downloadGooglePlay') }}
-          </button>
-        </div>
-      </div>
       </template>
     </div>
 
@@ -86,7 +87,8 @@
           <span class="iframe-modal-title">{{ currentToolName }}</span>
           <button class="iframe-close-btn" @click="closeIframeModal">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
         </div>
@@ -95,14 +97,8 @@
             <div class="loading-spinner"></div>
             <span class="loading-text">{{ t('common.loading') }}</span>
           </div>
-          <iframe 
-            :src="currentIframeUrl" 
-            class="tool-iframe" 
-            :class="{ hidden: iframeLoading }"
-            frameborder="0" 
-            allowfullscreen
-            @load="onIframeLoad"
-          ></iframe>
+          <iframe ref="toolIframeRef" :src="currentIframeUrl" class="tool-iframe" :class="{ hidden: iframeLoading }"
+            frameborder="0" allowfullscreen allow="camera; microphone" @load="onIframeLoad"></iframe>
         </div>
       </div>
     </div>
@@ -111,7 +107,9 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { useIframeFileBridge } from '~/composables/useIframeFileBridge'
 
 import tool1Icon from '~/assets/images/tool1.png'
 import tool2Icon from '~/assets/images/tool2.png'
@@ -124,6 +122,19 @@ definePageMeta({
 })
 
 const { t, locale } = useI18n()
+const runtimeConfig = useRuntimeConfig()
+const {
+  parseMessageData,
+  getMessageType,
+  pickMessagePayload,
+  pickMessageFileName,
+  toZipFile,
+  toWorkFile,
+  uploadFileToOSS,
+  createUploadFormData,
+  isMessageFromIframe,
+  postFileBufferToIframe
+} = useIframeFileBridge()
 
 // 页面骨架屏（最少显示 300ms）
 const pageLoading = ref(true)
@@ -164,7 +175,7 @@ const toolList: Tool[] = [
     descKey: 'tool.vincibot.desc',
     hasCreate: true,
     hasDownloadClient: true,
-    createUrl: 'https://vinci.matatastudio.com/',
+    createUrl: runtimeConfig.public.vincibotCreateUrl,
     downloadClientUrl: 'https://vinci.matatastudio.com/static/download.html'
   },
   {
@@ -175,7 +186,7 @@ const toolList: Tool[] = [
     descKey: 'tool.nous.desc',
     hasCreate: true,
     hasDownloadClient: true,
-    createUrl: 'https://nous.matatastudio.com/',
+    createUrl: runtimeConfig.public.nousCreateUrl,
     downloadClientUrl: 'https://nous.matatastudio.com/?page=download'
   },
   {
@@ -227,11 +238,164 @@ const showIframeModal = ref(false)
 const currentIframeUrl = ref('')
 const currentToolName = ref('')
 const iframeLoading = ref(true)
+const toolIframeRef = ref<HTMLIFrameElement | null>(null)
+const currentToolCacheKey = ref('')
+const savedProjectZipCache = new Map<string, File>()
+
+const downloadZipFile = (zipFile: File) => {
+  const downloadUrl = URL.createObjectURL(zipFile)
+  const link = document.createElement('a')
+  link.href = downloadUrl
+  link.download = zipFile.name
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000)
+}
+
+const uploadWorkFileToOSS = async (file: File) => uploadFileToOSS(file, '上传作品文件失败')
+
+const postCachedZipToIframe = async () => {
+  const zipFile = currentToolCacheKey.value
+    ? savedProjectZipCache.get(currentToolCacheKey.value)
+    : null
+  const postResult = await postFileBufferToIframe({
+    file: zipFile,
+    iframeUrl: currentIframeUrl.value,
+    iframeWindow: toolIframeRef.value?.contentWindow,
+    type: 'ZIP_DATA'
+  })
+
+  if (!postResult) {
+    return
+  }
+
+  console.log('已向工具 iframe 发送 ZIP_DATA:', {
+    cacheKey: currentToolCacheKey.value,
+    ...postResult
+  })
+}
+
+const handleIframeMessage = async (event: MessageEvent) => {
+  if (
+    !isMessageFromIframe({
+      event,
+      iframeWindow: toolIframeRef.value?.contentWindow,
+      iframeUrl: currentIframeUrl.value
+    })
+  ) {
+    return
+  }
+
+  console.log('收到工具 iframe 原始消息:', {
+    origin: event.origin,
+    data: event.data
+  })
+
+  const messageData = parseMessageData(event.data) as any
+  const messageType = getMessageType(messageData)
+
+  if (!messageData || (typeof messageData !== 'object' && typeof messageData !== 'string')) {
+    return
+  }
+
+  if (messageType === 'send-works-sb3' || messageType === 'send-works-mc') {
+    const sb3Payload = pickMessagePayload(messageData, [
+      'payload',
+      'data',
+      'file',
+      'blob',
+      'arrayBuffer'
+    ])
+    const sb3File = toWorkFile(
+      sb3Payload,
+      pickMessageFileName(messageData),
+      messageType === 'send-works-mc' ? '.mc' : '.sb3'
+    )
+
+    if (!sb3File) {
+      console.warn('收到 send-works-sb3 消息，但 payload 不是可转换的文件类型:', messageData)
+      return
+    }
+
+    const formData = createUploadFormData(sb3File)
+
+    const normalizedMessageData = {
+      ...messageData,
+      payload: sb3File,
+      sb3File,
+      formData
+    }
+
+    try {
+      const uploadResult = await uploadWorkFileToOSS(sb3File)
+      const eventName =
+        messageType === 'send-works-sb3' ? 'tool-send-works-sb3' : 'tool-send-works-mc'
+      const uploadedMessageData = {
+        ...normalizedMessageData,
+        uploadResult
+      }
+
+      console.log(`收到工具 iframe ${messageType} 消息并上传 OSS 成功:`, uploadedMessageData)
+
+      window.dispatchEvent(
+        new CustomEvent(eventName, {
+          detail: uploadedMessageData
+        })
+      )
+    } catch (error) {
+      console.error(`上传 ${messageType} 文件到 OSS 失败:`, error)
+      ElMessage.error(error instanceof Error ? error.message : '上传作品文件失败')
+    }
+
+    return
+  }
+
+  if (messageType !== 'saveProject') {
+    return
+  }
+
+  const zipPayload = pickMessagePayload(messageData)
+  const zipFile = toZipFile(zipPayload)
+  if (!zipFile) {
+    console.warn('收到 saveProject 消息，但 payload 不是可转换的文件类型:', messageData)
+    return
+  }
+
+  const formData = createUploadFormData(zipFile)
+
+  const normalizedMessageData = {
+    ...messageData,
+    payload: zipFile,
+    zipFile,
+    formData
+  }
+
+  if (currentToolCacheKey.value) {
+    savedProjectZipCache.set(currentToolCacheKey.value, zipFile)
+  }
+
+  console.log('收到工具 iframe saveProject 消息:', normalizedMessageData)
+
+  try {
+    downloadZipFile(zipFile)
+    ElMessage.success(`项目已下载：${zipFile.name}`)
+  } catch (error) {
+    console.error('下载项目文件失败:', error)
+    ElMessage.error('下载项目文件失败')
+  }
+
+  window.dispatchEvent(
+    new CustomEvent('tool-save-project', {
+      detail: normalizedMessageData
+    })
+  )
+}
 
 const handleCreate = (tool: Tool) => {
   if (tool.createUrl) {
     let url = tool.createUrl
-    
+
     // 动态添加语言参数
     if (tool.id === 'vincibot') {
       const lang = locale.value === 'zh' ? 'zh-CN' : 'en'
@@ -245,6 +409,7 @@ const handleCreate = (tool: Tool) => {
     url = `${url}${separator}ch=aiedu`
 
     currentIframeUrl.value = url
+    currentToolCacheKey.value = `tool:${tool.id}`
     currentToolName.value = tool.name.replace('<br/>', ' ')
     iframeLoading.value = true
     showIframeModal.value = true
@@ -253,6 +418,9 @@ const handleCreate = (tool: Tool) => {
 
 const onIframeLoad = () => {
   iframeLoading.value = false
+  window.setTimeout(() => {
+    void postCachedZipToIframe()
+  }, 300)
 }
 
 const closeIframeModal = () => {
@@ -261,6 +429,14 @@ const closeIframeModal = () => {
   currentToolName.value = ''
   iframeLoading.value = true
 }
+
+onMounted(() => {
+  window.addEventListener('message', handleIframeMessage)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('message', handleIframeMessage)
+})
 
 const handleDownloadClient = (tool: Tool) => {
   console.log('Download Client:', tool.id)

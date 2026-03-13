@@ -842,7 +842,6 @@ const fetchTaskDetail = async () => {
     scheduleConnectLayoutRefresh();
   } catch (error: any) {
     console.error("获取任务题目失败", error);
-    ElMessage.error(error?.message || "获取任务题目失败");
     detailData.value = null;
     questions.value = [];
     clearAnswerState();
@@ -978,7 +977,6 @@ const handleSubmit = async () => {
     closeModal();
   } catch (error: any) {
     console.error("提交任务失败", error);
-    ElMessage.error(error?.message || "提交任务失败");
   } finally {
     submitting.value = false;
   }

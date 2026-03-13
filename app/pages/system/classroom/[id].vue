@@ -876,7 +876,7 @@
 
     <ExerciseDetailModal
       v-model="showTaskExerciseDetailModal"
-      :resource-id="currentTaskResourceId"
+      :exercise-id="currentTaskExerciseId"
       :task-id="taskViewTaskId"
     />
     <ViewAndScoreModal
@@ -1159,12 +1159,6 @@ const autoEnableQuickLogin = async () => {
     if (data && data.classCode) {
       applyQuickLoginInfo(data);
       loginTipCollapsed.value = false;
-      quickLoginDataForModal.value = {
-        classCode: data.classCode,
-        classCodePwd: data.classCodePwd || "",
-        expirationDate: data.expirationDate || "",
-      };
-      showStudentManageModal.value = true;
     }
   } catch (error) {
     console.error("自动开启快捷登录失败:", error);
@@ -1568,7 +1562,19 @@ const resolveSelectedResourceId = (): string | null => {
   return null;
 };
 
-const currentTaskResourceId = computed(() => resolveSelectedResourceId());
+const resolveSelectedExerciseId = (): string | null => {
+  const task = selectedTask.value as any;
+  const candidates = [task?.exerciseId, task?.resourceId, task?.id, task?.taskId];
+  for (const candidate of candidates) {
+    if (candidate === null || candidate === undefined) continue;
+    const value = String(candidate).trim();
+    if (!value) continue;
+    return value;
+  }
+  return null;
+};
+
+const currentTaskExerciseId = computed(() => resolveSelectedExerciseId());
 const showTaskExerciseDetailModal = ref(false);
 const taskViewTaskId = ref<string | null>(null);
 const showTaskViewScoreModal = ref(false);
@@ -1773,6 +1779,36 @@ const openIssueModal = () => {
   showTaskIssueModal.value = true;
 };
 
+const TASK_ISSUE_ACTION = "question";
+const TASK_REVOKE_ACTION = "question_revoke";
+const TASK_REDO_ACTION = "question_redo";
+
+const broadcastTaskNotice = (action: string, distributeType?: number) => {
+  const classId = String(route.query.classId || "");
+  const courseId = String(route.query.courseId || "");
+  const chapterId = String(route.params.id || "");
+  const task = selectedTask.value;
+
+  if (!classId || !chapterId) return;
+  if (!notifyWs || notifyWs.readyState !== WebSocket.OPEN) return;
+
+  const msg = JSON.stringify({
+    type: "CLASS_INTERACTION",
+    peerId: classId,
+    action,
+    classId,
+    courseId,
+    chapterId,
+    taskId: task?.taskId ?? null,
+    resourceId: task?.resourceId ?? task?.id ?? task?.taskId ?? null,
+    taskName: currentTaskLabel.value || task?.resourceName || task?.fileName || "",
+    resourceCategory: task?.resourceCategory ?? null,
+    distributeType: distributeType ?? task?.distributeType ?? null,
+  });
+
+  notifyWs.send(msg);
+};
+
 const handleIssueGroup = async () => {
   const resourceId = resolveSelectedResourceId();
   const classId = String(route.query.classId || "");
@@ -1786,10 +1822,11 @@ const handleIssueGroup = async () => {
     setDistributeTypeOverride(selectedTaskMeta.value?.task, 2);
     showTaskIssueModal.value = false;
     ElMessage.success(t("taskManagement.issueTaskSuccess"));
+    broadcastTaskNotice(TASK_ISSUE_ACTION, 2);
     await loadTaskList();
     await fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.issueTaskFailed"));
+    console.error("小组任务下发失败:", error);
   } finally {
     taskIssuing.value = false;
   }
@@ -1808,10 +1845,11 @@ const handleIssueStudent = async () => {
     setDistributeTypeOverride(selectedTaskMeta.value?.task, 1);
     showTaskIssueModal.value = false;
     ElMessage.success(t("taskManagement.issueTaskSuccess"));
+    broadcastTaskNotice(TASK_ISSUE_ACTION, 1);
     await loadTaskList();
     await fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.issueTaskFailed"));
+    console.error("学生任务下发失败:", error);
   } finally {
     taskIssuing.value = false;
   }
@@ -1829,10 +1867,11 @@ const handleFreeCodingIssue = async () => {
     await taskApi.bindDistributer({ classId, resourceId, distributeType: 1 });
     setDistributeTypeOverride(selectedTaskMeta.value?.task, 1);
     ElMessage.success(t("taskManagement.issueTaskSuccess"));
+    broadcastTaskNotice(TASK_ISSUE_ACTION, 1);
     await loadTaskList();
     await fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.issueTaskFailed"));
+    console.error("自由编程任务下发失败:", error);
   } finally {
     taskIssuing.value = false;
   }
@@ -1851,6 +1890,7 @@ const handleWithdrawConfirm = async () => {
       resourceId,
       distributeType: issueTypeFromApi.value === "group" ? 2 : 1,
     });
+    broadcastTaskNotice(TASK_REVOKE_ACTION, issueTypeFromApi.value === "group" ? 2 : 1);
     clearDistributeTypeOverride(selectedTaskMeta.value?.task || null);
     showTaskWithdrawModal.value = false;
     ElMessage.success(t("taskManagement.withdrawSuccess"));
@@ -1858,7 +1898,7 @@ const handleWithdrawConfirm = async () => {
     groupTaskData.value = [];
     exitBatchMode();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.withdrawFailed"));
+    console.error("撤回任务失败:", error);
   }
 };
 
@@ -1904,11 +1944,12 @@ const confirmTaskReturnToRedo = async () => {
   try {
     const taskId = returnToRedoRow.value?._raw?.taskId || returnToRedoRow.value?.id;
     await taskApi.bindReject([String(taskId)]);
+    broadcastTaskNotice(TASK_REDO_ACTION, issueTypeFromApi.value === "group" ? 2 : 1);
     showTaskReturnToRedoModal.value = false;
     ElMessage.success(t("taskManagement.returnToRedoSuccess"));
     await fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.returnToRedo"));
+    console.error("打回重做失败:", error);
   }
 };
 
@@ -1923,11 +1964,12 @@ const handleBatchReturnToRedo = async () => {
   });
   try {
     await taskApi.bindReject(taskIds);
+    broadcastTaskNotice(TASK_REDO_ACTION, issueTypeFromApi.value === "group" ? 2 : 1);
     ElMessage.success(t("taskManagement.batchReturnSuccess"));
     exitBatchMode();
     await fetchStudentTaskList();
   } catch (error: any) {
-    ElMessage.error(error.message || t("taskManagement.batchReturnSuccess"));
+    console.error("批量打回重做失败:", error);
   }
 };
 
@@ -2162,7 +2204,6 @@ const confirmEndClass = async () => {
     navigateTo(`/system/course/${courseId}`);
   } catch (error: any) {
     console.error('下课失败:', error)
-    ElMessage.error(error.message || t("classroom.endClassFailed"));
   }
 };
 

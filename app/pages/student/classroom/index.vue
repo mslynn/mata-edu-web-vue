@@ -74,8 +74,9 @@
         </button>
         
         <!-- 课堂任务按钮 -->
-        <button class="task-btn">
+        <button class="task-btn" @click="handleTaskButtonClick">
           <span>课堂任务</span>
+          <span v-if="pendingTaskCount > 0" class="task-badge">{{ pendingTaskCount }}</span>
         </button>
       </div>
     </div>
@@ -206,27 +207,79 @@
         </div>
       </Transition>
     </Teleport>
+
+    <!-- 课堂任务弹窗 -->
+    <Teleport to="body">
+      <Transition name="modal-fade">
+        <div v-if="showTaskModal" class="task-modal-overlay" @click.self="showTaskModal = false">
+          <div class="task-modal-container task-modal-container--workspace">
+            <div v-if="currentChapterId" class="task-modal-workspace">
+              <StudentTaskPage
+                embedded
+                :course-id="currentCourseId"
+                :chapter-id="currentChapterId"
+                :chapter-name="currentChapterName"
+                :refresh-token="taskModalRenderKey"
+                @close="showTaskModal = false"
+                @updated="refreshClassroomTasks"
+              />
+            </div>
+            <div v-else class="task-modal-empty">
+              <div class="task-modal-empty-title">课堂任务</div>
+              <div class="task-modal-empty-text">
+                {{ latestTaskNotice || '等待老师下发课堂任务' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { student } from '~/composables/api/student'
+import StudentTaskPage from '~/pages/student/task/index.vue'
 import { usePeerJS } from '~/composables/usePeerJS'
 
 definePageMeta({ layout: 'blank' })
 
 const config = useRuntimeConfig()
 const route = useRoute()
+const { getStudentTaskList } = student()
 const STUDENT_ONGOING_CLASSROOM_KEY = 'student_ongoing_classroom'
 const STUDENT_PAUSE_AUTO_ENTER_KEY = 'student_pause_auto_enter_classroom'
 const STUDENT_CLASS_TIMER_STATE_KEY = 'student_classroom_timer_state'
+
+const readQueryText = (value: unknown) => {
+  if (Array.isArray(value)) return String(value[0] || '')
+  return String(value || '')
+}
+
+const firstNonEmptyString = (...values: any[]) => {
+  for (const value of values) {
+    if (value === null || value === undefined) continue
+    const text = String(value).trim()
+    if (text) return text
+  }
+  return ''
+}
 
 // 信令服务器地址（用于接收 CLASS_BEGIN）
 const signalingUrl =
   (config.public.signalingUrl as string) || 'ws://192.168.0.55:8001/resource/websocket'
 
+// 当前课堂上下文
+const currentClassId = ref(readQueryText(route.query.classId))
+const currentTeacherPeerId = ref(readQueryText(route.query.teacherPeerId))
+const currentCourseId = ref(readQueryText(route.query.courseId))
+const currentChapterId = ref(readQueryText(route.query.chapterId))
+const currentChapterName = ref(readQueryText(route.query.chapterName))
+
 // 状态
-const className = ref('')
+const className = ref(readQueryText(route.query.className))
 const studentName = ref('学生')
 const wsConnected = ref(false)
 const classStarted = ref(false)
@@ -234,13 +287,52 @@ const showClassEndModal = ref(false) // 下课弹窗
 const showFullscreenModal = ref(false) // 全屏管控弹窗
 const showResourceModal = ref(false) // 课程资源弹窗
 const showKickoutModal = ref(false) // 被踢出弹窗
+const showTaskModal = ref(false) // 课堂任务弹窗
+
+type ClassroomTaskStatus = 0 | 1
+
+interface ClassroomTaskItem {
+  key: string
+  taskId: string
+  taskName: string
+  status: ClassroomTaskStatus
+  resourceCategory: number
+  raw: any
+}
+
+interface ClassroomTaskGroup {
+  key: string
+  name: string
+  items: ClassroomTaskItem[]
+}
+
+const classroomTaskGroups = ref<ClassroomTaskGroup[]>([])
+const taskListLoading = ref(false)
+const latestTaskNotice = ref('')
+const taskModalRenderKey = ref(0)
+const taskCategoryNameMap: Record<number, string> = {
+  12: '个人实训任务',
+  7: '个人实训任务',
+  10: '个人实训任务',
+  2: '个人上传任务',
+  9: '个人上传任务',
+  11: '自定义练习题',
+  6: '课堂练习'
+}
+const TASK_ISSUE_ACTION = 'question'
+const TASK_REVOKE_ACTION = 'question_revoke'
+const TASK_REDO_ACTION = 'question_redo'
 
 // 保存/清理课堂状态（用于学生首页“返回课堂”入口）
 const saveOngoingClassroom = () => {
   if (typeof window === 'undefined') return
   const payload = {
     classId: String(currentClassId.value || ''),
+    className: String(className.value || ''),
     teacherPeerId: String(currentTeacherPeerId.value || ''),
+    courseId: String(currentCourseId.value || ''),
+    chapterId: String(currentChapterId.value || ''),
+    chapterName: String(currentChapterName.value || ''),
     expireAt: Date.now() + 2 * 60 * 60 * 1000
   }
   localStorage.setItem(STUDENT_ONGOING_CLASSROOM_KEY, JSON.stringify(payload))
@@ -352,10 +444,133 @@ const getResourceIconText = (fileName: string) => {
   if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) return '图'
   return 'F'
 }
-// 从路由获取 classId 和 teacherPeerId
-const currentClassId = ref((route.query.classId as string) || '')
-// 老师的 PeerId
-const currentTeacherPeerId = ref((route.query.teacherPeerId as string) || '')
+
+const getTaskCategoryName = (category: number) => {
+  return taskCategoryNameMap[category] || '课堂任务'
+}
+
+const normalizeTaskStatus = (item: any): ClassroomTaskStatus => {
+  return Number(item?.status ?? item?.taskStatus) === 1 ? 1 : 0
+}
+
+const normalizeTaskItem = (item: any, index: number, fallbackCategory?: number): ClassroomTaskItem => {
+  const taskId = firstNonEmptyString(item?.taskId, item?.taskid, item?.taskID, item?.id, `task_${index}`)
+  const taskName =
+    firstNonEmptyString(item?.taskName, item?.resourceName, item?.fileName) ||
+    `任务${index + 1}`
+  const resourceCategory = Number(item?.resourceCategory ?? fallbackCategory ?? -1)
+
+  return {
+    key: taskId || `task_${index}`,
+    taskId,
+    taskName,
+    status: normalizeTaskStatus(item),
+    resourceCategory,
+    raw: item
+  }
+}
+
+const normalizeTaskGroups = (data: any): ClassroomTaskGroup[] => {
+  if (!Array.isArray(data)) return []
+
+  const hasGroupedTaskList = data.some(
+    (group: any) => Array.isArray(group?.taskList) || Array.isArray(group?.resourceList)
+  )
+
+  if (hasGroupedTaskList) {
+    return data
+      .map((group: any, index: number) => {
+        const category = Number(group?.resourceCategory ?? -1)
+        const groupName = String(group?.resourceName || getTaskCategoryName(category))
+        const taskList = Array.isArray(group?.taskList)
+          ? group.taskList
+          : Array.isArray(group?.resourceList)
+            ? group.resourceList
+            : []
+        const items = taskList.map((item: any, taskIndex: number) =>
+          normalizeTaskItem(item, taskIndex, category)
+        )
+
+        return {
+          key: `task_group_${category}_${index}`,
+          name: groupName,
+          items
+        }
+      })
+      .filter((group: ClassroomTaskGroup) => group.items.length > 0)
+  }
+
+  const groupedMap = new Map<number, ClassroomTaskGroup>()
+  data.forEach((item: any, index: number) => {
+    const category = Number(item?.resourceCategory ?? -1)
+    if (!groupedMap.has(category)) {
+      groupedMap.set(category, {
+        key: `task_group_${category}`,
+        name: String(item?.resourceName || getTaskCategoryName(category)),
+        items: []
+      })
+    }
+    groupedMap.get(category)!.items.push(normalizeTaskItem(item, index, category))
+  })
+
+  return [...groupedMap.values()].filter((group) => group.items.length > 0)
+}
+
+const pendingTaskCount = computed(() =>
+  classroomTaskGroups.value.reduce(
+    (total, group) => total + group.items.filter((item) => item.status !== 1).length,
+    0
+  )
+)
+
+const syncClassroomContext = (payload: any = {}) => {
+  const nextClassName = firstNonEmptyString(payload.className, className.value)
+  const nextCourseId = firstNonEmptyString(payload.courseId, currentCourseId.value)
+  const nextChapterId = firstNonEmptyString(payload.chapterId, currentChapterId.value)
+  const nextChapterName = firstNonEmptyString(payload.chapterName, currentChapterName.value)
+  const nextTeacherPeerId = firstNonEmptyString(payload.teacherPeerId, currentTeacherPeerId.value)
+  const nextClassId = firstNonEmptyString(payload.classId, currentClassId.value)
+
+  className.value = nextClassName
+  currentCourseId.value = nextCourseId
+  currentChapterId.value = nextChapterId
+  currentChapterName.value = nextChapterName
+  currentTeacherPeerId.value = nextTeacherPeerId
+  currentClassId.value = nextClassId
+}
+
+const loadClassroomTasks = async () => {
+  if (!currentChapterId.value) {
+    classroomTaskGroups.value = []
+    return
+  }
+
+  taskListLoading.value = true
+  try {
+    const data = await getStudentTaskList(currentChapterId.value)
+    classroomTaskGroups.value = normalizeTaskGroups(data)
+  } catch (error) {
+    console.error('获取课堂任务失败:', error)
+    classroomTaskGroups.value = []
+  } finally {
+    taskListLoading.value = false
+  }
+}
+
+const refreshClassroomTasks = async () => {
+  await loadClassroomTasks()
+}
+
+const handleTaskButtonClick = async () => {
+  showTaskModal.value = true
+  taskModalRenderKey.value += 1
+  if (!currentChapterId.value) {
+    latestTaskNotice.value = latestTaskNotice.value || '等待老师下发课堂任务'
+    return
+  }
+  await loadClassroomTasks()
+}
+
 // 上课计时
 const classTime = ref(0)
 let classTimer: ReturnType<typeof setInterval> | null = null
@@ -561,7 +776,8 @@ const connectNotifyWebSocket = () => {
 
       // 处理 CLASS_BEGIN 消息
       if (message.type === 'CLASS_BEGIN') {
-        const teacherPeerId = message.peerId // 老师的 PeerId
+        syncClassroomContext(message)
+        const teacherPeerId = message.peerId || message.teacherPeerId // 老师的 PeerId
         // 从老师的 peerId 中提取 classId（格式：teacher_{classId}）
         const classId = message.classId || currentClassId.value || (teacherPeerId ? teacherPeerId.replace('teacher_', '') : '') || '1996788444002480128'
         console.log('[学生课堂] 收到上课通知! classId:', classId, 'teacherPeerId:', teacherPeerId)
@@ -601,6 +817,9 @@ const connectNotifyWebSocket = () => {
         setPauseAutoEnterClassroom(false)
         stopClassTimer(true)
         peerJS.destroy()
+        latestTaskNotice.value = ''
+        classroomTaskGroups.value = []
+        showTaskModal.value = false
         // 显示下课弹窗
         showClassEndModal.value = true
       }
@@ -644,9 +863,31 @@ const connectNotifyWebSocket = () => {
       // 处理 CLASS_INTERACTION 消息 - 课堂互动（全屏管控等）
       if (message.type === 'CLASS_INTERACTION') {
         console.log('[学生课堂] 收到课堂互动指令:', message.action)
-        
-        // 全屏管控
-        if (message.action === 'fullscreen_enter') {
+
+        if (message.action === TASK_ISSUE_ACTION) {
+          syncClassroomContext(message)
+          latestTaskNotice.value = firstNonEmptyString(message.taskName, '老师下发了新的课堂任务')
+          await loadClassroomTasks()
+          taskModalRenderKey.value += 1
+          showTaskModal.value = true
+          saveOngoingClassroom()
+          ElMessage.success(latestTaskNotice.value)
+        } else if (message.action === TASK_REVOKE_ACTION) {
+          syncClassroomContext(message)
+          latestTaskNotice.value = firstNonEmptyString(message.taskName, '老师撤回了课堂任务')
+          await loadClassroomTasks()
+          taskModalRenderKey.value += 1
+          if (classroomTaskGroups.value.length === 0) {
+            showTaskModal.value = false
+          }
+          ElMessage.info(latestTaskNotice.value)
+        } else if (message.action === TASK_REDO_ACTION) {
+          syncClassroomContext(message)
+          latestTaskNotice.value = firstNonEmptyString(message.taskName, '老师已将任务打回重做')
+          await loadClassroomTasks()
+          taskModalRenderKey.value += 1
+          ElMessage.warning(latestTaskNotice.value)
+        } else if (message.action === 'fullscreen_enter') {
           showFullscreenModal.value = true
         } else if (message.action === 'fullscreen_exit') {
           try {
@@ -680,6 +921,7 @@ const connectNotifyWebSocket = () => {
       // 处理 COURSEWARE_SEND 消息 - 老师发送课件
       if (message.type === 'COURSEWARE_SEND') {
         console.log('[学生课堂] 收到课件:', message)
+        syncClassroomContext(message)
         const coursewareList = message.coursewareList || []
         if (Array.isArray(coursewareList) && coursewareList.length > 0) {
           // 添加到已收到的课件列表（去重）
@@ -750,6 +992,9 @@ const connectNotifyWebSocket = () => {
           classTimer = null
         }
         peerJS.destroy()
+        latestTaskNotice.value = ''
+        classroomTaskGroups.value = []
+        showTaskModal.value = false
         // 显示踢出弹窗
         showKickoutModal.value = true
       }
@@ -816,6 +1061,8 @@ const handleClassEndConfirm = () => {
   clearOngoingClassroom()
   setPauseAutoEnterClassroom(false)
   stopClassTimer(true)
+  latestTaskNotice.value = ''
+  classroomTaskGroups.value = []
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -830,6 +1077,8 @@ const handleKickoutConfirm = () => {
   clearOngoingClassroom()
   setPauseAutoEnterClassroom(false)
   stopClassTimer(true)
+  latestTaskNotice.value = ''
+  classroomTaskGroups.value = []
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -860,10 +1109,27 @@ onMounted(async () => {
   console.log('[学生课堂] teacherPeerId:', currentTeacherPeerId.value)
   console.log('========================================')
 
+  try {
+    const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}')
+    studentName.value = firstNonEmptyString(
+      userInfo.nickName,
+      userInfo.userName,
+      userInfo.studentName,
+      userInfo.name,
+      studentName.value
+    )
+  } catch {
+    studentName.value = studentName.value || '学生'
+  }
+
   // 先连接通知 WebSocket
   connectNotifyWebSocket()
   // 已在课堂内，恢复自动进课堂能力
   setPauseAutoEnterClassroom(false)
+
+  if (currentChapterId.value) {
+    await loadClassroomTasks()
+  }
 
   // 如果有 classId，初始化 PeerJS 并开始计时
   if (currentClassId.value) {
@@ -1166,6 +1432,10 @@ onUnmounted(() => {
 }
 
 .task-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px 20px;
   background: #FF6B6B;
   border: none;
@@ -1178,6 +1448,23 @@ onUnmounted(() => {
 
 .task-btn:hover {
   background: #FF5252;
+}
+
+.task-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #FFD24D;
+  color: #7A4A00;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 下课弹窗 */
@@ -1258,6 +1545,209 @@ onUnmounted(() => {
 .modal-fade-enter-from,
 .modal-fade-leave-to {
   opacity: 0;
+}
+
+.task-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7, 16, 32, 0.58);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  padding: 20px;
+}
+
+.task-modal-container {
+  width: min(1200px, 94vw);
+  height: min(86vh, 880px);
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 54px rgba(16, 24, 40, 0.28);
+}
+
+.task-modal-container--workspace {
+  display: flex;
+  flex-direction: column;
+}
+
+.task-modal-workspace {
+  height: 100%;
+  background: #fff;
+}
+
+.task-modal-empty {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: linear-gradient(180deg, #F8FBFF 0%, #FFFFFF 100%);
+  text-align: center;
+  padding: 24px;
+}
+
+.task-modal-empty-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #253046;
+}
+
+.task-modal-empty-text {
+  font-size: 14px;
+  color: #7B8597;
+}
+
+.task-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(76, 217, 100, 0.16);
+  background: linear-gradient(180deg, #F2FFF2 0%, #FFFFFF 100%);
+}
+
+.task-modal-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #253046;
+}
+
+.task-modal-subtitle {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #6B7280;
+  line-height: 1.5;
+}
+
+.task-modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px 0;
+  background: #FAFCFF;
+}
+
+.task-modal-group + .task-modal-group {
+  margin-top: 16px;
+}
+
+.task-modal-group-title {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4CD964;
+}
+
+.task-modal-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: #fff;
+  border: 1px solid rgba(76, 217, 100, 0.12);
+  box-shadow: 0 6px 16px rgba(76, 217, 100, 0.08);
+}
+
+.task-modal-item + .task-modal-item {
+  margin-top: 10px;
+}
+
+.task-modal-item-main {
+  min-width: 0;
+}
+
+.task-modal-item-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1F2937;
+  word-break: break-all;
+}
+
+.task-modal-item-status {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.task-modal-item-status.is-pending {
+  background: rgba(255, 107, 107, 0.12);
+  color: #E25B5B;
+}
+
+.task-modal-item-status.is-done {
+  background: rgba(76, 217, 100, 0.14);
+  color: #2F9A48;
+}
+
+.task-modal-item-btn,
+.task-modal-secondary-btn,
+.task-modal-primary-btn {
+  border: none;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.task-modal-item-btn:hover,
+.task-modal-secondary-btn:hover,
+.task-modal-primary-btn:hover {
+  transform: translateY(-1px);
+}
+
+.task-modal-item-btn {
+  flex-shrink: 0;
+  padding: 10px 14px;
+  background: rgba(76, 217, 100, 0.12);
+  color: #2F9A48;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.task-modal-state {
+  min-height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #8B95A7;
+  font-size: 14px;
+}
+
+.task-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 18px 24px 24px;
+  background: #fff;
+}
+
+.task-modal-secondary-btn,
+.task-modal-primary-btn {
+  min-width: 112px;
+  height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.task-modal-secondary-btn {
+  background: #EEF2F7;
+  color: #5B6578;
+}
+
+.task-modal-primary-btn {
+  background: linear-gradient(135deg, #4CD964 0%, #40C95A 100%);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(76, 217, 100, 0.24);
 }
 
 /* 课程资源弹窗样式 */
@@ -1482,5 +1972,39 @@ onUnmounted(() => {
   gap: 12px;
   color: #999;
   font-size: 14px;
+}
+
+@media (max-width: 768px) {
+  .task-modal-overlay {
+    padding: 12px;
+  }
+
+  .task-modal-container {
+    width: 100%;
+    height: 88vh;
+    border-radius: 14px;
+  }
+
+  .task-modal-header,
+  .task-modal-body,
+  .task-modal-footer {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .task-modal-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .task-modal-item-btn,
+  .task-modal-secondary-btn,
+  .task-modal-primary-btn {
+    width: 100%;
+  }
+
+  .task-modal-footer {
+    flex-direction: column;
+  }
 }
 </style>

@@ -662,6 +662,7 @@
             <span class="loading-text">{{ $t("common.loading") }}</span>
           </div>
           <iframe
+            ref="toolIframeRef"
             :src="currentToolUrl"
             class="tool-iframe"
             :class="{ hidden: toolIframeLoading }"
@@ -679,11 +680,26 @@
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from "vue";
 import { useTeacher } from "~/composables/api/useTeacher";
+import { aiAdmin } from "~/composables/api/ai";
 import { useI18n } from "vue-i18n";
 import { ElMessage } from "element-plus";
+import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 
 const { t: $t, locale } = useI18n();
 const router = useRouter();
+const runtimeConfig = useRuntimeConfig();
+const {
+  parseMessageData,
+  getMessageType,
+  pickMessagePayload,
+  pickMessageFileName,
+  toZipFile,
+  toWorkFile,
+  uploadFileToOSS,
+  createUploadFormData,
+  isMessageFromIframe,
+  postFileBufferToIframe,
+} = useIframeFileBridge();
 
 definePageMeta({
   layout: "sidebar",
@@ -697,6 +713,7 @@ const {
   getTeachList,
   getQuickLoginInfo,
 } = useTeacher();
+const { ssoLogin } = aiAdmin();
 
 const goToLessons = () => {
   router.push("/lessons");
@@ -884,10 +901,171 @@ const showToolIframeModal = ref(false);
 const currentToolUrl = ref("");
 const currentToolName = ref("");
 const toolIframeLoading = ref(true);
+const toolIframeRef = ref<HTMLIFrameElement | null>(null);
+const currentToolCacheKey = ref("");
+const savedProjectZipCache = new Map<string, File>();
+
+const parseToolIframeMessageData = parseMessageData;
+
+const toToolZipFile = (payload: unknown) => toZipFile(payload);
+
+const toToolWorkFile = (
+  payload: unknown,
+  fileName?: string,
+  fallbackExtension = ".sb3"
+) => toWorkFile(payload, fileName, fallbackExtension);
+
+const downloadToolZipFile = (zipFile: File) => {
+  const downloadUrl = URL.createObjectURL(zipFile);
+  const link = document.createElement("a");
+  link.href = downloadUrl;
+  link.download = zipFile.name;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+};
+
+const uploadToolWorkFileToOSS = async (file: File) =>
+  uploadFileToOSS(file, "上传作品文件失败");
+
+const postCachedZipToToolIframe = async () => {
+  const zipFile = currentToolCacheKey.value
+    ? savedProjectZipCache.get(currentToolCacheKey.value)
+    : null;
+  const postResult = await postFileBufferToIframe({
+    file: zipFile,
+    iframeUrl: currentToolUrl.value,
+    iframeWindow: toolIframeRef.value?.contentWindow,
+    type: "ZIP_DATA",
+  });
+
+  if (!postResult) {
+    return;
+  }
+
+  console.log("已向教师端工具 iframe 发送 ZIP_DATA:", {
+    cacheKey: currentToolCacheKey.value,
+    ...postResult,
+  });
+};
+
+const handleToolIframeMessage = async (event: MessageEvent) => {
+  if (
+    !isMessageFromIframe({
+      event,
+      iframeWindow: toolIframeRef.value?.contentWindow,
+      iframeUrl: currentToolUrl.value,
+    })
+  ) {
+    return;
+  }
+
+  const messageData = parseToolIframeMessageData(event.data) as any;
+  const messageType = getMessageType(messageData);
+
+  if (!messageData || (typeof messageData !== "object" && typeof messageData !== "string")) {
+    return;
+  }
+
+  if (messageType === "send-works-mc") {
+    const mcPayload = pickMessagePayload(messageData, [
+      "payload",
+      "data",
+      "file",
+      "blob",
+      "arrayBuffer",
+    ]);
+    const mcFile = toToolWorkFile(
+      mcPayload,
+      pickMessageFileName(messageData),
+      ".mc"
+    );
+
+    if (!mcFile) {
+      console.warn("收到 send-works-mc 消息，但 payload 不是可转换的文件类型:", messageData);
+      return;
+    }
+
+    const formData = createUploadFormData(mcFile);
+
+    const normalizedMessageData = {
+      ...messageData,
+      payload: mcFile,
+      mcFile,
+      formData,
+    };
+
+    try {
+      const uploadResult = await uploadToolWorkFileToOSS(mcFile);
+      const uploadedMessageData = {
+        ...normalizedMessageData,
+        uploadResult,
+      };
+
+      console.log("收到教师端工具 iframe send-works-mc 消息并上传 OSS 成功:", uploadedMessageData);
+
+      window.dispatchEvent(
+        new CustomEvent("tool-send-works-mc", {
+          detail: uploadedMessageData,
+        })
+      );
+    } catch (error) {
+      console.error("上传 send-works-mc 文件到 OSS 失败:", error);
+      ElMessage.error(error instanceof Error ? error.message : "上传作品文件失败");
+    }
+
+    return;
+  }
+
+  if (messageType !== "saveProject") {
+    return;
+  }
+
+  const zipPayload = pickMessagePayload(messageData);
+  const zipFile = toToolZipFile(zipPayload);
+  if (!zipFile) {
+    console.warn("收到 saveProject 消息，但 payload 不是可转换的文件类型:", messageData);
+    return;
+  }
+
+  const formData = createUploadFormData(zipFile);
+
+  const normalizedMessageData = {
+    ...messageData,
+    payload: zipFile,
+    zipFile,
+    formData,
+  };
+
+  if (currentToolCacheKey.value) {
+    savedProjectZipCache.set(currentToolCacheKey.value, zipFile);
+  }
+
+  console.log("收到教师端工具 iframe saveProject 消息:", normalizedMessageData);
+
+  try {
+    downloadToolZipFile(zipFile);
+    ElMessage.success(`项目已下载：${zipFile.name}`);
+  } catch (error) {
+    console.error("下载项目文件失败:", error);
+    ElMessage.error("下载项目文件失败");
+  }
+
+  window.dispatchEvent(
+    new CustomEvent("tool-save-project", {
+      detail: normalizedMessageData,
+    })
+  );
+};
 
 const toolUrls: Record<string, { url: string; nameKey: string }> = {
-  vincibot: { url: "https://vinci.matatastudio.com/", nameKey: "teacher.vincibot" },
-  nous: { url: "https://nous.matatastudio.com/", nameKey: "teacher.nous" },
+  vincibot: {
+    url: runtimeConfig.public.vincibotCreateUrl,
+    nameKey: "teacher.vincibot",
+  },
+
+  nous: { url: runtimeConfig.public.nousCreateUrl, nameKey: "teacher.nous" },
   talemap: {
     url:
       "https://www.mediafire.com/file_premium/rz1j080mpbsdhus/MatataCode-TaleMap-v1.0.0-win-x64.exe/file",
@@ -913,6 +1091,7 @@ const handleOpenTool = (toolId: string) => {
     }
 
     currentToolUrl.value = url;
+    currentToolCacheKey.value = `tool:${toolId}`;
     currentToolName.value = $t(tool.nameKey);
     toolIframeLoading.value = true;
     showToolIframeModal.value = true;
@@ -930,40 +1109,63 @@ const handleOpenAIModal = (key: string) => {
   showAIModal.value = true;
 };
 
-const handleAIConfirm = () => {
+const getAiToolAccessToken = async () => {
+  const ssoData = await ssoLogin();
+  const accessToken =
+    (typeof ssoData === "string" ? ssoData : "") ||
+    ssoData?.accessToken ||
+    ssoData?.token ||
+    ssoData?.access_token ||
+    "";
+
+  if (!accessToken) {
+    throw new Error("获取AI工具Token失败");
+  }
+
+  return accessToken;
+};
+
+const handleAIConfirm = async () => {
   if (!aiModelName.value.trim()) return;
 
-  const token =
-    "Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJ7XCJ0b2tlblR5cGVcIjpcImFjY2Vzc190b2tlblwiLFwidXNlcklkXCI6MTE1MzIsXCJ1c2VybmFtZVwiOlwiMzI4NzI1Nzk0QHFxLmNvbVwifSIsImV4cCI6MTc3MDQzODM0MSwiaWF0IjoxNzY3ODQ2MzQxNDU0LCJqdGkiOiI0YzBmYWQ1ZC1mYjVjLTRjMTMtOTUwNi1kOGVlOGI0YWUzMTAifQ.MKTjQtiuXvbl1TDvp3AF8j0qllvMX-Hr6wwqjkzKW3LpUlM7A882MhYX78l2DoqrxrRPQ1gAzm8uZ_anCgzlrg";
-  const typeMap: Record<string, number> = {
-    imageClassModel: 1,
-    gestureClassModel: 2,
-    voiceClassModel: 3,
-    poseClassModel: 4,
-  };
-  const type = typeMap[currentAIKey.value] || 1;
-  const lang = locale.value === "zh" ? "zh" : "en";
-  const url = `https://pre.matatalab.com/?token=${token}&type=${type}&projectName=${aiModelName.value}&lang=${lang}`;
+  try {
+    const token = await getAiToolAccessToken();
+    const typeMap: Record<string, number> = {
+      imageClassModel: 1,
+      gestureClassModel: 2,
+      voiceClassModel: 3,
+      poseClassModel: 4,
+    };
+    const type = typeMap[currentAIKey.value] || 1;
+    const lang = locale.value === "zh" ? "zh" : "en";
+    const url = `https://pre.matatalab.com/?token=${encodeURIComponent(token)}&type=${type}&projectName=${encodeURIComponent(aiModelName.value)}&lang=${lang}&ch=aiedu`;
 
-  currentToolUrl.value = url;
+    currentToolUrl.value = url;
+    currentToolCacheKey.value = `ai:${currentAIKey.value}`;
 
-  const titleMap: Record<string, string> = {
-    imageClassModel: $t("ai.imageClassModel"),
-    gestureClassModel: $t("ai.gestureClassModel"),
-    voiceClassModel: $t("ai.voiceClassModel"),
-    poseClassModel: $t("ai.poseClassModel"),
-  };
+    const titleMap: Record<string, string> = {
+      imageClassModel: $t("ai.imageClassModel"),
+      gestureClassModel: $t("ai.gestureClassModel"),
+      voiceClassModel: $t("ai.voiceClassModel"),
+      poseClassModel: $t("ai.poseClassModel"),
+    };
 
-  currentToolName.value = titleMap[currentAIKey.value] || "";
-  toolIframeLoading.value = true;
-  showToolIframeModal.value = true;
-
-  showAIModal.value = false;
+    currentToolName.value = titleMap[currentAIKey.value] || "";
+    toolIframeLoading.value = true;
+    showToolIframeModal.value = true;
+    showAIModal.value = false;
+  } catch (error) {
+    console.error("获取AI工具SSO登录信息失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "获取AI工具Token失败");
+  }
 };
 
 // iframe 加载完成
 const onToolIframeLoad = () => {
   toolIframeLoading.value = false;
+  window.setTimeout(() => {
+    void postCachedZipToToolIframe();
+  }, 300);
 };
 
 // 关闭工具 iframe 弹窗
@@ -973,6 +1175,14 @@ const closeToolIframeModal = () => {
   currentToolName.value = "";
   toolIframeLoading.value = true;
 };
+
+onMounted(() => {
+  window.addEventListener("message", handleToolIframeMessage);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("message", handleToolIframeMessage);
+});
 
 // 跳转到工具中心
 const goToToolCenter = () => {

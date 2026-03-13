@@ -1060,7 +1060,7 @@ const handleConfirmDisableQuickLogin = async () => {
     ElMessage.success("已停用快捷登录");
     emit("quickLoginChange", null);
   } catch (error: any) {
-    ElMessage.error(error.message || "停用失败");
+    console.error("停用快捷登录失败:", error);
   }
 };
 
@@ -1085,7 +1085,7 @@ const handleConfirmEnableQuickLogin = async () => {
     }
     emit("quickLoginChange");
   } catch (error: any) {
-    ElMessage.error(error.message || "启用失败");
+    console.error("启用快捷登录失败:", error);
   }
 };
 
@@ -1107,7 +1107,7 @@ const handleKickStudent = async (student: Student) => {
     // 刷新列表
     loadStudents();
   } catch (error: any) {
-    ElMessage.error(error.message || "踢出失败");
+    console.error("踢出学生失败:", error);
   }
 };
 
@@ -1147,7 +1147,6 @@ const handleEditGroup = async (row: Group) => {
     showGroupModal.value = true;
   } catch (error) {
     console.error("获取小组成员失败:", error);
-    ElMessage.error("获取小组成员失败");
   }
 };
 
@@ -1307,6 +1306,10 @@ const handleGroupBatchAction = () => {
   if (groupActiveAction.value === "batch") {
     exitGroupBatchMode();
   } else {
+    if (!groups.value.length) {
+      ElMessage.warning("当前无小组数据，请先创建小组");
+      return;
+    }
     groupActiveAction.value = "batch";
   }
 };
@@ -1433,7 +1436,7 @@ watch(activeTab, (val) => {
 }
 
 .search-input {
-  width: 260px;
+  width: 300px;
 }
 
 .quick-login-btn {

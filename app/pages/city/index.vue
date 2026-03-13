@@ -6,8 +6,8 @@
         <h1 class="text-lg font-medium text-gray-800 mb-4">
           {{ $t("city.districtManage") }}
         </h1>
-        <div class="text-gray-600 text-sm">
-          {{ $t("city.adminCount") }}：<span class="text-[#FF9900] font-medium">{{ total }}个</span>
+        <div class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap">
+          {{ $t("city.adminCount") }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>个</span>
         </div>
       </div>
 
@@ -372,7 +372,6 @@ const fetchList = async () => {
     total.value = res?.total || 0;
   } catch (error: any) {
     console.error("获取列表失败：", error);
-    ElMessage.error(error.message || t("city.getListFailed"));
   } finally {
     loading.value = false;
   }
@@ -422,7 +421,7 @@ const handleConfirmResetPassword = async () => {
     newPassword.value = res?.password || res || "12345678";
     showResetSuccessModal.value = true;
   } catch (error: any) {
-    ElMessage.error(error.message || t("city.resetPasswordFailed"));
+    console.error("重置区管理员密码失败:", error);
   }
 };
 

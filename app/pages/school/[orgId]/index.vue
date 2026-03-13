@@ -8,8 +8,8 @@
           <span class="text-gray-400">></span>
           <span>{{ $t('schoolAdmin.title') }}</span>
         </div>
-        <div class="text-gray-600 text-sm">
-          {{ $t('schoolAdmin.adminCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}{{ $t('schoolAdmin.person') }}</span>
+        <div class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap">
+          {{ $t('schoolAdmin.adminCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>{{ $t('schoolAdmin.person') }}</span>
         </div>
       </div>
 
@@ -313,7 +313,7 @@ const fetchTeacherList = async () => {
     tableData.value = result.list
     total.value = result.total
   } catch (error: any) {
-    ElMessage.error(error.message || t('schoolAdmin.getListFailed'))
+    console.error('获取校管理员列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -400,11 +400,13 @@ const handleDeleteTeacher = (row: any) => {
 
 const handleConfirmDeleteTeacher = async () => {
   try {
-    await schoolUserApi.deleteTeacher(deleteTeacherIds.value)
+    await schoolUserApi.deleteTeacher(deleteTeacherIds.value, undefined, orgId.value)
     ElMessage.success(t('common.deleteSuccess'))
     showDeleteTeacherModal.value = false
     fetchTeacherList()
-  } catch (error: any) { ElMessage.error(error.message || t('schoolAdmin.deleteFailed')) }
+  } catch (error: any) {
+    console.error('删除校管理员失败:', error)
+  }
 }
 
 // 重置密码
@@ -419,13 +421,15 @@ const handleConfirmResetTeacher = async () => {
     await schoolUserApi.resetTeacherPassword(resetTeacherIds.value, undefined, orgId.value)
     ElMessage.success(t('schoolAdmin.resetPasswordSuccess'))
     showResetTeacherModal.value = false
-  } catch (error: any) { ElMessage.error(error.message || t('schoolAdmin.resetPasswordFailed')) }
+  } catch (error: any) {
+    console.error('重置校管理员密码失败:', error)
+  }
 }
 
 // 导出
 const handleExport = async () => {
   try {
-    await schoolUserApi.exportTeacherInfo()
+    await schoolUserApi.exportTeacherInfo('校管理员账号信息.xlsx')
     ElMessage.success(t('common.exportSuccess'))
   } catch (error: any) {
     ElMessage.error(error.message || t('common.exportFailed'))

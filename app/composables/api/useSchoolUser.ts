@@ -131,11 +131,13 @@ export const useSchoolUser = () => {
   };
 
   // 删除教师
-  const deleteTeacher = async (userIds: string[], password?: string) => {
+  const deleteTeacher = async (userIds: string[], password?: string, orgId?: string) => {
     try {
-      // 有密码时需要加密（批量删除），无密码时不加密（单个删除）
-      const headers = password ? { 'isEncrypt': 'true' } : {}
-      const response = await http.post("/system/user/remove", { ids: userIds, password }, { 'isEncrypt': 'true' });
+      const payload: Record<string, any> = { ids: userIds, password }
+      if (orgId) {
+        payload.orgId = orgId
+      }
+      const response = await http.post("/system/user/remove", payload, { 'isEncrypt': 'true' });
       if (response.code !== 200) {
         throw new Error(response.msg || "删除教师失败");
       }
