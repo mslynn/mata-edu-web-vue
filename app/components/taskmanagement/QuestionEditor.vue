@@ -50,7 +50,7 @@
         </label>
         <div class="flex-1">
           <div class="space-y-2">
-            <div v-for="(option, optIndex) in localQuestion.options" :key="optIndex" class="flex items-center gap-2">
+            <div v-for="(option, optIndex) in localQuestion.options" :key="optIndex" class="flex items-center gap-2 group">
               <!-- Custom Radio for Single Choice -->
               <label v-if="localQuestion.type === 'single'" class="relative flex items-center cursor-pointer">
                 <input 
@@ -103,6 +103,14 @@
                   @update:image-url="option.imageUrl = $event"
                 />
               </div>
+              <button 
+                class="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-500 transition-opacity shrink-0"
+                @click="removeOption(optIndex)"
+              >
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+              </button>
             </div>
             <div class="flex items-center gap-2">
               <button 
@@ -117,27 +125,6 @@
           <div v-if="showError && !hasAnswer" class="text-sm text-red-500 mt-1">
             {{ $t('customExercise.answerRequired') }}
           </div>
-        </div>
-      </div>
-
-      <!-- 分值 -->
-      <div class="flex flex-col">
-        <div class="flex items-center">
-          <label class="text-sm text-gray-600 shrink-0 w-[60px]">
-            <span class="text-red-500">*</span>{{ $t('customExercise.score') }}：
-          </label>
-          <input 
-            v-model.number="localQuestion.score"
-            type="number"
-            min="1"
-            max="100"
-            :placeholder="$t('customExercise.scorePlaceholder')"
-            class="w-[200px] h-9 px-3 border rounded text-sm focus:outline-none focus:border-[#FF9900]"
-            :class="showError && (localQuestion.score < 1 || localQuestion.score > 100) ? 'border-red-400' : 'border-gray-300'"
-          />
-        </div>
-        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-red-500">
-          {{ $t('customExercise.scoreRangeError') }}
         </div>
       </div>
 
@@ -239,6 +226,32 @@ const hasAnswer = computed(() => {
 const addOption = () => {
   if (localQuestion.value.options && localQuestion.value.options.length < 8) {
     localQuestion.value.options.push({ text: '', type: 'text' })
+  }
+}
+
+const removeOption = (index: number) => {
+  if (!localQuestion.value.options || localQuestion.value.options.length <= 2) return
+
+  localQuestion.value.options.splice(index, 1)
+
+  if (localQuestion.value.type === 'single') {
+    const answer = localQuestion.value.correctAnswer
+    if (typeof answer === 'number') {
+      if (answer === index) {
+        localQuestion.value.correctAnswer = undefined
+      } else if (answer > index) {
+        localQuestion.value.correctAnswer = answer - 1
+      }
+    }
+    return
+  }
+
+  if (localQuestion.value.type === 'multiple') {
+    const answer = localQuestion.value.correctAnswer
+    if (!Array.isArray(answer)) return
+    localQuestion.value.correctAnswer = answer
+      .filter((item) => item !== index)
+      .map((item) => (item > index ? item - 1 : item))
   }
 }
 

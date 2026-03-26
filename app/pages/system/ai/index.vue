@@ -1,7 +1,7 @@
 <template>
-  <div class="ai-center-page">
+  <div class="ai-center-page" :class="{ 'ai-center-page--embedded': embedded }">
     <!-- 页面标题 -->
-    <div class="page-header">
+    <div v-if="!embedded" class="page-header">
       <h1 class="page-title">{{ $t("ai.pageTitle") }}</h1>
       <button class="material-btn" @click="goToMaterial">
         <svg
@@ -20,7 +20,7 @@
     </div>
 
     <!-- 内容区 -->
-    <div class="content-area">
+    <div v-if="!embedded" class="content-area">
       <!-- 骨架屏 -->
       <template v-if="pageLoading">
         <div v-for="i in 4" :key="i" class="section">
@@ -419,7 +419,12 @@
     </div>
 
     <!-- 模型入口弹窗 -->
-    <div v-if="showModelSelectModal" class="modal-overlay" @click="closeModelSelectModal">
+    <div
+      v-if="showModelSelectModal"
+      class="modal-overlay"
+      :class="{ 'modal-overlay--embedded': embedded }"
+      @click="closeModelSelectModal"
+    >
       <div class="modal-content model-select-modal" @click.stop>
         <div class="modal-header">
           <span class="modal-title">{{
@@ -515,7 +520,12 @@
     </div>
 
     <!-- 新建模型弹窗 -->
-    <div v-if="showModal" class="modal-overlay" @click="closeCreateModal">
+    <div
+      v-if="showModal"
+      class="modal-overlay"
+      :class="{ 'modal-overlay--embedded': embedded }"
+      @click="closeCreateModal"
+    >
       <div class="modal-content" @click.stop>
         <div class="modal-header">
           <span class="modal-title">{{
@@ -586,7 +596,7 @@
           ref="aiIframeRef"
           :src="currentIframeUrl"
           class="iframe-view"
-          allow="camera; microphone"
+          allow="camera; microphone; bluetooth; serial"
           @load="onIframeLoad"
         ></iframe>
       </div>
@@ -595,7 +605,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, nextTick, onUnmounted } from "vue";
+import { ref, computed, onMounted, nextTick, onUnmounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { ElMessage, ElMessageBox } from "element-plus";
 import { aiAdmin } from "~/composables/api/ai";
@@ -618,19 +628,19 @@ definePageMeta({
 });
 
 const router = useRouter();
+const route = useRoute();
+const embedded = computed(() => route.query.embedded === "1");
 const { locale, t } = useI18n();
-const { getAiList, createAi, updateAi, deleteAi, ssoLogin } = aiAdmin();
+const { getAiList, createAi, updateAi, deleteAi, deleteOss, ssoLogin } = aiAdmin();
 const {
   parseMessageData,
   getMessageType,
   pickMessagePayload,
   pickMessageFileName,
-  createUploadFormData,
   toUploadFile: toSharedUploadFile,
   uploadFileToOSS,
-  getIframeOrigin,
+  downloadFileFromOSS,
   isMessageFromIframe,
-  postFileBufferToIframe,
 } = useIframeFileBridge();
 
 // 页面骨架屏（最少显示 300ms）
@@ -818,21 +828,32 @@ const currentModel = ref<AICardItem | null>(null);
 const modelName = ref("");
 const currentProjectName = ref("");
 const currentEditingModelId = ref("");
+const currentEditingOssId = ref("");
 const currentToolCacheKey = ref("");
 const savedModels = ref<SavedAIModelListItem[]>([]);
 const savedModelsLoading = ref(false);
+const loadedModelKeys = new Set<string>();
+const loadingModelKeys = new Set<string>();
 const showIframeModal = ref(false);
 const currentIframeUrl = ref("");
 const iframeLoading = ref(true);
+const iframeReady = ref(false);
 const aiIframeRef = ref<HTMLIFrameElement | null>(null);
 const savedProjectZipCache = new Map<string, File>();
-const TM_ZIP_REQUEST_MESSAGE_TYPE = "request-tm-zip";
+const savedModelMetaCache = new Map<string, SavedAIModelListItem>();
+const DEFAULT_IFRAME_ZIP_MESSAGE_TYPE = "ZIP_DATA";
+const TM_ZIP_RECEIVE_MESSAGE_TYPE = "receive-tm-zip";
 const TM_ZIP_RESPONSE_MESSAGE_TYPE = "send-tm-zip";
-const TM_ZIP_RESOLVE_MESSAGE_TYPE = "resolve-tm-zip";
-const TM_ZIP_REQUEST_TIMEOUT = 5000;
-const isRequestingIframeClose = ref(false);
+const currentIframeZipMessageType = ref(DEFAULT_IFRAME_ZIP_MESSAGE_TYPE);
+const pendingIframeZipDelivery = ref(false);
+const isEditingSavedModel = ref(false);
 const isHandlingTmZip = ref(false);
-let closeIframeTimer: number | null = null;
+const pendingIframeMessage = ref<{
+  type: string;
+  payload: ArrayBuffer;
+  optId?: string;
+  transfer?: Transferable[];
+} | null>(null);
 
 const isComingSoon = (item: AICardItem) => {
   return ![
@@ -841,6 +862,30 @@ const isComingSoon = (item: AICardItem) => {
     "voiceClassModel",
     "poseClassModel",
   ].includes(item.key);
+};
+
+const notifyEmbeddedHostToClose = () => {
+  if (!import.meta.client || !embedded.value || window.parent === window) {
+    return;
+  }
+
+  window.parent.postMessage(
+    {
+      type: "close-ai-embedded",
+    },
+    "*"
+  );
+};
+
+const findAIItemByKey = (key: string) => {
+  const allItems = [
+    ...aigcItems.value,
+    ...visionItems.value,
+    ...languageItems.value,
+    ...behaviorItems.value,
+    ...mlItems.value,
+  ];
+  return allItems.find((item) => item.key === key) || null;
 };
 
 const openAIModelDb = () => {
@@ -870,10 +915,16 @@ const loadSavedModels = async () => {
     return;
   }
 
+  const modelKey = currentModel.value.key;
+  if (loadingModelKeys.has(modelKey)) {
+    return;
+  }
+
   savedModelsLoading.value = true;
+  loadingModelKeys.add(modelKey);
 
   try {
-    const targetOptType = getAiOptTypeByToolKey(currentModel.value.key);
+    const targetOptType = getAiOptTypeByToolKey(modelKey);
     const userId = getCurrentUserId();
     const response = await getAiList({
       optType: targetOptType,
@@ -882,8 +933,7 @@ const loadSavedModels = async () => {
     const list = Array.isArray(response)
       ? response
       : response?.rows || response?.list || response?.records || [];
-
-    savedModels.value = list
+    const remoteModels = list
       .filter((item: any) => !targetOptType || item.optType === targetOptType)
       .map((item: any) => {
         const modelName = item.optName || item.name || item.projectName || "-";
@@ -904,15 +954,24 @@ const loadSavedModels = async () => {
           ossId: item.ossId ? String(item.ossId) : "",
           optType: item.optType || "",
           url: item.url || "",
-        };
-      })
-      .sort(
-        (a: SavedAIModelListItem, b: SavedAIModelListItem) => b.updatedAt - a.updatedAt
-      );
+        } satisfies SavedAIModelListItem;
+      });
+
+    savedModels.value = remoteModels.sort(
+      (a: SavedAIModelListItem, b: SavedAIModelListItem) => b.updatedAt - a.updatedAt
+    );
+
+    console.log("加载AI模型列表完成:", {
+      toolKey: modelKey,
+      count: savedModels.value.length,
+      ids: savedModels.value.map((item) => item.id),
+    });
+    loadedModelKeys.add(modelKey);
   } catch (error) {
     console.error("加载AI模型列表失败:", error);
     savedModels.value = [];
   } finally {
+    loadingModelKeys.delete(modelKey);
     savedModelsLoading.value = false;
   }
 };
@@ -952,6 +1011,39 @@ const getAIModelRecord = async (modelId: string) => {
   });
 };
 
+const getAllAIModelRecords = async () => {
+  const db = await openAIModelDb();
+
+  return new Promise<SavedAIModelRecord[]>((resolve, reject) => {
+    const transaction = db.transaction(AI_MODEL_STORE_NAME, "readonly");
+    const store = transaction.objectStore(AI_MODEL_STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = () =>
+      resolve((request.result as SavedAIModelRecord[] | undefined) || []);
+    request.onerror = () => reject(request.error || new Error("读取模型列表失败"));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () =>
+      reject(transaction.error || new Error("读取模型列表失败"));
+  });
+};
+
+const deleteAIModelRecord = async (modelId: string) => {
+  const db = await openAIModelDb();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(AI_MODEL_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(AI_MODEL_STORE_NAME);
+    const request = store.delete(modelId);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error || new Error("删除本地模型失败"));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () =>
+      reject(transaction.error || new Error("删除本地模型失败"));
+  });
+};
+
 const getTypeByToolKey = (toolKey: string) => {
   const typeMap: Record<string, number> = {
     imageClassModel: 1,
@@ -985,15 +1077,15 @@ const getAiToolAccessToken = async () => {
   return accessToken;
 };
 
-const buildAIIframeUrl = async (toolKey: string, projectName: string) => {
+const buildAIIframeUrl = async (toolKey: string, projectName: string, optId = "") => {
   const lang = locale.value === "zh" ? "zh" : "en";
   const type = getTypeByToolKey(toolKey);
   const aiToolToken = await getAiToolAccessToken();
-  return `http://192.168.0.199:8601/?token=${encodeURIComponent(
+  return `https://pre.matatalab.com/?token=${encodeURIComponent(
     aiToolToken
   )}&type=${type}&projectName=${encodeURIComponent(
     projectName
-  )}&lang=${lang}&ch=aiedu&type2=opt`;
+  )}&lang=${lang}&ch=aiedu&type2=opt${optId ? `&optId=${encodeURIComponent(optId)}` : ""}`;
 };
 
 const getAIModelCacheKey = (toolKey: string, modelId: string) =>
@@ -1066,6 +1158,40 @@ const getCurrentUserId = () => {
   }
 };
 
+const uploadProjectFileToOSS = async (file: File) => {
+  const uploadResult = await uploadFileToOSS(file, "上传模型文件失败");
+  console.log("AI 模型文件上传响应:", uploadResult);
+  return uploadResult;
+};
+
+const downloadAiModelZipFile = async (item: SavedAIModelListItem) => {
+  const fallbackFileName =
+    item.fileName || getAiFileNameFromUrl(item.url, `${item.name || "project"}.zip`);
+
+  if (item.url) {
+    const response = await fetch(item.url);
+    if (!response.ok) {
+      throw new Error(`下载模型文件失败: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return new File([blob], fallbackFileName, {
+      type: item.mimeType || blob.type || "application/zip",
+      lastModified: item.updatedAt || Date.now(),
+    });
+  }
+
+  if (item.ossId) {
+    return downloadFileFromOSS(
+      item.ossId,
+      fallbackFileName,
+      item.mimeType || "application/zip"
+    );
+  }
+
+  return null;
+};
+
 const generateAIModelId = () => {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
     return crypto.randomUUID();
@@ -1077,91 +1203,130 @@ const generateAIModelId = () => {
 const toUploadFile = (payload: unknown, fileName?: string) =>
   toSharedUploadFile(payload, fileName);
 
-const uploadProjectFileToOSS = async (file: File) => {
-  const uploadResult = await uploadFileToOSS(file, "上传模型文件失败");
-  console.log("AI 模型文件上传响应:", uploadResult);
-  return uploadResult;
-};
-
 const parseIframeMessageData = (rawData: unknown) => parseMessageData(rawData);
 
-const postCachedZipToIframe = async () => {
-  const zipFile = currentToolCacheKey.value
-    ? savedProjectZipCache.get(currentToolCacheKey.value)
-    : null;
-  const postResult = await postFileBufferToIframe({
-    file: zipFile,
-    iframeUrl: currentIframeUrl.value,
-    iframeWindow: aiIframeRef.value?.contentWindow,
-    type: "ZIP_DATA",
-  });
-
-  if (postResult) {
-    console.log("已向 AI iframe 发送 ZIP_DATA:", {
-      cacheKey: currentToolCacheKey.value,
-      ...postResult,
-    });
-  }
-};
-
-const clearCloseIframeTimer = () => {
-  if (closeIframeTimer) {
-    window.clearTimeout(closeIframeTimer);
-    closeIframeTimer = null;
-  }
-};
-
-const finishCloseIframeModal = () => {
-  clearCloseIframeTimer();
-  isRequestingIframeClose.value = false;
-  isHandlingTmZip.value = false;
-  showIframeModal.value = false;
-  currentIframeUrl.value = "";
-  iframeLoading.value = true;
-  currentProjectName.value = "";
-  currentEditingModelId.value = "";
-  currentToolCacheKey.value = "";
-  currentModel.value = null;
-  savedModels.value = [];
-};
-
-const requestTmZipFromIframe = () => {
+const postToIframe = (message: {
+  type: string;
+  payload: ArrayBuffer;
+  optId?: string;
+  transfer?: Transferable[];
+}) => {
   const iframeWindow = aiIframeRef.value?.contentWindow;
-  const iframeOrigin = getIframeOrigin(currentIframeUrl.value);
-  if (!iframeWindow || !iframeOrigin) {
+  if (!iframeWindow) {
     return false;
   }
+  const payloadSize = message.payload.byteLength;
 
-  const requestMessage = {
-    type: TM_ZIP_REQUEST_MESSAGE_TYPE,
-    event: TM_ZIP_REQUEST_MESSAGE_TYPE,
-    eventName: TM_ZIP_REQUEST_MESSAGE_TYPE,
-    name: TM_ZIP_REQUEST_MESSAGE_TYPE,
-  };
+  iframeWindow.postMessage(
+    {
+      type: message.type,
+      payload: message.payload,
+      optId: message.optId,
+    },
+    "*",
+    message.transfer || []
+  );
 
-  iframeWindow.postMessage(requestMessage, iframeOrigin);
-
-  iframeWindow.postMessage(TM_ZIP_REQUEST_MESSAGE_TYPE, iframeOrigin);
-
-  console.log("已向 AI iframe 请求 request-tm-zip:", {
-    origin: iframeOrigin,
+  console.log("已向 AI iframe 发送 receive-tm-zip:", {
     cacheKey: currentToolCacheKey.value,
-    requestMessage,
+    type: message.type,
+    fileName: currentToolCacheKey.value
+      ? savedProjectZipCache.get(currentToolCacheKey.value)?.name || ""
+      : "",
+    optId: message.optId || "",
+    payloadType: "ArrayBuffer",
+    size: payloadSize,
   });
 
   return true;
 };
 
+const postCachedZipToIframe = async () => {
+  const zipFile = currentToolCacheKey.value
+    ? savedProjectZipCache.get(currentToolCacheKey.value)
+    : null;
+  if (!zipFile) {
+    return null;
+  }
+
+  const arrayBuffer = await zipFile.arrayBuffer();
+  const message = {
+    type: currentIframeZipMessageType.value,
+    payload: arrayBuffer,
+    optId:
+      currentIframeZipMessageType.value === TM_ZIP_RECEIVE_MESSAGE_TYPE
+        ? currentEditingModelId.value || undefined
+        : undefined,
+    transfer: [arrayBuffer] as Transferable[],
+  };
+
+  if (iframeReady.value) {
+    const posted = postToIframe(message);
+    if (posted) {
+      pendingIframeZipDelivery.value = false;
+      pendingIframeMessage.value = null;
+      return {
+        payloadType: "ArrayBuffer" as const,
+        fileName: zipFile.name,
+        size: zipFile.size,
+      };
+    }
+    pendingIframeMessage.value = message;
+    return null;
+  }
+
+  pendingIframeMessage.value = message;
+  return {
+    payloadType: "ArrayBuffer" as const,
+    fileName: zipFile.name,
+    size: zipFile.size,
+    pending: true,
+  };
+};
+
+const finishCloseIframeModal = () => {
+  isHandlingTmZip.value = false;
+  pendingIframeZipDelivery.value = false;
+  isEditingSavedModel.value = false;
+  pendingIframeMessage.value = null;
+  showIframeModal.value = false;
+  currentIframeUrl.value = "";
+  iframeLoading.value = true;
+  iframeReady.value = false;
+  currentIframeZipMessageType.value = DEFAULT_IFRAME_ZIP_MESSAGE_TYPE;
+  currentProjectName.value = "";
+  currentEditingModelId.value = "";
+  currentEditingOssId.value = "";
+  currentToolCacheKey.value = "";
+  currentModel.value = null;
+  savedModels.value = [];
+
+  notifyEmbeddedHostToClose();
+};
+
 const openAIIframe = async (tool: AICardItem, projectName: string, modelId: string) => {
   try {
-    const iframeUrl = await buildAIIframeUrl(tool.key, projectName);
-    clearCloseIframeTimer();
-    isRequestingIframeClose.value = false;
+    const iframeUrl = await buildAIIframeUrl(
+      tool.key,
+      projectName,
+      isEditingSavedModel.value ? modelId : ""
+    );
+    const cacheKey = getAIModelCacheKey(tool.key, modelId);
+    console.log("打开 AI iframe:", {
+      mode: isEditingSavedModel.value ? "edit" : "create",
+      toolKey: tool.key,
+      projectName,
+      modelId,
+      optId: isEditingSavedModel.value ? modelId : "",
+      iframeUrl,
+    });
     isHandlingTmZip.value = false;
+    pendingIframeZipDelivery.value = savedProjectZipCache.has(cacheKey);
+    iframeReady.value = false;
     currentModel.value = tool;
     currentProjectName.value = projectName;
     currentEditingModelId.value = modelId;
-    currentToolCacheKey.value = getAIModelCacheKey(tool.key, modelId);
+    currentToolCacheKey.value = cacheKey;
     currentIframeUrl.value = iframeUrl;
     iframeLoading.value = true;
     showModelSelectModal.value = false;
@@ -1180,22 +1345,6 @@ const formatSavedModelTime = (timestamp: number) => {
 };
 
 const handleIframeMessage = async (event: MessageEvent) => {
-  const iframeOrigin = getIframeOrigin(currentIframeUrl.value);
-  const sourceMatched =
-    !!aiIframeRef.value?.contentWindow &&
-    event.source === aiIframeRef.value.contentWindow;
-  const originMatched = !!iframeOrigin && event.origin === iframeOrigin;
-
-  if (isRequestingIframeClose.value) {
-    console.log("关闭阶段收到 window message:", {
-      origin: event.origin,
-      expectedOrigin: iframeOrigin,
-      sourceMatched,
-      originMatched,
-      data: event.data,
-    });
-  }
-
   if (
     !isMessageFromIframe({
       event,
@@ -1203,35 +1352,11 @@ const handleIframeMessage = async (event: MessageEvent) => {
       iframeUrl: currentIframeUrl.value,
     })
   ) {
-    if (isRequestingIframeClose.value) {
-      console.warn("关闭阶段消息未通过 iframe 来源校验，已忽略:", {
-        origin: event.origin,
-        expectedOrigin: iframeOrigin,
-        sourceMatched,
-        originMatched,
-        data: event.data,
-      });
-    }
     return;
   }
 
   const messageData = parseIframeMessageData(event.data) as any;
   const messageType = getMessageType(messageData);
-  if (isRequestingIframeClose.value) {
-    console.log("收到 AI iframe 关闭阶段消息:", {
-      origin: event.origin,
-      type: messageType,
-      data: messageData,
-    });
-  }
-
-  if (messageType === TM_ZIP_RESOLVE_MESSAGE_TYPE) {
-    console.log("收到 AI iframe resolve-tm-zip 消息:", {
-      origin: event.origin,
-      data: messageData,
-    });
-    return;
-  }
 
   if (
     !messageData ||
@@ -1247,7 +1372,6 @@ const handleIframeMessage = async (event: MessageEvent) => {
     }
 
     isHandlingTmZip.value = true;
-    clearCloseIframeTimer();
 
     const rawPayload = pickMessagePayload(messageData, [
       "payload",
@@ -1266,118 +1390,132 @@ const handleIframeMessage = async (event: MessageEvent) => {
       return;
     }
 
-    const formData = createUploadFormData(uploadFile);
+    const saveMode = isEditingSavedModel.value ? "edit" : "create";
+    const activeToolKey = currentModel.value?.key || "";
+    const persistedModelId = currentEditingModelId.value || generateAIModelId();
+    const persistedProjectName =
+      currentProjectName.value.trim() || uploadFile.name.replace(/\.[^.]+$/, "");
+    const optType = activeToolKey ? getAiOptTypeByToolKey(activeToolKey) : "";
+    const cacheKey = activeToolKey
+      ? getAIModelCacheKey(activeToolKey, persistedModelId)
+      : currentToolCacheKey.value;
 
-    const normalizedMessageData = {
-      ...messageData,
-      payload: uploadFile,
-      uploadFile,
-      formData,
-    };
-
-    let uploadResult = null;
-    try {
-      uploadResult = await uploadProjectFileToOSS(uploadFile);
-      console.log("收到 AI iframe send-tm-zip 消息并上传 OSS 成功:", {
-        ...normalizedMessageData,
-        uploadResult,
-      });
-    } catch (error) {
-      console.error("上传 AI 模型文件到 OSS 失败:", error);
-      ElMessage.error(error instanceof Error ? error.message : "上传模型文件失败");
-      return;
-    }
-
-    const ossId = uploadResult?.ossId;
-    const userId = getCurrentUserId();
-    const optType = currentModel.value
-      ? getAiOptTypeByToolKey(currentModel.value.key)
-      : "";
-    const optName = currentProjectName.value || uploadFile.name;
-    let persistedModelId = currentEditingModelId.value;
-
-    if (!ossId || !userId || !optType) {
-      console.warn("createAi 参数不完整，已跳过创建:", {
-        ossId,
-        userId,
-        optType,
-        optName,
-      });
-    } else {
-      try {
-        const createResult = await createAi({
-          optName,
-          optType,
-          userId,
-          ossId,
-        });
-        uploadResult = {
-          ...uploadResult,
-          createResult,
-        };
-        persistedModelId = String(
-          createResult?.optId || createResult?.id || currentEditingModelId.value
-        );
-        if (currentModel.value && persistedModelId) {
-          currentEditingModelId.value = persistedModelId;
-          currentToolCacheKey.value = getAIModelCacheKey(
-            currentModel.value.key,
-            persistedModelId
-          );
-        }
-        console.log("AI 模型创建成功:", createResult);
-        ElMessage.success("创建成功");
-      } catch (error) {
-        console.error("调用 createAi 失败:", error);
-      }
-    }
+    console.log("收到 AI iframe send-tm-zip，准备写入本地模型库:", {
+      mode: saveMode,
+      origin: event.origin,
+      type: messageType,
+      rawData: event.data,
+      data: messageData,
+      payload: rawPayload,
+      uploadFile: {
+        name: uploadFile.name,
+        type: uploadFile.type,
+        size: uploadFile.size,
+      },
+      modelId: persistedModelId,
+      projectName: persistedProjectName,
+      toolKey: activeToolKey,
+    });
 
     window.dispatchEvent(
       new CustomEvent("tool-send-tm-zip", {
         detail: {
-          ...normalizedMessageData,
-          uploadResult,
+          ...messageData,
+          payload: uploadFile,
+          uploadFile,
+          mode: saveMode,
         },
       })
     );
 
-    if (
-      !currentModel.value ||
-      !currentEditingModelId.value ||
-      !currentProjectName.value
-    ) {
-      console.warn("AI 模型上下文不完整，已完成下载和事件派发，但未写入本地模型列表");
+    if (!currentModel.value || !activeToolKey) {
+      console.warn("AI 模型上下文不完整，已收到 send-tm-zip，但未写入本地模型列表");
       return;
     }
 
-    if (currentToolCacheKey.value) {
-      savedProjectZipCache.set(currentToolCacheKey.value, uploadFile);
-    }
-
     try {
-      await saveAIModelRecord({
-        id: persistedModelId,
+      if (isEditingSavedModel.value && currentEditingOssId.value) {
+        try {
+          await deleteOss(currentEditingOssId.value);
+          console.log("删除旧OSS对象成功:", currentEditingOssId.value);
+        } catch (error) {
+          console.warn("删除旧OSS对象失败，继续上传新文件:", error);
+        }
+      }
+
+      const uploadResult = await uploadProjectFileToOSS(uploadFile);
+      const ossId = uploadResult?.ossId;
+      const userId = getCurrentUserId();
+
+      if (!ossId || !userId || !optType) {
+        throw new Error("AI 保存参数不完整");
+      }
+
+      let finalModelId = persistedModelId;
+      if (isEditingSavedModel.value && currentEditingModelId.value) {
+        await updateAi({
+          optId: currentEditingModelId.value,
+          optName: persistedProjectName,
+          optType,
+          userId,
+          ossId,
+        });
+        finalModelId = currentEditingModelId.value;
+      } else {
+        const createResult = await createAi({
+          optName: persistedProjectName,
+          optType,
+          userId,
+          ossId,
+        });
+        finalModelId = String(
+          createResult?.optId || createResult?.id || currentEditingModelId.value || persistedModelId
+        );
+      }
+
+      const finalCacheKey = getAIModelCacheKey(activeToolKey, finalModelId);
+      currentEditingModelId.value = finalModelId;
+      currentEditingOssId.value = String(ossId);
+      currentToolCacheKey.value = finalCacheKey;
+      savedProjectZipCache.set(finalCacheKey, uploadFile);
+      if (cacheKey !== finalCacheKey) {
+        savedProjectZipCache.delete(cacheKey);
+      }
+      savedModelMetaCache.set(finalModelId, {
+        id: finalModelId,
         toolKey: currentModel.value.key,
-        name: currentProjectName.value,
+        name: persistedProjectName,
+        updatedAt: Date.now(),
+        fileName: uploadFile.name,
+        mimeType: uploadFile.type,
+        size: uploadFile.size,
+        ossId: String(ossId),
+        optType,
+        url: uploadResult?.url || "",
+      });
+      await saveAIModelRecord({
+        id: finalModelId,
+        toolKey: currentModel.value.key,
+        name: persistedProjectName,
         updatedAt: Date.now(),
         fileName: uploadFile.name,
         mimeType: uploadFile.type,
         size: uploadFile.size,
         zipBlob: uploadFile,
-        ossId: ossId ? String(ossId) : "",
+        ossId: String(ossId),
         optType,
+        url: uploadResult?.url || "",
       });
 
+      isEditingSavedModel.value = true;
       await loadSavedModels();
+      ElMessage.success(saveMode === "edit" ? "编辑成功" : "创建成功");
     } catch (error) {
-      console.error("保存本地模型失败:", error);
-      ElMessage.error(t("ai.modelSaveFailed"));
+      console.error("保存AI模型失败:", error);
+      ElMessage.error(error instanceof Error ? error.message : t("ai.modelSaveFailed"));
     }
   } finally {
     isHandlingTmZip.value = false;
-    if (isRequestingIframeClose.value) {
-      finishCloseIframeModal();
-    }
   }
 };
 
@@ -1386,9 +1524,11 @@ const handleCardClick = async (item: AICardItem) => {
 
   currentModel.value = item;
   modelName.value = "";
-  savedModels.value = [];
   showModelSelectModal.value = true;
-  await loadSavedModels();
+  if (!loadedModelKeys.has(item.key)) {
+    savedModels.value = [];
+    await loadSavedModels();
+  }
 };
 
 const closeModelSelectModal = () => {
@@ -1396,6 +1536,7 @@ const closeModelSelectModal = () => {
   currentModel.value = null;
   modelName.value = "";
   savedModels.value = [];
+  notifyEmbeddedHostToClose();
 };
 
 const openCreateModelModal = () => {
@@ -1413,6 +1554,7 @@ const closeCreateModal = () => {
   }
 
   savedModels.value = [];
+  notifyEmbeddedHostToClose();
 };
 
 const handleConfirm = async () => {
@@ -1426,6 +1568,9 @@ const handleConfirm = async () => {
     return;
   }
 
+  isEditingSavedModel.value = false;
+  currentEditingOssId.value = "";
+  currentIframeZipMessageType.value = DEFAULT_IFRAME_ZIP_MESSAGE_TYPE;
   await openAIIframe(currentModel.value, trimmedName, generateAIModelId());
 };
 
@@ -1435,13 +1580,17 @@ const handleOpenSavedModel = async (item: SavedAIModelListItem) => {
   }
 
   try {
-    await updateAi({
-      optId: item.id,
-    });
-
     const cacheKey = getAIModelCacheKey(item.toolKey, item.id);
     const cachedFile = savedProjectZipCache.get(cacheKey);
     if (cachedFile) {
+      console.log("命中内存缓存，直接使用已缓存的 AI 模型 ZIP:", {
+        modelId: item.id,
+        fileName: cachedFile.name,
+        size: cachedFile.size,
+      });
+      isEditingSavedModel.value = true;
+      currentEditingOssId.value = item.ossId || "";
+      currentIframeZipMessageType.value = TM_ZIP_RECEIVE_MESSAGE_TYPE;
       await openAIIframe(currentModel.value, item.name, item.id);
       return;
     }
@@ -1453,7 +1602,44 @@ const handleOpenSavedModel = async (item: SavedAIModelListItem) => {
         lastModified: localRecord.updatedAt,
       });
 
+      console.log("命中 IndexedDB 缓存，直接使用本地 AI 模型 ZIP:", {
+        modelId: item.id,
+        fileName: localFile.name,
+        size: localFile.size,
+      });
       savedProjectZipCache.set(cacheKey, localFile);
+      isEditingSavedModel.value = true;
+      currentEditingOssId.value = item.ossId || localRecord.ossId || "";
+      currentIframeZipMessageType.value = TM_ZIP_RECEIVE_MESSAGE_TYPE;
+      await openAIIframe(currentModel.value, item.name, item.id);
+      return;
+    }
+
+    const remoteFile = await downloadAiModelZipFile(item);
+    if (remoteFile) {
+      savedProjectZipCache.set(cacheKey, remoteFile);
+      savedModelMetaCache.set(item.id, {
+        ...item,
+        fileName: remoteFile.name,
+        mimeType: remoteFile.type || item.mimeType || "application/octet-stream",
+        size: remoteFile.size,
+      });
+      await saveAIModelRecord({
+        id: item.id,
+        toolKey: item.toolKey,
+        name: item.name,
+        updatedAt: item.updatedAt || Date.now(),
+        fileName: remoteFile.name,
+        mimeType: remoteFile.type || item.mimeType || "application/octet-stream",
+        size: remoteFile.size,
+        zipBlob: remoteFile,
+        ossId: item.ossId || "",
+        optType: item.optType || "",
+        url: item.url || "",
+      });
+      isEditingSavedModel.value = true;
+      currentEditingOssId.value = item.ossId || "";
+      currentIframeZipMessageType.value = TM_ZIP_RECEIVE_MESSAGE_TYPE;
       await openAIIframe(currentModel.value, item.name, item.id);
       return;
     }
@@ -1478,6 +1664,10 @@ const handleDeleteSavedModel = async (item: SavedAIModelListItem) => {
 
   try {
     await deleteAi(item.id);
+    await deleteAIModelRecord(item.id);
+    const cacheKey = getAIModelCacheKey(item.toolKey, item.id);
+    savedProjectZipCache.delete(cacheKey);
+    savedModelMetaCache.delete(item.id);
     savedModels.value = savedModels.value.filter((model) => model.id !== item.id);
     ElMessage.success("删除成功");
   } catch (error) {
@@ -1486,45 +1676,71 @@ const handleDeleteSavedModel = async (item: SavedAIModelListItem) => {
   }
 };
 
+const openSavedModelFromRoute = async () => {
+  const openKey = typeof route.query.open === "string" ? route.query.open : "";
+  const modelId = typeof route.query.modelId === "string" ? route.query.modelId : "";
+  const targetItem = openKey ? findAIItemByKey(openKey) : null;
+
+  if (!targetItem) {
+    return;
+  }
+
+  await handleCardClick(targetItem);
+
+  if (!modelId) {
+    return;
+  }
+
+  const targetSavedModel = savedModels.value.find(
+    (item) => String(item.id) === modelId
+  );
+
+  if (targetSavedModel) {
+    await handleOpenSavedModel(targetSavedModel);
+  }
+};
+
 const closeIframeModal = () => {
-  if (isRequestingIframeClose.value || isHandlingTmZip.value) {
-    return;
-  }
-
-  const requested = requestTmZipFromIframe();
-  if (!requested) {
-    finishCloseIframeModal();
-    return;
-  }
-
-  isRequestingIframeClose.value = true;
-  clearCloseIframeTimer();
-  closeIframeTimer = window.setTimeout(() => {
-    if (!isRequestingIframeClose.value) {
-      return;
-    }
-
-    console.warn("等待 AI iframe 返回 send-tm-zip 超时，已直接关闭弹窗");
-    finishCloseIframeModal();
-  }, TM_ZIP_REQUEST_TIMEOUT);
+  finishCloseIframeModal();
 };
 
 const onIframeLoad = () => {
   iframeLoading.value = false;
+  iframeReady.value = true;
   window.setTimeout(() => {
-    void postCachedZipToIframe();
+    if (pendingIframeMessage.value) {
+      const message = pendingIframeMessage.value;
+      pendingIframeMessage.value = null;
+      const posted = postToIframe(message);
+      if (posted) {
+        pendingIframeZipDelivery.value = false;
+      }
+      return;
+    }
+
+    if (pendingIframeZipDelivery.value) {
+      void postCachedZipToIframe();
+    }
   }, 300);
 };
 
 onMounted(() => {
-  setTimeout(() => {
+  if (embedded.value) {
     pageLoading.value = false;
-  }, 300);
+  } else {
+    setTimeout(() => {
+      pageLoading.value = false;
+    }, 300);
+  }
   nextTick(() => {
     checkAllArrows();
   });
   window.addEventListener("resize", checkAllArrows);
   window.addEventListener("message", handleIframeMessage);
+
+  nextTick(() => {
+    void openSavedModelFromRoute();
+  });
 });
 
 onUnmounted(() => {
@@ -1540,6 +1756,11 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+.ai-center-page--embedded {
+  height: 100vh;
+  background: transparent;
 }
 
 .page-header {
@@ -1843,6 +2064,10 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
+}
+
+.modal-overlay--embedded {
+  background: rgba(0, 0, 0, 0.18);
 }
 
 .modal-content {

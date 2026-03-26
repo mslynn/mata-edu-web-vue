@@ -1,9 +1,9 @@
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="visible" class="fixed inset-0 z-50 flex items-center justify-center">
+      <div v-if="visible" class="fixed inset-0 z-[2200] flex items-center justify-center">
         <div class="absolute inset-0 bg-black/50" @click="handleClose"></div>
-        <div class="relative bg-white rounded-lg w-[1000px] max-h-[85vh] flex flex-col">
+        <div class="relative bg-white rounded-lg w-[1180px] max-h-[88vh] flex flex-col">
           <!-- Header -->
           <div class="flex items-center justify-center py-4 border-b relative">
             <h3 class="text-lg font-medium">{{ $t('literacy.configTitle') }}</h3>
@@ -32,11 +32,19 @@
 
           <!-- Content -->
           <div class="flex-1 overflow-hidden p-6">
+            <div
+              v-if="dataLoading"
+              class="h-full flex items-center justify-center text-sm text-gray-400"
+            >
+              加载中...
+            </div>
+
+            <template v-else>
             <!-- Subtitle -->
             <div class="text-sm text-gray-600 mb-4">{{ $t('literacy.selectHint') }}</div>
 
             <!-- Four Column Selection -->
-            <div class="flex border rounded-lg h-[280px]">
+            <div class="flex border rounded-lg h-[360px]">
               <!-- Column 1: Questions -->
               <div class="w-[220px] border-r flex flex-col">
                 <div class="px-3 py-2 bg-gray-50 border-b text-sm text-center font-medium">
@@ -215,6 +223,7 @@
                 </div>
               </div>
             </div>
+            </template>
           </div>
 
           <!-- Footer -->
@@ -244,7 +253,7 @@
 
     <!-- Exit Confirm Modal -->
     <Transition name="modal">
-      <div v-if="exitConfirmVisible" class="fixed inset-0 z-[60] flex items-center justify-center">
+      <div v-if="exitConfirmVisible" class="fixed inset-0 z-[2210] flex items-center justify-center">
         <div class="absolute inset-0 bg-black/50" @click="exitConfirmVisible = false"></div>
         <div class="relative bg-white rounded-lg w-[400px] p-6">
           <button 
@@ -280,28 +289,45 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ElMessage } from 'element-plus'
+import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
 
 interface Question {
-  id: number
+  id: string
   title: string
   score: number
 }
 
 interface Indicator {
-  id: number
+  id: string
   name: string
-  parentId?: number
+  parentId?: string
 }
 
 const props = defineProps<{
   visible: boolean
   hasLiteracy?: boolean
+  exerciseId?: string | number | null
+  sourceType?: 'exercise' | 'resource'
+  resourceTitle?: string
+  initialConfigData?: any
 }>()
 
 const emit = defineEmits<{
   'close': []
-  'config': [data: any]
+  'config': [data: {
+    configList: Array<{
+      questionId: string | number
+      quotaIds: Array<string | number>
+    }>
+  }]
 }>()
+
+const {
+  getExerciseQuestions,
+  getQuotaMenuTree,
+  getExerciseEvalConfig
+} = taskmanagementcenterApi()
 
 // Tooltip state
 const tooltipVisible = ref(false)
@@ -311,7 +337,8 @@ const tooltipY = ref(0)
 
 // Exit confirm state
 const exitConfirmVisible = ref(false)
-const initialAssociations = ref<Record<number, number[]>>({})
+const dataLoading = ref(false)
+const initialAssociations = ref<Record<string, string[]>>({})
 const hasChanges = computed(() => {
   return JSON.stringify(questionAssociations.value) !== JSON.stringify(initialAssociations.value)
 })
@@ -328,114 +355,300 @@ const hideTooltip = () => {
   tooltipVisible.value = false
 }
 
-// Watch visible to reset state based on hasLiteracy
-watch(() => props.visible, (newVal) => {
-  if (newVal) {
-    if (props.hasLiteracy) {
-      // 已配置：所有试题都选中，但只关联第一个一级指标下的所有三级指标
-      const allQuestionIds = questions.value.map(q => q.id)
-      
-      // 获取第一个一级指标下的所有三级指标
-      const firstLevel1Id = level1Indicators.value[0]?.id
-      const level2IdsUnderFirst = level2Indicators.value
-        .filter(l2 => l2.parentId === firstLevel1Id)
-        .map(l2 => l2.id)
-      const level3IdsUnderFirst = level3Indicators.value
-        .filter(l3 => level2IdsUnderFirst.includes(l3.parentId!))
-        .map(l3 => l3.id)
-      
-      selectedQuestions.value = [...allQuestionIds]
-      
-      // 每个试题都关联第一个一级指标下的所有三级指标
-      const associations: Record<number, number[]> = {}
-      allQuestionIds.forEach(qId => {
-        associations[qId] = [...level3IdsUnderFirst]
-      })
-      questionAssociations.value = associations
-      expandedQuestions.value = allQuestionIds[0] ? [allQuestionIds[0]] : []
-    } else {
-      // 未配置：清空所有选中
-      selectedQuestions.value = []
-      questionAssociations.value = {}
-      expandedQuestions.value = []
-    }
-    selectedQuestionIndex.value = 0
-    selectedLevel1Index.value = 0
-    selectedLevel2Index.value = 0
-    // 保存初始状态用于比较
-    initialAssociations.value = JSON.parse(JSON.stringify(questionAssociations.value))
-  }
-})
-
-// Mock data
-const questions = ref<Question[]>([
-  { id: 1, title: '图像识别技术最适合应用在哪些场景中？', score: 10 },
-  { id: 2, title: '卷积神经网络（CNN）的主要特点是什么？', score: 10 },
-  { id: 3, title: '以下哪个场景最适合使用实时图像识别技术？', score: 10 },
-  { id: 4, title: '当图像识别系统出现误判时应该如何处理？', score: 10 },
-  { id: 5, title: '某公司用人脸识别技术进行考勤管理的优缺点', score: 10 },
-  { id: 6, title: '关于Nous Camera智能摄像头的功能描述', score: 10 },
-  { id: 7, title: '请写出实物编程机器人的三个主要应用场景', score: 10 },
-  { id: 8, title: 'Vincibot机器套件包含哪些核心组件？', score: 10 },
-  { id: 9, title: '将下列产品与其对应的应用领域进行匹配', score: 20 }
-])
-
-const level1Indicators = ref<Indicator[]>([
-  { id: 1, name: '1人工智能意识' },
-  { id: 2, name: '2人工智能技术' },
-  { id: 3, name: '3人工智能应用' },
-  { id: 4, name: '4人工智能思维' },
-  { id: 5, name: '5智能社会责任' }
-])
-
-const level2Indicators = ref<Indicator[]>([
-  { id: 11, name: '1.1人工智能相关概念', parentId: 1 },
-  { id: 12, name: '1.2人工智能技术优缺点', parentId: 1 },
-  { id: 13, name: '1.3人工智能发展历程', parentId: 1 },
-  { id: 21, name: '2.1机器学习基础', parentId: 2 },
-  { id: 22, name: '2.2深度学习', parentId: 2 },
-  { id: 31, name: '3.1智能家居应用', parentId: 3 },
-  { id: 32, name: '3.2智能交通应用', parentId: 3 },
-  { id: 41, name: '4.1人机协同思维', parentId: 4 },
-  { id: 42, name: '4.2创新思维', parentId: 4 },
-  { id: 43, name: '4.3计算思维', parentId: 4 },
-  { id: 51, name: '5.1数据安全与隐私', parentId: 5 },
-  { id: 52, name: '5.2人工智能伦理', parentId: 5 }
-])
-
-const level3Indicators = ref<Indicator[]>([
-  { id: 111, name: '1.1.1理解"智能""人工智能"的概念和内涵❌❌❌❌❌❌❌❌❌❌❌❌❌❌❌', parentId: 11 },
-  { id: 112, name: '1.1.2认识人类、动物与机器智能的区别与联系', parentId: 11 },
-  { id: 113, name: '1.1.3知道机器能够模拟、延伸和扩展人类智能嘟嘟嘟嘟嘟嘟哒哒哒哒', parentId: 11 },
-  { id: 114, name: '1.1.4了解人工智能在各个领域的应用场景', parentId: 11 },
-  { id: 115, name: '1.1.5能够基于对人工智能的理解分析实际问题', parentId: 11 },
-  { id: 121, name: '1.2.1认识人工智能在技术上的优势和特点', parentId: 12 },
-  { id: 122, name: '1.2.2了解人工智能的局限性', parentId: 12 },
-  { id: 131, name: '1.3.1了解人工智能发展历史', parentId: 13 },
-  { id: 211, name: '2.1.1理解机器学习基本概念', parentId: 21 },
-  { id: 212, name: '2.1.2了解监督学习与非监督学习', parentId: 21 },
-  { id: 221, name: '2.2.1理解深度学习基本原理', parentId: 22 },
-  { id: 311, name: '3.1.1了解智能家居系统组成', parentId: 31 },
-  { id: 321, name: '3.2.1了解智能交通应用场景', parentId: 32 },
-  { id: 411, name: '4.1.1了解协作可以是人与人、人与机器之间的合作滴滴滴滴滴滴滴滴滴的', parentId: 41 },
-  { id: 412, name: '4.1.2认识自身和智能机器各自的优势与不足', parentId: 41 },
-  { id: 421, name: '4.2.1理解创新思维的概念', parentId: 42 },
-  { id: 431, name: '4.3.1理解计算思维的概念', parentId: 43 },
-  { id: 511, name: '5.1.1了解数据安全的重要性', parentId: 51 },
-  { id: 521, name: '5.2.1理解人工智能伦理问题', parentId: 52 }
-])
+const questions = ref<Question[]>([])
+const level1Indicators = ref<Indicator[]>([])
+const level2Indicators = ref<Indicator[]>([])
+const level3Indicators = ref<Indicator[]>([])
 
 const selectedQuestionIndex = ref(0)
 const selectedLevel1Index = ref(0)
 const selectedLevel2Index = ref(0)
-const selectedQuestions = ref<number[]>([1, 2])
-const expandedQuestions = ref<number[]>([1])
+const selectedQuestions = ref<string[]>([])
+const expandedQuestions = ref<string[]>([])
 
 // Store associations per question: { questionId: [indicatorIds] }
-const questionAssociations = ref<Record<number, number[]>>({
-  1: [111, 112, 113, 114, 115, 121, 122, 131],
-  2: [211, 212, 221]
-})
+const questionAssociations = ref<Record<string, string[]>>({})
+
+const firstNonEmptyString = (...values: any[]) => {
+  for (const value of values) {
+    if (value === null || value === undefined) continue
+    const text = String(value).trim()
+    if (text) return text
+  }
+  return ''
+}
+
+const toIdString = (value: any, fallback = '') => {
+  const text = String(value ?? '').trim()
+  return text || fallback
+}
+
+const normalizeQuestions = (data: any): Question[] => {
+  const list = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.questions)
+      ? data.questions
+      : Array.isArray(data?.list)
+        ? data.list
+        : Array.isArray(data?.rows)
+          ? data.rows
+          : []
+
+  return list
+    .map((item: any, index: number) => ({
+      id: toIdString(item?.questionId ?? item?.id, `question_${index + 1}`),
+      title: firstNonEmptyString(item?.questionName, item?.title, item?.name, `题目${index + 1}`),
+      score: Number(item?.score ?? item?.questionScore ?? 0) || 0
+    }))
+    .filter((item: Question) => !!item.id)
+}
+
+const normalizeQuotaTree = (data: any) => {
+  const list = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.list)
+      ? data.list
+      : Array.isArray(data?.rows)
+        ? data.rows
+        : []
+
+  const nextLevel1: Indicator[] = []
+  const nextLevel2: Indicator[] = []
+  const nextLevel3: Indicator[] = []
+
+  list.forEach((level1: any, level1Index: number) => {
+    const level1Id = toIdString(level1?.id ?? level1?.quotaId, `level1_${level1Index + 1}`)
+    if (!level1Id) return
+
+    nextLevel1.push({
+      id: level1Id,
+      name: firstNonEmptyString(
+        [firstNonEmptyString(level1?.quotaCode), firstNonEmptyString(level1?.quotaName, level1?.name, level1?.label)].filter(Boolean).join(' '),
+        level1?.quotaName,
+        level1?.name,
+        level1?.label,
+        `一级指标${level1Index + 1}`
+      )
+    })
+
+    const level2List = Array.isArray(level1?.children) ? level1.children : []
+    level2List.forEach((level2: any, level2Index: number) => {
+      const level2Id = toIdString(level2?.id ?? level2?.quotaId, `level2_${level1Index + 1}_${level2Index + 1}`)
+      if (!level2Id) return
+
+      nextLevel2.push({
+        id: level2Id,
+        name: firstNonEmptyString(
+          [firstNonEmptyString(level2?.quotaCode), firstNonEmptyString(level2?.quotaName, level2?.name, level2?.label)].filter(Boolean).join(' '),
+          level2?.quotaName,
+          level2?.name,
+          level2?.label,
+          `二级指标${level2Index + 1}`
+        ),
+        parentId: level1Id
+      })
+
+      const level3List = Array.isArray(level2?.children) ? level2.children : []
+      level3List.forEach((level3: any, level3Index: number) => {
+        const level3Id = toIdString(level3?.id ?? level3?.quotaId, `level3_${level2Index + 1}_${level3Index + 1}`)
+        if (!level3Id) return
+
+        nextLevel3.push({
+          id: level3Id,
+          name: firstNonEmptyString(
+            [firstNonEmptyString(level3?.quotaCode), firstNonEmptyString(level3?.quotaName, level3?.name, level3?.label)].filter(Boolean).join(' '),
+            level3?.quotaName,
+            level3?.name,
+            level3?.label,
+            `三级指标${level3Index + 1}`
+          ),
+          parentId: level2Id
+        })
+      })
+    })
+  })
+
+  level1Indicators.value = nextLevel1
+  level2Indicators.value = nextLevel2
+  level3Indicators.value = nextLevel3
+}
+
+const normalizeExerciseEvalConfig = (data: any): Record<string, string[]> => {
+  const list = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.configList)
+      ? data.configList
+      : Array.isArray(data?.list)
+        ? data.list
+        : Array.isArray(data?.data)
+          ? data.data
+        : []
+
+  const associations: Record<string, string[]> = {}
+  list.forEach((item: any) => {
+    const questionId = toIdString(item?.questionId)
+    const quotaIds = Array.isArray(item?.quotaIds)
+      ? item.quotaIds.map((id: any) => toIdString(id)).filter(Boolean)
+      : Array.isArray(item?.quotaList)
+        ? item.quotaList
+            .map((quota: any) => toIdString(quota?.quotaId ?? quota?.id))
+            .filter(Boolean)
+        : []
+
+    if (questionId) {
+      associations[questionId] = quotaIds
+    }
+  })
+
+  return associations
+}
+
+const normalizeResourceEvalConfig = (
+  resourceId: string,
+  data: any
+): Record<string, string[]> => {
+  if (!resourceId) return {}
+
+  const configList = Array.isArray(data)
+    ? data
+    : Array.isArray(data?.data)
+      ? data.data
+      : Array.isArray(data?.rows)
+        ? data.rows
+      : Array.isArray(data?.configList)
+        ? data.configList
+        : []
+
+  const matchedConfigList = configList.filter(
+    (item: any) => toIdString(item?.objectId ?? item?.questionId) === resourceId
+  )
+
+  const collectedQuotaIds = matchedConfigList.flatMap((item: any) => {
+    if (Array.isArray(item?.quotaIds)) {
+      return item.quotaIds.map((id: any) => toIdString(id)).filter(Boolean)
+    }
+    if (Array.isArray(item?.quotaList)) {
+      return item.quotaList
+        .map((quota: any) => toIdString(quota?.quotaId ?? quota?.id))
+        .filter(Boolean)
+    }
+    const singleQuotaId = toIdString(item?.quotaId)
+    return singleQuotaId ? [singleQuotaId] : []
+  })
+
+  const quotaIds = collectedQuotaIds.length > 0
+    ? Array.from(new Set(collectedQuotaIds))
+    : Array.isArray(data?.quotaIds)
+      ? data.quotaIds.map((id: any) => toIdString(id)).filter(Boolean)
+      : Array.isArray(data?.quotaList)
+        ? data.quotaList
+            .map((quota: any) => toIdString(quota?.quotaId ?? quota?.id))
+            .filter(Boolean)
+        : []
+
+  return quotaIds.length > 0 ? { [resourceId]: quotaIds } : {}
+}
+
+const syncDefaultIndicatorSelection = () => {
+  const firstQuestionId = selectedQuestions.value[0]
+  if (!firstQuestionId) {
+    selectedQuestionIndex.value = 0
+    selectedLevel1Index.value = 0
+    selectedLevel2Index.value = 0
+    return
+  }
+
+  const questionIndex = questions.value.findIndex((question) => question.id === firstQuestionId)
+  selectedQuestionIndex.value = questionIndex >= 0 ? questionIndex : 0
+
+  const firstQuotaId = questionAssociations.value[firstQuestionId]?.[0]
+  if (!firstQuotaId) {
+    selectedLevel1Index.value = 0
+    selectedLevel2Index.value = 0
+    return
+  }
+
+  const level3Item = level3Indicators.value.find((item) => item.id === firstQuotaId)
+  const level2Id = level3Item?.parentId
+  const level2Index = level2Id
+    ? level2Indicators.value.findIndex((item) => item.id === level2Id)
+    : -1
+  const level1Id = level2Index >= 0 ? level2Indicators.value[level2Index]?.parentId : ''
+  const level1Index = level1Id
+    ? level1Indicators.value.findIndex((item) => item.id === level1Id)
+    : -1
+
+  selectedLevel1Index.value = level1Index >= 0 ? level1Index : 0
+  const currentLevel2List = level2Indicators.value.filter(
+    (item) => item.parentId === level1Indicators.value[selectedLevel1Index.value]?.id
+  )
+  const currentLevel2Index = level2Id
+    ? currentLevel2List.findIndex((item) => item.id === level2Id)
+    : -1
+  selectedLevel2Index.value = currentLevel2Index >= 0 ? currentLevel2Index : 0
+}
+
+const loadModalData = async () => {
+  if (!props.exerciseId) {
+    questions.value = []
+    level1Indicators.value = []
+    level2Indicators.value = []
+    level3Indicators.value = []
+    selectedQuestions.value = []
+    questionAssociations.value = {}
+    expandedQuestions.value = []
+    initialAssociations.value = {}
+    return
+  }
+
+  dataLoading.value = true
+  try {
+    const quotaTree = await getQuotaMenuTree()
+    normalizeQuotaTree(quotaTree)
+
+    if (props.sourceType === 'resource') {
+      const resourceId = toIdString(props.exerciseId)
+      questions.value = resourceId
+        ? [
+            {
+              id: resourceId,
+              title: firstNonEmptyString(props.resourceTitle, '个人资源'),
+              score: 0
+            }
+          ]
+        : []
+
+      questionAssociations.value = normalizeResourceEvalConfig(
+        resourceId,
+        props.initialConfigData
+      )
+    } else {
+      const [questionData, exerciseConfig] = await Promise.all([
+        getExerciseQuestions(String(props.exerciseId)),
+        getExerciseEvalConfig(String(props.exerciseId))
+      ])
+
+      questions.value = normalizeQuestions(questionData)
+      questionAssociations.value = normalizeExerciseEvalConfig(exerciseConfig)
+    }
+
+    selectedQuestions.value = Object.keys(questionAssociations.value)
+      .filter(Boolean)
+    expandedQuestions.value = [...selectedQuestions.value]
+    syncDefaultIndicatorSelection()
+    initialAssociations.value = JSON.parse(JSON.stringify(questionAssociations.value))
+  } catch (error) {
+    console.error('加载素养评价配置数据失败:', error)
+    ElMessage.error('加载素养评价配置数据失败')
+  } finally {
+    dataLoading.value = false
+  }
+}
+
+watch(() => [props.visible, props.exerciseId, props.hasLiteracy, props.sourceType, props.initialConfigData] as const, ([visible]) => {
+  if (!visible) return
+  loadModalData()
+}, { immediate: true })
 
 const currentLevel2Indicators = computed(() => {
   if (selectedLevel1Index.value < 0) return []
@@ -456,7 +669,7 @@ const currentQuestionId = computed(() => {
 })
 
 const associatedByQuestion = computed(() => {
-  const result: { questionId: number; title: string; score: number; items: { id: number; name: string }[] }[] = []
+  const result: { questionId: string; title: string; score: number; items: { id: string; name: string }[] }[] = []
   
   for (const qId of selectedQuestions.value) {
     const question = questions.value.find(q => q.id === qId)
@@ -465,7 +678,7 @@ const associatedByQuestion = computed(() => {
       const items = indicatorIds.map(id => {
         const indicator = level3Indicators.value.find(i => i.id === id)
         return indicator ? { id: indicator.id, name: indicator.name } : null
-      }).filter(Boolean) as { id: number; name: string }[]
+      }).filter(Boolean) as { id: string; name: string }[]
       
       if (items.length > 0) {
         result.push({
@@ -497,16 +710,16 @@ const selectLevel2 = (index: number) => {
   selectedLevel2Index.value = index
 }
 
-const isQuestionSelected = (id: number) => selectedQuestions.value.includes(id)
+const isQuestionSelected = (id: string) => selectedQuestions.value.includes(id)
 
 // 获取一级指标的选中状态: 'none' | 'partial' | 'full'
-const getLevel1CheckState = (id: number): 'none' | 'partial' | 'full' => {
+const getLevel1CheckState = (id: string): 'none' | 'partial' | 'full' => {
   const qId = currentQuestionId.value
   if (!qId) return 'none'
   
   const associations = questionAssociations.value[qId] || []
   const level2Ids = level2Indicators.value.filter(l2 => l2.parentId === id).map(l2 => l2.id)
-  const allLevel3Ids: number[] = []
+  const allLevel3Ids: string[] = []
   level2Ids.forEach(l2Id => {
     const l3Ids = level3Indicators.value.filter(l3 => l3.parentId === l2Id).map(l3 => l3.id)
     allLevel3Ids.push(...l3Ids)
@@ -521,7 +734,7 @@ const getLevel1CheckState = (id: number): 'none' | 'partial' | 'full' => {
 }
 
 // 获取二级指标的选中状态: 'none' | 'partial' | 'full'
-const getLevel2CheckState = (id: number): 'none' | 'partial' | 'full' => {
+const getLevel2CheckState = (id: string): 'none' | 'partial' | 'full' => {
   const qId = currentQuestionId.value
   if (!qId) return 'none'
   
@@ -536,7 +749,7 @@ const getLevel2CheckState = (id: number): 'none' | 'partial' | 'full' => {
   return 'partial'
 }
 
-const isLevel3Selected = (id: number) => {
+const isLevel3Selected = (id: string) => {
   const qId = currentQuestionId.value
   if (!qId) return false
   const associations = questionAssociations.value[qId] || []
@@ -565,7 +778,7 @@ const toggleLevel1 = (item: Indicator) => {
   const currentAssociations = questionAssociations.value[qId]
   const state = getLevel1CheckState(item.id)
   if (state !== 'none') {
-    questionAssociations.value[qId] = currentAssociations.filter((id: number) => !level3Ids.includes(id))
+    questionAssociations.value[qId] = currentAssociations.filter((id: string) => !level3Ids.includes(id))
   } else {
     level3Ids.forEach(id => {
       if (!currentAssociations.includes(id)) {
@@ -595,7 +808,7 @@ const toggleLevel2 = (item: Indicator) => {
   const currentAssociations = questionAssociations.value[qId]
   const state = getLevel2CheckState(item.id)
   if (state !== 'none') {
-    questionAssociations.value[qId] = currentAssociations.filter((id: number) => !level3Ids.includes(id))
+    questionAssociations.value[qId] = currentAssociations.filter((id: string) => !level3Ids.includes(id))
   } else {
     level3Ids.forEach(id => {
       if (!currentAssociations.includes(id)) {
@@ -631,13 +844,22 @@ const updateSelectedQuestions = () => {
   
   if (hasAssociations && !selectedQuestions.value.includes(qId)) {
     selectedQuestions.value.push(qId)
+  }
+
+  if (hasAssociations && !expandedQuestions.value.includes(qId)) {
+    expandedQuestions.value.push(qId)
   } else if (!hasAssociations && selectedQuestions.value.includes(qId)) {
     const idx = selectedQuestions.value.indexOf(qId)
     selectedQuestions.value.splice(idx, 1)
   }
+
+  if (!hasAssociations && expandedQuestions.value.includes(qId)) {
+    const expandedIdx = expandedQuestions.value.indexOf(qId)
+    expandedQuestions.value.splice(expandedIdx, 1)
+  }
 }
 
-const toggleExpand = (questionId: number) => {
+const toggleExpand = (questionId: string) => {
   const index = expandedQuestions.value.indexOf(questionId)
   if (index > -1) {
     expandedQuestions.value.splice(index, 1)
@@ -646,7 +868,7 @@ const toggleExpand = (questionId: number) => {
   }
 }
 
-const removeAssociated = (questionId: number, indicatorId: number) => {
+const removeAssociated = (questionId: string, indicatorId: string) => {
   if (questionAssociations.value[questionId]) {
     const index = questionAssociations.value[questionId].indexOf(indicatorId)
     if (index > -1) {
@@ -663,7 +885,14 @@ const removeAssociated = (questionId: number, indicatorId: number) => {
 }
 
 const handleConfig = () => {
-  emit('config', { associations: questionAssociations.value })
+  const configList = Object.entries(questionAssociations.value)
+    .map(([questionId, quotaIds]) => ({
+      questionId,
+      quotaIds: quotaIds || []
+    }))
+    .filter((item) => !!item.questionId && item.quotaIds.length > 0)
+
+  emit('config', { configList })
   emit('close')
 }
 

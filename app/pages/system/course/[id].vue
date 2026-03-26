@@ -42,7 +42,8 @@
     <ClassVisibilityModal v-model:visible="showClassModal" :course-id="String(route.params.id)" @confirm="handleClassConfirm" />
 
     <!-- 课程测评弹窗 -->
-    <CourseEvaluationModal v-model:visible="showEvaluationModal" @distribute="handleDistribute" />
+    <CourseEvaluationModal v-model:visible="showEvaluationModal" :course-id="String(route.params.id)"
+      @distribute="handleDistribute" />
 
     <!-- 开课设置弹窗 -->
     <StartClassModal v-model:visible="showStartClassModal" :class-list="startClassData.classList"
@@ -450,6 +451,8 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
 
   const { beginClass } = useTeacher()
   const peerId = data.classId
+  const className =
+    startClassData.classList.find((item) => item.classId === data.classId)?.className || ''
 
   try {
     await beginClass({
@@ -460,7 +463,7 @@ const handleStartClassConfirm = async (data: { classId: string; courseId: string
     })
     console.log('开始上课成功')
 
-    navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}&autoQuickLogin=1`)
+    navigateTo(`/system/classroom/${data.chapterId}?classId=${data.classId}&className=${encodeURIComponent(className)}&courseId=${data.courseId}&from=course&autoQuickLogin=1`)
   } catch (error: any) {
     console.error('开始上课失败:', error)
   }

@@ -363,7 +363,7 @@ const transformApiToQuestion = (apiQuestion: any): Question => {
     content: apiQuestion.questionName || '',
     contentImage: apiQuestion.imageOssId || undefined,
     contentImageUrl: apiQuestion.imageUrl || undefined,
-    score: apiQuestion.score || 10,
+    score: 0,
     analysis: apiQuestion.analysis || ''
   }
   
@@ -432,7 +432,7 @@ const transformApiToQuestion = (apiQuestion: any): Question => {
     })
   }
   
-  return question
+  return syncQuestionScore(question)
 }
 
 // 初始化
@@ -463,14 +463,34 @@ const questionTypes = computed(() => [
 ])
 
 const questions = ref<Question[]>([])
-const totalScore = computed(() => questions.value.reduce((sum, q) => sum + q.score, 0))
+const getQuestionScore = (question: Question) => {
+  if (question.type === 'single') return 10
+  if (question.type === 'multiple') return 20
+  if (question.type === 'trueFalse') return 10
+  if (question.type === 'fillBlank') {
+    const blankCount = Math.min(Math.max((question.blanks || []).length, 1), 10)
+    return blankCount * 5
+  }
+  if (question.type === 'matching') {
+    const pairCount = Math.min(Math.max((question.leftItems || []).length, 2), 10)
+    return pairCount * 5
+  }
+  return 0
+}
+
+const syncQuestionScore = (question: Question): Question => ({
+  ...question,
+  score: getQuestionScore(question)
+})
+
+const totalScore = computed(() => questions.value.reduce((sum, q) => sum + getQuestionScore(q), 0))
 
 const handleAddQuestion = (type: string) => {
   selectedType.value = type
   const newQuestion: Question = {
     type,
     content: '',
-    score: 10,
+    score: type === 'multiple' ? 20 : 10,
     analysis: ''
   }
   
@@ -496,24 +516,20 @@ const handleAddQuestion = (type: string) => {
   if (type === 'matching') {
     newQuestion.leftItems = [
       { type: 'text', content: '' },
-      { type: 'text', content: '' },
-      { type: 'text', content: '' },
       { type: 'text', content: '' }
     ]
     newQuestion.rightItems = [
       { type: 'text', content: '' },
-      { type: 'text', content: '' },
-      { type: 'text', content: '' },
       { type: 'text', content: '' }
     ]
-    newQuestion.matchAnswers = [undefined, undefined, undefined, undefined]
+    newQuestion.matchAnswers = [undefined, undefined]
   }
   
-  questions.value.push(newQuestion)
+  questions.value.push(syncQuestionScore(newQuestion))
 }
 
 const updateQuestion = (index: number, question: Question) => {
-  questions.value[index] = question
+  questions.value[index] = syncQuestionScore(question)
 }
 
 const showDeleteConfirm = (index: number) => {
@@ -549,6 +565,9 @@ const validateQuestion = (question: Question) => {
     if (leftCount !== rightCount) {
       isValid = false
     }
+    if (leftCount < 2 || leftCount > 10) {
+      isValid = false
+    }
     // 检查左右列表是否有空内容
     const hasEmptyLeft = (question.leftItems || []).some(item => item.type === 'image' ? !item.image : !item.content?.trim())
     const hasEmptyRight = (question.rightItems || []).some(item => item.type === 'image' ? !item.image : !item.content?.trim())
@@ -577,9 +596,12 @@ const validateQuestion = (question: Question) => {
       }
     }
   }
-  
-  if (question.score < 1 || question.score > 100) {
-    isValid = false
+
+  if (question.type === 'fillBlank') {
+    const blankCount = (question.blanks || []).length
+    if (blankCount < 1 || blankCount > 10) {
+      isValid = false
+    }
   }
   
   return isValid
@@ -633,7 +655,7 @@ const transformQuestionToApi = (question: Question, index: number) => {
   const result: any = {
     questionType: typeMap[question.type] || question.type,
     questionName: question.content, // 始终用文字内容
-    score: question.score,
+    score: getQuestionScore(question),
     analysis: question.analysis || '',
     sequence: index + 1, // 排序字段，按下标排序
     options: [],

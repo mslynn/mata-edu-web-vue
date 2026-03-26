@@ -62,7 +62,7 @@
                         <!-- 自定义下拉框 -->
                         <div class="relative">
                             <button type="button"
-                                class="flex items-center justify-center gap-2 w-[108px] h-[50px] px-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-600 hover:border-[#FF9900] transition-colors"
+                                class="flex items-center justify-center gap-2 w-[108px] h-[42px] px-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-600 hover:border-[#FF9900] transition-colors"
                                 @click="showStatusDropdown = !showStatusDropdown">
                                 <span>{{statusOptions.find(o => o.value === courseStatus)?.label || $t('common.all')}}</span>
                                 <svg class="w-4 h-4 text-gray-400 transition-transform"
@@ -90,7 +90,7 @@
                     </div>
                     <div class="relative">
                         <input v-model="searchKeyword" type="text" :placeholder="$t('common.searchPlaceholder')"
-                            class="pl-9 pr-4 w-[267px] h-[50px] border border-gray-200 rounded-[10px] text-sm outline-none focus:border-[#FF9900]" />
+                            class="pl-9 pr-4 w-[267px] h-[42px] border border-gray-200 rounded-[10px] text-sm outline-none focus:border-[#FF9900]" />
                         <svg class="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -126,8 +126,10 @@
                     </div>
                 </div>
                 <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    <NuxtLink v-for="course in courseList" :key="course.id" :to="`/system/course/${course.id}`"
-                        class="course-card w-full aspect-[265/380] rounded-[20px] border border-gray-200 shadow-sm cursor-pointer group pt-[5%] px-[8%]">
+                    <div v-for="course in filteredCourseList" :key="course.id"
+                        class="course-card w-full aspect-[265/380] rounded-[20px] border border-gray-200 shadow-sm group pt-[5%] px-[8%]"
+                        :class="getCourseCardStateClass(course)"
+                        @click="handleCourseCardClick(course)">
                         <!-- 课程封面 -->
                         <div
                             class="course-cover w-full aspect-[220/276] bg-gray-200 rounded-[5px] mb-3 flex items-center justify-center relative overflow-hidden">
@@ -136,7 +138,7 @@
                                 <div class="tooltip-wrapper group relative">
                                     <button
                                         class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-gray-50"
-                                        @click.prevent="handleEditCourse(course)">
+                                        @click.stop.prevent="handleEditCourse(course)">
                                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -149,7 +151,7 @@
                                 <div v-if="activeSubCategory !== 'public' && Number(course.coursePermission) !== 1" class="tooltip-wrapper group relative">
                                     <button
                                         class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-red-50"
-                                        @click.prevent="handleDeleteCourse(course)">
+                                        @click.stop.prevent="handleDeleteCourse(course)">
                                         <svg class="w-4 h-4 text-gray-500 hover:text-red-500" fill="none"
                                             stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -167,7 +169,7 @@
                                     <div v-if="course.canAdd" class="tooltip-wrapper group relative">
                                         <button
                                             class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-[#FFF7E6]"
-                                            @click.prevent="handleAddToMyCourse(course)">
+                                            @click.stop.prevent="handleAddToMyCourse(course)">
                                             <svg class="w-4 h-4 text-[#FF9900]" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -180,7 +182,7 @@
                                     <div v-else class="tooltip-wrapper group relative">
                                         <button
                                             class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-gray-50"
-                                            @click.prevent="handleEditCourse(course)">
+                                            @click.stop.prevent="handleEditCourse(course)">
                                             <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
                                                 viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -200,13 +202,19 @@
                                 {{ statusConfig[course.status]?.label }}
                             </span>
                             <!-- 封面图片 -->
-                            <img v-if="course.cover" :src="course.cover" alt="课程封面" loading="lazy" class="absolute inset-0 w-full h-full object-cover" />
-                            <!-- 无封面时显示占位 -->
+                            <img
+                                v-if="course.cover"
+                                :src="course.cover"
+                                alt="课程封面"
+                                loading="lazy"
+                                decoding="async"
+                                fetchpriority="low"
+                                class="absolute inset-0 w-full h-full object-cover"
+                            />
                             <template v-else>
                                 <div class="absolute inset-0 flex items-center justify-center">
                                     <span class="text-gray-400 text-sm">{{ $t('common.courseCover') }}</span>
                                 </div>
-                                <!-- 对角线装饰 -->
                                 <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
                                     <line x1="0" y1="0" x2="100%" y2="100%" stroke="#ccc" stroke-width="1" />
                                     <line x1="100%" y1="0" x2="0" y2="100%" stroke="#ccc" stroke-width="1" />
@@ -217,11 +225,11 @@
                         <div class="text-[18px] font-normal text-[#4D4D4D] leading-[24px] mb-[6px] text-center mt-[10px]">{{ course.name }}</div>
                         <!-- 课时数 -->
                         <!-- <div class="text-[16px] font-normal text-[#ADADAD] leading-[24px] text-center">{{ course.hours }}{{ $t('common.hours') }}</div> -->
-                    </NuxtLink>
+                    </div>
                 </div>
 
                 <!-- 空状态 -->
-                <div v-if="!loading && !courseList.length" class="flex flex-col items-center justify-center h-full text-gray-400">
+                <div v-if="!loading && !filteredCourseList.length" class="flex flex-col items-center justify-center h-full text-gray-400">
                     <p>{{ $t('course.noChapter') }}</p>
                 </div>
             </div>
@@ -232,8 +240,9 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { ref, shallowRef, computed, watch, onMounted, onUnmounted } from 'vue'
 import { cursorAdmin } from '~/composables/api/curosr'
+import { useCourseMenuStore, type CourseMenuNode } from '~/stores/courseMenu'
 
 definePageMeta({
     layout: 'sidebar'
@@ -253,127 +262,120 @@ const initUserInfo = () => {
     }
 }
 
-// 菜单树数据接口返回结构
-interface MenuNode {
-    menuId: number | null
-    menuName: string
-    parentId: number | null
-    menuLevel: number | null
-    isVisible: number | null
-    children?: MenuNode[]
-}
+const courseMenuStore = useCourseMenuStore()
 
 // 一级分类 - 主分类（从接口获取，不含自定义和共享）
-const mainCategories = ref<{ label: string; value: string }[]>([])
+const mainCategories = shallowRef<{ label: string; value: string }[]>([])
 
 // 一级分类 - 特殊分类（自定义和共享，从接口获取但单独处理）
-const extraCategories = ref<{ label: string; value: string }[]>([])
+const extraCategories = shallowRef<{ label: string; value: string }[]>([])
 
 const activeCategory = ref('')
 
 // 二级分类映射表：一级分类 -> 对应的二级分类列表（从接口获取）
-const subCategoryMap = ref<Record<string, { label: string; value: string; hasChildren?: boolean }[]>>({})
+const subCategoryMap = shallowRef<Record<string, { label: string; value: string; hasChildren?: boolean }[]>>({})
 
 // 三级分类映射表：二级分类 -> 对应的三级分类列表
-const thirdCategoryMap = ref<Record<string, { label: string; value: string }[]>>({})
+const thirdCategoryMap = shallowRef<Record<string, { label: string; value: string }[]>>({})
 
 // 当前选中的三级分类
 const activeThirdCategory = ref('')
 
 // 加载菜单数据
-const loadMenuData = async () => {
-    try {
-        const data = await getCursorTreeMenu()
-        if (data && Array.isArray(data)) {
-            const mainList: { label: string; value: string }[] = []
-            const extraList: { label: string; value: string }[] = []
+const applyMenuData = (data: CourseMenuNode[]) => {
+    const mainList: { label: string; value: string }[] = []
+    const extraList: { label: string; value: string }[] = []
+    const nextSubCategoryMap: Record<string, { label: string; value: string; hasChildren?: boolean }[]> = {}
+    const nextThirdCategoryMap: Record<string, { label: string; value: string }[]> = {}
 
-            data.forEach((item: MenuNode) => {
-                // menuId 为 null 的是特殊分类（自定义/共享），使用固定标识符
-                const isCustomCourse = item.menuId === null && (item.menuName === '自定义课程' || item.menuName === 'Custom Course')
-                const isSharedCourse = item.menuId === null && (item.menuName === '共享课程' || item.menuName === 'Shared Course')
-                const menuValue = item.menuId !== null ? String(item.menuId) : (isCustomCourse ? 'custom' : (isSharedCourse ? 'shared' : item.menuName))
-                const menuItem = {
-                    label: item.menuName,
-                    value: menuValue,
-                }
+    data.forEach((item: CourseMenuNode) => {
+        const isCustomCourse = item.menuId === null && (item.menuName === '自定义课程' || item.menuName === 'Custom Course')
+        const isSharedCourse = item.menuId === null && (item.menuName === '共享课程' || item.menuName === 'Shared Course')
+        const menuValue = item.menuId !== null ? String(item.menuId) : (isCustomCourse ? 'custom' : (isSharedCourse ? 'shared' : item.menuName))
+        const menuItem = {
+            label: item.menuName,
+            value: menuValue,
+        }
 
-                // 自定义课程和共享课程（menuId 为 null）放到特殊分类
-                if (item.menuId === null) {
-                    extraList.push(menuItem)
-                    // 设置特殊分类的二级分类
-                    if (isCustomCourse) {
-                        subCategoryMap.value[menuValue] = [
-                            { label: t('common.privateVisible'), value: 'private' },
-                            { label: t('common.schoolVisible'), value: 'public' },
-                        ]
-                    } else if (isSharedCourse) {
-                        subCategoryMap.value[menuValue] = [
-                            { label: t('common.all'), value: 'all' },
-                        ]
+        if (item.menuId === null) {
+            extraList.push(menuItem)
+            if (isCustomCourse) {
+                nextSubCategoryMap[menuValue] = [
+                    { label: t('common.privateVisible'), value: 'private' },
+                    { label: t('common.schoolVisible'), value: 'public' },
+                ]
+            } else if (isSharedCourse) {
+                nextSubCategoryMap[menuValue] = [
+                    { label: t('common.all'), value: 'all' },
+                ]
+            }
+        } else {
+            mainList.push(menuItem)
+            const children = item.children || []
+            const hasAll = children.some((c) => c.menuName === '全部')
+            const subList: { label: string; value: string; hasChildren?: boolean }[] = []
+
+            if (!hasAll) {
+                subList.push({ label: t('common.all'), value: 'all' })
+            }
+
+            children.forEach((child: CourseMenuNode) => {
+                const childValue = child.menuId !== null ? String(child.menuId) : 'all'
+                const hasGrandChildren = child.children && child.children.length > 0
+
+                subList.push({
+                    label: child.menuName,
+                    value: childValue,
+                    hasChildren: hasGrandChildren,
+                })
+
+                if (hasGrandChildren && child.children) {
+                    const hasThirdAll = child.children.some((c) => c.menuName === '全部')
+                    const thirdList: { label: string; value: string }[] = []
+
+                    if (!hasThirdAll) {
+                        thirdList.push({ label: t('common.all'), value: 'all' })
                     }
-                } else {
-                    mainList.push(menuItem)
-                    // 解析二级分类
-                    const children = item.children || []
-                    // 检查是否已有"全部"子项
-                    const hasAll = children.some((c) => c.menuName === '全部')
-                    const subList: { label: string; value: string; hasChildren?: boolean }[] = []
 
-                    if (!hasAll) {
-                        subList.push({ label: t('common.all'), value: 'all' })
-                    }
-
-                    children.forEach((child: MenuNode) => {
-                        const childValue = child.menuId !== null ? String(child.menuId) : 'all'
-                        const hasGrandChildren = child.children && child.children.length > 0
-
-                        subList.push({
-                            label: child.menuName,
-                            value: childValue,
-                            hasChildren: hasGrandChildren,
+                    child.children.forEach((grandChild: CourseMenuNode) => {
+                        thirdList.push({
+                            label: grandChild.menuName,
+                            value: grandChild.menuId !== null ? String(grandChild.menuId) : 'all',
                         })
-
-                        // 如果有三级分类，存储到三级分类映射表
-                        if (hasGrandChildren && child.children) {
-                            // 检查是否已有"全部"子项
-                            const hasThirdAll = child.children.some((c) => c.menuName === '全部')
-                            const thirdList: { label: string; value: string }[] = []
-
-                            if (!hasThirdAll) {
-                                thirdList.push({ label: t('common.all'), value: 'all' })
-                            }
-
-                            child.children.forEach((grandChild: MenuNode) => {
-                                thirdList.push({
-                                    label: grandChild.menuName,
-                                    value: grandChild.menuId !== null ? String(grandChild.menuId) : 'all',
-                                })
-                            })
-                            thirdCategoryMap.value[childValue] = thirdList
-                        }
                     })
-
-                    subCategoryMap.value[menuValue] = subList
+                    nextThirdCategoryMap[childValue] = thirdList
                 }
             })
 
-            mainCategories.value = mainList
-            extraCategories.value = extraList
+            nextSubCategoryMap[menuValue] = subList
+        }
+    })
 
-            // 默认选中第一个分类（常规课程）及其二级分类的第一个（全部）
+    mainCategories.value = mainList
+    extraCategories.value = extraList
+    subCategoryMap.value = nextSubCategoryMap
+    thirdCategoryMap.value = nextThirdCategoryMap
+}
+
+const loadMenuData = async () => {
+    try {
+        const cachedData = courseMenuStore.tree
+        const data = cachedData.length ? cachedData : await getCursorTreeMenu()
+        if (data && Array.isArray(data)) {
+            if (!cachedData.length) {
+                courseMenuStore.setTree(data)
+            }
+            applyMenuData(data)
+
             if (mainCategories.value.length > 0 && mainCategories.value[0]) {
                 const firstCategoryValue = mainCategories.value[0].value
                 activeCategory.value = firstCategoryValue
-                // 获取该分类的二级分类，默认选中第一个
                 const subList = subCategoryMap.value[firstCategoryValue]
                 if (subList && subList.length > 0 && subList[0]) {
                     activeSubCategory.value = subList[0].value
                 }
-                // 加载课程列表
                 await loadCourseList()
             }
-            // 标记初始化完成
             initialized.value = true
         }
     } catch (error) {
@@ -557,6 +559,10 @@ onMounted(() => {
 
 onUnmounted(() => {
     document.removeEventListener('click', closeDropdown)
+    if (searchTimer) {
+        clearTimeout(searchTimer)
+        searchTimer = null
+    }
 })
 
 // 课程状态配置
@@ -586,8 +592,55 @@ interface Course {
 }
 
 // 课程列表数据
-const courseList = ref<Course[]>([])
+const courseList = shallowRef<Course[]>([])
 const loading = ref(false)
+const debouncedSearchKeyword = ref('')
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+
+const filteredCourseList = computed(() => {
+    const keyword = debouncedSearchKeyword.value.trim().toLowerCase()
+    return courseList.value.filter((course) => {
+        const matchStatus =
+            !courseStatus.value || activeCategory.value === 'custom' || activeCategory.value === 'shared'
+                ? true
+                : course.status === courseStatus.value
+
+        const matchKeyword = !keyword
+            ? true
+            : [
+                course.name,
+                course.description,
+                course.createByName
+            ].some((field) => String(field || '').toLowerCase().includes(keyword))
+
+        return matchStatus && matchKeyword
+    })
+})
+
+const canEnterCourse = (course: Course) => {
+    if (course.category === 'custom' || course.category === 'shared') {
+        return true
+    }
+    return course.status === 'opened' || course.status === 'trial'
+}
+
+const getCourseCardStateClass = (course: Course) => {
+    return canEnterCourse(course)
+        ? 'cursor-pointer'
+        : 'cursor-not-allowed opacity-80'
+}
+
+const handleCourseCardClick = (course: Course) => {
+    if (!canEnterCourse(course)) {
+        ElMessage.warning(
+            course.status === 'expired'
+                ? '该课程已过期，暂时无法进入'
+                : '该课程暂未开通，暂时无法进入'
+        )
+        return
+    }
+    router.push(`/system/course/${course.id}`)
+}
 
 // 加载课程列表
 const loadCourseList = async () => {
@@ -631,25 +684,9 @@ const loadCourseList = async () => {
             params.menuId = menuId
         }
 
-        // 开通状态筛选（自定义和共享课程不传此参数）
-        if (courseStatus.value && activeCategory.value !== 'custom' && activeCategory.value !== 'shared') {
-            const statusMap: Record<string, number> = {
-                opened: 1,
-                not_opened: 0,
-                expired: 2,
-                trial: 3,
-            }
-            params.openStatus = statusMap[courseStatus.value]
-        }
-
-        // 关键词搜索
-        if (searchKeyword.value) {
-            params.name = searchKeyword.value
-        }
-
         const data = await getCursorList(params)
         if (data && Array.isArray(data)) {
-            courseList.value = data.map((item: any) => {
+            const nextCourseList = data.map((item: any) => {
                 // 共享课程：createBy 等于当前用户ID则可编辑，否则可添加
                 const isOwner = String(item.createBy) === String(currentUserId.value)
                 const permissionRaw = item.coursePermission ?? item.permission
@@ -675,6 +712,7 @@ const loadCourseList = async () => {
                     coursePermission: Number.isFinite(permissionValue) ? permissionValue : 0,
                 }
             })
+            courseList.value = nextCourseList
         } else {
             courseList.value = []
         }
@@ -690,10 +728,21 @@ const loadCourseList = async () => {
 const initialized = ref(false)
 
 // 监听分类和筛选条件变化，重新加载课程列表
-watch([activeCategory, activeSubCategory, activeThirdCategory, courseStatus, searchKeyword], () => {
+watch([activeCategory, activeSubCategory, activeThirdCategory], () => {
     // 初始化完成后才响应 watch
     if (initialized.value) {
         loadCourseList()
+    }
+})
+
+watch(searchKeyword, () => {
+    if (initialized.value) {
+        if (searchTimer) {
+            clearTimeout(searchTimer)
+        }
+        searchTimer = setTimeout(() => {
+            debouncedSearchKeyword.value = searchKeyword.value.trim()
+        }, 250)
     }
 })
 </script>
@@ -716,8 +765,31 @@ watch([activeCategory, activeSubCategory, activeThirdCategory, courseStatus, sea
     transform: scale(1.05);
 }
 
+.course-card.cursor-not-allowed:hover {
+    transform: none;
+}
+
 .course-card:hover .course-cover {
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.course-card.cursor-not-allowed:hover .course-cover {
+    box-shadow: none;
+}
+
+.course-cover-skeleton {
+    background: linear-gradient(110deg, #e8edf3 8%, #f7f9fc 18%, #e8edf3 33%);
+    background-size: 200% 100%;
+    animation: courseCoverShimmer 1.2s linear infinite;
+}
+
+@keyframes courseCoverShimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
 }
 
 /* 下拉框动画 */

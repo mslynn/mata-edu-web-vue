@@ -18,10 +18,12 @@
 
         <!-- Body -->
         <div class="p-8 flex flex-col items-center text-center">
-          <h3 class="text-xl font-bold text-gray-800 mb-6">{{ $t('taskManagement.withdrawConfirmTitle') }}</h3>
+          <h3 class="text-xl font-bold text-gray-800 mb-6">
+            {{ props.title || $t('taskManagement.withdrawConfirmTitle') }}
+          </h3>
           
           <p class="text-gray-600 leading-relaxed mb-8 px-4">
-            {{ $t('taskManagement.withdrawConfirmContent') }}
+            {{ props.content || $t('taskManagement.withdrawConfirmContent') }}
           </p>
 
           <!-- Buttons -->
@@ -48,6 +50,8 @@
 <script setup lang="ts">
 const props = defineProps<{
   modelValue: boolean
+  title?: string
+  content?: string
 }>()
 
 const emit = defineEmits<{

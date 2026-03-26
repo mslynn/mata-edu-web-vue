@@ -20,6 +20,7 @@
       </div>
     </Teleport>
 
+
     <!-- 两栏布局容器 -->
     <div class="main-content flex">
       
@@ -372,6 +373,7 @@ const connectNotifyWebSocket = () => {
         setPauseAutoEnterClassroom(false)
         ElMessage.info('老师已下课')
       }
+
     } catch (e) {
       console.log('[学生端] 非 JSON 消息:', event.data)
     }

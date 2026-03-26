@@ -21,6 +21,7 @@ type PostFileBufferOptions = {
   iframeUrl?: string;
   iframeWindow: IframeWindowLike;
   type?: string;
+  payloadOnly?: boolean;
   additionalData?: Record<string, unknown>;
 };
 
@@ -209,6 +210,33 @@ export const useIframeFileBridge = () => {
     return formData;
   };
 
+  const downloadFileFromOSS = async (
+    ossId: string,
+    fileName = "project.zip",
+    mimeType = "application/octet-stream"
+  ) => {
+    const token = http.getToken();
+    const response = await fetch(
+      `${runtimeConfig.public.apiBaseUrl}/resource/oss/download/${ossId}`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`下载 OSS 文件失败: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return new File([blob], fileName, {
+      type: blob.type || mimeType,
+      lastModified: Date.now(),
+    });
+  };
+
   const getIframeOrigin = (iframeUrl?: string) => {
     if (!iframeUrl) {
       return "";
@@ -244,6 +272,7 @@ export const useIframeFileBridge = () => {
     iframeUrl,
     iframeWindow,
     type = "ZIP_DATA",
+    payloadOnly = false,
     additionalData = {},
   }: PostFileBufferOptions) => {
     const iframeOrigin = getIframeOrigin(iframeUrl);
@@ -254,18 +283,21 @@ export const useIframeFileBridge = () => {
 
     const payload = await file.arrayBuffer();
 
-    iframeWindow.postMessage(
-      {
-        type,
-        payload,
-        fileName: file.name,
-        mimeType: file.type,
-        size: file.size,
-        ...additionalData,
-      },
-      iframeOrigin,
-      [payload]
-    );
+    const message = payloadOnly
+      ? {
+          type,
+          payload,
+        }
+      : {
+          type,
+          payload,
+          fileName: file.name,
+          mimeType: file.type,
+          size: file.size,
+          ...additionalData,
+        };
+
+    iframeWindow.postMessage(message, iframeOrigin, [payload]);
 
     return {
       origin: iframeOrigin,
@@ -288,6 +320,7 @@ export const useIframeFileBridge = () => {
     toUploadFile,
     uploadFileToOSS,
     createUploadFormData,
+    downloadFileFromOSS,
     getIframeOrigin,
     isMessageFromIframe,
     postFileBufferToIframe,

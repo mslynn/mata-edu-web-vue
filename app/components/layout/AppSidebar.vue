@@ -27,6 +27,7 @@
             : 'text-gray-700 hover:bg-gray-50 cursor-pointer text-sm'
         ]"
         @click="!isActiveItem(item) && handleMenuClick(item)"
+        @mouseenter="prefetchMenuRoute(item)"
       >
         <div class="w-9 h-9 flex items-center justify-center">
           <img 
@@ -61,14 +62,13 @@
 
 <script setup lang="ts">
 import { onMounted, watch, ref } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useTeacherNav } from '~/composables/api/useTeacherNav'
 
 const route = useRoute()
-const router = useRouter()
 const { locale, t } = useI18n()
-const { menuItems, loading, loadMenus } = useTeacherNav()
+const { menuItems, loadMenus } = useTeacherNav()
 
 // 菜单标签翻译映射
 const menuLabelMap: Record<string, string> = {
@@ -89,6 +89,7 @@ const getMenuLabel = (label: string) => {
 }
 
 const showComingSoonModal = ref(false)
+const prefetchedPaths = new Set<string>()
 
 // 立即加载菜单（不等 onMounted）
 loadMenus()
@@ -139,6 +140,19 @@ const isActiveItem = (item: any) => {
   // 其他页面使用 startsWith 匹配
   // 确保不会误匹配（例如 /system/class 不应该匹配 /system/classroom）
   return currentPath === item.path || currentPath.startsWith(item.path + '/')
+}
+
+const prefetchMenuRoute = async (item: TeacherMenuItem) => {
+  if (!item?.path || !isPageImplemented(item.path) || prefetchedPaths.has(item.path)) {
+    return
+  }
+
+  try {
+    await preloadRouteComponents(item.path)
+    prefetchedPaths.add(item.path)
+  } catch (error) {
+    console.warn('[sidebar] 预取路由失败:', item.path, error)
+  }
 }
 
 onMounted(() => {

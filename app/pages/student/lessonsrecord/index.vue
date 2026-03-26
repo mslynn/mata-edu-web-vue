@@ -110,93 +110,256 @@
           </div>
         </div>
 
-        <!-- 上课记录标签 -->
+        <!-- 上课记录 / 课程测评 Tab -->
         <div class="mb-3">
-          <span class="lesson-record-tag">{{ $t("lessonsRecord.classRecord") }}</span>
+          <div class="record-tabs">
+            <button
+              class="record-tab"
+              :class="activeTab === 'lessons' ? 'record-tab--active' : 'record-tab--inactive'"
+              @click="activeTab = 'lessons'"
+            >
+              {{ $t("lessonsRecord.classRecord") }}
+            </button>
+            <button
+              v-if="showEvaluationTab"
+              class="record-tab"
+              :class="activeTab === 'evaluation' ? 'record-tab--active' : 'record-tab--inactive'"
+              @click="activeTab = 'evaluation'"
+            >
+              课程测评
+            </button>
+          </div>
         </div>
 
         <div class="lesson-record-panel">
-          <!-- 记录骨架屏 -->
-          <div v-if="lessonRecordLoading && lessonSkeletonCount > 0" class="lesson-grid">
-            <el-skeleton
-              v-for="idx in lessonSkeletonCount"
-              :key="`lesson-skeleton-${idx}`"
-              animated
-              class="lesson-card lesson-card--skeleton"
-            >
-              <template #template>
-                <div class="lesson-skeleton-inner">
-                  <el-skeleton-item variant="rect" class="lesson-skeleton-corner" />
-                  <el-skeleton-item variant="text" class="lesson-skeleton-title" />
-                  <el-skeleton-item variant="text" class="lesson-skeleton-meta" />
-                  <el-skeleton-item variant="rect" class="lesson-skeleton-tag" />
-                  <div class="lesson-skeleton-actions">
-                    <el-skeleton-item
-                      variant="button"
-                      class="lesson-skeleton-btn lesson-skeleton-btn--primary"
-                    />
-                    <el-skeleton-item variant="button" class="lesson-skeleton-btn" />
+          <template v-if="activeTab === 'lessons'">
+            <!-- 记录骨架屏 -->
+            <div v-if="lessonRecordLoading && lessonSkeletonCount > 0" class="lesson-grid">
+              <el-skeleton
+                v-for="idx in lessonSkeletonCount"
+                :key="`lesson-skeleton-${idx}`"
+                animated
+                class="lesson-card lesson-card--skeleton"
+              >
+                <template #template>
+                  <div class="lesson-skeleton-inner">
+                    <el-skeleton-item variant="rect" class="lesson-skeleton-corner" />
+                    <el-skeleton-item variant="text" class="lesson-skeleton-title" />
+                    <el-skeleton-item variant="text" class="lesson-skeleton-meta" />
+                    <el-skeleton-item variant="rect" class="lesson-skeleton-tag" />
+                    <div class="lesson-skeleton-actions">
+                      <el-skeleton-item
+                        variant="button"
+                        class="lesson-skeleton-btn lesson-skeleton-btn--primary"
+                      />
+                      <el-skeleton-item variant="button" class="lesson-skeleton-btn" />
+                    </div>
                   </div>
+                </template>
+              </el-skeleton>
+            </div>
+
+            <!-- 记录卡片网格 -->
+            <div v-else-if="lessonRecords.length > 0" class="lesson-grid">
+              <div v-for="record in lessonRecords" :key="record.id" class="lesson-card">
+                <div v-if="record.isLastLesson" class="lesson-last-corner">上次课</div>
+
+                <h3 class="lesson-title">{{ record.title }}</h3>
+
+                <div class="lesson-meta">{{ record.teacher }} {{ record.time }}</div>
+
+                <span
+                  class="lesson-task-tag"
+                  :class="taskTagClass(record.taskStatus)"
+                >
+                  {{ taskTagLabel(record.taskStatus) }}
+                </span>
+
+                <div class="lesson-actions">
+                  <button
+                    v-for="(btn, bIdx) in record.actions"
+                    :key="bIdx"
+                    class="lesson-btn"
+                    :class="btn.primary ? 'lesson-btn--primary' : 'lesson-btn--secondary'"
+                    @click="handleLessonAction(btn, record)"
+                  >
+                    {{ btn.label }}
+                  </button>
                 </div>
-              </template>
-            </el-skeleton>
+              </div>
+            </div>
+
+            <div
+              v-else-if="!lessonRecordLoading"
+              class="h-[140px] rounded-lg border border-dashed border-gray-200 text-gray-400 text-sm flex items-center justify-center"
+            >
+              暂无上课记录
+            </div>
+          </template>
+
+          <div
+            v-else-if="evaluationLoading"
+            class="h-[140px] rounded-lg border border-dashed border-gray-200 text-gray-400 text-sm flex items-center justify-center"
+          >
+            测评加载中...
           </div>
 
-          <!-- 记录卡片网格 -->
-          <div v-else-if="lessonRecords.length > 0" class="lesson-grid">
-            <div v-for="record in lessonRecords" :key="record.id" class="lesson-card">
-              <div v-if="record.isLastLesson" class="lesson-last-corner">上次课</div>
+          <div v-else-if="evaluationRecords.length > 0" class="evaluation-grid">
+            <div
+              v-for="record in evaluationRecords"
+              :key="record.id"
+              class="evaluation-card"
+            >
+              <h3 class="evaluation-title">{{ record.title }}</h3>
 
-              <h3 class="lesson-title">{{ record.title }}</h3>
-
-              <div class="lesson-meta">{{ record.teacher }} {{ record.time }}</div>
+              <div class="evaluation-time">
+                考试时间：{{ record.examTime }}
+              </div>
 
               <span
-                class="lesson-task-tag"
-                :class="taskTagClass(record.taskStatus)"
+                class="evaluation-status"
+                :class="evaluationStatusClass(getEffectiveEvaluationStatus(record))"
               >
-                {{ taskTagLabel(record.taskStatus) }}
+                {{ evaluationStatusLabel(getEffectiveEvaluationStatus(record)) }}
               </span>
 
-              <div class="lesson-actions">
-                <button
-                  v-for="(btn, bIdx) in record.actions"
-                  :key="bIdx"
-                  class="lesson-btn"
-                  :class="btn.primary ? 'lesson-btn--primary' : 'lesson-btn--secondary'"
-                  @click="handleLessonAction(btn, record)"
+              <div
+                v-if="getEffectiveEvaluationStatus(record) === 2 && record.starScore > 0"
+                class="evaluation-score-stars"
+              >
+                <StarRating
+                  :model-value="record.starScore"
+                  :size="18"
+                  :gap="3"
+                  fill-color="#f7b84b"
+                  empty-color="#d9e0e7"
+                  readonly
+                />
+              </div>
+
+              <div
+                v-if="shouldShowEvaluationFooter(record)"
+                class="evaluation-footer"
+              >
+                <div
+                  v-if="getEvaluationActionLabel(getEffectiveEvaluationStatus(record))"
+                  class="evaluation-actions"
                 >
-                  {{ btn.label }}
-                </button>
+                  <button
+                    class="evaluation-btn"
+                    @click="handleEvaluationAction(record)"
+                  >
+                    {{ getEvaluationActionLabel(getEffectiveEvaluationStatus(record)) }}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           <div
-            v-else-if="!lessonRecordLoading"
+            v-else
             class="h-[140px] rounded-lg border border-dashed border-gray-200 text-gray-400 text-sm flex items-center justify-center"
           >
-            暂无上课记录
+            暂无课程测评
           </div>
         </div>
       </div>
     </div>
+
+    <Transition name="evaluation-countdown-float">
+      <div
+        v-if="activeCountdownRecord && activeTab === 'evaluation'"
+        class="evaluation-countdown-floating"
+      >
+        <span class="evaluation-countdown-label">考试倒计时：</span>
+        <span class="evaluation-countdown-box">
+          {{ activeCountdownDisplay.minutes }}
+        </span>
+        <span class="evaluation-countdown-separator">:</span>
+        <span class="evaluation-countdown-box">
+          {{ activeCountdownDisplay.seconds }}
+        </span>
+      </div>
+    </Transition>
+
+    <Transition name="evaluation-resume-float">
+      <button
+        v-if="showResumeEvaluationEntry"
+        class="evaluation-resume-floating"
+        type="button"
+        @click="resumeEvaluationExam"
+      >
+        <span class="evaluation-resume-text">考试进行中</span>
+        <span class="evaluation-resume-bars" aria-hidden="true">
+          <span class="evaluation-resume-bar"></span>
+          <span class="evaluation-resume-bar"></span>
+          <span class="evaluation-resume-bar"></span>
+          <span class="evaluation-resume-bar"></span>
+        </span>
+      </button>
+    </Transition>
+
+    <Teleport to="body">
+      <Transition name="evaluation-start-modal">
+        <div
+          v-if="showExamStartModal"
+          class="exam-start-overlay"
+        >
+          <div class="exam-start-backdrop" @click="closeExamStartModal"></div>
+          <div class="exam-start-modal">
+            <button class="exam-start-close" @click="closeExamStartModal" aria-label="关闭">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            <h3 class="exam-start-title">考试开始提示</h3>
+            <div class="exam-start-content">
+              <div class="exam-start-line">
+                考试名称：{{ examStartRecord?.title || "-" }}
+              </div>
+              <div class="exam-start-line">
+                考试已开始，点击开始考试，进入考试页面
+              </div>
+            </div>
+
+            <button class="exam-start-btn" @click="handleExamStartConfirm">
+              开始考试
+            </button>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
+    <StudentTaskAnswerModal
+      v-model="evaluationAnswerVisible"
+      :evaluation-id="activeEvaluationId"
+      :task-name="activeEvaluationName"
+      :readonly="evaluationAnswerReadonly"
+      @submitted="handleEvaluationSubmitted"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, nextTick, watch } from "vue";
+import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { student } from "~/composables/api/student";
+import StudentTaskAnswerModal from "~/components/student/StudentTaskAnswerModal.vue";
+import StarRating from "~/components/ui/StarRating.vue";
+import { scoreToStars } from "~/utils/star-rating";
 
 definePageMeta({
   layout: "default",
 });
 
 const { t } = useI18n();
-const { getStudentCourseList, getStudentChapterList } = student();
+const { getStudentCourseList, getStudentChapterList, getStudentCourseTest } = student();
 const route = useRoute();
 const router = useRouter();
+const activeTab = ref<"lessons" | "evaluation">(
+  String(route.query.tab || "") === "evaluation" ? "evaluation" : "lessons"
+);
 
 // 轮播
 const carouselRef = ref<HTMLElement | null>(null);
@@ -293,11 +456,45 @@ interface LessonRecordItem {
   }[];
 }
 
+interface EvaluationRecordItem {
+  id: string;
+  title: string;
+  courseId: string;
+  examTime: string;
+  examStartTime: string;
+  examEndTime: string;
+  score: number | null;
+  totalScore: number | null;
+  starScore: number;
+  status: 0 | 1 | 2 | 3;
+}
+
 const carouselCourses = ref<CarouselCourse[]>([]);
 const lessonRecords = ref<LessonRecordItem[]>([]);
+const evaluationRecords = ref<EvaluationRecordItem[]>([]);
 const lessonRecordLoading = ref(false);
+const evaluationLoading = ref(false);
+const evaluationLoadedCourseIds = ref<Record<string, boolean>>({});
+const evaluationHiddenCourseIds = ref<Record<string, boolean>>({});
+const evaluationCache = ref<Record<string, EvaluationRecordItem[]>>({});
+const nowTimestamp = ref(Date.now());
+const showExamStartModal = ref(false);
+const examStartRecord = ref<EvaluationRecordItem | null>(null);
+const evaluationAnswerVisible = ref(false);
+const activeEvaluationId = ref("");
+const activeEvaluationName = ref("");
+const evaluationAnswerReadonly = ref(false);
+const resumeEvaluationRecord = ref<EvaluationRecordItem | null>(null);
 let lessonRecordRequestSeq = 0;
+let evaluationRequestSeq = 0;
+let evaluationCountdownTimer: ReturnType<typeof setInterval> | null = null;
 const lessonSkeletonCount = computed(() => lessonRecords.value.length);
+const shownExamStartRecordIds = new Set<string>();
+const showEvaluationTab = computed(() => {
+  if (!selectedCourseId.value) return false;
+  if (!evaluationLoadedCourseIds.value[selectedCourseId.value]) return false;
+  return evaluationHiddenCourseIds.value[selectedCourseId.value] !== true;
+});
 
 const loadStudentCourseList = async () => {
   isCarouselLoading.value = true;
@@ -456,6 +653,182 @@ const normalizeLessonList = (data: any): any[] => {
   return [];
 };
 
+const evaluationStatusLabel = (status: EvaluationRecordItem["status"]) => {
+  if (status === 1) return "考试中";
+  if (status === 0) return "未开始";
+  if (status === 2) return "已批改";
+  return "未完成";
+};
+
+const evaluationStatusClass = (status: EvaluationRecordItem["status"]) => {
+  if (status === 1) return "evaluation-status--ongoing";
+  if (status === 0) return "evaluation-status--upcoming";
+  if (status === 2) return "evaluation-status--finished";
+  return "evaluation-status--unfinished";
+};
+
+const handleEvaluationAction = (record: EvaluationRecordItem) => {
+  if (getEffectiveEvaluationStatus(record) === 1) {
+    resumeEvaluationRecord.value = record;
+  }
+  activeEvaluationId.value = record.id;
+  activeEvaluationName.value = record.title;
+  evaluationAnswerReadonly.value = getEffectiveEvaluationStatus(record) !== 1;
+  evaluationAnswerVisible.value = true;
+};
+
+const showResumeEvaluationEntry = computed(() => {
+  return !!resumeEvaluationRecord.value && !evaluationAnswerVisible.value;
+});
+
+const resumeEvaluationExam = async () => {
+  if (!resumeEvaluationRecord.value) return;
+
+  const targetRecord = resumeEvaluationRecord.value;
+  activeTab.value = "evaluation";
+
+  if (selectedCourseId.value !== targetRecord.courseId) {
+    selectedCourseId.value = targetRecord.courseId;
+    await nextTick();
+    scrollToCourse(targetRecord.courseId);
+  }
+
+  handleEvaluationAction(targetRecord);
+};
+
+const parseEvaluationDateTime = (value: string) => {
+  const text = String(value || "").trim();
+  if (!text || text === "-") return null;
+  const parsed = new Date(text.replace(/-/g, "/"));
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const getEvaluationStartTimestamp = (record: EvaluationRecordItem) => {
+  const date = parseEvaluationDateTime(record.examStartTime);
+  return date ? date.getTime() : null;
+};
+
+const getEffectiveEvaluationStatus = (record: EvaluationRecordItem): EvaluationRecordItem["status"] => {
+  if (record.status !== 0) return record.status;
+  const startTimestamp = getEvaluationStartTimestamp(record);
+  if (startTimestamp !== null && nowTimestamp.value >= startTimestamp) {
+    return 1;
+  }
+  return record.status;
+};
+
+const getEvaluationCountdownSeconds = (record: EvaluationRecordItem) => {
+  if (record.status !== 0) return null;
+  const startTimestamp = getEvaluationStartTimestamp(record);
+  if (startTimestamp === null) return null;
+
+  const diffSeconds = Math.floor((startTimestamp - nowTimestamp.value) / 1000);
+  if (diffSeconds <= 0 || diffSeconds > 60) return null;
+  return diffSeconds;
+};
+
+const getEvaluationCountdownDisplay = (record: EvaluationRecordItem) => {
+  const totalSeconds = Math.max(0, getEvaluationCountdownSeconds(record) || 0);
+  const minutes = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
+  const seconds = String(totalSeconds % 60).padStart(2, "0");
+  return { minutes, seconds };
+};
+
+const shouldShowEvaluationFooter = (record: EvaluationRecordItem) => {
+  return !!getEvaluationActionLabel(getEffectiveEvaluationStatus(record));
+};
+
+const activeCountdownRecord = computed(() => {
+  return (
+    evaluationRecords.value.find(
+      (record) => getEvaluationCountdownSeconds(record) !== null
+    ) || null
+  );
+});
+
+const activeCountdownDisplay = computed(() => {
+  if (!activeCountdownRecord.value) {
+    return { minutes: "00", seconds: "00" };
+  }
+  return getEvaluationCountdownDisplay(activeCountdownRecord.value);
+});
+
+const closeExamStartModal = () => {
+  showExamStartModal.value = false;
+};
+
+const handleExamStartConfirm = () => {
+  if (examStartRecord.value) {
+    handleEvaluationAction(examStartRecord.value);
+  }
+  showExamStartModal.value = false;
+};
+
+const buildEvaluationExamTime = (item: any) => {
+  const fullRange = firstNonEmptyString(item?.examTime);
+  if (fullRange) return fullRange;
+
+  const start = firstNonEmptyString(item?.examStartTime);
+  const end = firstNonEmptyString(item?.examEndTime);
+  if (start && end) return `${start}-${end}`;
+  if (start) return start;
+  if (end) return end;
+  return "-";
+};
+
+const getEvaluationActionLabel = (status: number) => {
+  if (status === 1) return "去考试";
+  if (status === 0) return "";
+  return "查看详情";
+};
+
+const normalizeEvaluationRecord = (item: any, index: number): EvaluationRecordItem => {
+  const statusNum = Number(item?.status ?? 0);
+  const status: 0 | 1 | 2 | 3 =
+    statusNum === 0 || statusNum === 1 || statusNum === 2 || statusNum === 3
+      ? statusNum
+      : 0;
+
+  return {
+    id: firstNonEmptyString(item?.evaluationId, item?.id, `evaluation-${index}`),
+    title: firstNonEmptyString(item?.evaluationName, item?.title, item?.name) || "-",
+    courseId: String(selectedCourseId.value || ""),
+    examTime: buildEvaluationExamTime(item),
+    examStartTime: firstNonEmptyString(item?.examStartTime),
+    examEndTime: firstNonEmptyString(item?.examEndTime),
+    score: item?.score === null || item?.score === undefined ? null : Number(item.score),
+    totalScore:
+      item?.totalScore === null || item?.totalScore === undefined
+        ? null
+        : Number(item.totalScore),
+    starScore: scoreToStars(item?.score, item?.totalScore),
+    status,
+  };
+};
+
+const updateEvaluationCountdownState = () => {
+  const targetRecord = evaluationRecords.value.find((record) => {
+    if (shownExamStartRecordIds.has(record.id)) return false;
+    if (record.status !== 0) return false;
+    const startTimestamp = getEvaluationStartTimestamp(record);
+    return startTimestamp !== null && nowTimestamp.value >= startTimestamp;
+  });
+
+  if (!targetRecord) return;
+
+  shownExamStartRecordIds.add(targetRecord.id);
+  examStartRecord.value = targetRecord;
+  showExamStartModal.value = true;
+};
+
+const handleEvaluationSubmitted = async () => {
+  evaluationAnswerVisible.value = false;
+  resumeEvaluationRecord.value = null;
+  if (selectedCourseId.value) {
+    await loadEvaluationRecords(selectedCourseId.value);
+  }
+};
+
 const loadLessonRecords = async (courseId: string) => {
   if (!courseId) {
     lessonRecords.value = [];
@@ -483,14 +856,78 @@ const loadLessonRecords = async (courseId: string) => {
   }
 };
 
+const loadEvaluationRecords = async (courseId: string) => {
+  if (!courseId) {
+    evaluationRecords.value = [];
+    return;
+  }
+
+  const requestId = ++evaluationRequestSeq;
+  evaluationLoading.value = true;
+  try {
+    const data = await getStudentCourseTest(courseId);
+    if (requestId !== evaluationRequestSeq) return;
+
+    const list = Array.isArray(data) ? data : [];
+    const normalizedList = list.map((item: any, index: number) =>
+      normalizeEvaluationRecord(item, index)
+    );
+    evaluationCache.value[courseId] = normalizedList;
+    evaluationLoadedCourseIds.value[courseId] = true;
+    evaluationHiddenCourseIds.value[courseId] = normalizedList.length === 0;
+    evaluationRecords.value = normalizedList;
+    if (normalizedList.length === 0 && activeTab.value === "evaluation") {
+      activeTab.value = "lessons";
+    }
+  } catch (error) {
+    if (requestId !== evaluationRequestSeq) return;
+    console.error("获取学生课程测评列表失败", error);
+    evaluationRecords.value = [];
+    evaluationLoadedCourseIds.value[courseId] = true;
+    evaluationHiddenCourseIds.value[courseId] = true;
+  } finally {
+    if (requestId === evaluationRequestSeq) {
+      evaluationLoading.value = false;
+    }
+  }
+};
+
+const syncEvaluationRecordsByCourse = async (courseId: string) => {
+  if (!courseId) {
+    evaluationRecords.value = [];
+    return;
+  }
+
+  if (evaluationLoadedCourseIds.value[courseId]) {
+    evaluationRecords.value = evaluationCache.value[courseId] || [];
+    if (evaluationHiddenCourseIds.value[courseId]) {
+      activeTab.value = "lessons";
+    }
+    return;
+  }
+
+  await loadEvaluationRecords(courseId);
+};
+
 onMounted(() => {
   loadStudentCourseList();
+  evaluationCountdownTimer = window.setInterval(() => {
+    nowTimestamp.value = Date.now();
+  }, 1000);
+});
+
+onBeforeUnmount(() => {
+  if (evaluationCountdownTimer) {
+    clearInterval(evaluationCountdownTimer);
+    evaluationCountdownTimer = null;
+  }
 });
 
 watch(
   () => selectedCourseId.value,
   (courseId) => {
     loadLessonRecords(courseId);
+    void syncEvaluationRecordsByCourse(courseId);
   }
 );
 
@@ -505,6 +942,36 @@ watch(
     await nextTick();
     selectedCourseId.value = targetId;
     scrollToCourse(targetId);
+  }
+);
+
+watch(
+  () => route.query.tab,
+  (tab) => {
+    activeTab.value = String(tab || "") === "evaluation" ? "evaluation" : "lessons";
+  }
+);
+
+watch(
+  [() => nowTimestamp.value, () => evaluationRecords.value],
+  () => {
+    updateEvaluationCountdownState();
+  },
+  { deep: true }
+);
+
+watch(
+  () => evaluationAnswerVisible.value,
+  (visible) => {
+    if (visible) return;
+    if (!resumeEvaluationRecord.value) return;
+    if (evaluationAnswerReadonly.value) {
+      resumeEvaluationRecord.value = null;
+      return;
+    }
+    if (getEffectiveEvaluationStatus(resumeEvaluationRecord.value) !== 1) {
+      resumeEvaluationRecord.value = null;
+    }
   }
 );
 </script>
@@ -606,11 +1073,384 @@ watch(
   line-height: 1;
 }
 
+.record-tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.record-tab {
+  min-width: 112px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 10px 10px 0 0;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.record-tab--active {
+  background: linear-gradient(180deg, #5bd995 0%, #4dce86 100%);
+  color: #ffffff;
+  box-shadow: 0 8px 18px rgba(77, 206, 134, 0.22);
+}
+
+.record-tab--inactive {
+  background: #ffffff;
+  color: #4b5563;
+  border: 1px solid #dfe6ee;
+  border-bottom: none;
+}
+
 .lesson-record-panel {
   padding: 14px;
   border-radius: 14px;
   border: 1px solid #dfe6ee;
   background: #eef2f5;
+}
+
+.evaluation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 396px));
+  gap: 18px;
+  align-items: start;
+}
+
+.evaluation-card {
+  position: relative;
+  min-height: 230px;
+  padding: 26px 22px 20px;
+  border-radius: 16px;
+  border: 1px solid #e2e8ef;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.05);
+}
+
+.evaluation-title {
+  margin: 0;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 600;
+}
+
+.evaluation-time {
+  margin-top: 18px;
+  color: #6f7e94;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.evaluation-status {
+  margin-top: 22px;
+  width: fit-content;
+  min-width: 64px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.evaluation-status--ongoing {
+  background: #ddf8d9;
+  color: #58c64e;
+}
+
+.evaluation-status--upcoming {
+  background: #e4f5ff;
+  color: #3ea8ff;
+}
+
+.evaluation-status--finished {
+  background: #eceff3;
+  color: #a0acba;
+}
+
+.evaluation-status--unfinished {
+  background: #fff0f0;
+  color: #ff6b6b;
+}
+
+.evaluation-footer {
+  margin-top: auto;
+  padding-top: 26px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.evaluation-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.evaluation-btn {
+  min-width: 104px;
+  height: 40px;
+  padding: 0 20px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #ddf8df 0%, #cbeed0 100%);
+  color: #35c37a;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.evaluation-btn:hover {
+  background: linear-gradient(180deg, #d1f4d8 0%, #bce8c3 100%);
+}
+
+.evaluation-score-stars {
+  margin-top: 22px;
+  display: flex;
+  align-items: center;
+}
+
+.evaluation-countdown-floating {
+  position: fixed;
+  left: 44px;
+  bottom: 28px;
+  z-index: 50;
+  min-height: 64px;
+  padding: 0 14px 0 18px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(90deg, #79ec58 0%, #48d18b 100%);
+  box-shadow: 0 14px 24px rgba(72, 209, 139, 0.22);
+}
+
+.evaluation-countdown-label {
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.evaluation-countdown-box {
+  min-width: 68px;
+  height: 54px;
+  padding: 0 12px;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.98);
+  color: #4dd08a;
+  font-size: 30px;
+  line-height: 1;
+  font-weight: 700;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.evaluation-countdown-separator {
+  color: #ffffff;
+  font-size: 28px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.evaluation-countdown-float-enter-active,
+.evaluation-countdown-float-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.evaluation-countdown-float-enter-from,
+.evaluation-countdown-float-leave-to {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.evaluation-resume-floating {
+  position: fixed;
+  left: 0;
+  bottom: 168px;
+  z-index: 55;
+  min-width: 164px;
+  height: 68px;
+  padding: 0 22px 0 26px;
+  border-radius: 0 34px 34px 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  background: linear-gradient(90deg, #79ec58 0%, #48d18b 100%);
+  color: #ffffff;
+  box-shadow: 0 16px 30px rgba(73, 212, 138, 0.26);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.evaluation-resume-floating:hover {
+  transform: translateX(6px);
+  box-shadow: 0 18px 34px rgba(73, 212, 138, 0.32);
+}
+
+.evaluation-resume-text {
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.evaluation-resume-bars {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.evaluation-resume-bar {
+  width: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  animation: evaluation-resume-pulse 1s ease-in-out infinite;
+}
+
+.evaluation-resume-bar:nth-child(1) {
+  height: 18px;
+  animation-delay: 0s;
+}
+
+.evaluation-resume-bar:nth-child(2) {
+  height: 26px;
+  animation-delay: 0.12s;
+}
+
+.evaluation-resume-bar:nth-child(3) {
+  height: 22px;
+  animation-delay: 0.24s;
+}
+
+.evaluation-resume-bar:nth-child(4) {
+  height: 16px;
+  animation-delay: 0.36s;
+}
+
+.evaluation-resume-float-enter-active,
+.evaluation-resume-float-leave-active {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.evaluation-resume-float-enter-from,
+.evaluation-resume-float-leave-to {
+  opacity: 0;
+  transform: translateX(-10px);
+}
+
+@keyframes evaluation-resume-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scaleY(0.72);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+}
+
+.exam-start-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.exam-start-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.exam-start-modal {
+  position: relative;
+  z-index: 1;
+  width: min(420px, calc(100vw - 32px));
+  border-radius: 16px;
+  background: #fff;
+  padding: 30px 34px 28px;
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.18);
+  text-align: center;
+}
+
+.exam-start-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.exam-start-close:hover {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.exam-start-title {
+  margin: 0;
+  color: #1f2937;
+  font-size: 18px;
+  line-height: 1.4;
+  font-weight: 700;
+}
+
+.exam-start-content {
+  margin-top: 40px;
+}
+
+.exam-start-line {
+  color: #374151;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.exam-start-btn {
+  min-width: 130px;
+  height: 40px;
+  margin-top: 36px;
+  padding: 0 24px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #72e85d 0%, #66dd55 100%);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1;
+  font-weight: 600;
+  box-shadow: 0 10px 20px rgba(102, 221, 85, 0.22);
+  transition: all 0.2s ease;
+}
+
+.exam-start-btn:hover {
+  background: linear-gradient(180deg, #67df56 0%, #5fd34f 100%);
+}
+
+.evaluation-start-modal-enter-active,
+.evaluation-start-modal-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.evaluation-start-modal-enter-from,
+.evaluation-start-modal-leave-to {
+  opacity: 0;
 }
 
 .lesson-grid {
@@ -832,6 +1672,10 @@ watch(
 @media (max-width: 1024px) {
   .lesson-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .evaluation-grid {
+    grid-template-columns: 1fr;
   }
 }
 

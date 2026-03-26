@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="h-full flex flex-col bg-white overflow-hidden">
     <!-- Row 1: Breadcrumb & Custom Exercise Button (White Background) -->
     <div class="pl-[6%] pr-[5%] py-4 flex items-center justify-between">
@@ -28,9 +28,9 @@
       <div class="flex flex-wrap gap-3">
         <div
           v-for="(task, index) in pendingReviewTasks"
-          :key="index"
+          :key="task.resourceId || index"
           class="bg-white rounded-lg px-4 py-3 cursor-pointer hover:shadow-md transition-all relative overflow-hidden"
-          @click="selectedPendingIndex = index"
+          @click="handlePendingReviewSelect(index, task)"
         >
           <!-- 待批改标签 - 右上角斜角 -->
           <div
@@ -87,7 +87,7 @@
               @change="handleCourseChange"
             />
           </div>
-          <div class="flex items-center gap-2">
+          <div v-if="!isAssessmentTab" class="flex items-center gap-2">
             <MSelect
               v-model="filters.topic"
               :options="topicOptions"
@@ -124,6 +124,7 @@
 
           <div class="flex-1 overflow-y-auto px-3 py-4 custom-scrollbar">
             <MTree
+              v-if="hasSidebarTasks"
               :data="treeData"
               node-key="id"
               label-key="label"
@@ -134,15 +135,75 @@
               class="text-gray-700"
             >
             </MTree>
+            <div
+              v-else
+              class="flex h-full min-h-[120px] items-center justify-center text-sm text-gray-400"
+            >
+              {{ $t("taskManagement.noTask") }}
+            </div>
           </div>
         </div>
 
         <div class="flex-1 flex flex-col bg-white rounded-xl relative overflow-hidden">
           <div class="flex-1 w-full overflow-hidden">
             <div class="h-full w-full flex flex-col">
+              <div
+                v-if="!hasSidebarTasks"
+                class="flex-1 flex items-center justify-center w-full h-full bg-white"
+              >
+                <div
+                  class="flex w-full max-w-[560px] flex-col items-center px-6 text-center"
+                >
+                  <Transition name="icon-fade" mode="out-in">
+                    <svg
+                      width="100"
+                      height="100"
+                      viewBox="0 0 64 64"
+                      fill="none"
+                      class="mb-[34px] text-black"
+                    >
+                      <rect
+                        x="16"
+                        y="9"
+                        width="24"
+                        height="36"
+                        rx="4.8"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                      />
+                      <path
+                        d="M23 19h10M21 27.5h14M23 36h8"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                        stroke-linecap="round"
+                      />
+                      <circle
+                        cx="43"
+                        cy="39"
+                        r="11"
+                        fill="white"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                      />
+                      <path
+                        d="M38.7 39.2l2.9 3.1 6-7"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                    </svg>
+                  </Transition>
+
+                  <h2 class="text-[24px] font-bold leading-none text-[#122B49]">
+                    {{ $t("taskManagement.noTask") }}
+                  </h2>
+                </div>
+              </div>
+
               <!-- Cards Grid (Free Creation / Tools) - Only show when task not issued -->
               <div
-                v-if="isFreeCodingLikeTask && !isTaskIssued"
+                v-else-if="isFreeCoding && !isTaskIssued"
                 class="h-full w-full bg-[#F3F3F3] flex flex-col items-center px-6 pt-6 text-center"
               >
                 <div class="text-[#444] leading-[1.35] mb-6">
@@ -277,7 +338,7 @@
                     <!-- Exercise Actions -->
                     <template v-if="isExerciseTask">
                       <!-- Batch Mode: Only show Cancel button -->
-                      <template v-if="isBatchMode">
+                      <template v-if="isBatchMode && !isAssessmentTab">
                         <MButton
                           class="!bg-white !text-[#FF4D4F] !border-[#FF4D4F] hover:!bg-red-50 px-4 py-1.5 h-9 shadow-sm"
                           @click="exitBatchMode"
@@ -290,6 +351,7 @@
                       <template v-else>
                         <!-- Answer Analysis Toggle -->
                         <div
+                          v-if="!isAssessmentTab"
                           class="flex items-center gap-2 text-sm text-gray-600 relative group"
                         >
                           <span>{{ $t("taskManagement.answerAnalysis") }}</span>
@@ -321,13 +383,12 @@
                           </div>
                         </div>
 
-                        <!-- View Details -->
                         <MButton
-                          type="primary"
-                          class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-4 py-1.5 h-9 shadow-sm"
+                          v-if="isAssessmentTab"
+                          class="!bg-white !text-[#39A9FF] !border-[#A8D7FF] hover:!bg-[#F3FAFF] hover:!border-[#7EC4FF] px-4 py-1.5 h-9 shadow-sm"
                           @click="handleViewTaskDetail"
                         >
-                          {{ $t("taskManagement.viewTaskFileDetails") }}
+                          {{ $t("taskManagement.viewExamDetails") }}
                         </MButton>
 
                         <!-- Withdraw -->
@@ -335,11 +396,16 @@
                           class="!bg-white !text-[#FF4D4F] !border-gray-200 hover:!bg-red-50 hover:!border-red-200 px-4 py-1.5 h-9 shadow-sm"
                           @click="showWithdrawModal = true"
                         >
-                          {{ $t("taskManagement.withdrawTask") }}
+                          {{
+                            isAssessmentTab
+                              ? $t("taskManagement.withdrawExamPaper")
+                              : $t("taskManagement.withdrawTask")
+                          }}
                         </MButton>
 
                         <!-- Batch Operation -->
                         <MButton
+                          v-if="!isAssessmentTab"
                           class="!bg-white !text-gray-600 !border-gray-200 hover:!bg-gray-50 px-4 py-1.5 h-9 shadow-sm"
                           @click="enterBatchMode"
                         >
@@ -372,19 +438,10 @@
                       </template>
                     </template>
 
-                    <!-- Upload / AI Practice Task Actions: View Details, Withdraw, Refresh -->
+                    <!-- Upload / AI Practice Task Actions: Withdraw, Refresh -->
                     <template
                       v-else-if="isUploadTask || isFreeCodingLikeTask || isAiPracticeTask"
                     >
-                      <!-- View Details -->
-                      <MButton
-                        type="primary"
-                        class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-4 py-1.5 h-9 shadow-sm"
-                        @click="handleViewTaskDetail"
-                      >
-                        {{ $t("taskManagement.viewTaskFileDetails") }}
-                      </MButton>
-
                       <!-- Withdraw -->
                       <MButton
                         class="!bg-white !text-[#FF4D4F] !border-gray-200 hover:!bg-red-50 hover:!border-red-200 px-4 py-1.5 h-9 shadow-sm"
@@ -625,6 +682,23 @@
                         }}</span>
                       </template>
 
+                      <template #cell-reviewStatus="{ row }">
+                        <span
+                          class="px-2 py-1 rounded text-xs"
+                          :class="
+                            row.reviewStatus === 'reviewed'
+                              ? 'bg-[#E6F7FF] text-[#1890FF]'
+                              : 'bg-[#FFF7E6] text-[#FA8C16]'
+                          "
+                        >
+                          {{
+                            row.reviewStatus === "reviewed"
+                              ? $t("taskManagement.reviewed")
+                              : $t("taskManagement.unreviewed")
+                          }}
+                        </span>
+                      </template>
+
                       <!-- Custom Cell for Grade (Star Rating) -->
                       <template #cell-grade="{ row }">
                         <StarRating
@@ -637,24 +711,37 @@
 
                       <!-- Custom Cell for Teacher Score (Star Rating) -->
                       <template #cell-teacherScore="{ row }">
-                        <StarRating
-                          v-if="
-                            row.teacherScore !== undefined && row.teacherScore !== null
-                          "
-                          :model-value="row.teacherScore"
-                          :size="20"
-                          wrapper-class="justify-center"
-                          readonly
-                        />
-                        <span v-else class="text-gray-400">-</span>
+                        <span class="text-sm text-gray-600">
+                          {{ formatTeacherScoreDisplay(row.teacherScore) }}
+                        </span>
                       </template>
 
                       <!-- Custom Cell for Actions -->
                       <template #cell-action="{ row }">
-                        <div class="flex items-center justify-center gap-2">
+                        <div
+                          class="flex flex-nowrap items-center justify-center gap-2 whitespace-nowrap"
+                        >
+                          <template
+                            v-if="isAssessmentTab && row.submissionStatus === 'submitted'"
+                          >
+                            <button
+                              class="inline-flex h-8 min-w-[88px] shrink-0 items-center justify-center rounded-md bg-[#FF9900] px-3 text-sm font-medium text-white whitespace-nowrap transition-colors hover:bg-[#f39000]"
+                              @click="handleViewAndGrade(row)"
+                            >
+                              {{ $t("taskManagement.reviewAndView") }}
+                            </button>
+                            <button
+                              class="inline-flex h-8 min-w-[88px] shrink-0 items-center justify-center rounded-md border border-[#FF9900] bg-white px-3 text-sm font-medium text-[#FF9900] whitespace-nowrap transition-colors hover:bg-[#FFF7E6]"
+                              @click="openAssessmentActionModal(row)"
+                            >
+                              {{ getAssessmentActionLabel(row) }}
+                            </button>
+                          </template>
                           <!-- Custom Exercise: 查看 + 打回重做 -->
                           <template
-                            v-if="isExerciseTask && row.submissionStatus === 'submitted'"
+                            v-else-if="
+                              isExerciseTask && row.submissionStatus === 'submitted'
+                            "
                           >
                             <button
                               class="px-3 py-1 text-xs text-[#FF9900] border border-[#FF9900] rounded hover:bg-[#FFF7E6] transition-colors"
@@ -827,82 +914,257 @@
               <!-- Empty State for AI Chat Model (Task Not Issued) -->
               <div
                 v-else
-                class="flex-1 flex flex-col items-center justify-center w-full h-full pb-20 max-w-5xl mx-auto text-center"
+                class="flex-1 flex items-center justify-center w-full h-full bg-white"
               >
                 <div
-                  class="w-64 h-64 bg-blue-50/50 rounded-full flex items-center justify-center mb-8 relative"
+                  class="flex w-full max-w-[560px] flex-col items-center px-6 text-center"
                 >
-                  <div
-                    class="absolute inset-0 bg-blue-100/30 rounded-full animate-pulse"
-                  ></div>
-                  <!-- Placeholder Icon similar to screenshot -->
-                  <Transition name="icon-fade" mode="out-in">
-                    <svg
-                      :key="selectedTaskKey"
-                      width="120"
-                      height="120"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      class="text-blue-300 relative z-10"
+                  <template v-if="isAssessmentTab">
+                    <Transition name="icon-fade" mode="out-in">
+                      <div
+                        :key="selectedTaskKey"
+                        class="mb-[26px] flex h-[170px] w-[170px] items-center justify-center rounded-full bg-[radial-gradient(circle_at_50%_35%,rgba(197,237,255,0.95),rgba(226,245,255,0.82)_58%,rgba(255,255,255,0)_59%)]"
+                      >
+                        <svg width="118" height="118" viewBox="0 0 118 118" fill="none">
+                          <circle
+                            cx="59"
+                            cy="59"
+                            r="50"
+                            fill="url(#assessment-empty-bg)"
+                          />
+                          <g filter="url(#assessment-empty-shadow)">
+                            <rect
+                              x="37"
+                              y="30"
+                              width="42"
+                              height="56"
+                              rx="8"
+                              transform="rotate(-4 37 30)"
+                              fill="white"
+                            />
+                            <path
+                              d="M49 47H69"
+                              stroke="#7ABEFF"
+                              stroke-width="4.5"
+                              stroke-linecap="round"
+                            />
+                            <path
+                              d="M48 58H68"
+                              stroke="#7ABEFF"
+                              stroke-width="4.5"
+                              stroke-linecap="round"
+                            />
+                            <path
+                              d="M47 69H61"
+                              stroke="#7ABEFF"
+                              stroke-width="4.5"
+                              stroke-linecap="round"
+                            />
+                          </g>
+                          <g filter="url(#assessment-empty-pen-shadow)">
+                            <path
+                              d="M78.4 68.4L87.8 77.8L71.6 94L62.2 94.6L62.8 85.2L78.4 68.4Z"
+                              fill="#69B8FF"
+                            />
+                            <path
+                              d="M61.8 85.8L70.4 94.4"
+                              stroke="#3A9CFF"
+                              stroke-width="3.4"
+                              stroke-linecap="round"
+                            />
+                          </g>
+                          <circle cx="86" cy="33" r="12" fill="white" />
+                          <path
+                            d="M82.5 36.5L89.5 29.5"
+                            stroke="#A4D4FF"
+                            stroke-width="3"
+                            stroke-linecap="round"
+                          />
+                          <defs>
+                            <linearGradient
+                              id="assessment-empty-bg"
+                              x1="24"
+                              y1="22"
+                              x2="98"
+                              y2="96"
+                              gradientUnits="userSpaceOnUse"
+                            >
+                              <stop stop-color="#D8F2FF" />
+                              <stop offset="1" stop-color="#9ED1FF" />
+                            </linearGradient>
+                            <filter
+                              id="assessment-empty-shadow"
+                              x="28"
+                              y="22"
+                              width="60"
+                              height="73"
+                              filterUnits="userSpaceOnUse"
+                              color-interpolation-filters="sRGB"
+                            >
+                              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                              <feColorMatrix
+                                in="SourceAlpha"
+                                type="matrix"
+                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                                result="hardAlpha"
+                              />
+                              <feOffset dy="3" />
+                              <feGaussianBlur stdDeviation="3" />
+                              <feColorMatrix
+                                type="matrix"
+                                values="0 0 0 0 0.47451 0 0 0 0 0.745098 0 0 0 0 1 0 0 0 0.22 0"
+                              />
+                              <feBlend
+                                mode="normal"
+                                in2="BackgroundImageFix"
+                                result="effect1_dropShadow_1_1"
+                              />
+                              <feBlend
+                                mode="normal"
+                                in="SourceGraphic"
+                                in2="effect1_dropShadow_1_1"
+                                result="shape"
+                              />
+                            </filter>
+                            <filter
+                              id="assessment-empty-pen-shadow"
+                              x="56"
+                              y="64"
+                              width="38"
+                              height="38"
+                              filterUnits="userSpaceOnUse"
+                              color-interpolation-filters="sRGB"
+                            >
+                              <feFlood flood-opacity="0" result="BackgroundImageFix" />
+                              <feColorMatrix
+                                in="SourceAlpha"
+                                type="matrix"
+                                values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0"
+                                result="hardAlpha"
+                              />
+                              <feOffset dy="2" />
+                              <feGaussianBlur stdDeviation="2" />
+                              <feColorMatrix
+                                type="matrix"
+                                values="0 0 0 0 0.231373 0 0 0 0 0.611765 0 0 0 0 1 0 0 0 0.28 0"
+                              />
+                              <feBlend
+                                mode="normal"
+                                in2="BackgroundImageFix"
+                                result="effect1_dropShadow_1_1"
+                              />
+                              <feBlend
+                                mode="normal"
+                                in="SourceGraphic"
+                                in2="effect1_dropShadow_1_1"
+                                result="shape"
+                              />
+                            </filter>
+                          </defs>
+                        </svg>
+                      </div>
+                    </Transition>
+
+                    <h2
+                      class="mb-[16px] text-[24px] font-bold leading-none text-[#122B49]"
                     >
-                      <rect
-                        x="4"
-                        y="3"
-                        width="16"
-                        height="18"
-                        rx="2"
-                        fill="currentColor"
-                        fill-opacity="0.2"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M8 8h8M8 12h8M8 16h5"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                      />
-                      <circle
-                        cx="16"
-                        cy="16"
-                        r="6"
-                        fill="#EEF2FF"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                      />
-                      <path
-                        d="M14.5 15l1 1 2.5-2.5"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </Transition>
-                </div>
+                      {{ $t("taskManagement.assessmentNotIssued") }}
+                    </h2>
+                    <p
+                      class="mb-[42px] max-w-[560px] text-[14px] leading-[2.1] text-[#364A63]"
+                    >
+                      {{ $t("taskManagement.assessmentNotIssuedDesc") }}
+                    </p>
 
-                <h2 class="text-xl font-bold text-gray-800 mb-3">
-                  {{ $t("taskManagement.taskNotIssued") }}
-                </h2>
-                <p class="text-gray-500 text-sm max-w-md mx-auto mb-10 leading-relaxed">
-                  {{ $t("taskManagement.taskNotIssuedDesc") }}
-                </p>
+                    <div class="flex items-center gap-5">
+                      <MButton
+                        type="primary"
+                        class="!h-[40px] !w-[118px] !rounded-[8px] !border-0 !bg-[#39A9FF] !px-0 !text-[16px] !font-medium !text-white hover:!bg-[#249dff]"
+                        @click="openIssueModal"
+                      >
+                        {{ $t("taskManagement.issueExam") }}
+                      </MButton>
 
-                <div class="flex items-center gap-6">
-                  <MButton
-                    type="primary"
-                    class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-8 py-2.5 shadow-md shadow-orange-500/20 active:scale-95 transition-all"
-                    @click="openIssueModal"
-                  >
-                    {{ $t("taskManagement.issueTask") }}
-                  </MButton>
+                      <MButton
+                        class="!h-[40px] !w-[118px] !rounded-[8px] !border !border-[#A8D7FF] !bg-white !px-0 !text-[16px] !font-medium !text-[#39A9FF] hover:!border-[#7EC4FF] hover:!bg-[#F3FAFF]"
+                        @click="handleViewTaskDetail"
+                      >
+                        {{ $t("taskManagement.viewExamFile") }}
+                      </MButton>
+                    </div>
+                  </template>
 
-                  <MButton
-                    class="!bg-white !text-gray-600 border !border-gray-200 hover:!bg-gray-50 px-8 py-2.5 shadow-sm active:scale-95 transition-all"
-                    @click="handleViewTaskDetail"
-                  >
-                    {{ $t("taskManagement.viewDetails") }}
-                  </MButton>
+                  <template v-else>
+                    <Transition name="icon-fade" mode="out-in">
+                      <svg
+                        :key="selectedTaskKey"
+                        width="100"
+                        height="100"
+                        viewBox="0 0 64 64"
+                        fill="none"
+                        class="mb-[34px] text-black"
+                      >
+                        <rect
+                          x="16"
+                          y="9"
+                          width="24"
+                          height="36"
+                          rx="4.8"
+                          stroke="currentColor"
+                          stroke-width="3.6"
+                        />
+                        <path
+                          d="M23 19h10M21 27.5h14M23 36h8"
+                          stroke="currentColor"
+                          stroke-width="3.6"
+                          stroke-linecap="round"
+                        />
+                        <circle
+                          cx="43"
+                          cy="39"
+                          r="11"
+                          fill="white"
+                          stroke="currentColor"
+                          stroke-width="3.6"
+                        />
+                        <path
+                          d="M38.7 39.2l2.9 3.1 6-7"
+                          stroke="currentColor"
+                          stroke-width="3.6"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </Transition>
+
+                    <h2
+                      class="mb-[22px] text-[24px] font-bold leading-none text-[#122B49]"
+                    >
+                      {{ $t("taskManagement.taskNotIssued") }}
+                    </h2>
+                    <p
+                      class="mb-[48px] max-w-[500px] text-[14px] leading-[2.3] text-[#364A63]"
+                    >
+                      {{ $t("taskManagement.taskNotIssuedDesc") }}
+                    </p>
+
+                    <div class="flex items-center gap-[22px]">
+                      <MButton
+                        type="primary"
+                        class="!h-[40px] !w-[122px] !rounded-[4px] !border-0 !bg-[#FF9F14] !px-0 !text-[16px] !font-medium !text-white hover:!bg-[#f39000]"
+                        @click="openIssueModal"
+                      >
+                        {{ $t("taskManagement.issueTask") }}
+                      </MButton>
+
+                      <MButton
+                        class="!h-[40px] !w-[122px] !rounded-[4px] !border !border-[#D9DEE7] !bg-white !px-0 !text-[16px] !font-medium !text-[#2F3D52] hover:!border-[#c7ced8] hover:!bg-[#f8fafc]"
+                        @click="handleViewTaskDetail"
+                      >
+                        {{ $t("taskManagement.viewDetails") }}
+                      </MButton>
+                    </div>
+                  </template>
                 </div>
               </div>
             </div>
@@ -916,10 +1178,20 @@
       :class-name="currentClassName"
       :task-name="currentTaskLabel"
       :has-ai-settings="!isUploadTask && !isExerciseTask"
-      :is-free-coding="isFreeCodingLikeTask"
+      :is-free-coding="isFreeCoding"
       :editor-name="selectedEditor"
       @confirm-group="handleIssueGroup"
       @confirm-student="handleIssueStudent"
+    />
+
+    <AssessmentIssueExamModal
+      v-model:visible="showAssessmentIssueModal"
+      :course-id="String(filters.course || '')"
+      :class-id="String(filters.class || '')"
+      :exercise-id="currentExerciseId"
+      :title="assessmentIssueModalTitle"
+      :submit-text="assessmentIssueModalSubmitText"
+      @submit="handleAssessmentIssueSubmit"
     />
 
     <TaskWithdrawModal v-model="showWithdrawModal" @confirm="handleWithdrawConfirm" />
@@ -927,14 +1199,106 @@
     <ExerciseDetailModal
       v-model="showExerciseDetailModal"
       :exercise-id="currentExerciseId"
+      :evaluation-id="currentEvaluationId"
       :task-id="viewTaskId"
+      :detail-source="exerciseDetailSource"
     />
+
+    <div
+      v-if="showTaskAiIframeModal"
+      class="iframe-modal-overlay"
+      @click.self="closeTaskAiIframeModal"
+    >
+      <div class="iframe-modal-container">
+        <div class="iframe-modal-header">
+          <span class="iframe-modal-title">{{
+            currentTaskAiProjectName || currentTaskLabel
+          }}</span>
+          <button class="iframe-close-btn" @click="closeTaskAiIframeModal">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="iframe-modal-body">
+          <div v-if="taskAiIframeLoading" class="iframe-loading">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">{{ $t("common.loading") }}</span>
+          </div>
+          <iframe
+            ref="taskAiIframeRef"
+            :src="currentTaskAiUrl"
+            class="tool-iframe"
+            :class="{ hidden: taskAiIframeLoading }"
+            frameborder="0"
+            allowfullscreen
+            allow="camera; microphone; bluetooth; serial"
+            @load="onTaskAiIframeLoad"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showTaskToolIframeModal"
+      class="iframe-modal-overlay"
+      @click.self="closeTaskToolIframeModal"
+    >
+      <div class="iframe-modal-container">
+        <div class="iframe-modal-header">
+          <span class="iframe-modal-title">{{
+            currentTaskToolName || currentTaskLabel
+          }}</span>
+          <button class="iframe-close-btn" @click="closeTaskToolIframeModal">
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+        <div class="iframe-modal-body">
+          <div v-if="taskToolIframeLoading" class="iframe-loading">
+            <div class="loading-spinner"></div>
+            <span class="loading-text">{{ $t("common.loading") }}</span>
+          </div>
+          <iframe
+            ref="taskToolIframeRef"
+            :src="currentTaskToolUrl"
+            class="tool-iframe"
+            :class="{ hidden: taskToolIframeLoading }"
+            frameborder="0"
+            allowfullscreen
+            allow="camera; microphone; bluetooth; serial"
+            @load="onTaskToolIframeLoad"
+          />
+        </div>
+      </div>
+    </div>
 
     <ViewAndScoreModal
       :visible="showViewScoreModal"
       :row-data="currentScoreRow"
+      :detail-data="currentProgrammingTaskDetail"
+      :loading="viewScoreLoading"
+      :can-open-editor="!!currentProgrammingTaskDetail?.taskUrl"
       :has-next-submission="hasNextSubmission"
-      @close="showViewScoreModal = false"
+      @close="handleViewScoreClose"
+      @open-editor="handleOpenProgrammingEditor"
       @save="handleScoreSave"
       @next="handleScoreNext"
     />
@@ -993,15 +1357,32 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, watch } from "vue";
 import { useI18n } from "vue-i18n";
+import { aiAdmin } from "~/composables/api/ai";
+import { cursorAdmin } from "~/composables/api/curosr";
 import { taskmanagementcenterApi } from "~/composables/api/taskmanagement";
+import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import { scoreToStars } from "~/utils/star-rating";
 import tool1Cover from "~/assets/images/tool1.png";
 import tool5Cover from "~/assets/images/tool5.png";
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const router = useRouter();
+const runtimeConfig = useRuntimeConfig();
 const taskApi = taskmanagementcenterApi();
+const { startDistribute, withdrawExam } = cursorAdmin();
+const { ssoLogin, createAi, updateAi } = aiAdmin();
+const {
+  parseMessageData,
+  getMessageType,
+  pickMessagePayload,
+  pickMessageFileName,
+  toUploadFile,
+  uploadFileToOSS,
+  downloadFileFromOSS,
+  isMessageFromIframe,
+  postFileBufferToIframe,
+} = useIframeFileBridge();
 
 // --- Filter Data & State ---
 const filters = ref({
@@ -1059,6 +1440,9 @@ const handleClassChange = (classId: string | number | null) => {
   const classItem = chapterData.value.find((item: any) => item.classId === classId);
   if (classItem?.courseList?.length > 0) {
     filters.value.course = classItem.courseList[0].courseId;
+    if (isAssessmentTab.value) {
+      return;
+    }
     if (classItem.courseList[0].chapterList?.length > 0) {
       filters.value.topic = classItem.courseList[0].chapterList[0].chapterId;
     }
@@ -1069,6 +1453,7 @@ const handleClassChange = (classId: string | number | null) => {
 const handleCourseChange = (courseId: string | number | null) => {
   filters.value.topic = null;
   if (!courseId || !filters.value.class) return;
+  if (isAssessmentTab.value) return;
   const classItem = chapterData.value.find(
     (item: any) => item.classId === filters.value.class
   );
@@ -1093,8 +1478,6 @@ const fetchChapterData = async () => {
         // 默认选中第一个章节
         if (firstClass.courseList[0].chapterList?.length > 0) {
           filters.value.topic = firstClass.courseList[0].chapterList[0].chapterId;
-          // 加载任务列表
-          await fetchTaskList();
         }
       }
     }
@@ -1103,25 +1486,13 @@ const fetchChapterData = async () => {
   }
 };
 
-// 监听章节变化，重新加载任务列表
-watch(
-  () => filters.value.topic,
-  (newVal) => {
-    if (newVal) {
-      fetchTaskList();
-    } else {
-      taskListData.value = [];
-      selectedTaskKey.value = "";
-    }
-  }
-);
-
 // --- Sidebar Data & State ---
 const activeTab = ref("tasks");
 const tabs = computed(() => [
   { label: t("taskManagement.courseTasks"), value: "tasks" },
   { label: t("taskManagement.courseAssessment"), value: "assessment" },
 ]);
+const isAssessmentTab = computed(() => activeTab.value === "assessment");
 
 const selectedTaskKey = ref<string | number>("");
 const expandedKeys = ref<(string | number)[]>([]);
@@ -1142,62 +1513,192 @@ const treeData = computed(() => {
   }));
 });
 
+const hasSidebarTasks = computed(() => {
+  return taskListData.value.some(
+    (category: any) =>
+      Array.isArray(category?.resourceList) && category.resourceList.length > 0
+  );
+});
+
+const clearCurrentListState = () => {
+  taskListData.value = [];
+  expandedKeys.value = [];
+  selectedTaskKey.value = "";
+  groupTaskData.value = [];
+  isBatchMode.value = false;
+  selectedRowKeys.value = [];
+};
+
+const applyTaskListData = (list: any[]) => {
+  taskListData.value = list;
+  expandedKeys.value = taskListData.value.map(
+    (c: any) => `category_${c.resourceCategory}`
+  );
+
+  const currentKey = String(selectedTaskKey.value || "");
+  let matchedTask: any = null;
+  if (currentKey) {
+    for (const category of taskListData.value) {
+      const found = (category.resourceList || []).find(
+        (r: any) => String(r.resourceId) === currentKey
+      );
+      if (found) {
+        matchedTask = found;
+        break;
+      }
+    }
+  }
+
+  if (matchedTask) {
+    selectedTaskKey.value = matchedTask.resourceId;
+    if (isIssuedDistributeType(matchedTask.distributeType)) {
+      fetchStudentTaskList();
+    } else {
+      groupTaskData.value = [];
+    }
+    return;
+  }
+
+  if (taskListData.value.length > 0 && taskListData.value[0].resourceList?.length > 0) {
+    const firstTask = taskListData.value[0].resourceList[0];
+    selectedTaskKey.value = firstTask.resourceId;
+    if (isIssuedDistributeType(firstTask.distributeType)) {
+      fetchStudentTaskList();
+    } else {
+      groupTaskData.value = [];
+    }
+    return;
+  }
+
+  selectedTaskKey.value = "";
+  groupTaskData.value = [];
+};
+
 // 加载任务列表
 const fetchTaskList = async () => {
   if (!filters.value.topic) return;
   try {
     const data = await taskApi.getTaskList({
-      chapterId: Number(filters.value.topic),
+      chapterId: String(filters.value.topic),
       classId: String(filters.value.class || ""),
     });
-    taskListData.value = data || [];
-    // 默认展开所有分类
-    expandedKeys.value = taskListData.value.map(
-      (c: any) => `category_${c.resourceCategory}`
-    );
-    // 优先保持当前选中的任务；不存在时再回退到第一个
-    const currentKey = String(selectedTaskKey.value || "");
-    let matchedTask: any = null;
-    if (currentKey) {
-      for (const category of taskListData.value) {
-        const found = (category.resourceList || []).find(
-          (r: any) => String(r.resourceId) === currentKey
-        );
-        if (found) {
-          matchedTask = found;
-          break;
-        }
-      }
-    }
-
-    if (matchedTask) {
-      selectedTaskKey.value = matchedTask.resourceId;
-      if (isIssuedDistributeType(matchedTask.distributeType)) {
-        fetchStudentTaskList();
-      } else {
-        groupTaskData.value = [];
-      }
-    } else if (
-      taskListData.value.length > 0 &&
-      taskListData.value[0].resourceList?.length > 0
-    ) {
-      selectedTaskKey.value = taskListData.value[0].resourceList[0].resourceId;
-      // 如果该任务已下发，加载学生任务列表
-      const firstTask = taskListData.value[0].resourceList[0];
-      if (isIssuedDistributeType(firstTask.distributeType)) {
-        fetchStudentTaskList();
-      } else {
-        groupTaskData.value = [];
-      }
-    } else {
-      selectedTaskKey.value = "";
-      groupTaskData.value = [];
-    }
+    applyTaskListData(data || []);
   } catch (error) {
     console.error("获取任务列表失败", error);
-    taskListData.value = [];
+    clearCurrentListState();
   }
 };
+
+const normalizeEvaluationItem = (item: any) => {
+  const exerciseId = String(
+    item?.exerciseId ?? item?.resourceId ?? item?.id ?? item?.evaluationId ?? ""
+  ).trim();
+  const status = Number(item?.status ?? 0);
+  return {
+    ...item,
+    resourceId: exerciseId,
+    exerciseId,
+    fileName: item?.exerciseName || item?.resourceName || item?.fileName || "-",
+    resourceName: item?.exerciseName || item?.resourceName || item?.fileName || "-",
+    resourceCategory: 11,
+    distributeType: status > 0 ? 1 : null,
+  };
+};
+
+const fetchEvaluationList = async () => {
+  const courseId = String(filters.value.course || "").trim();
+  const classId = String(filters.value.class || "").trim();
+  if (!courseId || !classId) {
+    clearCurrentListState();
+    return;
+  }
+  try {
+    const data = await taskApi.getEvaluationList({ courseId, classId });
+    const normalizedList = (Array.isArray(data) ? data : [])
+      .map((group: any, index: number) => {
+        const resourceList = (Array.isArray(group?.evaluationList)
+          ? group.evaluationList
+          : []
+        ).map((item: any) => ({
+          ...normalizeEvaluationItem(item),
+          evaluationCategory: group?.evaluationCategory,
+        }));
+
+        return {
+          resourceCategory: 11,
+          resourceName:
+            group?.evaluationName ||
+            group?.resourceName ||
+            `${t("taskManagement.courseAssessment")}${index + 1}`,
+          evaluationCategory: group?.evaluationCategory,
+          resourceList,
+        };
+      })
+      .filter(
+        (group: any) =>
+          Array.isArray(group?.resourceList) && group.resourceList.length > 0
+      );
+    applyTaskListData(normalizedList);
+  } catch (error) {
+    console.error("获取测评列表失败", error);
+    clearCurrentListState();
+  }
+};
+
+const loadCurrentTabList = async () => {
+  if (isAssessmentTab.value) {
+    await fetchEvaluationList();
+    return;
+  }
+
+  if (!filters.value.topic) {
+    clearCurrentListState();
+    return;
+  }
+
+  await fetchTaskList();
+};
+
+watch(
+  () => activeTab.value,
+  (tab) => {
+    if (tab !== "tasks") return;
+    if (filters.value.topic) return;
+    if (!filters.value.class || !filters.value.course) return;
+
+    const classItem = chapterData.value.find(
+      (item: any) => item.classId === filters.value.class
+    );
+    const courseItem = classItem?.courseList?.find(
+      (item: any) => item.courseId === filters.value.course
+    );
+    if (courseItem?.chapterList?.length > 0) {
+      filters.value.topic = courseItem.chapterList[0].chapterId;
+    }
+  }
+);
+
+watch(
+  [
+    () => activeTab.value,
+    () => filters.value.class,
+    () => filters.value.course,
+    () => filters.value.topic,
+  ],
+  async () => {
+    if (!filters.value.class || !filters.value.course) {
+      clearCurrentListState();
+      return;
+    }
+
+    if (!isAssessmentTab.value && !filters.value.topic) {
+      clearCurrentListState();
+      return;
+    }
+
+    await loadCurrentTabList();
+  }
+);
 
 const handleNodeSelect = (node: any) => {
   // 分类节点仅用于展开，不作为任务项选择
@@ -1228,8 +1729,29 @@ import { ElMessage } from "element-plus";
 // --- Main Content Data & State ---
 const selectedEditor = ref("vincibot");
 const showIssueModal = ref(false);
+const showAssessmentIssueModal = ref(false);
 const freeCodingIssuing = ref(false);
 const distributeTypeOverrides = ref<Record<string, number>>({});
+const showTaskAiIframeModal = ref(false);
+const taskAiIframeLoading = ref(true);
+const currentTaskAiUrl = ref("");
+const currentTaskAiProjectName = ref("");
+const currentTaskAiToolKey = ref("");
+const currentTaskAiOptType = ref("");
+const currentTaskAiOptId = ref("");
+const currentTaskAiFile = ref<File | null>(null);
+const taskAiIframeRef = ref<HTMLIFrameElement | null>(null);
+const showTaskToolIframeModal = ref(false);
+const taskToolIframeLoading = ref(true);
+const currentTaskToolUrl = ref("");
+const currentTaskToolName = ref("");
+const currentTaskToolFile = ref<File | null>(null);
+const taskToolIframeRef = ref<HTMLIFrameElement | null>(null);
+
+const pushTaskToolDebugLog = (message: string) => {
+  const timestamp = new Date().toLocaleTimeString("zh-CN", { hour12: false });
+  console.log(`[taskmanagement iframe] [${timestamp}] ${message}`);
+};
 
 const setDistributeTypeOverride = (
   resourceId: string | number,
@@ -1299,6 +1821,12 @@ const currentClassName = computed(() => {
 });
 
 const openIssueModal = () => {
+  if (isAssessmentTab.value) {
+    assessmentIssueMode.value = "create";
+    assessmentIssueEvaluationIds.value = [];
+    showAssessmentIssueModal.value = true;
+    return;
+  }
   showIssueModal.value = true;
 };
 
@@ -1317,7 +1845,13 @@ function resolveSelectedResourceId(): string | null {
 
 function resolveSelectedExerciseId(): string | null {
   const task = selectedTask.value as any;
-  const candidates = [task?.exerciseId, task?.resourceId, task?.id, task?.taskId, selectedTaskKey.value];
+  const candidates = [
+    task?.exerciseId,
+    task?.resourceId,
+    task?.id,
+    task?.taskId,
+    selectedTaskKey.value,
+  ];
   for (const candidate of candidates) {
     if (candidate === null || candidate === undefined) continue;
     const value = String(candidate).trim();
@@ -1326,6 +1860,608 @@ function resolveSelectedExerciseId(): string | null {
   }
   return null;
 }
+
+const getCurrentUserId = () => {
+  if (!import.meta.client) {
+    return "";
+  }
+
+  try {
+    const rawUserInfo = localStorage.getItem("user_info");
+    if (!rawUserInfo) {
+      return "";
+    }
+
+    const userInfo = JSON.parse(rawUserInfo);
+    return userInfo?.user_id || userInfo?.userId || userInfo?.id || "";
+  } catch {
+    return "";
+  }
+};
+
+const TASK_AI_TOOL_KEY_MAP: Record<string, string> = {
+  image_cls: "imageClassModel",
+  audio_cls: "voiceClassModel",
+  pose_cls: "poseClassModel",
+  gesture_cls: "gestureClassModel",
+};
+
+const TASK_AI_TYPE_MAP: Record<string, number> = {
+  imageClassModel: 1,
+  gestureClassModel: 2,
+  voiceClassModel: 3,
+  poseClassModel: 4,
+};
+
+const resolveSelectedTaskName = () => {
+  const task = selectedTask.value as any;
+  return (
+    task?.taskName ||
+    task?.fileName ||
+    task?.resourceName ||
+    task?.name ||
+    currentTaskLabel.value ||
+    ""
+  );
+};
+
+const resolveIssuedTaskName = () => {
+  const task = selectedTask.value as any;
+  return String(task?.fileName || "").trim();
+};
+
+const resolveFreeCodingFileType = (): "vinci" | "nous" =>
+  selectedEditor.value === "nous" ? "nous" : "vinci";
+
+const normalizeFreeCodingToolId = (value: unknown): "vincibot" | "nous" | "" => {
+  const normalizedValue = String(value || "")
+    .trim()
+    .toLowerCase();
+  if (!normalizedValue) return "";
+  if (normalizedValue.includes("nous")) return "nous";
+  if (
+    normalizedValue.includes("vincibot") ||
+    normalizedValue.includes("vinci") ||
+    normalizedValue.includes("ucode4")
+  ) {
+    return "vincibot";
+  }
+  return "";
+};
+
+const resolveSelectedFreeCodingToolId = (): "vincibot" | "nous" => {
+  const task = selectedTask.value as any;
+  const candidates = [
+    task?.fileType,
+    task?.toolType,
+    task?.editorType,
+    task?.editor,
+    task?.fileName,
+    task?.taskName,
+    task?.resourceName,
+    task?.raw?.fileType,
+    task?.raw?.toolType,
+    task?.raw?.editorType,
+    task?.raw?.editor,
+    task?.raw?.fileName,
+    task?.raw?.taskName,
+    task?.raw?.resourceName,
+    selectedEditor.value,
+  ];
+
+  for (const candidate of candidates) {
+    const toolId = normalizeFreeCodingToolId(candidate);
+    if (toolId) {
+      return toolId;
+    }
+  }
+
+  return "vincibot";
+};
+
+const resolveProgrammingDetailToolId = (detail: any): "vincibot" | "nous" => {
+  const candidates = [
+    detail?.fileType,
+    detail?.toolType,
+    detail?.editorType,
+    detail?.editor,
+    detail?.opus?.opusType,
+    detail?.resourceName,
+    detail?.taskName,
+  ];
+
+  for (const candidate of candidates) {
+    const toolId = normalizeFreeCodingToolId(candidate);
+    if (toolId) {
+      return toolId;
+    }
+  }
+
+  return "vincibot";
+};
+
+const resolveProgrammingDetailFileName = (detail: any) => {
+  const taskUrl = String(detail?.taskUrl || detail?.opus?.opusUrl || "").trim();
+  const urlFileName = taskUrl.split("/").pop() || "";
+  if (/\.[^.]+$/i.test(urlFileName)) {
+    return urlFileName;
+  }
+
+  const baseName =
+    String(
+      detail?.taskName || detail?.opus?.opusName || detail?.resourceName || "project"
+    ).trim() || "project";
+  const ext = resolveProgrammingDetailToolId(detail) === "nous" ? ".sb3" : ".mc";
+  return /\.[^.]+$/i.test(baseName) ? baseName : `${baseName}${ext}`;
+};
+
+const downloadProgrammingDetailTaskFile = async (detail: any) => {
+  const taskUrl = String(detail?.taskUrl || detail?.opus?.opusUrl || "").trim();
+  const fileName = resolveProgrammingDetailFileName(detail);
+
+  if (!taskUrl || !/^https?:\/\//i.test(taskUrl)) {
+    return null;
+  }
+
+  const response = await fetch(taskUrl);
+  if (!response.ok) {
+    throw new Error(`下载编程任务文件失败: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return new File([blob], fileName, {
+    type: blob.type || "application/octet-stream",
+    lastModified: Date.now(),
+  });
+};
+
+const normalizeAiTaskOptType = (value: unknown) => {
+  const normalizedValue = String(value || "")
+    .trim()
+    .toLowerCase();
+  const typeMap: Record<string, string> = {
+    image_cls: "image_cls",
+    audio_cls: "audio_cls",
+    pose_cls: "pose_cls",
+    gesture_cls: "gesture_cls",
+    image: "image_cls",
+    audio: "audio_cls",
+    voice: "audio_cls",
+    pose: "pose_cls",
+    hand: "gesture_cls",
+    gesture: "gesture_cls",
+  };
+
+  return typeMap[normalizedValue] || "";
+};
+
+const inferAiTaskOptType = () => {
+  const task = selectedTask.value as any;
+  const candidates = [
+    task?.fileType,
+    task?.optType,
+    task?.resourceType,
+    task?.modelType,
+    task?.raw?.fileType,
+    task?.raw?.optType,
+    task?.raw?.resourceType,
+    task?.raw?.modelType,
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeAiTaskOptType(candidate);
+    if (normalized) {
+      return normalized;
+    }
+  }
+
+  const nameSource = [
+    resolveSelectedTaskName(),
+    String(selectedTask.value?.fileName || ""),
+    String(selectedTask.value?.resourceName || ""),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (nameSource.includes("图像") || nameSource.includes("image")) return "image_cls";
+  if (
+    nameSource.includes("语音") ||
+    nameSource.includes("音频") ||
+    nameSource.includes("audio") ||
+    nameSource.includes("voice")
+  )
+    return "audio_cls";
+  if (nameSource.includes("姿态") || nameSource.includes("pose")) return "pose_cls";
+  if (
+    nameSource.includes("手势") ||
+    nameSource.includes("gesture") ||
+    nameSource.includes("hand")
+  )
+    return "gesture_cls";
+
+  return "";
+};
+
+const resolveSelectedAiTaskResourceUrl = () => {
+  const task = selectedTask.value as any;
+  return String(task?.resourceUrl || task?.raw?.resourceUrl || "").trim();
+};
+
+const resolveSelectedAiTaskOssId = () => {
+  const task = selectedTask.value as any;
+  return String(
+    task?.resourceOssId ||
+      task?.ossId ||
+      task?.raw?.resourceOssId ||
+      task?.raw?.ossId ||
+      ""
+  ).trim();
+};
+
+const resolveSelectedAiTaskOptId = () => {
+  const task = selectedTask.value as any;
+  return String(
+    task?.optId || task?.aiId || task?.modelId || task?.resourceId || task?.id || ""
+  ).trim();
+};
+
+const resolveSelectedAiTaskFileName = () => {
+  const baseName = resolveSelectedTaskName();
+  if (!baseName) {
+    return "project.zip";
+  }
+  return /\.zip$/i.test(baseName) ? baseName : `${baseName}.zip`;
+};
+
+const resolveSelectedFreeCodingResourceUrl = () => {
+  const task = selectedTask.value as any;
+  return String(task?.resourceUrl || task?.raw?.resourceUrl || "").trim();
+};
+
+const resolveSelectedFreeCodingOssId = () => {
+  const task = selectedTask.value as any;
+  return String(
+    task?.resourceOssId ||
+      task?.ossId ||
+      task?.raw?.resourceOssId ||
+      task?.raw?.ossId ||
+      ""
+  ).trim();
+};
+
+const resolveSelectedFreeCodingFileName = () => {
+  const task = selectedTask.value as any;
+  const baseName = String(
+    task?.fileName || task?.resourceName || currentTaskLabel.value || "project.zip"
+  ).trim();
+
+  if (!baseName) {
+    return "project.zip";
+  }
+
+  return /\.[^.]+$/i.test(baseName) ? baseName : `${baseName}.zip`;
+};
+
+const buildTaskAiIframeUrl = async (toolKey: string, projectName: string, optId = "") => {
+  const tokenData = await ssoLogin();
+  const accessToken =
+    (typeof tokenData === "string" ? tokenData : "") ||
+    tokenData?.accessToken ||
+    tokenData?.token ||
+    tokenData?.access_token ||
+    "";
+
+  if (!accessToken) {
+    throw new Error("获取AI工具 Token 失败");
+  }
+
+  const type = TASK_AI_TYPE_MAP[toolKey];
+  if (!type) {
+    throw new Error("当前任务缺少可识别的 AI 模型类型");
+  }
+
+  const lang = locale.value === "zh" ? "zh" : "en";
+  return `https://pre.matatalab.com/?token=${encodeURIComponent(
+    accessToken
+  )}&type=${type}&projectName=${encodeURIComponent(
+    projectName
+  )}&lang=${lang}&ch=aiedu&type2=opt${
+    optId ? `&optId=${encodeURIComponent(optId)}` : ""
+  }`;
+};
+
+const getToolAccessToken = async () => {
+  const tokenData = await ssoLogin();
+  const accessToken =
+    (typeof tokenData === "string" ? tokenData : "") ||
+    tokenData?.accessToken ||
+    tokenData?.token ||
+    tokenData?.access_token ||
+    "";
+
+  if (!accessToken) {
+    throw new Error("获取工具 Token 失败");
+  }
+
+  return accessToken;
+};
+
+const buildFreeCodingIframeUrl = async (toolId: "vincibot" | "nous") => {
+  const baseUrl =
+    toolId === "nous"
+      ? String(runtimeConfig.public.nousCreateUrl || "").trim()
+      : String(runtimeConfig.public.vincibotCreateUrl || "").trim();
+
+  if (!baseUrl) {
+    throw new Error("当前未配置自由编程工具地址");
+  }
+
+  const token = await getToolAccessToken();
+  const lang =
+    toolId === "vincibot"
+      ? locale.value === "zh"
+        ? "zh-CN"
+        : "en"
+      : locale.value === "zh"
+      ? "zh"
+      : "en";
+  const separator = baseUrl.includes("?") ? "&" : "?";
+
+  return `${baseUrl}${separator}token=${encodeURIComponent(token)}&lang=${lang}&ch=aiedu`;
+};
+
+const downloadAiTaskFile = async () => {
+  const resourceUrl = resolveSelectedAiTaskResourceUrl();
+  const ossId = resolveSelectedAiTaskOssId();
+  const fileName = resolveSelectedAiTaskFileName();
+
+  if (ossId) {
+    return downloadFileFromOSS(ossId, fileName, "application/zip");
+  }
+
+  if (!resourceUrl) {
+    return null;
+  }
+
+  const response = await fetch(resourceUrl);
+  if (!response.ok) {
+    throw new Error(`下载AI模型文件失败: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return new File([blob], fileName, {
+    type: blob.type || "application/zip",
+    lastModified: Date.now(),
+  });
+};
+
+const downloadFreeCodingTaskFile = async () => {
+  const resourceUrl = resolveSelectedFreeCodingResourceUrl();
+  const ossId = resolveSelectedFreeCodingOssId();
+  const fileName = resolveSelectedFreeCodingFileName();
+
+  if (ossId) {
+    return downloadFileFromOSS(ossId, fileName, "application/octet-stream");
+  }
+
+  if (!resourceUrl) {
+    return null;
+  }
+
+  const response = await fetch(resourceUrl);
+  if (!response.ok) {
+    throw new Error(`下载自由编程文件失败: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  return new File([blob], fileName, {
+    type: blob.type || "application/octet-stream",
+    lastModified: Date.now(),
+  });
+};
+
+const postCurrentAiFileToIframe = async () => {
+  const iframeWindow = taskAiIframeRef.value?.contentWindow;
+  if (!currentTaskAiFile.value || !iframeWindow || !currentTaskAiUrl.value) {
+    return;
+  }
+
+  const origin = new URL(currentTaskAiUrl.value).origin;
+  const payload = await currentTaskAiFile.value.arrayBuffer();
+  iframeWindow.postMessage(
+    {
+      type: "receive-tm-zip",
+      payload,
+      optId: currentTaskAiOptId.value || undefined,
+    },
+    origin,
+    [payload]
+  );
+};
+
+const postCurrentToolFileToIframe = async () => {
+  if (!currentTaskToolFile.value || !currentTaskToolUrl.value) {
+    pushTaskToolDebugLog("未发送：缺少当前工具文件或 iframe 地址");
+    return;
+  }
+
+  const messageType = /\.mc$/i.test(currentTaskToolFile.value.name)
+    ? "receive-works-sb3"
+    : "ZIP_DATA";
+
+  pushTaskToolDebugLog(
+    `准备发送到 iframe，type=${messageType}，file=${currentTaskToolFile.value.name}`
+  );
+
+  const postResult = await postFileBufferToIframe({
+    file: currentTaskToolFile.value,
+    iframeUrl: currentTaskToolUrl.value,
+    iframeWindow: taskToolIframeRef.value?.contentWindow,
+    type: messageType,
+  });
+
+  if (postResult) {
+    pushTaskToolDebugLog(
+      `已发送到 iframe，type=${messageType}，file=${postResult.fileName}，size=${postResult.size}`
+    );
+  } else {
+    pushTaskToolDebugLog(`发送失败，type=${messageType}`);
+  }
+};
+
+const closeTaskAiIframeModal = () => {
+  showTaskAiIframeModal.value = false;
+  taskAiIframeLoading.value = true;
+  currentTaskAiUrl.value = "";
+  currentTaskAiProjectName.value = "";
+  currentTaskAiToolKey.value = "";
+  currentTaskAiOptType.value = "";
+  currentTaskAiOptId.value = "";
+  currentTaskAiFile.value = null;
+};
+
+const closeTaskToolIframeModal = () => {
+  showTaskToolIframeModal.value = false;
+  taskToolIframeLoading.value = true;
+  currentTaskToolUrl.value = "";
+  currentTaskToolName.value = "";
+  currentTaskToolFile.value = null;
+  pushTaskToolDebugLog("工具 iframe 已关闭");
+};
+
+const onTaskAiIframeLoad = () => {
+  taskAiIframeLoading.value = false;
+  if (!currentTaskAiFile.value) {
+    return;
+  }
+
+  window.setTimeout(() => {
+    void postCurrentAiFileToIframe();
+  }, 300);
+};
+
+const onTaskToolIframeLoad = () => {
+  taskToolIframeLoading.value = false;
+  pushTaskToolDebugLog("工具 iframe 加载完成");
+  if (!currentTaskToolFile.value) {
+    pushTaskToolDebugLog("当前没有可回传的文件");
+    return;
+  }
+
+  window.setTimeout(() => {
+    void postCurrentToolFileToIframe();
+  }, 300);
+};
+
+const openSelectedAiTaskDetail = async () => {
+  const optType = inferAiTaskOptType();
+  const toolKey = TASK_AI_TOOL_KEY_MAP[optType];
+  if (!toolKey) {
+    throw new Error("当前任务缺少 fileType，无法匹配 AI 模型");
+  }
+
+  const projectName = resolveSelectedTaskName() || "AI Model";
+  const resourceUrl = resolveSelectedAiTaskResourceUrl();
+
+  currentTaskAiToolKey.value = toolKey;
+  currentTaskAiOptType.value = optType;
+  currentTaskAiProjectName.value = projectName;
+  currentTaskAiOptId.value = resourceUrl ? resolveSelectedAiTaskOptId() : "";
+  currentTaskAiFile.value = resourceUrl ? await downloadAiTaskFile() : null;
+  currentTaskAiUrl.value = await buildTaskAiIframeUrl(
+    toolKey,
+    projectName,
+    resourceUrl ? currentTaskAiOptId.value : ""
+  );
+  taskAiIframeLoading.value = true;
+  showTaskAiIframeModal.value = true;
+};
+
+const openSelectedFreeCodingTaskDetail = async () => {
+  const toolId = resolveSelectedFreeCodingToolId();
+  currentTaskToolName.value =
+    toolId === "nous" ? "MatataCode (Nous)" : "MatataCode (VinciBot)";
+  currentTaskToolFile.value = await downloadFreeCodingTaskFile();
+  currentTaskToolUrl.value = await buildFreeCodingIframeUrl(toolId);
+  taskToolIframeLoading.value = true;
+  showTaskToolIframeModal.value = true;
+};
+
+const handleTaskAiIframeMessage = async (event: MessageEvent) => {
+  if (
+    !isMessageFromIframe({
+      event,
+      iframeWindow: taskAiIframeRef.value?.contentWindow,
+      iframeUrl: currentTaskAiUrl.value,
+    })
+  ) {
+    return;
+  }
+
+  const messageData = parseMessageData(event.data) as any;
+  const messageType = getMessageType(messageData);
+  if (
+    !messageData ||
+    (typeof messageData !== "object" && typeof messageData !== "string") ||
+    messageType !== "send-tm-zip"
+  ) {
+    return;
+  }
+
+  try {
+    const rawPayload = pickMessagePayload(messageData, [
+      "payload",
+      "data",
+      "file",
+      "blob",
+      "arrayBuffer",
+      "result",
+    ]);
+    const uploadFile = toUploadFile(rawPayload, pickMessageFileName(messageData));
+    if (!uploadFile) {
+      throw new Error("AI模型文件格式不正确");
+    }
+
+    const uploadResult = await uploadFileToOSS(uploadFile, "上传AI模型文件失败");
+    const userId = getCurrentUserId();
+    const optName =
+      (typeof messageData?.projectName === "string" && messageData.projectName.trim()) ||
+      currentTaskAiProjectName.value ||
+      uploadFile.name.replace(/\.[^.]+$/, "");
+
+    if (!uploadResult?.ossId || !userId || !currentTaskAiOptType.value) {
+      throw new Error("AI模型保存参数不完整");
+    }
+
+    if (currentTaskAiOptId.value) {
+      await updateAi({
+        optId: currentTaskAiOptId.value,
+        optName,
+        optType: currentTaskAiOptType.value,
+        userId,
+        ossId: uploadResult.ossId,
+      });
+    } else {
+      const createResult = await createAi({
+        optName,
+        optType: currentTaskAiOptType.value,
+        userId,
+        ossId: uploadResult.ossId,
+      });
+      currentTaskAiOptId.value = String(
+        createResult?.optId || createResult?.id || currentTaskAiOptId.value
+      );
+    }
+
+    currentTaskAiProjectName.value = optName;
+    currentTaskAiFile.value = uploadFile;
+    ElMessage.success("保存成功");
+    await fetchTaskList();
+  } catch (error) {
+    console.error("保存 AI 实践任务失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "保存 AI 实践任务失败");
+  }
+};
 
 const handleFreeCodingIssue = async () => {
   if (freeCodingIssuing.value) return;
@@ -1343,11 +2479,14 @@ const handleFreeCodingIssue = async () => {
     ElMessage.warning(t("taskManagement.selectClass"));
     return;
   }
+  showIssueModal.value = true;
+  return;
   freeCodingIssuing.value = true;
   try {
     await taskApi.bindDistributer({
       classId: String(classId),
       resourceId: String(resourceId),
+      taskName: resolveIssuedTaskName(),
       distributeType: 1,
     });
     setDistributeTypeOverride(String(resourceId), 1);
@@ -1361,16 +2500,32 @@ const handleFreeCodingIssue = async () => {
   }
 };
 
-const handleIssueGroup = async () => {
+const handleIssueGroup = async (taskName?: string) => {
   const resourceId = resolveSelectedResourceId();
   if (!resourceId) {
     ElMessage.warning(t("taskManagement.noDataSelectedTip"));
     return;
   }
   try {
+    if (isFreeCoding.value) {
+      await taskApi.bindFreeDistribute({
+        classId: String(filters.value.class || ""),
+        resourceId,
+        taskName: String(taskName || "").trim(),
+        fileType: resolveFreeCodingFileType(),
+        distributeType: 2,
+      });
+      setDistributeTypeOverride(resourceId, 2);
+      showIssueModal.value = false;
+      ElMessage.success(t("taskManagement.issueTaskSuccess"));
+      await fetchTaskList();
+      fetchStudentTaskList();
+      return;
+    }
     await taskApi.bindDistributer({
       classId: String(filters.value.class || ""),
       resourceId,
+      taskName: resolveIssuedTaskName(),
       distributeType: 2,
     });
     setDistributeTypeOverride(resourceId, 2);
@@ -1384,16 +2539,32 @@ const handleIssueGroup = async () => {
   }
 };
 
-const handleIssueStudent = async () => {
+const handleIssueStudent = async (taskName?: string) => {
   const resourceId = resolveSelectedResourceId();
   if (!resourceId) {
     ElMessage.warning(t("taskManagement.noDataSelectedTip"));
     return;
   }
   try {
+    if (isFreeCoding.value) {
+      await taskApi.bindFreeDistribute({
+        classId: String(filters.value.class || ""),
+        resourceId,
+        taskName: String(taskName || "").trim(),
+        fileType: resolveFreeCodingFileType(),
+        distributeType: 1,
+      });
+      setDistributeTypeOverride(resourceId, 1);
+      showIssueModal.value = false;
+      ElMessage.success(t("taskManagement.issueTaskSuccess"));
+      await fetchTaskList();
+      fetchStudentTaskList();
+      return;
+    }
     await taskApi.bindDistributer({
       classId: String(filters.value.class || ""),
       resourceId,
+      taskName: resolveIssuedTaskName(),
       distributeType: 1,
     });
     setDistributeTypeOverride(resourceId, 1);
@@ -1565,6 +2736,51 @@ const customExerciseColumns = computed(() => [
   },
 ]);
 
+const assessmentColumns = computed(() => [
+  {
+    key: "studentName",
+    title: t("taskManagement.studentShort"),
+    align: "center" as const,
+    width: "140px",
+  },
+  {
+    key: "submissionStatus",
+    title: t("taskManagement.submissionOverview"),
+    align: "center" as const,
+    width: "120px",
+  },
+  {
+    key: "examTime",
+    title: t("taskManagement.examTime"),
+    align: "center" as const,
+    width: "180px",
+  },
+  {
+    key: "reviewStatus",
+    title: t("taskManagement.reviewStatus"),
+    align: "center" as const,
+    width: "120px",
+  },
+  {
+    key: "scoreTotal",
+    title: t("taskManagement.assessmentScoreTotal"),
+    align: "center" as const,
+    width: "120px",
+  },
+  {
+    key: "grade",
+    title: t("taskManagement.grade"),
+    align: "center" as const,
+    width: "120px",
+  },
+  {
+    key: "action",
+    title: t("common.operation"),
+    align: "center" as const,
+    width: "210px",
+  },
+]);
+
 // Upload Task Columns for Student (Personal Upload / Free Coding)
 const uploadTaskStudentColumns = computed(() => [
   {
@@ -1694,8 +2910,8 @@ const isAiPracticeTask = computed(() => {
 
 // Check if current task is upload task
 const isUploadTask = computed(() => {
-  // TODO: 根据实际 resourceCategory 判断上传任务类型
-  return false;
+  // 个人程序类型（resourceCategory: 9）
+  return Number(selectedTask.value?.resourceCategory) === 9;
 });
 
 // Check if current task is free coding
@@ -1718,6 +2934,9 @@ const issueType = computed({
   },
 });
 const currentColumns = computed(() => {
+  if (isAssessmentTab.value) {
+    return assessmentColumns.value;
+  }
   // Exercise tasks use special columns
   if (isExerciseTask.value) {
     return customExerciseColumns.value;
@@ -1770,13 +2989,235 @@ const handleMoreAction = (val: string | number | null) => {
 
 // 学生任务列表数据
 const groupTaskData = ref<any[]>([]);
+const assessmentIssueMode = ref<"create" | "returnToRedo" | "redistribute">("create");
+const assessmentIssueEvaluationIds = ref<string[]>([]);
+
+const normalizeAssessmentSubmissionStatus = (item: any) => {
+  const status = Number(
+    item?.status ?? item?.submitStatus ?? item?.evaluationStatus ?? -1
+  );
+  if (status === 1 || status === 2) {
+    return "submitted";
+  }
+  if (
+    String(item?.submitTime || item?.submissionTime || item?.taskEndTime || "").trim()
+  ) {
+    return "submitted";
+  }
+  if (item?.score !== null && item?.score !== undefined) {
+    return "submitted";
+  }
+  return "unsubmitted";
+};
+
+const normalizeAssessmentReviewStatus = (item: any) => {
+  const statusCandidates = [
+    item?.reviewStatus,
+    item?.correctStatus,
+    item?.gradingStatus,
+    item?.markStatus,
+    item?.judgeStatus,
+    item?.teacherScoreStatus,
+  ];
+
+  for (const candidate of statusCandidates) {
+    const normalized = String(candidate ?? "").trim();
+    if (!normalized) continue;
+    if (["1", "2", "已批改", "已阅卷", "reviewed"].includes(normalized)) {
+      return "reviewed";
+    }
+    if (["0", "未批改", "未阅卷", "unreviewed"].includes(normalized)) {
+      return "unreviewed";
+    }
+  }
+
+  if (item?.teacherScore !== null && item?.teacherScore !== undefined) {
+    return "reviewed";
+  }
+
+  if (
+    item?.score !== null &&
+    item?.score !== undefined &&
+    String(item?.submitTime || item?.submissionTime || "").trim()
+  ) {
+    return "reviewed";
+  }
+
+  return "unreviewed";
+};
+
+const normalizeTeacherScore = (value: unknown): number | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "string" && !value.trim()) {
+    return null;
+  }
+  const score = Number(value);
+  if (!Number.isFinite(score) || score < 0) {
+    return null;
+  }
+  return score;
+};
+
+const formatTeacherScoreDisplay = (value: unknown) => {
+  const score = normalizeTeacherScore(value);
+  if (score === null) return "-";
+  return `${Number(score.toFixed(1))}${t("viewScore.point")}`;
+};
+
+const parseAssessmentDateTime = (value: unknown) => {
+  const text = String(value ?? "").trim();
+  if (!text || text === "-") return null;
+  const parsed = new Date(text.replace(/-/g, "/"));
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const splitAssessmentTimeRange = (value: unknown) => {
+  const text = String(value ?? "").trim();
+  if (!text) return [];
+
+  const separator = [" ~ ", " - ", " 至 ", "—", "–"].find((token) =>
+    text.includes(token)
+  );
+  if (!separator) {
+    return [text];
+  }
+
+  return text
+    .split(separator)
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const resolveAssessmentExamStart = (row: any) => {
+  const raw = row?._raw || {};
+  const directStart = parseAssessmentDateTime(raw.examStartTime || raw.startTime);
+  if (directStart) return directStart;
+
+  const examTimeText = String(raw.examTime || row?.examTime || "").trim();
+  if (examTimeText) {
+    const [startText] = splitAssessmentTimeRange(examTimeText);
+    const directExamTime = parseAssessmentDateTime(startText);
+    if (directExamTime) return directExamTime;
+  }
+
+  const examDate = String(raw.examDate || "").trim();
+  const examClock = String(
+    raw.examClockTime || raw.examTimePoint || raw.examTime || ""
+  ).trim();
+  if (examDate && examClock && !examClock.includes("-")) {
+    return parseAssessmentDateTime(`${examDate} ${examClock}`);
+  }
+
+  return null;
+};
+
+const resolveAssessmentExamEnd = (row: any) => {
+  const raw = row?._raw || {};
+  const directEnd = parseAssessmentDateTime(raw.examEndTime || raw.endTime);
+  if (directEnd) return directEnd;
+
+  const examTimeText = String(raw.examTime || row?.examTime || "").trim();
+  const [, endText] = splitAssessmentTimeRange(examTimeText);
+  const rangeEnd = parseAssessmentDateTime(endText);
+  if (rangeEnd) return rangeEnd;
+
+  const start = resolveAssessmentExamStart(row);
+  const duration = Number(raw.examDuration ?? row?.duration ?? 0);
+  if (!start || !Number.isFinite(duration) || duration <= 0) {
+    return null;
+  }
+
+  return new Date(start.getTime() + duration * 60 * 1000);
+};
+
+const isAssessmentInExamTime = (row: any) => {
+  const start = resolveAssessmentExamStart(row);
+  const end = resolveAssessmentExamEnd(row);
+  if (!start || !end) return false;
+  const now = Date.now();
+  return now >= start.getTime() && now <= end.getTime();
+};
+
+const getAssessmentActionLabel = (row: any) => {
+  return isAssessmentInExamTime(row)
+    ? t("taskManagement.returnToRedo")
+    : t("taskManagement.redistributeExam");
+};
+
+const assessmentIssueModalTitle = computed(() => {
+  if (assessmentIssueMode.value === "returnToRedo") {
+    return t("taskManagement.returnToRedo");
+  }
+  if (assessmentIssueMode.value === "redistribute") {
+    return t("taskManagement.redistributeExam");
+  }
+  return t("taskManagement.issueExam");
+});
+
+const assessmentIssueModalSubmitText = computed(() => {
+  if (assessmentIssueMode.value === "returnToRedo") {
+    return t("taskManagement.returnToRedo");
+  }
+  if (assessmentIssueMode.value === "redistribute") {
+    return t("taskManagement.redistributeExam");
+  }
+  return t("taskManagement.issueExam");
+});
 
 // 加载学生任务列表
 const fetchStudentTaskList = async () => {
-  const resourceId = resolveSelectedResourceId();
   const classId = String(filters.value.class || "");
-  if (!resourceId) return;
   if (!classId) return;
+
+  if (isAssessmentTab.value) {
+    const courseId = String(filters.value.course || "").trim();
+    const exerciseId = String(resolveSelectedExerciseId() || "").trim();
+    if (!courseId || !exerciseId) return;
+    try {
+      const data = await taskApi.getStudentEvaluationList({
+        courseId,
+        classId,
+        exerciseId,
+      });
+      groupTaskData.value = (data || []).map((item: any, index: number) => ({
+        id:
+          item.evaluationId ||
+          item.id ||
+          item.taskId ||
+          `${item.studentNumber || item.studentId || index}`,
+        studentName: item.studentName || "-",
+        studentAccount: item.studentNumber || "-",
+        submissionStatus: normalizeAssessmentSubmissionStatus(item),
+        examTime:
+          item.examTime ||
+          item.submitTime ||
+          item.submissionTime ||
+          item.taskEndTime ||
+          "-",
+        className: item.className || currentClassName.value || "-",
+        reviewStatus: normalizeAssessmentReviewStatus(item),
+        scoreTotal:
+          item.score !== null && item.score !== undefined
+            ? `${item.score}/${item.totalScore ?? "-"}`
+            : "-",
+        duration: item.examDuration || item.taskDuration || "-",
+        submissionTime: item.submitTime || item.submissionTime || item.taskEndTime || "-",
+        grade: scoreToStars(item.score, item.totalScore),
+        teacherScore: item.teacherScore ?? null,
+        graded: Boolean(item.graded) || item.score !== null,
+        _raw: item,
+      }));
+    } catch (error) {
+      console.error("获取学生测评列表失败", error);
+      groupTaskData.value = [];
+    }
+    return;
+  }
+
+  const resourceId = resolveSelectedResourceId();
+  if (!resourceId) return;
   try {
     const data = await taskApi.getStudentTaskList({ resourceId, classId });
     groupTaskData.value = (data || []).map((item: any) => ({
@@ -1784,12 +3225,26 @@ const fetchStudentTaskList = async () => {
       studentName: item.studentName,
       studentAccount: item.studentNumber,
       submissionStatus: item.status === 1 ? "submitted" : "unsubmitted",
-      scoreTotal: item.score !== null ? `${item.score}/${item.totalScore}` : "-",
+      scoreTotal:
+        item.score !== null &&
+        item.score !== undefined &&
+        item.totalScore !== null &&
+        item.totalScore !== undefined
+          ? `${item.score}/${item.totalScore}`
+          : item.totalScore !== null && item.totalScore !== undefined
+            ? `-/${item.totalScore}`
+            : "-",
       duration: item.taskDuration || "-",
       submissionTime: item.taskEndTime || "-",
       grade: scoreToStars(item.score, item.totalScore),
-      teacherScore: null,
-      graded: false,
+      teacherScore:
+        normalizeTeacherScore(item.score ?? item.teacherScore),
+      graded:
+        item.score !== null && item.score !== undefined
+          ? true
+          : item.teacherScore !== null && item.teacherScore !== undefined
+            ? true
+            : Boolean(item.graded),
       _raw: item,
     }));
   } catch (error) {
@@ -1804,11 +3259,17 @@ const showWithdrawModal = ref(false);
 // Exercise Detail Modal State
 const showExerciseDetailModal = ref(false);
 const viewTaskId = ref<string | null>(null);
+const currentEvaluationId = ref<string | null>(null);
+const exerciseDetailSource = ref<
+  "task" | "courseEvaluation" | "evaluationDetail" | "evaluationWithAnswers"
+>("task");
 const currentExerciseId = computed(() => resolveSelectedExerciseId());
 
 // View and Score Modal State
 const showViewScoreModal = ref(false);
 const currentScoreRow = ref<any>(null);
+const currentProgrammingTaskDetail = ref<any>(null);
+const viewScoreLoading = ref(false);
 
 // Check if there's a next submission to score
 const hasNextSubmission = computed(() => {
@@ -1862,40 +3323,259 @@ const pendingReviewCount = computed(() => {
   ).length;
 });
 
-// Pending review tasks list (mock data for demo)
-const pendingReviewTasks = ref([
-  { className: "1年级1111111", taskName: "AI未来实验室（硬件版）/第2课 你画我猜" },
-  { className: "2年级3班", taskName: "Python基础/第5课 循环语句" },
-]);
+type PendingReviewTaskItem = {
+  className: string;
+  courseName: string;
+  chapterName: string;
+  resourceId: string;
+  taskName: string;
+};
+
+const normalizePendingReviewText = (value: unknown) => String(value ?? "").trim();
+
+const normalizePendingReviewTask = (item: any): PendingReviewTaskItem => {
+  const className = normalizePendingReviewText(item?.className) || "-";
+  const courseName = normalizePendingReviewText(item?.courseName);
+  const chapterName = normalizePendingReviewText(item?.chapterName);
+
+  return {
+    className,
+    courseName,
+    chapterName,
+    resourceId: normalizePendingReviewText(item?.resourceId || item?.id),
+    taskName: [courseName, chapterName].filter(Boolean).join("/"),
+  };
+};
+
+const pendingReviewTasks = ref<PendingReviewTaskItem[]>([]);
 
 // Selected pending review task index (default first one)
 const selectedPendingIndex = ref(0);
+
+const fetchCorrectTaskList = async () => {
+  try {
+    const data = await taskApi.getCorrectTaskList();
+    pendingReviewTasks.value = (Array.isArray(data) ? data : []).map((item: any) =>
+      normalizePendingReviewTask(item)
+    );
+
+    if (pendingReviewTasks.value.length === 0) {
+      selectedPendingIndex.value = 0;
+      return;
+    }
+
+    if (selectedPendingIndex.value >= pendingReviewTasks.value.length) {
+      selectedPendingIndex.value = 0;
+    }
+  } catch (error) {
+    console.error("获取待批改任务列表失败", error);
+    pendingReviewTasks.value = [];
+    selectedPendingIndex.value = 0;
+  }
+};
+
+const handlePendingReviewSelect = async (index: number, task: PendingReviewTaskItem) => {
+  selectedPendingIndex.value = index;
+  activeTab.value = "tasks";
+  const previousClass = filters.value.class;
+  const previousCourse = filters.value.course;
+  const previousTopic = filters.value.topic;
+  selectedTaskKey.value = task.resourceId;
+
+  if (chapterData.value.length === 0) {
+    await fetchChapterData();
+  }
+
+  const classItem = chapterData.value.find(
+    (item: any) => normalizePendingReviewText(item?.className) === task.className
+  );
+  const courseItem = classItem?.courseList?.find(
+    (item: any) => normalizePendingReviewText(item?.courseName) === task.courseName
+  );
+  const chapterItem = courseItem?.chapterList?.find(
+    (item: any) => normalizePendingReviewText(item?.chapterName) === task.chapterName
+  );
+
+  if (classItem?.classId !== undefined) {
+    filters.value.class = classItem.classId;
+  }
+  if (courseItem?.courseId !== undefined) {
+    filters.value.course = courseItem.courseId;
+  }
+  if (chapterItem?.chapterId !== undefined) {
+    filters.value.topic = chapterItem.chapterId;
+  }
+
+  const isSameContext =
+    previousClass === filters.value.class &&
+    previousCourse === filters.value.course &&
+    previousTopic === filters.value.topic;
+
+  if (isSameContext && task.resourceId) {
+    await fetchStudentTaskList();
+  }
+};
 
 const goHome = () => {
   router.push("/teacher");
 };
 // Action handlers
 const handleViewAndGrade = (row: any) => {
+  if (isAssessmentTab.value) {
+    viewTaskId.value = null;
+    currentEvaluationId.value = row._raw?.evaluationId || row.id || null;
+    exerciseDetailSource.value = "evaluationWithAnswers";
+    showExerciseDetailModal.value = true;
+    return;
+  }
+  currentEvaluationId.value = null;
+  exerciseDetailSource.value = "task";
   viewTaskId.value = row._raw?.taskId || row.id || null;
   showExerciseDetailModal.value = true;
 };
 
-const handleViewTaskDetail = () => {
+const openAssessmentActionModal = (row: any) => {
+  const evaluationId = String(row?._raw?.evaluationId || row?.id || "").trim();
+  if (!evaluationId) {
+    ElMessage.warning(t("taskManagement.noDataSelectedTip"));
+    return;
+  }
+
+  assessmentIssueMode.value = isAssessmentInExamTime(row)
+    ? "returnToRedo"
+    : "redistribute";
+  assessmentIssueEvaluationIds.value = [evaluationId];
+  showAssessmentIssueModal.value = true;
+};
+
+const handleViewTaskDetail = async () => {
+  if (isAssessmentTab.value) {
+    viewTaskId.value = null;
+    currentEvaluationId.value = null;
+    exerciseDetailSource.value = "evaluationDetail";
+    showExerciseDetailModal.value = true;
+    return;
+  }
+
+  if (isFreeCoding.value || isStudentCodingTask.value || isUploadTask.value) {
+    try {
+      await openSelectedFreeCodingTaskDetail();
+    } catch (error: any) {
+      console.error("打开编程平台失败:", error);
+      ElMessage.error(error instanceof Error ? error.message : "打开编程平台失败");
+    }
+    return;
+  }
+
+  if (isAiPracticeTask.value) {
+    try {
+      await openSelectedAiTaskDetail();
+    } catch (error: any) {
+      console.error("打开 AI 实践任务失败:", error);
+      ElMessage.error(error instanceof Error ? error.message : "打开 AI 实践任务失败");
+    }
+    return;
+  }
+
+  currentEvaluationId.value = null;
+  exerciseDetailSource.value = "task";
   viewTaskId.value = null;
   showExerciseDetailModal.value = true;
 };
 
-const handleViewAndScore = (row: any) => {
+const loadProgrammingTaskDetail = async (row: any) => {
+  const taskId = String(row?._raw?.taskId || row?.id || "").trim();
+  if (!taskId) {
+    ElMessage.warning(t("taskManagement.noDataSelectedTip"));
+    return;
+  }
+
+  viewScoreLoading.value = true;
+  try {
+    currentProgrammingTaskDetail.value = await taskApi.getProgrammingTaskDetail(taskId);
+  } catch (error: any) {
+    console.error("获取编程任务详情失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "获取编程任务详情失败");
+  } finally {
+    viewScoreLoading.value = false;
+  }
+};
+
+const handleOpenProgrammingEditor = async () => {
+  const detail = currentProgrammingTaskDetail.value;
+  if (!detail?.taskUrl) {
+    ElMessage.warning("当前作品缺少 taskUrl");
+    pushTaskToolDebugLog("打开编程平台失败：缺少 taskUrl");
+    return;
+  }
+
+  try {
+    const toolId = resolveProgrammingDetailToolId(detail);
+    pushTaskToolDebugLog(
+      `打开编程平台，tool=${toolId}，taskUrl=${String(detail.taskUrl)}`
+    );
+    currentTaskToolName.value =
+      toolId === "nous" ? "MatataCode (Nous)" : "MatataCode (VinciBot)";
+    currentTaskToolFile.value = await downloadProgrammingDetailTaskFile(detail);
+    pushTaskToolDebugLog(
+      currentTaskToolFile.value
+        ? `已下载任务文件：${currentTaskToolFile.value.name}`
+        : "没有下载到任务文件"
+    );
+    currentTaskToolUrl.value = await buildFreeCodingIframeUrl(toolId);
+    taskToolIframeLoading.value = true;
+    showTaskToolIframeModal.value = true;
+  } catch (error: any) {
+    console.error("打开编程平台失败:", error);
+    pushTaskToolDebugLog(
+      `打开编程平台失败：${error instanceof Error ? error.message : "未知错误"}`
+    );
+    ElMessage.error(error instanceof Error ? error.message : "打开编程平台失败");
+  }
+};
+
+const handleViewAndScore = async (row: any) => {
   currentScoreRow.value = row;
+  currentProgrammingTaskDetail.value = null;
   showViewScoreModal.value = true;
+  await loadProgrammingTaskDetail(row);
 };
 
-const handleScoreSave = (data: any) => {
-  console.log("Score saved:", data);
+const handleViewScoreClose = () => {
   showViewScoreModal.value = false;
+  currentProgrammingTaskDetail.value = null;
+  viewScoreLoading.value = false;
 };
 
-const handleScoreNext = () => {
+const handleScoreSave = async (data: any) => {
+  const taskId = String(
+    currentProgrammingTaskDetail.value?.taskId ||
+      currentScoreRow.value?._raw?.taskId ||
+      currentScoreRow.value?.id ||
+      ""
+  ).trim();
+
+  if (!taskId) {
+    ElMessage.warning(t("taskManagement.noDataSelectedTip"));
+    return;
+  }
+
+  try {
+    await taskApi.bindFreeScore({
+      taskId,
+      score: Number(data?.totalScore || 0),
+      comment: String(data?.comment || "").trim(),
+    });
+    ElMessage.success(t("common.saveSuccess") || "保存成功");
+    await Promise.all([fetchStudentTaskList(), fetchCorrectTaskList()]);
+    handleViewScoreClose();
+  } catch (error: any) {
+    console.error("保存编程评分失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "保存编程评分失败");
+  }
+};
+
+const handleScoreNext = async () => {
   // Find next submitted row
   const currentIndex = groupTaskData.value.findIndex(
     (r) => r.id === currentScoreRow.value?.id
@@ -1905,9 +3585,11 @@ const handleScoreNext = () => {
     .find((r) => r.submissionStatus === "submitted");
   if (nextRow) {
     currentScoreRow.value = nextRow;
+    currentProgrammingTaskDetail.value = null;
+    await loadProgrammingTaskDetail(nextRow);
   } else {
     ElMessage.info(t("taskManagement.noMoreSubmissions") || "没有更多待评分的作业了");
-    showViewScoreModal.value = false;
+    handleViewScoreClose();
   }
 };
 
@@ -1922,8 +3604,14 @@ const returnToRedoRow = ref<any>(null);
 const confirmReturnToRedo = async () => {
   if (!returnToRedoRow.value) return;
   try {
-    const taskId = returnToRedoRow.value._raw?.taskId || returnToRedoRow.value.id;
-    await taskApi.bindReject([String(taskId)]);
+    if (isAssessmentTab.value) {
+      const evaluationId =
+        returnToRedoRow.value._raw?.evaluationId || returnToRedoRow.value.id;
+      await taskApi.bindEvaluationReject([String(evaluationId)]);
+    } else {
+      const taskId = returnToRedoRow.value._raw?.taskId || returnToRedoRow.value.id;
+      await taskApi.bindReject([String(taskId)]);
+    }
     showReturnToRedoModal.value = false;
     ElMessage.success(t("taskManagement.returnToRedoSuccess"));
     fetchStudentTaskList();
@@ -1933,12 +3621,28 @@ const confirmReturnToRedo = async () => {
 };
 
 const handleWithdrawConfirm = async () => {
-  const resourceId = resolveSelectedResourceId();
-  if (!resourceId) {
-    ElMessage.warning(t("taskManagement.noDataSelectedTip"));
-    return;
-  }
   try {
+    if (isAssessmentTab.value) {
+      const exerciseId = String(resolveSelectedExerciseId() || "").trim();
+      if (!exerciseId) {
+        ElMessage.warning(t("taskManagement.noDataSelectedTip"));
+        return;
+      }
+      await withdrawExam({
+        classId: String(filters.value.class || ""),
+        exerciseId,
+      });
+      ElMessage.success(t("taskManagement.withdrawSuccess"));
+      await fetchEvaluationList();
+      groupTaskData.value = [];
+      return;
+    }
+
+    const resourceId = resolveSelectedResourceId();
+    if (!resourceId) {
+      ElMessage.warning(t("taskManagement.noDataSelectedTip"));
+      return;
+    }
     await taskApi.bindWithdrawr({
       classId: String(filters.value.class || ""),
       resourceId,
@@ -1951,6 +3655,40 @@ const handleWithdrawConfirm = async () => {
     groupTaskData.value = [];
   } catch (error: any) {
     console.error("撤回任务失败:", error);
+  }
+};
+
+const handleAssessmentIssueSubmit = async (data: {
+  courseId: string;
+  exerciseId: string;
+  classId: string;
+  examDate: string;
+  examTime: string;
+  examDuration: number;
+}) => {
+  try {
+    const payload = assessmentIssueEvaluationIds.value.length
+      ? {
+          ...data,
+          evaluationIds: assessmentIssueEvaluationIds.value,
+        }
+      : data;
+
+    await startDistribute(payload);
+    showAssessmentIssueModal.value = false;
+    const successMessage =
+      assessmentIssueMode.value === "returnToRedo"
+        ? t("taskManagement.returnToRedoSuccess")
+        : assessmentIssueMode.value === "redistribute"
+        ? t("taskManagement.redistributeSuccess")
+        : t("taskManagement.issueTaskSuccess");
+    ElMessage.success(successMessage);
+    assessmentIssueMode.value = "create";
+    assessmentIssueEvaluationIds.value = [];
+    await fetchEvaluationList();
+  } catch (error) {
+    console.error("下发测评失败:", error);
+    ElMessage.error("下发测评失败");
   }
 };
 
@@ -2005,13 +3743,20 @@ const handleBatchReturnToRedo = async () => {
     ElMessage.warning(t("taskManagement.noDataSelectedTip"));
     return;
   }
-  // 从选中的行中找到对应的 taskId
-  const taskIds = selectedRowKeys.value.map((key) => {
-    const row = groupTaskData.value.find((r) => r.id === key);
-    return String(row?._raw?.taskId || key);
-  });
   try {
-    await taskApi.bindReject(taskIds);
+    if (isAssessmentTab.value) {
+      const evaluationIds = selectedRowKeys.value.map((key) => {
+        const row = groupTaskData.value.find((r) => r.id === key);
+        return String(row?._raw?.evaluationId || key);
+      });
+      await taskApi.bindEvaluationReject(evaluationIds);
+    } else {
+      const taskIds = selectedRowKeys.value.map((key) => {
+        const row = groupTaskData.value.find((r) => r.id === key);
+        return String(row?._raw?.taskId || key);
+      });
+      await taskApi.bindReject(taskIds);
+    }
     ElMessage.success(t("taskManagement.batchReturnSuccess"));
     exitBatchMode();
     fetchStudentTaskList();
@@ -2021,8 +3766,14 @@ const handleBatchReturnToRedo = async () => {
 };
 
 // 初始化
-onMounted(() => {
-  fetchChapterData();
+onMounted(async () => {
+  await fetchChapterData();
+  await fetchCorrectTaskList();
+  window.addEventListener("message", handleTaskAiIframeMessage);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("message", handleTaskAiIframeMessage);
 });
 </script>
 
@@ -2059,5 +3810,112 @@ onMounted(() => {
 .icon-fade-leave-to {
   opacity: 0;
   transform: scale(0.9);
+}
+
+.iframe-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.iframe-modal-container {
+  width: 95vw;
+  height: 90vh;
+  max-width: 1400px;
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.iframe-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  background: #ffffff;
+}
+
+.iframe-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.iframe-close-btn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: #666666;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.iframe-close-btn:hover {
+  background: #f5f5f5;
+  color: #333333;
+}
+
+.iframe-modal-body {
+  flex: 1;
+  position: relative;
+}
+
+.tool-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+.tool-iframe.hidden {
+  visibility: hidden;
+}
+
+.iframe-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  z-index: 2;
+}
+
+.loading-spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid #f3f3f3;
+  border-top-color: #ff9900;
+  border-radius: 50%;
+  animation: task-iframe-spin 0.8s linear infinite;
+}
+
+.loading-text {
+  font-size: 14px;
+  color: #666666;
+}
+
+@keyframes task-iframe-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>

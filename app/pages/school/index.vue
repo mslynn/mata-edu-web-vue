@@ -5,7 +5,7 @@
       <div class="flex items-center justify-between mb-4">
         <h1 class="text-base font-medium text-gray-800">{{ $t('school.schoolManage') }}</h1>
         <div class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap">
-          {{ $t('school.schoolCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>个</span>
+          {{ $t('school.schoolCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>所</span>
         </div>
       </div>
 

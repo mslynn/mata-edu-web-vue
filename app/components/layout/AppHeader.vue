@@ -34,7 +34,7 @@
               class="absolute right-0 top-12 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
             >
               <div class="px-4 py-2 border-b border-gray-100">
-                <p class="text-sm font-medium text-gray-800 truncate">{{ user?.nickname || user?.nick_name || '用户' }}</p>
+                <p class="text-sm font-medium text-gray-800 truncate">{{ displayUserName }}</p>
                 <p class="text-xs text-gray-400 truncate">{{ user?.role_name || '' }}</p>
               </div>
               <!-- 模块切换 - 仅市/区管理员显示 -->
@@ -100,6 +100,17 @@ const logoSrc = computed(() => {
 
 const showDropdown = ref(false)
 const dropdownRef = ref<HTMLElement | null>(null)
+
+const displayUserName = computed(() => {
+  return (
+    user.value?.nickName ||
+    user.value?.userName ||
+    user.value?.nickname ||
+    user.value?.nick_name ||
+    user.value?.user_name ||
+    '用户'
+  )
+})
 
 // 判断是否显示模块切换（仅市/区管理员）
 const showModuleSwitch = computed(() => {

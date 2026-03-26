@@ -17,13 +17,12 @@
               v-model="freeTaskName"
               type="text"
               class="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-gray-700 focus:outline-none focus:border-[#1890FF] focus:ring-1 focus:ring-[#1890FF]/20"
-              :placeholder="editorName || 'uCode4'"
             />
           </div>
           <!-- Task Type -->
           <div class="flex items-center gap-4">
             <span class="text-gray-700 font-medium whitespace-nowrap w-20 text-right">{{ $t('taskManagement.taskType') }}:</span>
-            <span class="text-gray-700">{{ $t('taskManagement.freeCreationTask') }}</span>
+            <span class="text-gray-700">{{ taskTypeName || $t('taskManagement.freeCreationTask') }}</span>
           </div>
           <!-- Issue Class -->
           <div class="flex items-center gap-4">
@@ -36,7 +35,7 @@
       <!-- Default Layout -->
       <template v-else>
         <!-- Info Rows -->
-        <div class="flex flex-col items-center justify-center space-y-4" :class="{ 'mb-6': hasAiSettings }">
+        <div class="flex flex-col items-center justify-center space-y-4">
           <div class="grid grid-cols-[80px_1fr] gap-4 items-baseline text-gray-700 w-full max-w-[300px]">
             <span class="text-right font-medium text-gray-500 truncate">{{ $t('class.className') }}:</span>
             <span class="font-medium text-left truncate" :title="className">{{ className }}</span>
@@ -45,39 +44,6 @@
             <span class="text-right font-medium text-gray-500 truncate">{{ $t('taskManagement.task') }}:</span>
             <span class="font-medium text-left truncate" :title="taskName">{{ taskName }}</span>
           </div>
-        </div>
-
-        <!-- AI Settings Section -->
-        <div v-if="hasAiSettings" class="space-y-6">
-           <!-- Divider -->
-           <div class="border-t border-dashed border-gray-200"></div>
-
-           <div class="space-y-4">
-               <div class="flex items-center text-sm">
-                  <span class="font-bold text-gray-800 mr-2">{{ $t('taskManagement.qaValidPeriod') }}:</span>
-                  <span class="text-[#FF4D4F]">{{ $t('taskManagement.permanent') }}</span>
-               </div>
-
-               <div class="flex items-center text-sm">
-                  <span class="font-bold text-gray-800 mr-4">{{ $t('taskManagement.allowQa') }}:</span>
-                  <div class="flex items-center gap-6">
-                      <label class="flex items-center gap-2 cursor-pointer select-none">
-                         <input type="radio" v-model="allow" :value="true" class="w-4 h-4 accent-[#FF9900]" />
-                         <span class="text-gray-600">{{ $t('taskManagement.allow') }}</span>
-                      </label>
-                      <label class="flex items-center gap-2 cursor-pointer select-none">
-                         <input type="radio" v-model="allow" :value="false" class="w-4 h-4 accent-[#FF9900]" />
-                         <span class="text-gray-600">{{ $t('taskManagement.disallow') }}</span>
-                      </label>
-                  </div>
-               </div>
-           </div>
-
-           <!-- Note -->
-           <div class="text-xs text-gray-400 leading-relaxed bg-gray-50 p-3 rounded-lg text-justify">
-              <span class="font-bold mr-1">{{ $t('taskManagement.note') }}:</span>
-              {{ $t('taskManagement.qaNote') }}
-           </div>
         </div>
       </template>
     </div>
@@ -123,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = withDefaults(defineProps<{
   modelValue: boolean
@@ -131,10 +97,12 @@ const props = withDefaults(defineProps<{
   taskName: string
   hasAiSettings?: boolean
   isFreeCoding?: boolean
+  taskTypeName?: string
   editorName?: string
 }>(), {
   hasAiSettings: true,
   isFreeCoding: false,
+  taskTypeName: '',
   editorName: ''
 })
 
@@ -144,12 +112,20 @@ const emit = defineEmits<{
   'confirm-student': [taskName?: string]
 }>()
 
-const allow = ref(true)
-const freeTaskName = ref(props.editorName || 'uCode4')
+const resolveDefaultFreeTaskName = () => ''
+const freeTaskName = ref(resolveDefaultFreeTaskName())
+
+watch(() => props.modelValue, (visible) => {
+  if (visible && props.isFreeCoding) {
+    freeTaskName.value = resolveDefaultFreeTaskName()
+  }
+})
+
+const resolveEmitTaskName = () => freeTaskName.value.trim()
 
 const handleGroup = () => {
   if (props.isFreeCoding) {
-    emit('confirm-group', freeTaskName.value)
+    emit('confirm-group', resolveEmitTaskName())
   } else {
     emit('confirm-group')
   }
@@ -157,7 +133,7 @@ const handleGroup = () => {
 
 const handleStudent = () => {
   if (props.isFreeCoding) {
-    emit('confirm-student', freeTaskName.value)
+    emit('confirm-student', resolveEmitTaskName())
   } else {
     emit('confirm-student')
   }

@@ -1442,8 +1442,17 @@ const isPasswordLengthValid = (value: string) => {
   return length >= PASSWORD_MIN_LENGTH && length <= PASSWORD_MAX_LENGTH
 }
 
-// 当前用户名称
-const currentUserName = computed(() => user.value?.nickName || user.value?.userName || "");
+// 当前登录人名称
+const currentUserName = computed(() => {
+  return (
+    user.value?.nickName ||
+    user.value?.nickname ||
+    user.value?.nick_name ||
+    user.value?.userName ||
+    user.value?.user_name ||
+    ""
+  );
+});
 
 const {
   getGradeDict,
@@ -2435,7 +2444,7 @@ const handleCreateNewClass = (gradeNode: any) => {
   editingClassId.value = null;
   createClassForm.gradeId = null;
   createClassForm.className = "";
-  createClassForm.teacherName = selectedClass.value?.teacherName || currentUserName.value || "";
+  createClassForm.teacherName = currentUserName.value || "";
   if (gradeNode) { createClassForm.gradeId = gradeNode.id; }
   showCreateClassModal.value = true;
 };

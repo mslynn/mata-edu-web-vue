@@ -350,7 +350,7 @@
           <div v-else-if="activeSidebarPanel === 'task'" class="w-full h-full bg-white flex flex-col">
             <div v-if="selectedTask" class="h-full w-full flex flex-col">
               <div
-                v-if="isFreeCodingLikeTask && !isTaskIssued"
+                v-if="isFreeCoding && !isTaskIssued"
                 class="h-full w-full bg-[#F3F3F3] flex flex-col items-center justify-center px-6 py-6 text-center"
               >
                 <div class="text-[#444] leading-[1.35] mb-6">
@@ -440,14 +440,6 @@
                         </div>
 
                         <MButton
-                          type="primary"
-                          class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-4 py-1.5 h-9 shadow-sm"
-                          @click="handleViewTaskDetail"
-                        >
-                          {{ t("taskManagement.viewTaskFileDetails") }}
-                        </MButton>
-
-                        <MButton
                           class="!bg-white !text-[#FF4D4F] !border-gray-200 hover:!bg-red-50 hover:!border-red-200 px-4 py-1.5 h-9 shadow-sm"
                           @click="showTaskWithdrawModal = true"
                         >
@@ -471,14 +463,6 @@
                     </template>
 
                     <template v-else-if="isUploadTask || isFreeCodingLikeTask || isAiPracticeTask">
-                      <MButton
-                        type="primary"
-                        class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-4 py-1.5 h-9 shadow-sm"
-                        @click="handleViewTaskDetail"
-                      >
-                        {{ t("taskManagement.viewTaskFileDetails") }}
-                      </MButton>
-
                       <MButton
                         class="!bg-white !text-[#FF4D4F] !border-gray-200 hover:!bg-red-50 hover:!border-red-200 px-4 py-1.5 h-9 shadow-sm"
                         @click="showTaskWithdrawModal = true"
@@ -630,14 +614,9 @@
                       </template>
 
                       <template #cell-teacherScore="{ row }">
-                        <StarRating
-                          v-if="row.teacherScore !== undefined && row.teacherScore !== null"
-                          :model-value="row.teacherScore"
-                          :size="20"
-                          wrapper-class="justify-center"
-                          readonly
-                        />
-                        <span v-else class="text-gray-400">-</span>
+                        <span class="text-sm text-gray-600">
+                          {{ formatTeacherScoreDisplay(row.teacherScore) }}
+                        </span>
                       </template>
 
                       <template #cell-action="{ row }">
@@ -723,37 +702,72 @@
                 </div>
               </div>
 
-              <div v-else class="flex-1 flex flex-col items-center justify-center w-full h-full pb-20 max-w-5xl mx-auto text-center">
-                <div class="w-64 h-64 bg-blue-50/50 rounded-full flex items-center justify-center mb-8 relative">
-                  <div class="absolute inset-0 bg-blue-100/30 rounded-full animate-pulse"></div>
+              <div v-else class="flex-1 flex items-center justify-center w-full h-full bg-white">
+                <div class="flex w-full max-w-[560px] flex-col items-center px-6 text-center">
                   <Transition name="icon-fade" mode="out-in">
-                    <svg :key="selectedTaskKey" width="120" height="120" viewBox="0 0 24 24" fill="none" class="text-blue-300 relative z-10">
-                      <rect x="4" y="3" width="16" height="18" rx="2" fill="currentColor" fill-opacity="0.2" stroke="currentColor" stroke-width="1.5" />
-                      <path d="M8 8h8M8 12h8M8 16h5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-                      <circle cx="16" cy="16" r="6" fill="#EEF2FF" stroke="currentColor" stroke-width="1.5" />
-                      <path d="M14.5 15l1 1 2.5-2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <svg
+                      :key="selectedTaskKey"
+                      width="100"
+                      height="100"
+                      viewBox="0 0 64 64"
+                      fill="none"
+                      class="mb-[34px] text-black"
+                    >
+                      <rect
+                        x="16"
+                        y="9"
+                        width="24"
+                        height="36"
+                        rx="4.8"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                      />
+                      <path
+                        d="M23 19h10M21 27.5h14M23 36h8"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                        stroke-linecap="round"
+                      />
+                      <circle
+                        cx="43"
+                        cy="39"
+                        r="11"
+                        fill="white"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                      />
+                      <path
+                        d="M38.7 39.2l2.9 3.1 6-7"
+                        stroke="currentColor"
+                        stroke-width="3.6"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
                     </svg>
                   </Transition>
-                </div>
-                <h2 class="text-xl font-bold text-gray-800 mb-3">{{ t("taskManagement.taskNotIssued") }}</h2>
-                <p class="text-gray-500 text-sm max-w-md mx-auto mb-10 leading-relaxed">
-                  {{ t("taskManagement.taskNotIssuedDesc") }}
-                </p>
 
-                <div class="flex items-center gap-6">
-                  <MButton
-                    type="primary"
-                    class="!bg-[#FF9900] !text-white hover:!bg-[#e68a00] px-8 py-2.5 shadow-md shadow-orange-500/20 active:scale-95 transition-all"
-                    @click="openIssueModal"
-                  >
-                    {{ t("taskManagement.issueTask") }}
-                  </MButton>
-                  <MButton
-                    class="!bg-white !text-gray-600 border !border-gray-200 hover:!bg-gray-50 px-8 py-2.5 shadow-sm active:scale-95 transition-all"
-                    @click="handleViewTaskDetail"
-                  >
-                    {{ t("taskManagement.viewDetails") }}
-                  </MButton>
+                  <h2 class="mb-[22px] text-[24px] font-bold leading-none text-[#122B49]">
+                    {{ t("taskManagement.taskNotIssued") }}
+                  </h2>
+                  <p class="mb-[48px] max-w-[500px] text-[14px] leading-[2.3] text-[#364A63]">
+                    {{ t("taskManagement.taskNotIssuedDesc") }}
+                  </p>
+
+                  <div class="flex items-center gap-[22px]">
+                    <MButton
+                      type="primary"
+                      class="!h-[40px] !w-[122px] !rounded-[4px] !border-0 !bg-[#FF9F14] !px-0 !text-[16px] !font-medium !text-white hover:!bg-[#f39000]"
+                      @click="openIssueModal"
+                    >
+                      {{ t("taskManagement.issueTask") }}
+                    </MButton>
+                    <MButton
+                      class="!h-[40px] !w-[122px] !rounded-[4px] !border !border-[#D9DEE7] !bg-white !px-0 !text-[16px] !font-medium !text-[#2F3D52] hover:!border-[#c7ced8] hover:!bg-[#f8fafc]"
+                      @click="handleViewTaskDetail"
+                    >
+                      {{ t("taskManagement.viewDetails") }}
+                    </MButton>
+                  </div>
                 </div>
               </div>
             </div>
@@ -863,7 +877,7 @@
       :class-name="currentClassName"
       :task-name="currentTaskLabel"
       :has-ai-settings="!isUploadTask && !isExerciseTask"
-      :is-free-coding="isFreeCodingLikeTask"
+      :is-free-coding="isFreeCoding"
       :editor-name="selectedEditor"
       @confirm-group="handleIssueGroup"
       @confirm-student="handleIssueStudent"
@@ -1454,6 +1468,8 @@ const editorsList = computed(() => [
   { id: "vincibot", name: "Matatacode\n(VinciBot)", cover: tool1Cover },
   { id: "nous", name: "Matatacode\n(Nous)", cover: tool5Cover },
 ]);
+const resolveFreeCodingFileType = (): "vinci" | "nous" =>
+  selectedEditor.value === "nous" ? "nous" : "vinci";
 
 const visibleTaskGroups = computed(() => {
   return taskListData.value.filter((group) => group && group.resourceCategory !== null && group.resourceCategory !== undefined);
@@ -1518,7 +1534,13 @@ const currentTaskLabel = computed(() => {
   return getTaskDisplayName(selectedTaskMeta.value.task);
 });
 
-const currentClassName = computed(() => String(route.query.classId || ""));
+const currentClassName = computed(() => {
+  const queryClassName = String(route.query.className || "").trim();
+  if (queryClassName) {
+    return decodeURIComponent(queryClassName);
+  }
+  return String(route.query.classId || "");
+});
 
 const isIssuedDistributeType = (distributeType: any) => {
   const dt = Number(distributeType);
@@ -1560,6 +1582,11 @@ const resolveSelectedResourceId = (): string | null => {
     return value;
   }
   return null;
+};
+
+const resolveIssuedTaskName = (): string => {
+  const task = selectedTask.value as any;
+  return String(task?.fileName || "").trim();
 };
 
 const resolveSelectedExerciseId = (): string | null => {
@@ -1659,6 +1686,26 @@ const currentColumns = computed(() => {
   return issueType.value === "group" ? groupTaskColumns.value : studentTaskColumns.value;
 });
 
+const normalizeTeacherScore = (value: unknown): number | null => {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value === "string" && !value.trim()) {
+    return null;
+  }
+  const score = Number(value);
+  if (!Number.isFinite(score) || score < 0) {
+    return null;
+  }
+  return score;
+};
+
+const formatTeacherScoreDisplay = (value: unknown) => {
+  const score = normalizeTeacherScore(value);
+  if (score === null) return "-";
+  return `${Number(score.toFixed(1))}${t("viewScore.point")}`;
+};
+
 const submissionFilterOptions = computed(() => {
   const options: Array<{ label: string; value: string }> = [
     { label: t("common.all"), value: "all" },
@@ -1746,7 +1793,7 @@ const fetchStudentTaskList = async () => {
         submissionTime: item.taskEndTime || "-",
         qaStatus: item.qaStatusText || item.qaStatus || "-",
         grade: scoreToStars(item.score, item.totalScore),
-        teacherScore: item.teacherScore ?? null,
+        teacherScore: normalizeTeacherScore(item.score ?? item.teacherScore),
         graded: Boolean(item.graded),
         _raw: item,
       };
@@ -1783,7 +1830,7 @@ const TASK_ISSUE_ACTION = "question";
 const TASK_REVOKE_ACTION = "question_revoke";
 const TASK_REDO_ACTION = "question_redo";
 
-const broadcastTaskNotice = (action: string, distributeType?: number) => {
+const broadcastTaskNotice = (action: string, distributeType?: number, taskName?: string) => {
   const classId = String(route.query.classId || "");
   const courseId = String(route.query.courseId || "");
   const chapterId = String(route.params.id || "");
@@ -1801,7 +1848,7 @@ const broadcastTaskNotice = (action: string, distributeType?: number) => {
     chapterId,
     taskId: task?.taskId ?? null,
     resourceId: task?.resourceId ?? task?.id ?? task?.taskId ?? null,
-    taskName: currentTaskLabel.value || task?.resourceName || task?.fileName || "",
+    taskName: taskName ?? (currentTaskLabel.value || task?.resourceName || task?.fileName || ""),
     resourceCategory: task?.resourceCategory ?? null,
     distributeType: distributeType ?? task?.distributeType ?? null,
   });
@@ -1809,7 +1856,7 @@ const broadcastTaskNotice = (action: string, distributeType?: number) => {
   notifyWs.send(msg);
 };
 
-const handleIssueGroup = async () => {
+const handleIssueGroup = async (taskName?: string) => {
   const resourceId = resolveSelectedResourceId();
   const classId = String(route.query.classId || "");
   if (!resourceId || !classId) {
@@ -1818,7 +1865,29 @@ const handleIssueGroup = async () => {
   }
   taskIssuing.value = true;
   try {
-    await taskApi.bindDistributer({ classId, resourceId, distributeType: 2 });
+    if (isFreeCoding.value) {
+      const normalizedTaskName = String(taskName || "").trim();
+      await taskApi.bindFreeDistribute({
+        classId,
+        resourceId,
+        taskName: normalizedTaskName,
+        fileType: resolveFreeCodingFileType(),
+        distributeType: 2,
+      });
+      setDistributeTypeOverride(selectedTaskMeta.value?.task, 2);
+      showTaskIssueModal.value = false;
+      ElMessage.success(t("taskManagement.issueTaskSuccess"));
+      broadcastTaskNotice(TASK_ISSUE_ACTION, 2, normalizedTaskName);
+      await loadTaskList();
+      await fetchStudentTaskList();
+      return;
+    }
+    await taskApi.bindDistributer({
+      classId,
+      resourceId: String(resourceId),
+      taskName: resolveIssuedTaskName(),
+      distributeType: 2,
+    });
     setDistributeTypeOverride(selectedTaskMeta.value?.task, 2);
     showTaskIssueModal.value = false;
     ElMessage.success(t("taskManagement.issueTaskSuccess"));
@@ -1832,7 +1901,7 @@ const handleIssueGroup = async () => {
   }
 };
 
-const handleIssueStudent = async () => {
+const handleIssueStudent = async (taskName?: string) => {
   const resourceId = resolveSelectedResourceId();
   const classId = String(route.query.classId || "");
   if (!resourceId || !classId) {
@@ -1841,7 +1910,29 @@ const handleIssueStudent = async () => {
   }
   taskIssuing.value = true;
   try {
-    await taskApi.bindDistributer({ classId, resourceId, distributeType: 1 });
+    if (isFreeCoding.value) {
+      const normalizedTaskName = String(taskName || "").trim();
+      await taskApi.bindFreeDistribute({
+        classId,
+        resourceId,
+        taskName: normalizedTaskName,
+        fileType: resolveFreeCodingFileType(),
+        distributeType: 1,
+      });
+      setDistributeTypeOverride(selectedTaskMeta.value?.task, 1);
+      showTaskIssueModal.value = false;
+      ElMessage.success(t("taskManagement.issueTaskSuccess"));
+      broadcastTaskNotice(TASK_ISSUE_ACTION, 1, normalizedTaskName);
+      await loadTaskList();
+      await fetchStudentTaskList();
+      return;
+    }
+    await taskApi.bindDistributer({
+      classId,
+      resourceId: String(resourceId),
+      taskName: resolveIssuedTaskName(),
+      distributeType: 1,
+    });
     setDistributeTypeOverride(selectedTaskMeta.value?.task, 1);
     showTaskIssueModal.value = false;
     ElMessage.success(t("taskManagement.issueTaskSuccess"));
@@ -1862,9 +1953,16 @@ const handleFreeCodingIssue = async () => {
     ElMessage.warning(t("taskManagement.noDataSelectedTip"));
     return;
   }
+  showTaskIssueModal.value = true;
+  return;
   taskIssuing.value = true;
   try {
-    await taskApi.bindDistributer({ classId, resourceId, distributeType: 1 });
+    await taskApi.bindDistributer({
+      classId,
+      resourceId: String(resourceId),
+      taskName: resolveIssuedTaskName(),
+      distributeType: 1,
+    });
     setDistributeTypeOverride(selectedTaskMeta.value?.task, 1);
     ElMessage.success(t("taskManagement.issueTaskSuccess"));
     broadcastTaskNotice(TASK_ISSUE_ACTION, 1);
@@ -2179,6 +2277,7 @@ const confirmEndClass = async () => {
   const chapterId = route.params.id as string;
   const classId = route.query.classId as string;
   const courseId = route.query.courseId as string;
+  const from = String(route.query.from || "").trim();
 
   try {
     await endClass({
@@ -2201,6 +2300,10 @@ const confirmEndClass = async () => {
     // 清理课堂状态缓存
     localStorage.removeItem("ongoing_classroom");
     showEndClassModal.value = false;
+    if (from === "teacher") {
+      navigateTo("/teacher");
+      return;
+    }
     navigateTo(`/system/course/${courseId}`);
   } catch (error: any) {
     console.error('下课失败:', error)

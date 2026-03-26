@@ -72,7 +72,7 @@
                 </div>
                 <div class="col-action">
                   <button class="action-btn delete-btn" @click="deleteResource(item)">{{ $t('common.delete') }}</button>
-                  <button class="action-btn config-btn" @click="configEvaluation(item)">{{ $t('prepare.configEvaluation') }}</button>
+                  <button class="action-btn config-btn" @click="configEvaluation(item)">{{ getConfigEvaluationLabel(item) }}</button>
                 </div>
               </div>
             </template>
@@ -154,12 +154,25 @@
         </div>
       </div>
     </div>
+
+    <LiteracyConfigModal
+      :visible="literacyModalVisible"
+      :exercise-id="currentConfigRow?.resourceId"
+      source-type="resource"
+      :resource-title="currentConfigRow?.fileName"
+      :initial-config-data="currentConfigRow?.evalConfigData ?? currentConfigRow"
+      :has-literacy="Number(currentConfigRow?.updateStatus) === 1"
+      @close="literacyModalVisible = false"
+      @config="handleLiteracyConfigConfirm"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import LiteracyConfigModal from '~/components/taskmanagement/LiteracyConfigModal.vue'
 import { cursorAdmin } from '~/composables/api/curosr'
 import { useHttp } from '~/composables/api/useHttp'
 
@@ -191,8 +204,16 @@ const emit = defineEmits<{
   (e: 'uploaded', files: UploadFile[]): void
 }>()
 
-const { createChapterResource, getResourceeDict, getChapterResourceListPage, deleteChapterResource } = cursorAdmin()
+const {
+  createChapterResource,
+  getResourceeDict,
+  getChapterResourceListPage,
+  deleteChapterResource,
+  saveLiteracyConfig,
+  getResourceeDictEvalconfig
+} = cursorAdmin()
 const http = useHttp()
+const { t } = useI18n()
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
 const uploadFiles = ref<UploadFile[]>([])
@@ -200,6 +221,8 @@ const showUploadDialog = ref(false)
 const selectedResourceType = ref('')
 const resourceTypeList = ref<DictItem[]>([])
 const pendingMcFiles = ref<File[]>([])
+const literacyModalVisible = ref(false)
+const currentConfigRow = ref<ResourceItem | null>(null)
 
 // 资源列表
 interface ResourceItem {
@@ -207,6 +230,8 @@ interface ResourceItem {
   fileName: string
   fileType?: string
   fileTypeName?: string
+  updateStatus?: number | string | null
+  evalConfigData?: any
 }
 const resourceList = ref<ResourceItem[]>([])
 
@@ -243,10 +268,59 @@ const deleteResource = async (item: ResourceItem) => {
 // 取消上传
 
 
+const getConfigEvaluationLabel = (item: ResourceItem) => {
+  return Number(item.updateStatus) === 1
+    ? t('prepare.editEvaluation')
+    : t('prepare.configEvaluation')
+}
+
 // 配置素养评价
-const configEvaluation = (item: ResourceItem) => {
-  // TODO: 实现配置素养评价逻辑
-  console.log('配置素养评价:', item)
+const configEvaluation = async (item: ResourceItem) => {
+  try {
+    let configData: any = item
+    if (Number(item.updateStatus) === 1 && item.resourceId) {
+      const result = await getResourceeDictEvalconfig(item.resourceId, 2)
+      configData = {
+        ...item,
+        evalConfigData: result
+      }
+    }
+
+    currentConfigRow.value = configData
+    literacyModalVisible.value = true
+  } catch (error) {
+    console.error('加载资源素养评价配置失败:', error)
+    ElMessage.error('加载资源素养评价配置失败')
+  }
+}
+
+const handleLiteracyConfigConfirm = async (data: {
+  configList: Array<{
+    questionId: string | number
+    quotaIds: Array<string | number>
+  }>
+}) => {
+  if (!currentConfigRow.value?.resourceId) {
+    ElMessage.warning('当前资源缺少 resourceId')
+    return
+  }
+
+  try {
+    await saveLiteracyConfig({
+      objectType: 2,
+      configList: data.configList.map((item) => ({
+        objectId: item.questionId,
+        quotaIds: item.quotaIds || []
+      }))
+    })
+    literacyModalVisible.value = false
+    ElMessage.success(t('common.editSuccess'))
+    await loadResourceList()
+    emit('uploaded', [])
+  } catch (error) {
+    console.error('保存素养评价配置失败:', error)
+    ElMessage.error('保存素养评价配置失败')
+  }
 }
 
 // 加载资源类型字典

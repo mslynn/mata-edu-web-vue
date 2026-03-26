@@ -445,22 +445,125 @@
             </div>
           </div>
 
-          <!-- AI 项目名称输入弹窗 -->
-          <div v-if="showAIModal" class="modal-overlay" @click.self="showAIModal = false">
-            <div class="modal-content">
+          <div
+            v-if="showAIModelSelectModal"
+            class="modal-overlay"
+            @click="closeAIModelSelectModal"
+          >
+            <div class="modal-content model-select-modal" @click.stop>
               <div class="modal-header">
-                <span class="modal-title">{{ $t("ai.createProject") }}</span>
-                <button class="close-btn" @click="showAIModal = false">
+                <span class="modal-title">{{
+                  currentAIModel ? $t(currentAIModel.label) : ""
+                }}</span>
+                <button class="close-btn" @click="closeAIModelSelectModal">
                   <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
                     fill="none"
                     stroke="currentColor"
                     stroke-width="2"
                   >
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                    <path d="M1 1l12 12M13 1l-12 12" />
+                  </svg>
+                </button>
+              </div>
+              <div class="modal-body model-select-body">
+                <div class="model-select-section">
+                  <div class="model-select-section-head">
+                    <div>
+                      <div class="model-select-section-title">
+                        {{ $t("ai.createNewModel") }}
+                      </div>
+                      <div class="model-select-section-desc">
+                        {{ $t("ai.createNewModelDesc") }}
+                      </div>
+                    </div>
+                    <button
+                      class="btn-confirm model-select-create-btn"
+                      @click="openAICreateModal"
+                    >
+                      {{ $t("ai.createProject") }}
+                    </button>
+                  </div>
+                </div>
+
+                <div class="model-select-section">
+                  <div class="model-select-section-head model-select-section-head--stack">
+                    <div class="model-select-section-title-row">
+                      <div class="model-select-section-title">
+                        {{ $t("ai.myCreatedModels") }}
+                      </div>
+                      <span v-if="savedAIModels.length" class="model-select-count">{{
+                        savedAIModels.length
+                      }}</span>
+                    </div>
+                    <div class="model-select-section-desc">
+                      {{ $t("ai.myCreatedModelsDesc") }}
+                    </div>
+                  </div>
+
+                  <div v-if="savedAIModelsLoading" class="model-list-empty">
+                    {{ $t("common.loading") }}
+                  </div>
+                  <div v-else-if="!savedAIModels.length" class="model-list-empty">
+                    {{ $t("ai.noCreatedModels") }}
+                  </div>
+                  <div v-else class="model-card-grid">
+                    <div
+                      v-for="item in savedAIModels"
+                      :key="item.id"
+                      class="model-card"
+                      @click="handleOpenAISavedModel(item)"
+                    >
+                      <button
+                        class="model-card-delete"
+                        type="button"
+                        @click.stop="handleDeleteAISavedModel(item)"
+                      >
+                        删除
+                      </button>
+                      <div class="model-card-cover">
+                        <img :src="getSavedAIModelCover(item.toolKey)" alt="" />
+                      </div>
+                      <div class="model-card-body">
+                        <div class="model-card-name">{{ item.name }}</div>
+                        <div class="model-card-time">
+                          {{
+                            item.updatedAt ? formatSavedAIModelTime(item.updatedAt) : "-"
+                          }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="modal-footer modal-footer--single">
+                <button class="btn-cancel" @click="closeAIModelSelectModal">
+                  {{ $t("common.cancel") }}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="showAICreateModal" class="modal-overlay" @click="closeAICreateModal">
+            <div class="modal-content" @click.stop>
+              <div class="modal-header">
+                <span class="modal-title">{{
+                  $t("ai.newModelTitle", {
+                    name: currentAIModel ? $t(currentAIModel.label) : "",
+                  })
+                }}</span>
+                <button class="close-btn" @click="closeAICreateModal">
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path d="M1 1l12 12M13 1l-12 12" />
                   </svg>
                 </button>
               </div>
@@ -477,7 +580,7 @@
                 </div>
               </div>
               <div class="modal-footer">
-                <button class="btn-cancel" @click="showAIModal = false">
+                <button class="btn-cancel" @click="closeAICreateModal">
                   {{ $t("common.cancel") }}
                 </button>
                 <button class="btn-confirm" @click="handleAIConfirm">
@@ -637,10 +740,14 @@
     <div
       v-if="showToolIframeModal"
       class="iframe-modal-overlay"
+      :class="{ 'iframe-modal-overlay--embedded-ai': currentEmbeddedAI }"
       @click.self="closeToolIframeModal"
     >
-      <div class="iframe-modal-container">
-        <div class="iframe-modal-header">
+      <div
+        class="iframe-modal-container"
+        :class="{ 'iframe-modal-container--embedded-ai': currentEmbeddedAI }"
+      >
+        <div v-if="!currentEmbeddedAI" class="iframe-modal-header">
           <span class="iframe-modal-title">{{ currentToolName }}</span>
           <button class="iframe-close-btn" @click="closeToolIframeModal">
             <svg
@@ -656,7 +763,10 @@
             </svg>
           </button>
         </div>
-        <div class="iframe-modal-body">
+        <div
+          class="iframe-modal-body"
+          :class="{ 'iframe-modal-body--embedded-ai': currentEmbeddedAI }"
+        >
           <div v-if="toolIframeLoading" class="iframe-loading">
             <div class="loading-spinner"></div>
             <span class="loading-text">{{ $t("common.loading") }}</span>
@@ -668,7 +778,7 @@
             :class="{ hidden: toolIframeLoading }"
             frameborder="0"
             allowfullscreen
-            allow="camera; microphone"
+            allow="camera; microphone; bluetooth; serial"
             @load="onToolIframeLoad"
           ></iframe>
         </div>
@@ -681,9 +791,14 @@
 import { ref, reactive, computed, watch } from "vue";
 import { useTeacher } from "~/composables/api/useTeacher";
 import { aiAdmin } from "~/composables/api/ai";
+import { personalcenterApi } from "~/composables/api/personalcenter";
 import { useI18n } from "vue-i18n";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
+import aigcCover1 from "~/assets/images/1.svg";
+import aigcCover2 from "~/assets/images/2.svg";
+import aigcCover3 from "~/assets/images/3.svg";
+import aigcCover4 from "~/assets/images/4.svg";
 
 const { t: $t, locale } = useI18n();
 const router = useRouter();
@@ -694,6 +809,7 @@ const {
   pickMessagePayload,
   pickMessageFileName,
   toZipFile,
+  toUploadFile,
   toWorkFile,
   uploadFileToOSS,
   createUploadFormData,
@@ -713,7 +829,8 @@ const {
   getTeachList,
   getQuickLoginInfo,
 } = useTeacher();
-const { ssoLogin } = aiAdmin();
+const { getAiList, createAi, updateAi, deleteAi, deleteOss, ssoLogin } = aiAdmin();
+const { addOpus, uploadOSS } = personalcenterApi();
 
 const goToLessons = () => {
   router.push("/lessons");
@@ -882,12 +999,12 @@ const { data: quickLoginInfo, refresh: refreshQuickLoginInfo } = useAsyncData(
   }
 );
 
-// 页面加载状态（最少显示 500ms 骨架屏，避免闪烁）
+// 页面加载状态（最少显示 150ms 骨架屏，避免闪烁）
 const minLoadingDone = ref(false);
 onMounted(() => {
   setTimeout(() => {
     minLoadingDone.value = true;
-  }, 500);
+  }, 0);
 });
 const pageLoading = computed(() => !minLoadingDone.value || teachListPending.value);
 
@@ -903,7 +1020,151 @@ const currentToolName = ref("");
 const toolIframeLoading = ref(true);
 const toolIframeRef = ref<HTMLIFrameElement | null>(null);
 const currentToolCacheKey = ref("");
+const currentToolOnlyCreate = ref(false);
+const currentEmbeddedAI = ref(false);
 const savedProjectZipCache = new Map<string, File>();
+
+interface TeacherAICardItem {
+  key: string;
+  label: string;
+  cover: string;
+}
+
+interface SavedAITeacherModelRecord {
+  id: string;
+  toolKey: string;
+  name: string;
+  updatedAt: number;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  zipBlob: Blob;
+  ossId?: string;
+  optType?: string;
+  url?: string;
+}
+
+interface SavedAITeacherModelListItem {
+  id: string;
+  toolKey: string;
+  name: string;
+  updatedAt: number;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  ossId?: string;
+  optType?: string;
+  url?: string;
+}
+
+const teacherAIItems: Record<string, TeacherAICardItem> = {
+  imageClassModel: {
+    key: "imageClassModel",
+    label: "ai.imageClassModel",
+    cover: aigcCover1,
+  },
+  gestureClassModel: {
+    key: "gestureClassModel",
+    label: "ai.gestureClassModel",
+    cover: aigcCover2,
+  },
+  voiceClassModel: {
+    key: "voiceClassModel",
+    label: "ai.voiceClassModel",
+    cover: aigcCover3,
+  },
+  poseClassModel: {
+    key: "poseClassModel",
+    label: "ai.poseClassModel",
+    cover: aigcCover4,
+  },
+};
+
+const AI_MODEL_DB_NAME = "mata-ai-models-db";
+const AI_MODEL_STORE_NAME = "models";
+
+const showAIModelSelectModal = ref(false);
+const showAICreateModal = ref(false);
+const currentAIModel = ref<TeacherAICardItem | null>(null);
+const aiModelName = ref("");
+const currentAIProjectName = ref("");
+const currentEditingAIModelId = ref("");
+const currentEditingAIOssId = ref("");
+const isEditingAITeacherModel = ref(false);
+const savedAIModels = ref<SavedAITeacherModelListItem[]>([]);
+const savedAIModelsLoading = ref(false);
+
+const openAIModelDb = () => {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      reject(new Error("当前环境不支持 IndexedDB"));
+      return;
+    }
+
+    const request = window.indexedDB.open(AI_MODEL_DB_NAME, 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(AI_MODEL_STORE_NAME)) {
+        db.createObjectStore(AI_MODEL_STORE_NAME, { keyPath: "id" });
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("打开本地模型库失败"));
+  });
+};
+
+const saveAITeacherModelRecord = async (record: SavedAITeacherModelRecord) => {
+  const db = await openAIModelDb();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(AI_MODEL_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(AI_MODEL_STORE_NAME);
+
+    store.put(record);
+    transaction.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    transaction.onerror = () => {
+      reject(transaction.error || new Error("保存本地模型失败"));
+    };
+  });
+};
+
+const getAITeacherModelRecord = async (modelId: string) => {
+  const db = await openAIModelDb();
+
+  return new Promise<SavedAITeacherModelRecord | null>((resolve, reject) => {
+    const transaction = db.transaction(AI_MODEL_STORE_NAME, "readonly");
+    const store = transaction.objectStore(AI_MODEL_STORE_NAME);
+    const request = store.get(modelId);
+
+    request.onsuccess = () =>
+      resolve((request.result as SavedAITeacherModelRecord | undefined) || null);
+    request.onerror = () => reject(request.error || new Error("读取模型文件失败"));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () =>
+      reject(transaction.error || new Error("读取模型文件失败"));
+  });
+};
+
+const deleteAITeacherModelRecord = async (modelId: string) => {
+  const db = await openAIModelDb();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(AI_MODEL_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(AI_MODEL_STORE_NAME);
+    const request = store.delete(modelId);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error || new Error("删除本地模型失败"));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () =>
+      reject(transaction.error || new Error("删除本地模型失败"));
+  });
+};
 
 const parseToolIframeMessageData = parseMessageData;
 
@@ -928,16 +1189,95 @@ const downloadToolZipFile = (zipFile: File) => {
 
 const uploadToolWorkFileToOSS = async (file: File) =>
   uploadFileToOSS(file, "上传作品文件失败");
+const uploadToolProjectFileToOSS = async (file: File) =>
+  uploadFileToOSS(file, "上传模型文件失败");
+
+const getCurrentUserId = () => {
+  if (!import.meta.client) {
+    return "";
+  }
+
+  try {
+    const rawUserInfo = localStorage.getItem("user_info");
+    if (!rawUserInfo) {
+      return "";
+    }
+
+    const userInfo = JSON.parse(rawUserInfo);
+    return userInfo?.user_id || userInfo?.userId || userInfo?.id || "";
+  } catch {
+    return "";
+  }
+};
+
+const getAiOptTypeFromMessage = (messageData: any, fallbackName = "") => {
+  const toolKey = typeof messageData?.toolKey === "string" ? messageData.toolKey : "";
+  const modelType = typeof messageData?.modelType === "string" ? messageData.modelType : "";
+  const nameSource = [
+    typeof messageData?.projectName === "string" ? messageData.projectName : "",
+    typeof messageData?.fileName === "string" ? messageData.fileName : "",
+    typeof messageData?.name === "string" ? messageData.name : "",
+    fallbackName,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const toolKeyMap: Record<string, string> = {
+    imageClassModel: "image_cls",
+    voiceClassModel: "audio_cls",
+    poseClassModel: "pose_cls",
+    gestureClassModel: "gesture_cls",
+  };
+
+  const modelTypeMap: Record<string, string> = {
+    image: "image_cls",
+    audio: "audio_cls",
+    voice: "audio_cls",
+    pose: "pose_cls",
+    hand: "gesture_cls",
+    gesture: "gesture_cls",
+  };
+
+  if (toolKeyMap[toolKey]) {
+    return toolKeyMap[toolKey];
+  }
+
+  if (modelTypeMap[modelType]) {
+    return modelTypeMap[modelType];
+  }
+
+  if (nameSource.includes("图像") || nameSource.includes("image")) {
+    return "image_cls";
+  }
+  if (nameSource.includes("语音") || nameSource.includes("audio") || nameSource.includes("voice")) {
+    return "audio_cls";
+  }
+  if (nameSource.includes("姿态") || nameSource.includes("pose")) {
+    return "pose_cls";
+  }
+  if (nameSource.includes("手势") || nameSource.includes("gesture") || nameSource.includes("hand")) {
+    return "gesture_cls";
+  }
+
+  return "";
+};
 
 const postCachedZipToToolIframe = async () => {
+  if (currentToolOnlyCreate.value) {
+    return;
+  }
+
   const zipFile = currentToolCacheKey.value
     ? savedProjectZipCache.get(currentToolCacheKey.value)
     : null;
+  const isAITool = currentToolCacheKey.value.startsWith("ai:");
   const postResult = await postFileBufferToIframe({
     file: zipFile,
     iframeUrl: currentToolUrl.value,
     iframeWindow: toolIframeRef.value?.contentWindow,
-    type: "ZIP_DATA",
+    type: isAITool ? "receive-tm-zip" : "ZIP_DATA",
+    payloadOnly: isAITool,
+    additionalData: isAITool ? { optId: currentEditingAIModelId.value || undefined } : {},
   });
 
   if (!postResult) {
@@ -968,50 +1308,281 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
     return;
   }
 
-  if (messageType === "send-works-mc") {
-    const mcPayload = pickMessagePayload(messageData, [
+  if (messageType === "close-ai-embedded") {
+    closeToolIframeModal();
+    return;
+  }
+
+  if (messageType === "send-tm-zip") {
+    const zipPayload = pickMessagePayload(messageData, [
       "payload",
       "data",
       "file",
       "blob",
       "arrayBuffer",
+      "result",
     ]);
-    const mcFile = toToolWorkFile(
-      mcPayload,
-      pickMessageFileName(messageData),
-      ".mc"
-    );
-
-    if (!mcFile) {
-      console.warn("收到 send-works-mc 消息，但 payload 不是可转换的文件类型:", messageData);
+    const zipFile = toToolZipFile(zipPayload);
+    if (!zipFile) {
+      console.warn("收到 send-tm-zip 消息，但 payload 不是可转换的文件类型:", messageData);
       return;
     }
 
-    const formData = createUploadFormData(mcFile);
+    if (currentToolCacheKey.value) {
+      savedProjectZipCache.set(currentToolCacheKey.value, zipFile);
+    }
 
     const normalizedMessageData = {
       ...messageData,
-      payload: mcFile,
-      mcFile,
+      payload: zipFile,
+      zipFile,
+    };
+
+    console.log("收到教师端工具 iframe send-tm-zip 消息:", normalizedMessageData);
+
+    if (currentToolCacheKey.value.startsWith("ai:")) {
+      try {
+        if (!currentAIModel.value) {
+          throw new Error("当前AI模型上下文不存在");
+        }
+        const saveMode = isEditingAITeacherModel.value ? "edit" : "create";
+
+        const uploadFile = toUploadFile(zipPayload, pickMessageFileName(messageData));
+        if (!uploadFile) {
+          throw new Error("模型文件格式不正确");
+        }
+
+        if (isEditingAITeacherModel.value && currentEditingAIOssId.value) {
+          try {
+            await deleteOss(currentEditingAIOssId.value);
+          } catch (error) {
+            console.warn("教师页删除旧OSS对象失败，继续上传新文件:", error);
+          }
+        }
+
+        const uploadResult = await uploadToolProjectFileToOSS(uploadFile);
+        const userId = getCurrentUserId();
+        const optType = getTeacherAIOptTypeByKey(currentAIModel.value.key);
+        const optName =
+          (typeof messageData?.projectName === "string" && messageData.projectName.trim()) ||
+          currentAIProjectName.value.trim() ||
+          uploadFile.name.replace(/\.[^.]+$/, "");
+
+        if (!uploadResult?.ossId || !userId || !optType) {
+          throw new Error("创建模型参数不完整");
+        }
+
+        let finalModelId = currentEditingAIModelId.value || `${Date.now()}`;
+        if (isEditingAITeacherModel.value && currentEditingAIModelId.value) {
+          await updateAi({
+            optId: currentEditingAIModelId.value,
+            optName,
+            optType,
+            userId,
+            ossId: uploadResult.ossId,
+          });
+        } else {
+          const createResult = await createAi({
+            optName,
+            optType,
+            userId,
+            ossId: uploadResult.ossId,
+          });
+          finalModelId = String(createResult?.optId || createResult?.id || finalModelId);
+        }
+
+        currentEditingAIModelId.value = finalModelId;
+        currentEditingAIOssId.value = String(uploadResult.ossId);
+        const finalCacheKey = getTeacherAICacheKey(currentAIModel.value.key, finalModelId);
+        currentToolCacheKey.value = finalCacheKey;
+        savedProjectZipCache.set(finalCacheKey, uploadFile);
+        await saveAITeacherModelRecord({
+          id: finalModelId,
+          toolKey: currentAIModel.value.key,
+          name: optName,
+          updatedAt: Date.now(),
+          fileName: uploadFile.name,
+          mimeType: uploadFile.type,
+          size: uploadFile.size,
+          zipBlob: uploadFile,
+          ossId: String(uploadResult.ossId),
+          optType,
+          url: uploadResult?.url || "",
+        });
+
+        isEditingAITeacherModel.value = true;
+        await loadSavedAIModels();
+        ElMessage.success(saveMode === "edit" ? "编辑成功" : "创建成功");
+      } catch (error) {
+        console.error("教师页AI中心保存模型失败:", error);
+        ElMessage.error(error instanceof Error ? error.message : "保存失败");
+      }
+      return;
+    }
+
+    if (
+      currentToolName.value.includes("VinciBot") ||
+      currentToolName.value.includes("Nous")
+    ) {
+      try {
+        const uploadFile = toUploadFile(zipPayload, pickMessageFileName(messageData));
+        if (!uploadFile) {
+          throw new Error("模型文件格式不正确");
+        }
+
+        const uploadResult = await uploadToolProjectFileToOSS(uploadFile);
+        const userId = getCurrentUserId();
+        const optType = getAiOptTypeFromMessage(messageData, uploadFile.name);
+        const optName =
+          (typeof messageData?.projectName === "string" && messageData.projectName.trim()) ||
+          uploadFile.name.replace(/\.[^.]+$/, "");
+
+        if (!uploadResult?.ossId || !userId || !optType) {
+          console.warn("教师页工具中心创建模型参数缺失:", {
+            ossId: uploadResult?.ossId,
+            userId,
+            optType,
+            uploadFileName: uploadFile.name,
+            rawData: messageData,
+          });
+          throw new Error("创建模型参数不完整");
+        }
+
+        console.log("教师页工具中心创建模型参数:", {
+          optName,
+          optType,
+          userId,
+          ossId: uploadResult.ossId,
+        });
+
+        const createResult = await createAi({
+          optName,
+          optType,
+          userId,
+          ossId: uploadResult.ossId,
+        });
+
+        console.log("教师页工具中心新建模型成功:", {
+          uploadResult,
+          createResult,
+        });
+
+        ElMessage.success("创建成功");
+      } catch (error) {
+        console.error("教师页工具中心新建模型失败:", error);
+        ElMessage.error(error instanceof Error ? error.message : "创建失败");
+      }
+    }
+
+    window.dispatchEvent(
+      new CustomEvent("tool-send-tm-zip", {
+        detail: normalizedMessageData,
+      })
+    );
+
+    return;
+  }
+
+  if (messageType === "send-works-sb3" || messageType === "send-works-mc") {
+    const worksPayload = pickMessagePayload(messageData, [
+      "payload",
+      "data",
+      "file",
+      "blob",
+      "arrayBuffer",
+    ]) as any;
+
+    const nestedPayload =
+      worksPayload &&
+      typeof worksPayload === "object" &&
+      !(worksPayload instanceof File) &&
+      !(worksPayload instanceof Blob) &&
+      !(worksPayload instanceof ArrayBuffer) &&
+      !ArrayBuffer.isView(worksPayload)
+        ? worksPayload
+        : null;
+
+    const workFilePayload = nestedPayload
+      ? messageType === "send-works-mc"
+        ? nestedPayload.mc || nestedPayload.file || nestedPayload.payload
+        : nestedPayload.sb3 || nestedPayload.file || nestedPayload.payload
+      : worksPayload;
+
+    const coverFile = nestedPayload?.cover instanceof File ? nestedPayload.cover : null;
+
+    const workFile = toToolWorkFile(
+      workFilePayload,
+      pickMessageFileName(messageData),
+      messageType === "send-works-mc" ? ".mc" : ".sb3"
+    );
+
+    if (!workFile) {
+      console.warn(
+        `收到 ${messageType} 消息，但作品文件不是可转换的文件类型:`,
+        messageData
+      );
+      return;
+    }
+
+    if (!coverFile) {
+      console.warn(`收到 ${messageType} 消息，但未找到 cover 图片文件:`, messageData);
+      return;
+    }
+
+    const formData = createUploadFormData(workFile);
+
+    const normalizedMessageData = {
+      ...messageData,
+      payload: workFile,
+      workFile,
+      coverFile,
       formData,
     };
 
     try {
-      const uploadResult = await uploadToolWorkFileToOSS(mcFile);
+      const uploadResult = await uploadToolWorkFileToOSS(workFile);
+      const coverUploadResult = await uploadOSS(coverFile);
+
+      const opusType = currentToolName.value.includes("VinciBot")
+        ? "vinci"
+        : currentToolName.value.includes("Nous")
+          ? "nous"
+          : "";
+
+      if (!uploadResult?.ossId || !coverUploadResult?.ossId || !opusType) {
+        throw new Error("作品保存参数不完整");
+      }
+
+      const opusName =
+        (typeof messageData?.projectName === "string" && messageData.projectName.trim()) ||
+        workFile.name.replace(/\.[^.]+$/, "");
+
+      const opusResult = await addOpus({
+        opusName,
+        opusOssId: String(uploadResult.ossId),
+        coverOssId: String(coverUploadResult.ossId),
+        opusType,
+      });
+
       const uploadedMessageData = {
         ...normalizedMessageData,
         uploadResult,
+        coverUploadResult,
+        opusResult,
       };
 
-      console.log("收到教师端工具 iframe send-works-mc 消息并上传 OSS 成功:", uploadedMessageData);
+      console.log(
+        `收到教师端工具 iframe ${messageType} 消息并上传 OSS 成功:`,
+        uploadedMessageData
+      );
 
       window.dispatchEvent(
-        new CustomEvent("tool-send-works-mc", {
+        new CustomEvent(messageType === "send-works-mc" ? "tool-send-works-mc" : "tool-send-works-sb3", {
           detail: uploadedMessageData,
         })
       );
     } catch (error) {
-      console.error("上传 send-works-mc 文件到 OSS 失败:", error);
+      console.error(`上传 ${messageType} 文件到 OSS 失败:`, error);
       ElMessage.error(error instanceof Error ? error.message : "上传作品文件失败");
     }
 
@@ -1038,7 +1609,7 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
     formData,
   };
 
-  if (currentToolCacheKey.value) {
+  if (currentToolCacheKey.value && !currentToolOnlyCreate.value) {
     savedProjectZipCache.set(currentToolCacheKey.value, zipFile);
   }
 
@@ -1077,36 +1648,39 @@ const toolUrls: Record<string, { url: string; nameKey: string }> = {
 const handleOpenTool = (toolId: string) => {
   const tool = toolUrls[toolId];
   if (tool) {
-    let url = tool.url;
-    // 动态添加语言参数
-    if (toolId === "vincibot") {
-      const lang = locale.value === "zh" ? "zh-CN" : "en";
-      url = `${url}?lang=${lang}&ch=aiedu`;
-    } else if (toolId === "nous") {
-      const lang = locale.value === "zh" ? "zh" : "en";
-      url = `${url}?lang=${lang}&ch=aiedu`;
-    } else if (toolId === "talemap") {
-      window.open(url, "_blank");
-      return;
-    }
+    void (async () => {
+      let url = tool.url;
+      if (toolId === "talemap") {
+        window.open(url, "_blank");
+        return;
+      }
 
-    currentToolUrl.value = url;
-    currentToolCacheKey.value = `tool:${toolId}`;
-    currentToolName.value = $t(tool.nameKey);
-    toolIframeLoading.value = true;
-    showToolIframeModal.value = true;
+      if (toolId === "vincibot") {
+        const token = await getAiToolAccessToken();
+        const lang = locale.value === "zh" ? "zh-CN" : "en";
+        url = `${url}?token=${encodeURIComponent(token)}&lang=${lang}&ch=aiedu`;
+      } else if (toolId === "nous") {
+        const token = await getAiToolAccessToken();
+        const lang = locale.value === "zh" ? "zh" : "en";
+        url = `${url}?token=${encodeURIComponent(token)}&lang=${lang}&ch=aiedu`;
+      }
+
+      currentToolUrl.value = url;
+      currentToolOnlyCreate.value = toolId === "vincibot" || toolId === "nous";
+      if (currentToolOnlyCreate.value) {
+        savedProjectZipCache.delete(`tool:${toolId}`);
+        currentToolCacheKey.value = "";
+      } else {
+        currentToolCacheKey.value = `tool:${toolId}`;
+      }
+      currentToolName.value = $t(tool.nameKey);
+      toolIframeLoading.value = true;
+      showToolIframeModal.value = true;
+    })().catch((error) => {
+      console.error("获取工具SSO登录信息失败:", error);
+      ElMessage.error(error instanceof Error ? error.message : "获取工具Token失败");
+    });
   }
-};
-
-// AI 弹窗逻辑
-const showAIModal = ref(false);
-const aiModelName = ref("");
-const currentAIKey = ref("");
-
-const handleOpenAIModal = (key: string) => {
-  currentAIKey.value = key;
-  aiModelName.value = "";
-  showAIModal.value = true;
 };
 
 const getAiToolAccessToken = async () => {
@@ -1125,38 +1699,296 @@ const getAiToolAccessToken = async () => {
   return accessToken;
 };
 
-const handleAIConfirm = async () => {
-  if (!aiModelName.value.trim()) return;
+const getSavedAIModelCover = (toolKey: string) => {
+  return teacherAIItems[toolKey]?.cover || aigcCover1;
+};
+
+const formatSavedAIModelTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleString(locale.value === "zh" ? "zh-CN" : "en-US", {
+    hour12: false,
+  });
+};
+
+const getTeacherAITypeByKey = (toolKey: string) => {
+  const typeMap: Record<string, number> = {
+    imageClassModel: 1,
+    gestureClassModel: 2,
+    voiceClassModel: 3,
+    poseClassModel: 4,
+  };
+
+  return typeMap[toolKey] || 1;
+};
+
+const getTeacherAIOptTypeByKey = (toolKey: string) => {
+  const optTypeMap: Record<string, string> = {
+    imageClassModel: "image_cls",
+    voiceClassModel: "audio_cls",
+    poseClassModel: "pose_cls",
+    gestureClassModel: "gesture_cls",
+  };
+
+  return optTypeMap[toolKey] || "";
+};
+
+const getTeacherAICacheKey = (toolKey: string, modelId: string) => `ai:${toolKey}:${modelId}`;
+
+const getTeacherAIFileNameFromUrl = (url?: string, fallbackName = "project.zip") => {
+  if (!url) {
+    return fallbackName;
+  }
 
   try {
-    const token = await getAiToolAccessToken();
-    const typeMap: Record<string, number> = {
-      imageClassModel: 1,
-      gestureClassModel: 2,
-      voiceClassModel: 3,
-      poseClassModel: 4,
-    };
-    const type = typeMap[currentAIKey.value] || 1;
-    const lang = locale.value === "zh" ? "zh" : "en";
-    const url = `https://pre.matatalab.com/?token=${encodeURIComponent(token)}&type=${type}&projectName=${encodeURIComponent(aiModelName.value)}&lang=${lang}&ch=aiedu`;
+    const pathname = new URL(url).pathname;
+    const lastSegment = pathname.split("/").filter(Boolean).pop();
+    return lastSegment ? decodeURIComponent(lastSegment) : fallbackName;
+  } catch {
+    return fallbackName;
+  }
+};
 
-    currentToolUrl.value = url;
-    currentToolCacheKey.value = `ai:${currentAIKey.value}`;
+const normalizeTeacherAIModelTimestamp = (value: unknown, fallbackValue = Date.now()) => {
+  if (typeof value === "number") {
+    return value;
+  }
 
-    const titleMap: Record<string, string> = {
-      imageClassModel: $t("ai.imageClassModel"),
-      gestureClassModel: $t("ai.gestureClassModel"),
-      voiceClassModel: $t("ai.voiceClassModel"),
-      poseClassModel: $t("ai.poseClassModel"),
-    };
+  if (typeof value === "string") {
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? fallbackValue : parsed;
+  }
 
-    currentToolName.value = titleMap[currentAIKey.value] || "";
-    toolIframeLoading.value = true;
-    showToolIframeModal.value = true;
-    showAIModal.value = false;
+  return fallbackValue;
+};
+
+const loadSavedAIModels = async () => {
+  if (!currentAIModel.value) {
+    savedAIModels.value = [];
+    return;
+  }
+
+  savedAIModelsLoading.value = true;
+
+  try {
+    const targetOptType = getTeacherAIOptTypeByKey(currentAIModel.value.key);
+    const userId = getCurrentUserId();
+    const response = await getAiList({
+      optType: targetOptType,
+      userId,
+    });
+    const list = Array.isArray(response)
+      ? response
+      : response?.rows || response?.list || response?.records || [];
+
+    savedAIModels.value = list
+      .filter((item: any) => !targetOptType || item.optType === targetOptType)
+      .map((item: any) => {
+        const modelName = item.optName || item.name || item.projectName || "-";
+
+        return {
+          id: String(
+            item.optId || item.id || item.aiId || item.ossId || `${Date.now()}`
+          ),
+          toolKey: currentAIModel.value?.key || "",
+          name: modelName,
+          updatedAt: normalizeTeacherAIModelTimestamp(
+            item.updateTime || item.updatedAt || item.createTime,
+            0
+          ),
+          fileName:
+            item.fileName ||
+            getTeacherAIFileNameFromUrl(item.url, `${modelName}.zip`),
+          mimeType: item.mimeType || "application/octet-stream",
+          size: Number(item.size || 0),
+          ossId: item.ossId ? String(item.ossId) : "",
+          optType: item.optType || "",
+          url: item.url || "",
+        } satisfies SavedAITeacherModelListItem;
+      })
+      .sort(
+        (a: SavedAITeacherModelListItem, b: SavedAITeacherModelListItem) =>
+          b.updatedAt - a.updatedAt
+      );
   } catch (error) {
-    console.error("获取AI工具SSO登录信息失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "获取AI工具Token失败");
+    console.error("加载教师页AI模型列表失败:", error);
+    savedAIModels.value = [];
+  } finally {
+    savedAIModelsLoading.value = false;
+  }
+};
+
+const downloadTeacherAIModelZipFile = async (item: SavedAITeacherModelListItem) => {
+  const fallbackFileName =
+    item.fileName || getTeacherAIFileNameFromUrl(item.url, `${item.name || "project"}.zip`);
+
+  if (item.url) {
+    const response = await fetch(item.url);
+    if (!response.ok) {
+      throw new Error(`下载模型文件失败: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return new File([blob], fallbackFileName, {
+      type: item.mimeType || blob.type || "application/zip",
+      lastModified: item.updatedAt || Date.now(),
+    });
+  }
+
+  return null;
+};
+
+const openTeacherAIIframe = async (
+  tool: TeacherAICardItem,
+  projectName: string,
+  modelId: string
+) => {
+  const token = await getAiToolAccessToken();
+  const type = getTeacherAITypeByKey(tool.key);
+  const lang = locale.value === "zh" ? "zh" : "en";
+  const url = `https://pre.matatalab.com/?token=${encodeURIComponent(token)}&type=${type}&projectName=${encodeURIComponent(projectName)}&lang=${lang}&ch=aiedu&type2=opt${isEditingAITeacherModel.value ? `&optId=${encodeURIComponent(modelId)}` : ""}`;
+
+  currentToolUrl.value = url;
+  currentToolName.value = $t(tool.label);
+  currentToolCacheKey.value = getTeacherAICacheKey(tool.key, modelId);
+  currentToolOnlyCreate.value = false;
+  currentEmbeddedAI.value = false;
+  toolIframeLoading.value = true;
+  currentAIProjectName.value = projectName;
+  currentEditingAIModelId.value = modelId;
+  showAIModelSelectModal.value = false;
+  showAICreateModal.value = false;
+  showToolIframeModal.value = true;
+};
+
+const handleOpenAIModal = (key: string) => {
+  currentAIModel.value = teacherAIItems[key] || null;
+  aiModelName.value = "";
+  savedAIModels.value = [];
+  showAIModelSelectModal.value = true;
+  void loadSavedAIModels();
+};
+
+const closeAIModelSelectModal = () => {
+  showAIModelSelectModal.value = false;
+  currentAIModel.value = null;
+  aiModelName.value = "";
+  savedAIModels.value = [];
+};
+
+const openAICreateModal = () => {
+  aiModelName.value = "";
+  showAIModelSelectModal.value = false;
+  showAICreateModal.value = true;
+};
+
+const closeAICreateModal = () => {
+  showAICreateModal.value = false;
+  aiModelName.value = "";
+  if (currentAIModel.value) {
+    showAIModelSelectModal.value = true;
+    return;
+  }
+
+  savedAIModels.value = [];
+};
+
+const handleAIConfirm = async () => {
+  if (!currentAIModel.value) {
+    return;
+  }
+
+  const trimmedName = aiModelName.value.trim();
+  if (!trimmedName) {
+    ElMessage.warning($t("ai.inputModelName"));
+    return;
+  }
+
+  isEditingAITeacherModel.value = false;
+  currentEditingAIOssId.value = "";
+  await openTeacherAIIframe(
+    currentAIModel.value,
+    trimmedName,
+    `teacher-ai-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+  );
+};
+
+const handleOpenAISavedModel = async (item: SavedAITeacherModelListItem) => {
+  if (!currentAIModel.value) {
+    return;
+  }
+
+  try {
+    const cacheKey = getTeacherAICacheKey(item.toolKey, item.id);
+    const cachedFile = savedProjectZipCache.get(cacheKey);
+    if (cachedFile) {
+      isEditingAITeacherModel.value = true;
+      currentEditingAIOssId.value = item.ossId || "";
+      await openTeacherAIIframe(currentAIModel.value, item.name, item.id);
+      return;
+    }
+
+    const localRecord = await getAITeacherModelRecord(item.id);
+    if (localRecord) {
+      const localFile = new File([localRecord.zipBlob], localRecord.fileName, {
+        type: localRecord.mimeType || "application/octet-stream",
+        lastModified: localRecord.updatedAt,
+      });
+      savedProjectZipCache.set(cacheKey, localFile);
+      isEditingAITeacherModel.value = true;
+      currentEditingAIOssId.value = item.ossId || localRecord.ossId || "";
+      await openTeacherAIIframe(currentAIModel.value, item.name, item.id);
+      return;
+    }
+
+    const remoteFile = await downloadTeacherAIModelZipFile(item);
+    if (remoteFile) {
+      savedProjectZipCache.set(cacheKey, remoteFile);
+      await saveAITeacherModelRecord({
+        id: item.id,
+        toolKey: item.toolKey,
+        name: item.name,
+        updatedAt: item.updatedAt || Date.now(),
+        fileName: remoteFile.name,
+        mimeType: remoteFile.type || item.mimeType || "application/octet-stream",
+        size: remoteFile.size,
+        zipBlob: remoteFile,
+        ossId: item.ossId || "",
+        optType: item.optType || "",
+        url: item.url || "",
+      });
+      isEditingAITeacherModel.value = true;
+      currentEditingAIOssId.value = item.ossId || "";
+      await openTeacherAIIframe(currentAIModel.value, item.name, item.id);
+      return;
+    }
+
+    ElMessage.error($t("ai.loadModelFailed"));
+  } catch (error) {
+    console.error("教师页读取AI模型文件失败:", error);
+    ElMessage.error($t("ai.loadModelFailed"));
+  }
+};
+
+const handleDeleteAISavedModel = async (item: SavedAITeacherModelListItem) => {
+  try {
+    await ElMessageBox.confirm(`确认删除模型“${item.name}”吗？`, "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+  } catch {
+    return;
+  }
+
+  try {
+    await deleteAi(item.id);
+    await deleteAITeacherModelRecord(item.id);
+    const cacheKey = getTeacherAICacheKey(item.toolKey, item.id);
+    savedProjectZipCache.delete(cacheKey);
+    savedAIModels.value = savedAIModels.value.filter((model) => model.id !== item.id);
+    ElMessage.success("删除成功");
+  } catch (error) {
+    console.error("教师页删除AI模型失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "删除失败");
   }
 };
 
@@ -1174,6 +2006,9 @@ const closeToolIframeModal = () => {
   currentToolUrl.value = "";
   currentToolName.value = "";
   toolIframeLoading.value = true;
+  currentToolOnlyCreate.value = false;
+  currentEmbeddedAI.value = false;
+  currentToolCacheKey.value = "";
 };
 
 onMounted(() => {
@@ -1372,7 +2207,7 @@ const goToTeach = async (chapter: ChapterItem) => {
   const currentClassId = selectedClassId.value;
   const courseId = selectedCourseId.value;
   const chapterId = chapter.chapterId;
-  const classroomUrl = `/system/classroom/${chapterId}?classId=${currentClassId}&courseId=${courseId}&from=teacher&autoQuickLogin=1`;
+  const classroomUrl = `/system/classroom/${chapterId}?classId=${currentClassId}&className=${encodeURIComponent(selectedClassName.value || "")}&courseId=${courseId}&from=teacher&autoQuickLogin=1`;
 
   // 如果是开课中状态，直接跳转
   if (chapter.teachStatus === 1) {
@@ -1528,6 +2363,8 @@ const handleStartClassConfirm = async (data: {
   console.log("开课数据:", data);
 
   const peerId = data.classId;
+  const className =
+    startClassData.classList.find((item) => item.classId === data.classId)?.className || "";
 
   try {
     await beginClass({
@@ -1538,7 +2375,7 @@ const handleStartClassConfirm = async (data: {
     });
     console.log("开始上课成功");
     navigateTo(
-      `/system/classroom/${data.chapterId}?classId=${data.classId}&courseId=${data.courseId}&from=teacher&autoQuickLogin=1`
+      `/system/classroom/${data.chapterId}?classId=${data.classId}&className=${encodeURIComponent(className)}&courseId=${data.courseId}&from=teacher&autoQuickLogin=1`
     );
   } catch (error: any) {
     console.error("开始上课失败:", error);
@@ -1828,6 +2665,174 @@ const handleStartClassConfirm = async (data: {
   overflow: hidden;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   animation: modalFadeIn 0.3s ease;
+}
+
+.model-select-modal {
+  width: 620px;
+}
+
+.model-select-body {
+  padding: 28px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.model-select-section {
+  border: 1px solid #f0e4d0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9f0 100%);
+}
+
+.model-select-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.model-select-section-head--stack {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.model-select-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.model-select-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+
+.model-select-section-desc {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8a6a3f;
+}
+
+.model-select-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #fff1d9;
+  color: #ff9900;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-select-create-btn {
+  width: auto;
+  min-width: 120px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.model-card-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.model-card {
+  position: relative;
+  text-align: left;
+  border: 1px solid #f3d7a7;
+  border-radius: 14px;
+  background: white;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.model-card:hover {
+  border-color: #ff9900;
+  box-shadow: 0 10px 18px rgba(255, 153, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.model-card-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  min-width: 52px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 77, 79, 0.92);
+  color: white;
+  font-size: 12px;
+  line-height: 28px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(-4px);
+}
+
+.model-card:hover .model-card-delete {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.model-card-cover {
+  background: #f3f3f3;
+  height: 96px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.model-card-body {
+  padding: 10px 12px 12px;
+}
+
+.model-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-card-time {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #999;
+}
+
+.model-list-empty {
+  margin-top: 16px;
+  border: 1px dashed #e5d3b6;
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #999;
+  background: rgba(255, 255, 255, 0.7);
 }
 
 .modal-header {
@@ -2218,7 +3223,7 @@ const handleStartClassConfirm = async (data: {
 }
 
 .info-value--highlight {
-  color: #FF9900;
+  color: #ff9900;
 }
 
 /* 响应式 */
@@ -2567,6 +3572,10 @@ const handleStartClassConfirm = async (data: {
   z-index: 2000;
 }
 
+.iframe-modal-overlay--embedded-ai {
+  background: transparent;
+}
+
 .iframe-modal-container {
   width: 95vw;
   height: 90vh;
@@ -2576,6 +3585,14 @@ const handleStartClassConfirm = async (data: {
   flex-direction: column;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.iframe-modal-container--embedded-ai {
+  width: 100vw;
+  height: 100vh;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .iframe-modal-header {
@@ -2616,6 +3633,10 @@ const handleStartClassConfirm = async (data: {
   flex: 1;
   overflow: hidden;
   position: relative;
+}
+
+.iframe-modal-body--embedded-ai {
+  height: 100vh;
 }
 
 .tool-iframe {

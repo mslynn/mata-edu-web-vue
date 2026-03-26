@@ -234,6 +234,7 @@
         </div>
       </Transition>
     </Teleport>
+
   </div>
 </template>
 
@@ -266,6 +267,8 @@ const firstNonEmptyString = (...values: any[]) => {
   }
   return ''
 }
+
+
 
 // 信令服务器地址（用于接收 CLASS_BEGIN）
 const signalingUrl =
@@ -864,7 +867,9 @@ const connectNotifyWebSocket = () => {
       if (message.type === 'CLASS_INTERACTION') {
         console.log('[学生课堂] 收到课堂互动指令:', message.action)
 
-        if (message.action === TASK_ISSUE_ACTION) {
+        if (message.action === TASK_ISSUE_ACTION && message.noticeType === 'evaluation') {
+          console.log('[学生课堂] 收到课程测评通知，交给全局弹窗处理')
+        } else if (message.action === TASK_ISSUE_ACTION) {
           syncClassroomContext(message)
           latestTaskNotice.value = firstNonEmptyString(message.taskName, '老师下发了新的课堂任务')
           await loadClassroomTasks()

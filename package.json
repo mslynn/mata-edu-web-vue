@@ -3,16 +3,17 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "set NODE_ENV=production&& nuxt build",
-    "build:dev": "set NODE_ENV=development&& nuxt build",
-    "dev": "nuxt dev",
+    "build": "set NODE_ENV=production&& nuxt build --dotenv .env.production",
+    "build:dev": "set NODE_ENV=development&& nuxt build --dotenv .env.development",
+    "dev": "nuxt dev --dotenv .env.development",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
+    "preview": "nuxt preview --dotenv .env.production",
     "translate": "node scripts/translation_tool.js",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
     "@nuxtjs/i18n": "^10.2.1",
+    "@pinia/nuxt": "^0.11.3",
     "@stomp/stompjs": "^7.2.1",
     "@wangeditor/editor": "^5.1.23",
     "@wangeditor/editor-for-vue": "^5.1.12",
@@ -24,6 +25,7 @@
     "jsencrypt": "^3.3.2",
     "nuxt": "^4.2.1",
     "peerjs": "^1.5.4",
+    "pinia": "^3.0.4",
     "vue": "^3.5.25",
     "vue-i18n": "^11.2.7",
     "vue-router": "^4.6.3"

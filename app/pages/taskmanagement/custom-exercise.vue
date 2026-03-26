@@ -124,8 +124,10 @@
     <!-- Literacy Config Modal -->
     <LiteracyConfigModal 
       :visible="literacyModalVisible" 
+      :exercise-id="currentEditRow?.id"
       :has-literacy="currentEditRow?.hasLiteracy || false"
       @close="literacyModalVisible = false"
+      @config="handleLiteracyConfigConfirm"
     />
 
     <!-- Link Course Modal -->
@@ -182,7 +184,7 @@ import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 const { t } = useI18n()
 const router = useRouter()
-const { getexerciseList, copyExercise, delExercise } = taskmanagementcenterApi()
+const { getexerciseList, copyExercise, delExercise, saveExercise } = taskmanagementcenterApi()
 
 // Search
 const searchKeyword = ref('')
@@ -272,6 +274,24 @@ const handleEditScore = (row: any) => {
   console.log('Edit score:', row)
   currentEditRow.value = row
   literacyModalVisible.value = true
+}
+
+const handleLiteracyConfigConfirm = async (data: {
+  configList: Array<{
+    questionId: string | number
+    quotaIds: Array<string | number>
+  }>
+}) => {
+  try {
+    await saveExercise({
+      configList: data.configList
+    })
+    literacyModalVisible.value = false
+    ElMessage.success(t('common.editSuccess'))
+    await loadExerciseList()
+  } catch (error) {
+    console.error('保存素养评价配置失败:', error)
+  }
 }
 
 const handleLinkCourse = (row: any) => {

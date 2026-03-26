@@ -11,80 +11,245 @@
         <h2 class="modal-title">{{ $t('course.courseEvaluation') }}</h2>
         
         <div class="evaluation-list">
-          <div v-for="item in evaluationList" :key="item.id" class="evaluation-item">
-            <div class="item-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7CB3F0" stroke-width="1.5">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-                <line x1="16" y1="13" x2="8" y2="13" />
-                <line x1="16" y1="17" x2="8" y2="17" />
-                <polyline points="10 9 9 9 8 9" />
-              </svg>
-            </div>
-            <span class="item-name">
-              {{ $t('course.codingTest') }} {{ item.id }} 
-              <span class="distribute-text" :class="{ sent: item.distributed }">
-                {{ item.distributed ? $t('course.distributed') : $t('course.notDistributed') }}
+          <div v-if="loading" class="empty-state">加载中...</div>
+          <div v-else-if="loadError" class="empty-state">{{ loadError }}</div>
+          <div v-else-if="evaluationList.length === 0" class="empty-state">暂无课程测评</div>
+          <template v-else>
+            <div v-for="item in evaluationList" :key="item.exerciseId" class="evaluation-item">
+              <div class="item-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7CB3F0" stroke-width="1.5">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                  <line x1="16" y1="13" x2="8" y2="13" />
+                  <line x1="16" y1="17" x2="8" y2="17" />
+                  <polyline points="10 9 9 9 8 9" />
+                </svg>
+              </div>
+              <span class="item-name">
+                {{ item.exerciseName }}
+                <span class="distribute-text" :class="getStatusClass(item.status)">
+                  {{ getStatusText(item.status) }}
+                </span>
               </span>
-            </span>
-            <div class="hover-actions">
-              <button class="hover-btn" @click="handleViewQuestions(item)">{{ $t('course.viewQuestions') }}</button>
-              <button class="hover-btn" @click="handleSetExam(item)">{{ $t('course.setExam') }}</button>
-              <button 
-                class="hover-btn" 
-                :class="{ disabled: !item.distributed }"
-                :disabled="!item.distributed"
-                @click="item.distributed && handleGrading(item)"
-              >{{ $t('course.gradeExam') }}</button>
+              <div class="hover-actions">
+                <button class="hover-btn" @click="handleViewQuestions(item)">{{ $t('course.viewQuestions') }}</button>
+                <button class="hover-btn" @click="handleSetExam(item)">{{ $t('course.setExam') }}</button>
+                <button class="hover-btn" :class="{ disabled: !canGrade(item.status) }"
+                  :disabled="!canGrade(item.status)" @click="canGrade(item.status) && handleGrading(item)">
+                  {{ $t('course.gradeExam') }}
+                </button>
+              </div>
             </div>
-          </div>
+          </template>
         </div>
       </div>
     </div>
   </Transition>
   
   <!-- 设置考试弹窗 -->
-  <SetExamModal v-model:visible="showSetExamModal" @submit="handleExamSubmit" />
+  <SetExamModal v-model:visible="showSetExamModal" :course-id="props.courseId"
+    :exercise-id="currentSetExamExerciseId" @submit="handleExamSubmit" @withdraw="handleExamWithdraw" />
+  <ExerciseDetailModal v-model="showExerciseDetailModal" :exercise-id="currentExerciseId"
+    detail-source="courseEvaluation" />
+  <SelectGradingClassModal
+    v-model:visible="showGradingClassModal"
+    :loading="gradingClassLoading"
+    :options="gradingClassOptions"
+    @select="handleGradingClassSelect"
+  />
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+import { ElMessage } from 'element-plus'
+import { cursorAdmin } from '~/composables/api/curosr'
+
+interface CourseEvaluationItem {
+  courseId: number | string
+  exerciseId: string
+  exerciseName: string
+  status: number
+}
 
 const props = defineProps<{
   visible: boolean
+  courseId: string
 }>()
 
 const emit = defineEmits(['update:visible', 'distribute'])
 
-const evaluationList = ref([
-  { id: 1, distributed: true },
-  { id: 2, distributed: false },
-  { id: 3, distributed: true },
-])
+const { getCourseEvaluationList, startDistribute, withdrawExam, getChapterExerciseclass } = cursorAdmin()
+
+const evaluationList = ref<CourseEvaluationItem[]>([])
+const loading = ref(false)
+const loadError = ref('')
+const showExerciseDetailModal = ref(false)
+const currentExerciseId = ref<string | null>(null)
+const currentSetExamExerciseId = ref<string | null>(null)
+const showGradingClassModal = ref(false)
+const gradingClassLoading = ref(false)
+const gradingClassOptions = ref<{ value: string; label: string }[]>([])
+const currentGradingExerciseId = ref<string | null>(null)
+
+const normalizeGradingClassOptions = (data: any) => {
+  const classList = (Array.isArray(data) ? data : []).flatMap((item: any) => {
+    if (Array.isArray(item?.classList)) {
+      return item.classList
+    }
+    return item ? [item] : []
+  })
+
+  const seenClassIds = new Set<string>()
+
+  return classList
+    .filter((cls: any) => {
+      if (cls?.status === null || cls?.status === undefined || cls?.status === '') {
+        return true
+      }
+      return Number(cls.status) === 1
+    })
+    .map((cls: any) => {
+      const classId = String(cls?.classId ?? cls?.id ?? '')
+      const className = String(cls?.className ?? cls?.name ?? '')
+
+      if (!classId || !className || seenClassIds.has(classId)) {
+        return null
+      }
+
+      seenClassIds.add(classId)
+      return {
+        value: classId,
+        label: className
+      }
+    })
+    .filter((option): option is { value: string; label: string } => !!option)
+}
 
 const handleClose = () => {
   emit('update:visible', false)
 }
 
+const loadEvaluationData = async () => {
+  if (!props.courseId) {
+    evaluationList.value = []
+    return
+  }
+
+  loading.value = true
+  loadError.value = ''
+
+  try {
+    const data = await getCourseEvaluationList(props.courseId)
+    evaluationList.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('加载课程测评列表失败:', error)
+    loadError.value = '加载课程测评列表失败'
+    evaluationList.value = []
+  } finally {
+    loading.value = false
+  }
+}
+
+watch(() => props.visible, (visible) => {
+  if (visible) {
+    loadEvaluationData()
+  }
+})
+
+watch(() => props.courseId, () => {
+  if (props.visible) {
+    loadEvaluationData()
+  }
+})
+
 const handleDistribute = (item: any) => {
   emit('distribute', item)
 }
 
+const getStatusText = (status: number) => {
+  if (status === 2) return '全部下发'
+  if (status === 1) return '部分下发'
+  return '未下发'
+}
+
+const getStatusClass = (status: number) => {
+  if (status === 2) return 'sent'
+  if (status === 1) return 'partial'
+  return ''
+}
+
+const canGrade = (status: number) => status !== 0
+
 const handleViewQuestions = (item: any) => {
-  console.log('查看试题:', item)
+  currentExerciseId.value = String(item.exerciseId || '')
+  showExerciseDetailModal.value = !!currentExerciseId.value
 }
 
 const showSetExamModal = ref(false)
 const handleSetExam = (item: any) => {
-  showSetExamModal.value = true
+  currentSetExamExerciseId.value = String(item.exerciseId || '')
+  showSetExamModal.value = !!currentSetExamExerciseId.value
 }
 
-const handleExamSubmit = (data: any) => {
-  console.log('下发考试:', data)
+const handleExamSubmit = async (data: any) => {
+  try {
+    await startDistribute(data)
+    ElMessage.success('下发测评成功')
+    showSetExamModal.value = false
+    await loadEvaluationData()
+    handleDistribute(data)
+  } catch (error) {
+    console.error('下发测评失败:', error)
+    ElMessage.error('下发测评失败')
+  }
 }
 
-const handleGrading = (item: any) => {
-  console.log('批改试卷:', item)
+const handleExamWithdraw = async (data: any) => {
+  try {
+    await withdrawExam(data)
+    ElMessage.success('撤回测评成功')
+    showSetExamModal.value = false
+    await loadEvaluationData()
+  } catch (error) {
+    console.error('撤回测评失败:', error)
+    ElMessage.error('撤回测评失败')
+  }
+}
+
+const handleGrading = async (item: any) => {
+  if (!props.courseId || !item?.exerciseId) return
+
+  currentGradingExerciseId.value = String(item.exerciseId)
+  gradingClassLoading.value = true
+  gradingClassOptions.value = []
+  showGradingClassModal.value = true
+
+  try {
+    const data = await getChapterExerciseclass({
+      courseId: props.courseId,
+      exerciseId: String(item.exerciseId)
+    })
+
+    gradingClassOptions.value = normalizeGradingClassOptions(data)
+  } catch (error) {
+    console.error('加载批改班级失败:', error)
+    gradingClassOptions.value = []
+    ElMessage.error('加载批改班级失败')
+  } finally {
+    gradingClassLoading.value = false
+  }
+}
+
+const handleGradingClassSelect = async (option: { value: string; label: string }) => {
+  await navigateTo({
+    path: "/taskmanagement",
+    query: {
+      tab: "assessment",
+      classId: option.value,
+      courseId: String(props.courseId || ""),
+      exerciseId: String(currentGradingExerciseId.value || ""),
+    },
+  })
 }
 </script>
 
@@ -169,6 +334,10 @@ const handleGrading = (item: any) => {
   color: #52c41a;
 }
 
+.distribute-text.partial {
+  color: #fa8c16;
+}
+
 .hover-actions {
   display: none;
   gap: 8px;
@@ -184,6 +353,13 @@ const handleGrading = (item: any) => {
   margin: 0 -16px;
   padding: 16px;
   border-radius: 8px;
+}
+
+.empty-state {
+  padding: 48px 0;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
 }
 
 .hover-btn {

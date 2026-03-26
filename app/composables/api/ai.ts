@@ -32,7 +32,7 @@ export const aiAdmin = () => {
   //查询AI实践列表
   //   const getAiList = async () => {
   //     try {
-  //       const response = await http.get("/system/ai/opt/list");
+  //       const response = await http.get("/system/opt/list");
   //       if (response.code !== 200) {
   //         throw new Error(response.msg || "查询AI实践列表失败");
   //       }
@@ -58,7 +58,7 @@ export const aiAdmin = () => {
 
   const getAiList = async (params: AiListParams) => {
     try {
-      const response = await http.get("/system/ai/opt/list", params);
+      const response = await http.get("/system/opt/list", params);
       if (response.code !== 200) {
         throw new Error(response.msg || "查询AI实践列表失败");
       }
@@ -75,7 +75,7 @@ export const aiAdmin = () => {
     ossId: number | string;
   }) => {
     try {
-      const response = await http.post("/system/ai/opt", data);
+      const response = await http.post("/system/opt", data);
       if (response.code !== 200) {
         throw new Error(response.msg || "新增AI实践失败");
       }
@@ -85,9 +85,15 @@ export const aiAdmin = () => {
     }
   };
   //修改AI实践
-  const updateAi = async (data: { optId: string }) => {
+  const updateAi = async (data: {
+    optId: string;
+    optName?: string;
+    optType?: string;
+    userId?: string;
+    ossId?: number | string;
+  }) => {
     try {
-      const response = await http.put("/system/ai/opt", data);
+      const response = await http.put("/system/opt", data);
       if (response.code !== 200) {
         throw new Error(response.msg || "更新AI实践失败");
       }
@@ -99,7 +105,7 @@ export const aiAdmin = () => {
   //删除AI实践
   const deleteAi = async (optIds: string) => {
     try {
-      const response = await http.del(`/system/ai/opt/${optIds}`);
+      const response = await http.del(`/system/opt/${optIds}`);
       if (response.code !== 200) {
         throw new Error(response.msg || "删除AI实践失败");
       }

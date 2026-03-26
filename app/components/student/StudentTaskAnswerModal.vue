@@ -327,6 +327,7 @@ type ConnectPointSide = "source" | "target";
 const props = defineProps<{
   modelValue: boolean;
   taskId?: string | null;
+  evaluationId?: string | null;
   taskName?: string;
   readonly?: boolean;
 }>();
@@ -336,8 +337,8 @@ const emit = defineEmits<{
   submitted: [];
 }>();
 
-const { getTaskIdDetail } = taskmanagementcenterApi();
-const { submitStudentTask } = student();
+const { getTaskIdDetail, getEvaluationWithAnswers } = taskmanagementcenterApi();
+const { submitStudentTask, submitEvaluation } = student();
 
 const loading = ref(false);
 const submitting = ref(false);
@@ -537,6 +538,8 @@ const fillAnswerStateFromDetail = () => {
 
 const displayTitle = computed(() => {
   return firstNonEmptyString(
+    detailData.value?.evaluationName,
+    detailData.value?.exerciseName,
     detailData.value?.taskInfo?.taskName,
     detailData.value?.taskName,
     props.taskName,
@@ -572,6 +575,9 @@ const studentScoreStars = computed(() => {
 });
 
 const showStudentMeta = computed(() => {
+  if (props.evaluationId) {
+    return false;
+  }
   return props.readonly || !!studentDisplayName.value || studentScoreStars.value > 0;
 });
 
@@ -832,10 +838,14 @@ const getTargetOptions = (question: QuestionItem) => {
 };
 
 const fetchTaskDetail = async () => {
-  if (!props.taskId) return;
+  if (!props.taskId && !props.evaluationId) return;
   loading.value = true;
   try {
-    detailData.value = await getTaskIdDetail(String(props.taskId));
+    if (props.evaluationId) {
+      detailData.value = await getEvaluationWithAnswers(String(props.evaluationId));
+    } else {
+      detailData.value = await getTaskIdDetail(String(props.taskId));
+    }
     questions.value = normalizeQuestions(detailData.value);
     fillAnswerStateFromDetail();
     await nextTick();
@@ -853,6 +863,16 @@ const fetchTaskDetail = async () => {
 
 const closeModal = () => {
   emit("update:modelValue", false);
+};
+
+const resolveSubmitTargetId = () => {
+  return firstIdString(
+    detailData.value?.taskInfo?.taskId,
+    detailData.value?.taskId,
+    detailData.value?.taskid,
+    detailData.value?.taskID,
+    props.taskId
+  );
 };
 
 const buildSubmitAnswers = (): StudentTaskAnswer[] => {
@@ -946,7 +966,13 @@ const handleSubmit = async () => {
     return;
   }
 
-  if (!props.taskId) {
+  const submitTargetId = resolveSubmitTargetId();
+  if (props.evaluationId && !String(props.evaluationId).trim()) {
+    ElMessage.warning("当前测评缺少提交标识");
+    return;
+  }
+
+  if (!props.evaluationId && !submitTargetId) {
     ElMessage.warning("任务ID缺失");
     return;
   }
@@ -968,10 +994,17 @@ const handleSubmit = async () => {
   const answers = buildSubmitAnswers();
   submitting.value = true;
   try {
-    await submitStudentTask({
-      taskId: props.taskId,
-      answers,
-    });
+    if (props.evaluationId) {
+      await submitEvaluation({
+        evaluationId: props.evaluationId,
+        answers,
+      });
+    } else {
+      await submitStudentTask({
+        taskId: submitTargetId,
+        answers,
+      });
+    }
     ElMessage.success("提交成功");
     emit("submitted");
     closeModal();
@@ -1011,13 +1044,13 @@ onBeforeUnmount(() => {
 });
 
 watch(
-  () => [props.modelValue, props.taskId] as const,
-  ([visible, taskId]) => {
+  () => [props.modelValue, props.taskId, props.evaluationId] as const,
+  ([visible, taskId, evaluationId]) => {
     if (!visible) {
       finishConnectDrag();
       return;
     }
-    if (!taskId) {
+    if (!taskId && !evaluationId) {
       detailData.value = null;
       questions.value = [];
       clearAnswerState();

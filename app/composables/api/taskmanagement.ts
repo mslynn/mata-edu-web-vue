@@ -208,7 +208,7 @@ export const taskmanagementcenterApi = () => {
   const bindExerciseChapter = async (data: {
     exerciseId: string;
     type: number; // 1-关联 2-取消关联
-    chapterIds: number[];
+    chapterIds: string[];
   }) => {
     try {
       const response = await http.post("/system/exercise/bind", data);
@@ -249,7 +249,7 @@ export const taskmanagementcenterApi = () => {
 
   //查询任务列表
   const getTaskList = async (data?: {
-    chapterId: number;
+    chapterId: string;
     classId?: string;
   }) => {
     try {
@@ -267,6 +267,7 @@ export const taskmanagementcenterApi = () => {
   const bindDistributer = async (data: {
     classId: string;
     resourceId: string;
+    taskName?: string;
     distributeType?: number; //分发类型 1:学生端 2:小组端
   }) => {
     try {
@@ -279,8 +280,30 @@ export const taskmanagementcenterApi = () => {
       throw error;
     }
   };
+
+  //自由编程任务下发
+  const bindFreeDistribute = async (data: {
+    classId: string;
+    resourceId: string;
+    taskName?: string;
+    fileType?: "vinci" | "nous"; // 文件类型：vinci / nous
+    distributeType?: number; //分发类型 1:学生端 2:小组端
+  }) => {
+    try {
+      const response = await http.post("/system/task/free/distribute", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "自由编程任务下发失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
   //查询学生任务列表
-  const getStudentTaskList = async (data: { resourceId: string, classId: string; }) => {
+  const getStudentTaskList = async (data: {
+    resourceId: string;
+    classId: string;
+  }) => {
     try {
       const response = await http.get("/system/task/list", data);
       if (response.code !== 200) {
@@ -347,6 +370,222 @@ export const taskmanagementcenterApi = () => {
       throw error;
     }
   };
+
+  //查询测评列表
+  const getEvaluationList = async (data?: {
+    courseId: string;
+    classId?: string;
+  }) => {
+    try {
+      const response = await http.get(
+        "/system/teach/evaluation/list",
+        data || {},
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询测评列表失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      console.log(error);
+      throw error;
+    }
+  };
+
+  //查询学生测评列表
+  const getStudentEvaluationList = async (data: {
+    courseId: string;
+    classId: string;
+    exerciseId: string;
+  }) => {
+    try {
+      const response = await http.get("/system/evaluation/page", data || {});
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询学生测评列表失败");
+      }
+      return response.rows;
+    } catch (error: any) {
+      console.log(error);
+      throw error;
+    }
+  };
+  //测评打回重做
+  const bindEvaluationReject = async (evaluationId: string[]) => {
+    try {
+      const response = await http.post(
+        "/system/evaluation/reject",
+        evaluationId,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "测评打回重做失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  //重新下发测评
+  const bindEvaluation = async (data: {
+    courseId: string;
+    classId: string;
+    exerciseId: string;
+    examDate?: string;
+    examTime?: string;
+    examDuration?: number;
+    evaluationId: string[];
+  }) => {
+    try {
+      const response = await http.post("/system/evaluation/redo", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "重新下发测评失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查看试卷详情
+  const getEvaluationDetail = async (exerciseId: string) => {
+    try {
+      const response = await http.get(
+        `/system/evaluation/exercise/${exerciseId}`,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查看试卷详情失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查看（测评包含答题记录)
+
+  const getEvaluationWithAnswers = async (exerciseId: string) => {
+    try {
+      const response = await http.get(`/system/evaluation/${exerciseId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查看（测评包含答题记录)失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  //获取指标树形结构
+  const getQuotaMenuTree = async () => {
+    try {
+      const response = await http.get("/system/quota/tree");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "获取指标树形结构树失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  //获取练习题题目
+  const getExerciseQuestions = async (exerciseId: string) => {
+    try {
+      const response = await http.get(
+        `/system/exercise/${exerciseId}/questions`,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "获取练习题题目列表失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查询练习题素养评价配置
+  const getExerciseEvalConfig = async (exerciseId: string) => {
+    try {
+      const response = await http.get(
+        `/system/exercise/${exerciseId}/eval-config`,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询练习题素养评价配置列表失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //保存练习题素养评价配置
+  const saveExercise = async (data: {
+    objectType?: string | number;
+    configList: Array<{
+      objectId?: string | number;
+      questionId?: string | number;
+      quotaIds: Array<string | number>;
+    }>;
+  }) => {
+    const payload = {
+      objectType: data.objectType ?? 1,
+      configList: (data.configList || [])
+        .map((item) => ({
+          objectId: item.objectId ?? item.questionId ?? "",
+          quotaIds: item.quotaIds || [],
+        }))
+        .filter((item) => String(item.objectId).trim() && item.quotaIds.length > 0),
+    };
+
+    try {
+      const response = await http.post("/system/exercise/eval-config", payload);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "保存练习题素养评价配置失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  //获取待批改任务数据
+  const getCorrectTaskList = async () => {
+    try {
+      const response = await http.get("/system/task/correct/list");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "获取待批改任务数据失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      console.log(error);
+      throw error;
+    }
+  };
+  //查看编程任务详情
+  const getProgrammingTaskDetail = async (taskId: string) => {
+    try {
+      const response = await http.get(`/system/task/program/detail/${taskId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查看编程任务详情失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  //评分编程任务
+  const bindFreeScore = async (data: {
+    taskId: string;
+    score: number;
+    comment: string;
+  }) => {
+    try {
+      const response = await http.post("/system/task/program/score", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "评分编程任务失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
   return {
     addExercise,
     getexerciseList,
@@ -368,5 +607,19 @@ export const taskmanagementcenterApi = () => {
     bindWithdrawr,
     getTaskIdDetail,
     bindReject,
+    getEvaluationList,
+    getStudentEvaluationList,
+    bindEvaluationReject,
+    bindEvaluation,
+    getEvaluationDetail,
+    getEvaluationWithAnswers,
+    getExerciseQuestions,
+    getQuotaMenuTree,
+    saveExercise,
+    getExerciseEvalConfig,
+    bindFreeDistribute,
+    getCorrectTaskList,
+    getProgrammingTaskDetail,
+    bindFreeScore,
   };
 };

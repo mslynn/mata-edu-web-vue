@@ -19,7 +19,14 @@
 
           <!-- Content -->
           <div class="flex-1 overflow-hidden p-6">
-            <div class="flex gap-8 h-[600px]">
+            <div
+              v-if="modalLoading"
+              class="flex h-[600px] items-center justify-center text-base text-gray-500"
+            >
+              加载中...
+            </div>
+
+            <div v-else class="flex gap-8 h-[600px]">
               <!-- Left: Preview Area -->
               <div class="flex-1 flex flex-col">
                 <!-- Tabs -->
@@ -40,36 +47,83 @@
                 </div>
 
                 <!-- Preview Content -->
-                <div class="flex-1 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl overflow-hidden relative border border-gray-200">
+                <div class="flex-1 bg-gradient-to-br from-[#fff8ed] via-[#fffdf7] to-[#fff3df] rounded-xl overflow-hidden relative border border-[#ffd7a3]">
                   <!-- Project Name Tag -->
-                  <div class="absolute top-4 left-4 z-10 bg-[#1890FF] text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm">
+                  <div class="absolute top-4 left-4 z-10 bg-[#FF9900] text-white text-xs px-3 py-1.5 rounded-lg font-medium shadow-sm">
                     {{ projectName }}
                   </div>
                   
                   <!-- Preview Image/Video -->
-                  <div class="w-full h-full flex items-center justify-center p-4">
-                    <img 
-                      v-if="activePreviewTab === 'code' || activePreviewTab === 'image'"
-                      :src="previewImage" 
-                      alt="Preview" 
-                      class="max-w-full max-h-full object-contain rounded-lg shadow-sm"
-                    />
+                  <div v-if="activePreviewTab === 'video' && previewVideo" class="w-full h-full p-4 pt-16">
                     <video 
-                      v-else-if="activePreviewTab === 'video'"
                       :src="previewVideo"
                       controls
-                      class="max-w-full max-h-full rounded-lg"
+                      class="w-full h-full rounded-[20px] bg-black object-contain shadow-[0_18px_36px_rgba(255,153,0,0.16)]"
                     ></video>
                   </div>
 
-                  <!-- View Source Code Button -->
-                  <div class="absolute bottom-5 left-1/2 -translate-x-1/2">
-                    <button 
-                      class="px-6 py-2.5 bg-[#1890FF] text-white text-sm font-medium rounded-full hover:bg-[#40a9ff] transition-all shadow-lg hover:shadow-xl active:scale-95"
-                      @click="handleViewSourceCode"
-                    >
-                      {{ $t('viewScore.viewSourceCode') }}
-                    </button>
+                  <div
+                    v-else-if="activePreviewTab === 'image' && currentPreviewImage"
+                    class="w-full h-full p-4 pt-16"
+                  >
+                    <div class="relative w-full h-full overflow-hidden rounded-[20px] bg-white shadow-[0_18px_36px_rgba(255,153,0,0.16)]">
+                      <img
+                        :src="currentPreviewImage"
+                        alt="Preview"
+                        class="w-full h-full object-cover"
+                      />
+
+                      <button
+                        v-if="imageUrlList.length > 1"
+                        class="absolute left-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#ffd7a3] bg-white/92 text-[#FF9900] shadow-lg transition-all hover:bg-[#FFF7E6]"
+                        @click="showPrevImage"
+                      >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M15 18l-6-6 6-6" />
+                        </svg>
+                      </button>
+
+                      <button
+                        v-if="imageUrlList.length > 1"
+                        class="absolute right-4 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-[#ffd7a3] bg-white/92 text-[#FF9900] shadow-lg transition-all hover:bg-[#FFF7E6]"
+                        @click="showNextImage"
+                      >
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <path d="M9 18l6-6-6-6" />
+                        </svg>
+                      </button>
+
+                      <div
+                        v-if="imageUrlList.length > 1"
+                        class="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/38 px-3 py-1.5 text-xs font-medium text-white"
+                      >
+                        <span>{{ currentImageIndex + 1 }}/{{ imageUrlList.length }}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    v-else-if="currentPreviewImage"
+                    class="w-full h-full flex items-center justify-center p-4 pt-16"
+                  >
+                    <div class="relative h-full w-full">
+                      <img 
+                        :src="currentPreviewImage" 
+                        alt="Preview" 
+                        class="h-full w-full rounded-[20px] object-contain bg-white shadow-[0_18px_36px_rgba(255,153,0,0.12)]"
+                      />
+                      <button
+                        v-if="activePreviewTab === 'code' && canOpenEditor"
+                        class="absolute bottom-6 left-1/2 flex h-12 -translate-x-1/2 items-center justify-center rounded-full bg-[#FF9900] px-6 text-sm font-medium text-white shadow-[0_14px_28px_rgba(255,153,0,0.28)] transition-all hover:bg-[#f39000] active:scale-95"
+                        @click="handleOpenEditor"
+                      >
+                        进入编程平台
+                      </button>
+                    </div>
+                  </div>
+
+                  <div v-else class="flex h-full items-center justify-center text-sm text-[#c0a17a]">
+                      暂无预览内容
                   </div>
                 </div>
               </div>
@@ -90,27 +144,35 @@
                     <span class="text-gray-400 text-sm w-20 shrink-0">{{ $t('viewScore.submitTime') }}</span>
                     <span class="text-gray-600 text-sm">{{ submitTime }}</span>
                   </div>
+                  <div class="flex items-center">
+                    <span class="text-gray-400 text-sm w-20 shrink-0">完成时长</span>
+                    <span class="text-gray-600 text-sm">{{ taskDuration }}</span>
+                  </div>
                 </div>
 
                 <!-- Dimension Scoring -->
                 <div class="mb-6">
                   <div class="flex items-center gap-1 mb-3">
-                    <span class="font-semibold text-gray-800">{{ $t('viewScore.dimensionScore') }}</span>
-                    <span class="text-[#FF9900] text-sm">{{ $t('viewScore.dimensionScoreHint') }}</span>
+                    <span class="font-semibold text-gray-800">{{ $t('taskManagement.teacherScore') }}</span>
+                    <span class="text-[#FF9900] text-sm">{{ $t('viewScore.scoreHint') }}</span>
                   </div>
                   <div class="bg-[#F7F8FA] rounded-xl p-4 border border-gray-100">
-                    <div class="space-y-4">
-                      <div v-for="(dim, index) in dimensions" :key="index" class="flex items-center justify-between">
-                        <span class="text-gray-700 text-sm">{{ getDimensionName(dim.name) }}</span>
-                        <div class="flex items-center gap-2">
-                          <StarRating 
-                            v-model="dim.score"
-                            :size="20"
-                            :readonly="false"
-                          />
-                          <span class="text-gray-300 text-xs mx-1">--------</span>
-                          <span class="text-[#FF9900] text-sm font-semibold min-w-[50px] text-right">{{ dim.score }} {{ $t('viewScore.point') }}</span>
-                        </div>
+                    <div class="flex items-center justify-between">
+                      <span class="text-gray-700 text-sm">{{ $t('viewScore.totalScore') }}</span>
+                      <div class="flex items-center gap-2">
+                        <input
+                          :value="formatScoreText(scoreInput)"
+                          type="number"
+                          inputmode="decimal"
+                          min="0"
+                          max="100"
+                          step="0.5"
+                          class="score-input h-10 w-32 shrink-0 rounded-lg border border-[#FFD7A3] bg-white px-3 text-left text-sm text-gray-700 outline-none transition-all focus:border-[#FF9900] focus:ring-2 focus:ring-[#FFE8CC]"
+                          :placeholder="$t('viewScore.scorePlaceholder')"
+                          @input="handleScoreInput"
+                          @blur="handleScoreBlur"
+                        />
+                        <span class="text-[#FF9900] text-sm font-semibold">{{ $t('viewScore.point') }}</span>
                       </div>
                     </div>
                   </div>
@@ -130,34 +192,18 @@
                 <!-- Total Score -->
                 <div class="flex items-center justify-between py-4 border-t border-gray-100 mb-4">
                   <span class="text-gray-700 font-semibold">{{ $t('viewScore.totalScore') }}</span>
-                  <div class="flex items-center gap-2">
-                    <StarRating 
-                      :model-value="averageScore"
-                      :size="20"
-                      readonly
-                    />
-                    <span class="text-gray-300 text-xs mx-1">--------</span>
-                    <span class="text-[#FF9900] font-bold text-lg">{{ totalScoreDisplay }} {{ $t('viewScore.point') }}</span>
+                  <div class="rounded-xl bg-[#FFF7E6] px-4 py-2">
+                    <span class="text-[#FF9900] font-bold text-lg">{{ formatScoreText(totalScoreDisplay) }} {{ $t('viewScore.point') }}</span>
                   </div>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex items-center justify-end gap-3 mt-auto">
+                <div class="flex items-center justify-end mt-auto">
                   <button 
                     class="px-8 py-2.5 bg-[#FF9900] text-white font-medium rounded-lg hover:bg-[#e68a00] transition-all active:scale-95"
                     @click="handleSave"
                   >
                     {{ $t('common.save') }}
-                  </button>
-                  <button 
-                    class="px-8 py-2.5 font-medium rounded-lg transition-all"
-                    :class="hasNextSubmission 
-                      ? 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 hover:border-gray-400 active:scale-95' 
-                      : 'bg-gray-100 text-gray-400 border border-gray-200 cursor-not-allowed'"
-                    :disabled="!hasNextSubmission"
-                    @click="handleNext"
-                  >
-                    {{ $t('viewScore.next') }}
                   </button>
                 </div>
               </div>
@@ -170,18 +216,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 
 const props = defineProps<{
   visible: boolean
   rowData?: any
+  detailData?: any
+  loading?: boolean
+  canOpenEditor?: boolean
   hasNextSubmission?: boolean
 }>()
 
 const emit = defineEmits<{
   'close': []
+  'open-editor': []
   'save': [data: any]
   'next': []
 }>()
@@ -190,62 +240,155 @@ const { t } = useI18n()
 
 // Preview tabs
 const previewTabs = computed(() => [
-  { value: 'code', label: t('viewScore.code') },
+  { value: 'code', label: '作品' },
   { value: 'video', label: t('viewScore.video') },
   { value: 'image', label: t('viewScore.image') }
 ])
 
 const activePreviewTab = ref('code')
+const modalLoading = computed(() => Boolean(props.loading))
+const currentImageIndex = ref(0)
 
-// Mock data
-const projectName = ref('uCode4-2')
-const studentName = computed(() => props.rowData?.studentName || 'tony')
-const taskName = ref('uCode4')
-const submitTime = computed(() => props.rowData?.submissionTime || '2026-01-23 15:45:30')
-const previewImage = ref('https://via.placeholder.com/600x400/E8F4FD/1890FF?text=Preview')
-const previewVideo = ref('')
+const detailOpus = computed(() => props.detailData?.opus || {})
+const imageUrlList = computed(() => {
+  const rawValue = String(detailOpus.value?.picUrl || '').trim()
+  if (!rawValue) return []
+  return rawValue
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+})
 
-// Dimensions scoring (support half stars: 0.5, 1, 1.5, 2, 2.5, 3)
-const dimensions = ref([
-  { name: 'creativeDesign', score: 2.5 },
-  { name: 'codeStandard', score: 2 }
-])
+const projectName = computed(
+  () =>
+    props.detailData?.opus?.opusName ||
+    props.detailData?.taskName ||
+    props.rowData?.taskName ||
+    '-'
+)
+const studentName = computed(
+  () => props.detailData?.studentName || props.rowData?.studentName || '-'
+)
+const taskName = computed(
+  () => props.detailData?.taskName || props.rowData?.taskName || '-'
+)
+const submitTime = computed(
+  () => props.detailData?.taskEndTime || props.rowData?.submissionTime || '-'
+)
+const taskDuration = computed(() => props.detailData?.taskDuration || '-')
+const previewImage = computed(
+  () =>
+    detailOpus.value?.coverUrl ||
+    imageUrlList.value[0] ||
+    ''
+)
+const previewVideo = computed(() => detailOpus.value?.videoUrl || '')
+const currentPreviewImage = computed(() => {
+  if (activePreviewTab.value === 'image') {
+    return imageUrlList.value[currentImageIndex.value] || previewImage.value
+  }
+  return previewImage.value
+})
 
-// Get dimension display name
-const getDimensionName = (key: string) => {
-  return t(`viewScore.dimensions.${key}`)
+const DIMENSION_KEYS = ['creativeDesign', 'codeStandard'] as const
+const MIN_SCORE = 0
+const MAX_SCORE = 100
+
+const roundToHalf = (value: number) => Math.round(value * 2) / 2
+
+const normalizeScore = (value: unknown) => {
+  const score = Number(value)
+  if (!Number.isFinite(score) || score < MIN_SCORE) {
+    return 0
+  }
+  return Math.min(MAX_SCORE, Math.max(MIN_SCORE, roundToHalf(score)))
 }
+
+const createDimensionsFromTotalScore = (totalScore: number) => {
+  let remaining = normalizeScore(totalScore)
+  return DIMENSION_KEYS.map((name, index) => {
+    const remainingSlots = DIMENSION_KEYS.length - index
+    const current = remainingSlots > 0 ? roundToHalf(remaining / remainingSlots) : 0
+    remaining = roundToHalf(Math.max(0, remaining - current))
+    return {
+      name,
+      score: current,
+    }
+  })
+}
+
+const scoreInput = ref(0)
 
 // Comment
 const comment = ref('')
 
-// Calculate average score (rounded to 0.5)
-const averageScore = computed(() => {
-  if (dimensions.value.length === 0) return 0
-  const total = dimensions.value.reduce((sum, dim) => sum + dim.score, 0)
-  const avg = total / dimensions.value.length
-  return Math.round(avg * 2) / 2 // Round to nearest 0.5
-})
+const formatScoreText = (value: number) => Number(value.toFixed(1)).toString()
 
 // Total score display
 const totalScoreDisplay = computed(() => {
-  const total = dimensions.value.reduce((sum, dim) => sum + dim.score, 0)
-  return total
+  return Number(scoreInput.value.toFixed(1))
 })
+
+const getInputValue = (event: Event) => {
+  return event.target instanceof HTMLInputElement ? event.target.value : ''
+}
+
+const handleScoreInput = (event: Event) => {
+  const input = event.target instanceof HTMLInputElement ? event.target : null
+  const value = getInputValue(event)
+  if (!value) {
+    scoreInput.value = 0
+    if (input) input.value = ''
+    return
+  }
+
+  const score = Number(value)
+  if (!Number.isFinite(score)) return
+  const nextScore = Math.min(MAX_SCORE, Math.max(MIN_SCORE, score))
+  scoreInput.value = nextScore
+  if (input && Number(value) !== nextScore) {
+    input.value = formatScoreText(nextScore)
+  }
+}
+
+const handleScoreBlur = (event: Event) => {
+  scoreInput.value = normalizeScore(getInputValue(event))
+}
 
 // Handlers
 const handleClose = () => {
   emit('close')
 }
 
-const handleViewSourceCode = () => {
-  console.log('View source code')
+const handleOpenEditor = () => {
+  emit('open-editor')
+}
+
+const showPrevImage = () => {
+  if (imageUrlList.value.length <= 1) return
+  currentImageIndex.value =
+    currentImageIndex.value === 0
+      ? imageUrlList.value.length - 1
+      : currentImageIndex.value - 1
+}
+
+const showNextImage = () => {
+  if (imageUrlList.value.length <= 1) return
+  currentImageIndex.value =
+    currentImageIndex.value === imageUrlList.value.length - 1
+      ? 0
+      : currentImageIndex.value + 1
 }
 
 const handleSave = () => {
+  scoreInput.value = normalizeScore(scoreInput.value)
+  if (scoreInput.value < MIN_SCORE || scoreInput.value > MAX_SCORE) {
+    ElMessage.warning(t('viewScore.scoreRangeError'))
+    return
+  }
   ElMessage.success(t('common.success'))
   emit('save', {
-    dimensions: dimensions.value,
+    dimensions: createDimensionsFromTotalScore(totalScoreDisplay.value),
     comment: comment.value,
     totalScore: totalScoreDisplay.value
   })
@@ -256,6 +399,48 @@ const handleNext = () => {
     emit('next')
   }
 }
+
+watch(
+  () => props.visible,
+  (visible) => {
+    if (visible) {
+      activePreviewTab.value = 'code'
+      currentImageIndex.value = 0
+    }
+  }
+)
+
+watch(
+  () => props.detailData,
+  (detail) => {
+    const totalScore = normalizeScore(
+      detail?.score ?? props.rowData?._raw?.score ?? props.rowData?.teacherScore ?? 0
+    )
+    scoreInput.value = totalScore
+    comment.value = String(detail?.comment ?? '').trim()
+  },
+  { immediate: true }
+)
+
+watch(
+  () => props.detailData?.taskId,
+  () => {
+    currentImageIndex.value = 0
+  }
+)
+
+watch(
+  () => imageUrlList.value.length,
+  (length) => {
+    if (length === 0) {
+      currentImageIndex.value = 0
+      return
+    }
+    if (currentImageIndex.value >= length) {
+      currentImageIndex.value = 0
+    }
+  }
+)
 </script>
 
 <style scoped>
@@ -266,5 +451,15 @@ const handleNext = () => {
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
+}
+
+.score-input::-webkit-outer-spin-button,
+.score-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.score-input[type="number"] {
+  -moz-appearance: textfield;
 }
 </style>

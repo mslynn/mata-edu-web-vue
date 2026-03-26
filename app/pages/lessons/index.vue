@@ -6,6 +6,25 @@
     <!-- 设置可见班级弹窗 -->
     <ClassVisibilityModal v-model:visible="showClassModal" :course-id="selectedCourse?.courseId || ''" @confirm="handleClassConfirm" />
 
+    <SetExamModal
+      v-model:visible="showSetExamModal"
+      :course-id="selectedCourse?.courseId || ''"
+      :exercise-id="currentSetExamExerciseId"
+      @submit="handleExamSubmit"
+      @withdraw="handleExamWithdraw"
+    />
+    <ExerciseDetailModal
+      v-model="showExerciseDetailModal"
+      :exercise-id="currentExerciseId"
+      detail-source="courseEvaluation"
+    />
+    <SelectGradingClassModal
+      v-model:visible="showGradingClassModal"
+      :loading="gradingClassLoading"
+      :options="gradingClassOptions"
+      @select="handleGradingClassSelect"
+    />
+
     <!-- 左侧面板 -->
     <aside class="left-panel w-[260px] flex-shrink-0 bg-white border-r border-gray-200 flex flex-col">
       <!-- 搜索框 -->
@@ -97,7 +116,7 @@
         </div>
       </div>
 
-      <!-- 章节列表 -->
+      <!-- 内容区域 -->
       <div class="flex-1 overflow-y-auto p-6">
         <div class="bg-white rounded-lg shadow-sm">
           <!-- 课程标题 -->
@@ -105,26 +124,69 @@
             <h2 class="text-lg font-medium text-gray-800">{{ selectedCourse?.courseName || $t('teacher.pleaseSelectCourse') }}</h2>
           </div>
 
-          <!-- 章节列表 -->
-          <div class="divide-y divide-gray-100">
-            <div 
-              v-for="chapter in chapterList" 
-              :key="chapter.chapterId"
-              class="chapter-item px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors"
-            >
-              <span class="text-sm text-gray-700">{{ chapter.chapterName }}</span>
-              <div class="chapter-actions">
-                <button class="prepare-btn" @click.stop="handlePrepare(chapter)">
-                  {{ chapter.isPrepare === 1 ? $t('course.continuePrepare') : $t('course.startPrepare') }}
-                </button>
+          <template v-if="activeTab === 'chapters'">
+            <div class="divide-y divide-gray-100">
+              <div 
+                v-for="chapter in chapterList" 
+                :key="chapter.chapterId"
+                class="chapter-item px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors"
+              >
+                <span class="text-sm text-gray-700">{{ chapter.chapterName }}</span>
+                <div class="chapter-actions">
+                  <button class="prepare-btn" @click.stop="handlePrepare(chapter)">
+                    {{ chapter.isPrepare === 1 ? $t('course.continuePrepare') : $t('course.startPrepare') }}
+                  </button>
+                </div>
+              </div>
+
+              <div v-if="chapterList.length === 0" class="px-6 py-12 text-center text-gray-400">
+                {{ $t('common.noData') }}
               </div>
             </div>
+          </template>
 
-            <!-- 空状态 -->
-            <div v-if="chapterList.length === 0" class="px-6 py-12 text-center text-gray-400">
-              {{ $t('common.noData') }}
+          <template v-else-if="activeTab === 'evaluation'">
+            <div class="evaluation-list px-4 py-3">
+              <div v-if="evaluationLoading" class="empty-state">加载中...</div>
+              <div v-else-if="evaluationLoadError" class="empty-state">{{ evaluationLoadError }}</div>
+              <div v-else-if="evaluationList.length === 0" class="empty-state">暂无课程测评</div>
+              <template v-else>
+                <div
+                  v-for="item in evaluationList"
+                  :key="item.exerciseId"
+                  class="evaluation-item"
+                >
+                  <div class="item-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7CB3F0" stroke-width="1.5">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                      <polyline points="14 2 14 8 20 8" />
+                      <line x1="16" y1="13" x2="8" y2="13" />
+                      <line x1="16" y1="17" x2="8" y2="17" />
+                      <polyline points="10 9 9 9 8 9" />
+                    </svg>
+                  </div>
+                  <span class="item-name">
+                    {{ item.exerciseName }}
+                    <span class="distribute-text" :class="getEvaluationStatusClass(item.status)">
+                      {{ getEvaluationStatusText(item.status) }}
+                    </span>
+                  </span>
+                  <div class="hover-actions">
+                    <button class="hover-btn" @click="handleViewQuestions(item)">{{ $t('course.viewQuestions') }}</button>
+                    <button class="hover-btn" @click="handleSetExam(item)">{{ $t('course.setExam') }}</button>
+                    <button
+                      class="hover-btn"
+                      :class="{ disabled: !canGradeEvaluation(item.status) }"
+                      :disabled="!canGradeEvaluation(item.status)"
+                      @click="canGradeEvaluation(item.status) && handleGrading(item)"
+                    >
+                      {{ $t('course.gradeExam') }}
+                    </button>
+                  </div>
+                </div>
+              </template>
             </div>
-          </div>
+          </template>
         </div>
       </div>
     </main>
@@ -144,7 +206,15 @@ definePageMeta({
 
 const { t } = useI18n()
 const router = useRouter()
-const { getCursorDetail, createCursor, startPrepare } = cursorAdmin()
+const {
+  getCursorDetail,
+  createCursor,
+  startPrepare,
+  getCourseEvaluationList,
+  startDistribute,
+  withdrawExam,
+  setCourseEvaluationList
+} = cursorAdmin()
 const { getCourseMenuTree } = useTeacher()
 
 const showCreateModal = ref(false)
@@ -154,7 +224,7 @@ const searchKeyword = ref('')
 const activeTab = ref('chapters')
 const tabs = computed(() => [
   { label: t('course.courseChapter'), value: 'chapters' },
-  { label: t('course.courseEvaluation'), value: 'resources' }
+  { label: t('course.courseEvaluation'), value: 'evaluation' }
 ])
 
 // 类型定义
@@ -176,10 +246,62 @@ interface ChapterItem {
   isPrepare?: number
 }
 
+interface CourseEvaluationItem {
+  courseId: number | string
+  exerciseId: string
+  exerciseName: string
+  status: number
+}
+
 const menuTree = ref<MenuNode[]>([])
 const expandedMenus = ref<Set<string>>(new Set())
 const selectedCourse = ref<CourseItem | null>(null)
 const chapterList = ref<ChapterItem[]>([])
+const evaluationList = ref<CourseEvaluationItem[]>([])
+const evaluationLoading = ref(false)
+const evaluationLoadError = ref('')
+const showExerciseDetailModal = ref(false)
+const currentExerciseId = ref<string | null>(null)
+const showSetExamModal = ref(false)
+const currentSetExamExerciseId = ref<string | null>(null)
+const showGradingClassModal = ref(false)
+const gradingClassLoading = ref(false)
+const gradingClassOptions = ref<{ value: string; label: string }[]>([])
+const currentGradingExerciseId = ref<string | null>(null)
+
+const normalizeGradingClassOptions = (data: any) => {
+  const classList = (Array.isArray(data) ? data : []).flatMap((item: any) => {
+    if (Array.isArray(item?.classList)) {
+      return item.classList
+    }
+    return item ? [item] : []
+  })
+
+  const seenClassIds = new Set<string>()
+
+  return classList
+    .filter((cls: any) => {
+      if (cls?.status === null || cls?.status === undefined || cls?.status === '') {
+        return true
+      }
+      return Number(cls.status) === 1
+    })
+    .map((cls: any) => {
+      const classId = String(cls?.classId ?? cls?.id ?? '')
+      const className = String(cls?.className ?? cls?.name ?? '')
+
+      if (!classId || !className || seenClassIds.has(classId)) {
+        return null
+      }
+
+      seenClassIds.add(classId)
+      return {
+        value: classId,
+        label: className
+      }
+    })
+    .filter((option): option is { value: string; label: string } => !!option)
+}
 
 // 递归提取所有课程
 const allCourses = computed(() => {
@@ -260,7 +382,7 @@ const loadMenuData = async () => {
           const firstCourse = findFirstCourse(menu)
           if (firstCourse) {
             selectedCourse.value = firstCourse
-            await loadChapters(firstCourse.courseId)
+            await loadCourseContent(firstCourse.courseId)
           }
           break
         }
@@ -274,7 +396,7 @@ const loadMenuData = async () => {
 const selectSearchResult = async (course: CourseItem) => {
   searchKeyword.value = ''
   selectedCourse.value = course
-  await loadChapters(course.courseId)
+  await loadCourseContent(course.courseId)
 }
 
 const clearSearch = () => {
@@ -283,7 +405,7 @@ const clearSearch = () => {
 
 const selectCourse = async (course: CourseItem) => {
   selectedCourse.value = course
-  await loadChapters(course.courseId)
+  await loadCourseContent(course.courseId)
 }
 
 const loadChapters = async (courseId: string) => {
@@ -298,6 +420,34 @@ const loadChapters = async (courseId: string) => {
     console.error('获取章节列表失败:', error)
     chapterList.value = []
   }
+}
+
+const loadEvaluations = async (courseId: string) => {
+  if (!courseId) {
+    evaluationList.value = []
+    return
+  }
+
+  evaluationLoading.value = true
+  evaluationLoadError.value = ''
+
+  try {
+    const data = await getCourseEvaluationList(courseId)
+    evaluationList.value = Array.isArray(data) ? data : []
+  } catch (error) {
+    console.error('获取课程测评列表失败:', error)
+    evaluationLoadError.value = '加载课程测评列表失败'
+    evaluationList.value = []
+  } finally {
+    evaluationLoading.value = false
+  }
+}
+
+const loadCourseContent = async (courseId: string) => {
+  await Promise.allSettled([
+    loadChapters(courseId),
+    loadEvaluations(courseId)
+  ])
 }
 
 const handlePrepare = async (chapter: ChapterItem) => {
@@ -349,6 +499,94 @@ const handleClassConfirm = (selectedIds: number[]) => {
   console.log('选中的班级:', selectedIds)
 }
 
+const getEvaluationStatusText = (status: number) => {
+  if (status === 2) return '全部下发'
+  if (status === 1) return '部分下发'
+  return '未下发'
+}
+
+const getEvaluationStatusClass = (status: number) => {
+  if (status === 2) return 'sent'
+  if (status === 1) return 'partial'
+  return ''
+}
+
+const canGradeEvaluation = (status: number) => status !== 0
+
+const handleViewQuestions = (item: CourseEvaluationItem) => {
+  currentExerciseId.value = String(item.exerciseId || '')
+  showExerciseDetailModal.value = !!currentExerciseId.value
+}
+
+const handleSetExam = (item: CourseEvaluationItem) => {
+  currentSetExamExerciseId.value = String(item.exerciseId || '')
+  showSetExamModal.value = !!currentSetExamExerciseId.value
+}
+
+const handleExamSubmit = async (data: any) => {
+  try {
+    await startDistribute(data)
+    ElMessage.success('下发测评成功')
+    showSetExamModal.value = false
+    if (selectedCourse.value?.courseId) {
+      await loadEvaluations(selectedCourse.value.courseId)
+    }
+  } catch (error) {
+    console.error('下发测评失败:', error)
+    ElMessage.error('下发测评失败')
+  }
+}
+
+const handleExamWithdraw = async (data: any) => {
+  try {
+    await withdrawExam(data)
+    ElMessage.success('撤回测评成功')
+    showSetExamModal.value = false
+    if (selectedCourse.value?.courseId) {
+      await loadEvaluations(selectedCourse.value.courseId)
+    }
+  } catch (error) {
+    console.error('撤回测评失败:', error)
+    ElMessage.error('撤回测评失败')
+  }
+}
+
+const handleGrading = async (item: CourseEvaluationItem) => {
+  if (!selectedCourse.value?.courseId || !item?.exerciseId) return
+
+  currentGradingExerciseId.value = String(item.exerciseId)
+  gradingClassLoading.value = true
+  gradingClassOptions.value = []
+  showGradingClassModal.value = true
+
+  try {
+    const data = await setCourseEvaluationList({
+      courseId: selectedCourse.value.courseId,
+      exerciseId: String(item.exerciseId)
+    })
+
+    gradingClassOptions.value = normalizeGradingClassOptions(data)
+  } catch (error) {
+    console.error('加载批改班级失败:', error)
+    gradingClassOptions.value = []
+    ElMessage.error('加载批改班级失败')
+  } finally {
+    gradingClassLoading.value = false
+  }
+}
+
+const handleGradingClassSelect = async (option: { value: string; label: string }) => {
+  await router.push({
+    path: "/taskmanagement",
+    query: {
+      tab: "assessment",
+      classId: option.value,
+      courseId: String(selectedCourse.value?.courseId || ""),
+      exerciseId: String(currentGradingExerciseId.value || ""),
+    },
+  })
+}
+
 onMounted(() => {
   loadMenuData()
 })
@@ -386,5 +624,93 @@ onMounted(() => {
 
 .prepare-btn:hover {
   background: #E6F4FF;
+}
+
+.evaluation-list {
+  min-height: 240px;
+}
+
+.evaluation-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 12px;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+}
+
+.evaluation-item:hover {
+  background: #f5f9ff;
+  border-radius: 8px;
+}
+
+.item-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-name {
+  flex: 1;
+  font-size: 14px;
+  color: #333;
+}
+
+.distribute-text {
+  color: #FF6B6B;
+  font-size: 13px;
+  margin-left: 8px;
+}
+
+.distribute-text.sent {
+  color: #52c41a;
+}
+
+.distribute-text.partial {
+  color: #fa8c16;
+}
+
+.hover-actions {
+  display: none;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.evaluation-item:hover .hover-actions {
+  display: flex;
+}
+
+.hover-btn {
+  padding: 6px 16px;
+  background: white;
+  border: 1px solid #FF9900;
+  border-radius: 20px;
+  color: #FF9900;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.hover-btn:hover {
+  background: #FFF7E6;
+}
+
+.hover-btn.disabled {
+  border-color: #ddd;
+  color: #ccc;
+  cursor: not-allowed;
+}
+
+.hover-btn.disabled:hover {
+  background: white;
+}
+
+.empty-state {
+  padding: 48px 0;
+  text-align: center;
+  color: #999;
+  font-size: 14px;
 }
 </style>

@@ -102,27 +102,6 @@
         </div>
       </div>
 
-      <!-- 分值 -->
-      <div class="flex flex-col">
-        <div class="flex items-center">
-          <label class="text-sm text-gray-600 shrink-0 w-[60px]">
-            <span class="text-red-500">*</span>{{ $t('customExercise.score') }}：
-          </label>
-          <input 
-            v-model.number="localQuestion.score"
-            type="number"
-            min="1"
-            max="100"
-            :placeholder="$t('customExercise.scorePlaceholder')"
-            class="w-[200px] h-9 px-3 border rounded text-sm focus:outline-none focus:border-[#FF9900]"
-            :class="showError && (localQuestion.score < 1 || localQuestion.score > 100) ? 'border-red-400' : 'border-gray-300'"
-          />
-        </div>
-        <div v-if="showError && (localQuestion.score < 1 || localQuestion.score > 100)" class="ml-[60px] mt-1 text-sm text-red-500">
-          {{ $t('customExercise.scoreRangeError') }}
-        </div>
-      </div>
-
       <!-- 解析 -->
       <div class="flex items-start">
         <label class="text-sm text-gray-600 shrink-0 w-[60px] pt-2">
@@ -274,6 +253,7 @@ const addBlank = () => {
   if (!localQuestion.value.blanks) {
     localQuestion.value.blanks = []
   }
+  if (localQuestion.value.blanks.length >= 10) return
   const blankIndex = localQuestion.value.blanks.length + 1
   localQuestion.value.blanks.push({ answer: '' })
   

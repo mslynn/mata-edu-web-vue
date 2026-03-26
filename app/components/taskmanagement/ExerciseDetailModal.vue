@@ -160,18 +160,22 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { taskmanagementcenterApi } from '~/composables/api/taskmanagement'
+import { cursorAdmin } from '~/composables/api/curosr'
 
 const props = defineProps<{
   modelValue: boolean
   exerciseId?: string | null
+  evaluationId?: string | null
   taskId?: string | null
+  detailSource?: 'task' | 'courseEvaluation' | 'evaluationDetail' | 'evaluationWithAnswers'
 }>()
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-const { getExerciseDetail, getTaskIdDetail } = taskmanagementcenterApi()
+const { getExerciseDetail, getTaskIdDetail, getEvaluationDetail, getEvaluationWithAnswers } = taskmanagementcenterApi()
+const { getCourseEvaluationDetail } = cursorAdmin()
 
 const loading = ref(true)
 const exerciseData = ref<any>(null)
@@ -179,7 +183,7 @@ const taskDetailData = ref<any>(null)
 const expandedAnalysis = ref<number[]>([])
 
 // 是否为学生答题详情模式
-const isTaskMode = computed(() => !!props.taskId)
+const isTaskMode = computed(() => props.detailSource === 'evaluationWithAnswers' || !!props.taskId)
 
 // 任务信息（学生姓名、得分等）
 const taskInfo = computed(() => taskDetailData.value?.taskInfo || null)
@@ -325,13 +329,21 @@ const fetchDetail = async () => {
   exerciseData.value = null
   taskDetailData.value = null
   try {
-    if (props.taskId) {
+    if (props.detailSource === 'evaluationWithAnswers' && props.evaluationId) {
+      taskDetailData.value = await getEvaluationWithAnswers(props.evaluationId)
+    } else if (props.taskId) {
       // 学生答题详情模式
       const data = await getTaskIdDetail(props.taskId)
       taskDetailData.value = data
     } else if (props.exerciseId) {
-      // 任务文件详情模式
-      exerciseData.value = await getExerciseDetail(props.exerciseId)
+      if (props.detailSource === 'evaluationDetail') {
+        exerciseData.value = await getEvaluationDetail(props.exerciseId)
+      } else if (props.detailSource === 'courseEvaluation') {
+        exerciseData.value = await getCourseEvaluationDetail(props.exerciseId)
+      } else {
+        // 任务文件详情模式
+        exerciseData.value = await getExerciseDetail(props.exerciseId)
+      }
     }
   } catch (error) {
     console.error('获取详情失败', error)
@@ -341,7 +353,7 @@ const fetchDetail = async () => {
 }
 
 watch(() => props.modelValue, (val) => {
-  if (val && (props.exerciseId || props.taskId)) {
+  if (val && (props.exerciseId || props.taskId || props.evaluationId)) {
     fetchDetail()
   }
 })

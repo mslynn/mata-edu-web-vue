@@ -145,8 +145,31 @@
           <h2 class="tip-title">{{ t('common.tips') }}</h2>
           
           <!-- 插图 -->
-          <div class="tip-image">
-            <img src="~/assets/images/kecheng.png" alt="开始上课" />
+          <div class="tip-image" aria-hidden="true">
+            <div class="tip-illustration">
+              <div class="tip-aurora tip-aurora--one"></div>
+              <div class="tip-aurora tip-aurora--two"></div>
+              <div class="tip-spark tip-spark--one"></div>
+              <div class="tip-spark tip-spark--two"></div>
+              <div class="tip-spark tip-spark--three"></div>
+
+              <div class="tip-screen">
+                <div class="tip-screen__badge">LIVE</div>
+                <div class="tip-screen__play"></div>
+                <div class="tip-screen__line tip-screen__line--one"></div>
+                <div class="tip-screen__line tip-screen__line--two"></div>
+                <div class="tip-screen__line tip-screen__line--three"></div>
+              </div>
+
+              <div class="tip-book">
+                <div class="tip-book__page tip-book__page--left"></div>
+                <div class="tip-book__page tip-book__page--right"></div>
+                <div class="tip-book__spine"></div>
+              </div>
+
+              <div class="tip-wave tip-wave--one"></div>
+              <div class="tip-wave tip-wave--two"></div>
+            </div>
           </div>
 
           <p class="tip-text">{{ t('teacher.classStartTip') }}</p>
@@ -785,34 +808,259 @@ defineExpose({ setChapterList })
 .tip-container {
   position: relative;
   width: 420px;
-  background: #FFFFFF;
-  border-radius: 12px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #FFF9F0 100%);
+  border-radius: 18px;
   padding: 28px 32px 32px;
   text-align: center;
+  box-shadow: 0 24px 60px rgba(65, 36, 0, 0.16);
 }
 
 .tip-title {
-  font-size: 17px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #2F2A24;
+  margin-bottom: 18px;
 }
 
 .tip-image {
   width: 240px;
   height: 180px;
   margin: 0 auto 24px;
+  position: relative;
 }
 
-.tip-image img {
+.tip-illustration {
+  position: relative;
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  overflow: hidden;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(255, 215, 153, 0.9), rgba(255, 215, 153, 0) 34%),
+    linear-gradient(180deg, #FFF6E7 0%, #FFEACC 58%, #FFF9EE 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 185, 86, 0.22);
+}
+
+.tip-aurora {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(6px);
+  opacity: 0.8;
+}
+
+.tip-aurora--one {
+  width: 126px;
+  height: 126px;
+  left: 8px;
+  top: 10px;
+  background: rgba(255, 176, 78, 0.25);
+  animation: tipFloat 3.8s ease-in-out infinite;
+}
+
+.tip-aurora--two {
+  width: 96px;
+  height: 96px;
+  right: 18px;
+  top: 22px;
+  background: rgba(255, 216, 143, 0.42);
+  animation: tipFloat 3.2s ease-in-out infinite reverse;
+}
+
+.tip-screen {
+  position: absolute;
+  left: 34px;
+  right: 34px;
+  top: 28px;
+  height: 86px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #FFB11C 0%, #FF9800 100%);
+  box-shadow: 0 14px 24px rgba(255, 153, 0, 0.22);
+  animation: tipPulse 2.8s ease-in-out infinite;
+}
+
+.tip-screen::before {
+  content: "";
+  position: absolute;
+  inset: 10px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #FFF8E7 0%, #FFF3D4 100%);
+}
+
+.tip-screen__badge {
+  position: absolute;
+  left: 16px;
+  top: 14px;
+  z-index: 1;
+  height: 20px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(255, 153, 0, 0.14);
+  color: #FF9800;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 20px;
+  letter-spacing: 0.08em;
+}
+
+.tip-screen__play {
+  position: absolute;
+  z-index: 1;
+  left: 24px;
+  top: 38px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #FFB21F 0%, #FF9800 100%);
+  box-shadow: 0 8px 14px rgba(255, 153, 0, 0.28);
+}
+
+.tip-screen__play::before {
+  content: "";
+  position: absolute;
+  left: 14px;
+  top: 10px;
+  width: 0;
+  height: 0;
+  border-left: 11px solid #FFF7E4;
+  border-top: 7px solid transparent;
+  border-bottom: 7px solid transparent;
+}
+
+.tip-screen__line {
+  position: absolute;
+  z-index: 1;
+  left: 76px;
+  right: 20px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(255, 152, 0, 0.18);
+  overflow: hidden;
+}
+
+.tip-screen__line::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(255, 171, 44, 0) 0%, rgba(255, 171, 44, 0.95) 55%, rgba(255, 171, 44, 0) 100%);
+  transform: translateX(-100%);
+  animation: tipShimmer 2.4s linear infinite;
+}
+
+.tip-screen__line--one {
+  top: 36px;
+  width: 96px;
+}
+
+.tip-screen__line--two {
+  top: 52px;
+  width: 118px;
+}
+
+.tip-screen__line--three {
+  top: 68px;
+  width: 74px;
+}
+
+.tip-book {
+  position: absolute;
+  left: 80px;
+  bottom: 34px;
+  width: 82px;
+  height: 62px;
+  transform-origin: center bottom;
+  animation: tipBookFloat 3.4s ease-in-out infinite;
+}
+
+.tip-book__page {
+  position: absolute;
+  top: 0;
+  width: 38px;
+  height: 54px;
+  background: linear-gradient(180deg, #4F79D8 0%, #345FBE 100%);
+  box-shadow: 0 10px 16px rgba(49, 86, 173, 0.26);
+}
+
+.tip-book__page--left {
+  left: 2px;
+  border-radius: 14px 10px 16px 18px;
+  transform: perspective(120px) rotateY(12deg) rotate(-2deg);
+}
+
+.tip-book__page--right {
+  right: 2px;
+  border-radius: 10px 14px 18px 16px;
+  transform: perspective(120px) rotateY(-12deg) rotate(2deg);
+}
+
+.tip-book__spine {
+  position: absolute;
+  left: 50%;
+  top: 2px;
+  width: 8px;
+  height: 52px;
+  transform: translateX(-50%);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F3F8FF 100%);
+}
+
+.tip-wave {
+  position: absolute;
+  left: 50%;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  border: 2px solid rgba(255, 175, 61, 0.24);
+}
+
+.tip-wave--one {
+  bottom: 14px;
+  width: 126px;
+  height: 26px;
+  animation: tipWave 2.2s ease-out infinite;
+}
+
+.tip-wave--two {
+  bottom: 6px;
+  width: 166px;
+  height: 36px;
+  animation: tipWave 2.2s ease-out infinite 0.7s;
+}
+
+.tip-spark {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #FFB22B;
+  box-shadow: 0 0 0 4px rgba(255, 178, 43, 0.14);
+}
+
+.tip-spark--one {
+  right: 52px;
+  top: 44px;
+  animation: tipBlink 2.1s ease-in-out infinite;
+}
+
+.tip-spark--two {
+  left: 42px;
+  bottom: 46px;
+  width: 6px;
+  height: 6px;
+  animation: tipBlink 2.4s ease-in-out infinite 0.5s;
+}
+
+.tip-spark--three {
+  right: 74px;
+  bottom: 66px;
+  width: 5px;
+  height: 5px;
+  animation: tipBlink 2s ease-in-out infinite 1s;
 }
 
 .tip-text {
   font-size: 15px;
-  color: #666;
+  color: #6D6256;
+  line-height: 1.7;
   margin-bottom: 28px;
 }
 
@@ -820,16 +1068,80 @@ defineExpose({ setChapterList })
   min-width: 140px;
   height: 44px;
   padding: 0 40px;
-  background: #FF9900;
+  background: linear-gradient(180deg, #FFB11C 0%, #FF9800 100%);
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 15px;
   color: white;
   cursor: pointer;
-  transition: background 0.2s;
+  box-shadow: 0 14px 24px rgba(255, 153, 0, 0.24);
+  transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
 }
 
 .btn-tip-confirm:hover {
-  background: #E68A00;
+  background: linear-gradient(180deg, #FFAA10 0%, #EA8D00 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 28px rgba(255, 153, 0, 0.28);
+}
+
+@keyframes tipFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes tipPulse {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.01);
+  }
+}
+
+@keyframes tipBookFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(-2deg);
+  }
+}
+
+@keyframes tipWave {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) scale(0.92);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-50%) scale(1.08);
+  }
+}
+
+@keyframes tipBlink {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+@keyframes tipShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(130%);
+  }
 }
 </style>
