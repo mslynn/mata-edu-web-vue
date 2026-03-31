@@ -3,7 +3,7 @@
     <!-- 页面标题 -->
     <div v-if="!embedded" class="page-header">
       <h1 class="page-title">{{ $t("ai.pageTitle") }}</h1>
-      <button class="material-btn" @click="goToMaterial">
+      <!-- <button class="material-btn" @click="goToMaterial">
         <svg
           width="16"
           height="16"
@@ -16,7 +16,7 @@
           <path d="M3 9h18M9 21V9" />
         </svg>
         {{ $t("ai.myMaterial") }}
-      </button>
+      </button> -->
     </div>
 
     <!-- 内容区 -->
@@ -1285,6 +1285,7 @@ const postCachedZipToIframe = async () => {
 };
 
 const finishCloseIframeModal = () => {
+  const shouldRestoreModelSelect = Boolean(currentModel.value);
   isHandlingTmZip.value = false;
   pendingIframeZipDelivery.value = false;
   isEditingSavedModel.value = false;
@@ -1298,10 +1299,11 @@ const finishCloseIframeModal = () => {
   currentEditingModelId.value = "";
   currentEditingOssId.value = "";
   currentToolCacheKey.value = "";
-  currentModel.value = null;
-  savedModels.value = [];
 
-  notifyEmbeddedHostToClose();
+  if (shouldRestoreModelSelect) {
+    showModelSelectModal.value = true;
+    void loadSavedModels();
+  }
 };
 
 const openAIIframe = async (tool: AICardItem, projectName: string, modelId: string) => {
@@ -1525,7 +1527,7 @@ const handleCardClick = async (item: AICardItem) => {
   currentModel.value = item;
   modelName.value = "";
   showModelSelectModal.value = true;
-  if (!loadedModelKeys.has(item.key)) {
+  if (!loadedModelKeys.has(item.key) || !savedModels.value.length) {
     savedModels.value = [];
     await loadSavedModels();
   }

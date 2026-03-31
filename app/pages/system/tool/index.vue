@@ -174,8 +174,8 @@ import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 
 import tool1Icon from "~/assets/images/tool1.png";
 import tool2Icon from "~/assets/images/tool2.png";
-import tool3Icon from "~/assets/images/tool3.png";
 import tool4Icon from "~/assets/images/too4.png";
+import tool3Icon from "~/assets/images/tool3.png";
 import tool5Icon from "~/assets/images/tool5.png";
 
 definePageMeta({
@@ -258,7 +258,7 @@ const toolList: Tool[] = [
   },
   {
     id: "matatacode",
-    name: "MatataCode",
+    name: "MatataCode（Kids）",
     icon: tool3Icon,
     titleKey: "tool.matatacode.title",
     descKey: "tool.matatacode.desc",
@@ -268,8 +268,9 @@ const toolList: Tool[] = [
     appStoreKey: "tool.downloadTheAppStore",
     googlePlayKey: "tool.downloadTheGooglePlay",
     appStoreUrl: "https://apps.apple.com/us/app/matatacode/id1448969038",
-    googlePlayUrl: "https://nous.matatastudio.com/?page=download&lang=zh",
+    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.matatalab.matatacode",
   },
+  // https://nous.matatastudio.com/?page=download&lang=zh
   {
     id: "talemap",
     name: "MatataCode<br/>(TaleMap)",

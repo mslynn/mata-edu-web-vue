@@ -76,7 +76,7 @@
                     <div 
                       v-else-if="item.type === 'course' && item.course"
                       class="list-item course-item"
-                      :class="{ active: selectedCourse?.courseId === item.course.courseId }"
+                      :class="{ active: String(selectedCourse?.courseId || '') === String(item.course.courseId || '') }"
                       :data-course-id="item.course.courseId"
                       :style="{ paddingLeft: (item.level * 16 + 16) + 'px' }"
                       :title="item.course.courseName"
@@ -92,7 +92,7 @@
                     v-for="course in courseList" 
                     :key="course.courseId" 
                     class="list-item"
-                    :class="{ active: selectedCourse?.courseId === course.courseId }"
+                    :class="{ active: String(selectedCourse?.courseId || '') === String(course.courseId || '') }"
                     :data-course-id="course.courseId"
                     :title="course.courseName"
                     @click="selectCourse(course)"
@@ -386,6 +386,24 @@ const setChapterList = (list: ChapterItem[]) => {
   chapterList.value = list
 }
 
+const ensureInitialCourseSelection = () => {
+  if (!props.visible || selectedCourse.value || props.courseList.length === 0) {
+    return
+  }
+
+  const course = props.initialCourseId
+    ? props.courseList.find((item) => item.courseId === props.initialCourseId) || props.courseList[0]
+    : props.courseList[0]
+
+  if (!course) return
+
+  selectedCourse.value = course
+  void scrollSelectedCourseIntoView()
+  if (selectedClass.value) {
+    emit('course-change', course.courseId, selectedClass.value.classId)
+  }
+}
+
 // 监听弹窗显示
 watch(() => props.visible, (val) => {
   if (!val) {
@@ -409,6 +427,7 @@ watch(() => props.visible, (val) => {
     if (props.courseTree.length > 0) {
       expandAllMenus(props.courseTree)
     }
+    ensureInitialCourseSelection()
   }
 })
 
@@ -425,16 +444,7 @@ watch(() => props.classList, (list) => {
 // 监听课程列表变化，默认选中第一个并加载章节
 watch(() => props.courseList, (list) => {
   if (props.visible && list.length > 0 && !selectedCourse.value) {
-    const course = props.initialCourseId 
-      ? list.find(c => c.courseId === props.initialCourseId) || list[0]
-      : list[0]
-    if (course) {
-      selectedCourse.value = course
-      void scrollSelectedCourseIntoView()
-      if (selectedClass.value) {
-        emit('course-change', course.courseId, selectedClass.value.classId)
-      }
-    }
+    ensureInitialCourseSelection()
   }
 }, { immediate: true })
 
@@ -692,6 +702,25 @@ defineExpose({ setChapterList })
 
 .course-item {
   background: transparent;
+}
+
+.course-item.active {
+  position: relative;
+  color: #FF9900;
+  background: linear-gradient(180deg, #FFF7EB 0%, #FFF1DD 100%);
+  font-weight: 600;
+  box-shadow: inset 0 0 0 1px rgba(255, 153, 0, 0.08);
+}
+
+.course-item.active::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #FFB21D 0%, #FF9900 100%);
 }
 
 .item-text {

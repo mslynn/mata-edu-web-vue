@@ -2620,10 +2620,9 @@ const copyToClipboard = async (text?: string) => {
 const handleRefreshQuickLogin = async () => {
   if (!selectedClass.value?.id) return;
   try {
-    const data = await createQuickLogin(selectedClass.value.id);
-    quickLoginData.value = data || {};
+    await loadStudentList(selectedClass.value.id);
     ElMessage.success(t('common.refreshed'));
-  } catch (error) { console.error("刷新快捷登录失败:", error); }
+  } catch (error) { console.error("刷新学生列表失败:", error); }
 };
 
 const handleExport = async () => {

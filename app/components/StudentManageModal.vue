@@ -260,7 +260,12 @@
               {{ row.name || "-" }}
             </template>
             <template #leaderName="{ row }">
-              {{ row.leaderName || "-" }}
+              <span
+                class="block max-w-[140px] truncate"
+                :title="row.leaderName || ''"
+              >
+                {{ formatLimitedLeaderName(row.leaderName) || "-" }}
+              </span>
             </template>
             <template #members="{ row }">
               {{ row.members || "-" }}
@@ -1243,6 +1248,11 @@ const toggleAllMemberSelection = () => {
 const getStudentNameById = (id: string) => {
   const student = availableStudents.value.find((s) => s.id === id);
   return student?.studentName || student?.name || id;
+};
+
+const formatLimitedLeaderName = (name?: string | null) => {
+  if (!name) return "";
+  return name.length > 10 ? name.slice(0, 10) : name;
 };
 
 // 移除已选学生

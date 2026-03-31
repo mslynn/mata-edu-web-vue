@@ -538,8 +538,8 @@
               </template>
               <template #leaderName="{ row }">
                 <div class="tooltip-wrapper group relative">
-                  <span class="truncate block max-w-[80px]">{{
-                    row.leaderName || "-"
+                  <span class="block max-w-[140px] truncate">{{
+                    formatLimitedLeaderName(row.leaderName) || "-"
                   }}</span>
                   <div v-if="row.leaderName" class="tooltip-content">
                     {{ row.leaderName }}
@@ -1530,6 +1530,7 @@
               <MInput
                 v-model="groupForm.remarks"
                 :placeholder="$t('class.pleaseInputGroupName')"
+                maxlength="100"
                 style="flex: 1; max-width: 320px"
               />
             </div>
@@ -2166,6 +2167,11 @@ const toggleAllMemberSelection = () => {
 const getStudentNameById = (id: string) => {
   const student = availableStudents.value.find((s) => s.id === id);
   return student?.studentName || student?.name || id;
+};
+
+const formatLimitedLeaderName = (name?: string | null) => {
+  if (!name) return "";
+  return name.length > 10 ? name.slice(0, 10) : name;
 };
 
 // 移除已选学生
@@ -2841,15 +2847,14 @@ const copyQuickLoginInfo = async () => {
   await copyToClipboard(text);
 };
 
-// 刷新快捷登录
+// 刷新学生列表
 const handleRefreshQuickLogin = async () => {
   if (!selectedClass.value?.id) return;
   try {
-    const data = await createQuickLogin(selectedClass.value.id);
-    quickLoginData.value = data || {};
+    await loadStudentList(selectedClass.value.id, false);
     ElMessage.success(t("common.refreshed"));
   } catch (error) {
-    console.error("刷新快捷登录失败:", error);
+    console.error("刷新学生列表失败:", error);
   }
 };
 
@@ -3426,6 +3431,10 @@ const handleConfirmGroup = async () => {
   }
   if (groupForm.name.trim().length > 10) {
     ElMessage.warning(t("auth.nameLengthLimit"));
+    return;
+  }
+  if (groupForm.remarks.trim().length > 100) {
+    ElMessage.warning(t("class.groupDescLengthLimit"));
     return;
   }
 

@@ -5,6 +5,10 @@
   "scripts": {
     "build": "set NODE_ENV=production&& nuxt build --dotenv .env.production",
     "build:dev": "set NODE_ENV=development&& nuxt build --dotenv .env.development",
+    "datacenter:capture": "powershell -ExecutionPolicy Bypass -File .\\scripts\\capture-datacenter-large-screen.ps1",
+    "datacenter:capture:2k": "powershell -ExecutionPolicy Bypass -File .\\scripts\\capture-datacenter-large-screen.ps1 -Width 2560 -Height 1440",
+    "datacenter:capture:3k": "powershell -ExecutionPolicy Bypass -File .\\scripts\\capture-datacenter-large-screen.ps1 -Width 3200 -Height 1800",
+    "datacenter:capture:4k": "powershell -ExecutionPolicy Bypass -File .\\scripts\\capture-datacenter-large-screen.ps1 -Width 3840 -Height 2160",
     "dev": "nuxt dev --dotenv .env.development",
     "generate": "nuxt generate",
     "preview": "nuxt preview --dotenv .env.production",
@@ -19,6 +23,7 @@
     "@wangeditor/editor-for-vue": "^5.1.12",
     "axios": "^1.13.2",
     "crypto-js": "^4.2.0",
+    "echarts": "^6.0.0",
     "element-plus": "^2.11.8",
     "fabric": "^6.9.1",
     "gsap": "^3.14.2",
@@ -27,6 +32,7 @@
     "peerjs": "^1.5.4",
     "pinia": "^3.0.4",
     "vue": "^3.5.25",
+    "vue-echarts": "^8.0.1",
     "vue-i18n": "^11.2.7",
     "vue-router": "^4.6.3"
   },

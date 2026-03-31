@@ -1,7 +1,7 @@
 <template>
-  <div class="student-classroom">
+  <div class="student-classroom" :class="{ 'student-classroom--immersive': isImmersiveMode }">
     <!-- 顶部导航栏 -->
-    <header class="classroom-header">
+    <header v-if="!isImmersiveMode" class="classroom-header">
       <button class="header-back-btn" @click="handleBack" aria-label="返回学生首页">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
           <path d="M15 18l-6-6 6-6" />
@@ -144,13 +144,18 @@
           <div class="resource-modal-container">
             <div class="resource-modal-header">
               <span class="resource-modal-title">课程资源</span>
-              <button class="resource-close-btn" @click="showResourceModal = false">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              </button>
+              <div class="resource-modal-actions">
+                <button class="resource-toggle-btn" @click="isResourceSidebarCollapsed = !isResourceSidebarCollapsed">
+                  {{ isResourceSidebarCollapsed ? '显示列表' : '隐藏列表' }}
+                </button>
+                <button class="resource-close-btn" @click="showResourceModal = false">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
             </div>
-            <div class="resource-modal-body">
+            <div class="resource-modal-body" :class="{ 'is-sidebar-collapsed': isResourceSidebarCollapsed }">
               <!-- 左侧资源列表 -->
               <div class="resource-list-panel">
                 <div class="resource-list-header">
@@ -213,6 +218,12 @@
       <Transition name="modal-fade">
         <div v-if="showTaskModal" class="task-modal-overlay" @click.self="showTaskModal = false">
           <div class="task-modal-container task-modal-container--workspace">
+            <button class="task-modal-close-btn" @click="showTaskModal = false" aria-label="关闭课堂任务弹窗">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
             <div v-if="currentChapterId" class="task-modal-workspace">
               <StudentTaskPage
                 embedded
@@ -253,6 +264,7 @@ const { getStudentTaskList } = student()
 const STUDENT_ONGOING_CLASSROOM_KEY = 'student_ongoing_classroom'
 const STUDENT_PAUSE_AUTO_ENTER_KEY = 'student_pause_auto_enter_classroom'
 const STUDENT_CLASS_TIMER_STATE_KEY = 'student_classroom_timer_state'
+const STUDENT_COURSEWARE_STORAGE_PREFIX = 'student_classroom_courseware'
 
 const readQueryText = (value: unknown) => {
   if (Array.isArray(value)) return String(value[0] || '')
@@ -291,6 +303,8 @@ const showFullscreenModal = ref(false) // 全屏管控弹窗
 const showResourceModal = ref(false) // 课程资源弹窗
 const showKickoutModal = ref(false) // 被踢出弹窗
 const showTaskModal = ref(false) // 课堂任务弹窗
+const isResourceSidebarCollapsed = ref(false)
+const isDocumentFullscreen = ref(false)
 
 type ClassroomTaskStatus = 0 | 1
 
@@ -326,7 +340,51 @@ const TASK_ISSUE_ACTION = 'question'
 const TASK_REVOKE_ACTION = 'question_revoke'
 const TASK_REDO_ACTION = 'question_redo'
 
+interface StoredClassroomInfo {
+  classId?: string
+  className?: string
+  teacherPeerId?: string
+  courseId?: string
+  chapterId?: string
+  chapterName?: string
+  expireAt?: number
+}
+
 // 保存/清理课堂状态（用于学生首页“返回课堂”入口）
+const getStoredClassroomInfo = (): StoredClassroomInfo | null => {
+  if (typeof window === 'undefined') return null
+  const stored = localStorage.getItem(STUDENT_ONGOING_CLASSROOM_KEY)
+  if (!stored) return null
+
+  try {
+    const parsed = JSON.parse(stored)
+    const expireAt = Number(parsed?.expireAt || 0)
+    if (expireAt && expireAt < Date.now()) {
+      localStorage.removeItem(STUDENT_ONGOING_CLASSROOM_KEY)
+      return null
+    }
+    return parsed
+  } catch {
+    localStorage.removeItem(STUDENT_ONGOING_CLASSROOM_KEY)
+    return null
+  }
+}
+
+const restoreStoredClassroomContext = () => {
+  const stored = getStoredClassroomInfo()
+  if (!stored) return
+
+  currentClassId.value = firstNonEmptyString(currentClassId.value, stored.classId)
+  className.value = firstNonEmptyString(className.value, stored.className)
+  currentTeacherPeerId.value = firstNonEmptyString(
+    currentTeacherPeerId.value,
+    stored.teacherPeerId
+  )
+  currentCourseId.value = firstNonEmptyString(currentCourseId.value, stored.courseId)
+  currentChapterId.value = firstNonEmptyString(currentChapterId.value, stored.chapterId)
+  currentChapterName.value = firstNonEmptyString(currentChapterName.value, stored.chapterName)
+}
+
 const saveOngoingClassroom = () => {
   if (typeof window === 'undefined') return
   const payload = {
@@ -398,9 +456,114 @@ interface CoursewareItem {
   fileName: string
   resourceUrl: string
 }
+
+interface StoredCoursewareState {
+  list: CoursewareItem[]
+  selectedResourceId: string
+  expireAt: number
+}
+
 const receivedCoursewareList = ref<CoursewareItem[]>([])
 const selectedResourceIndex = ref(-1)
 const previewLoading = ref(false)
+
+const getCoursewareStorageKeys = () => {
+  const classId = firstNonEmptyString(currentClassId.value)
+  const chapterId = firstNonEmptyString(currentChapterId.value)
+  const teacherPeerId = firstNonEmptyString(currentTeacherPeerId.value)
+  const keys: string[] = []
+
+  const appendKey = (value: string) => {
+    if (value && !keys.includes(value)) {
+      keys.push(value)
+    }
+  }
+
+  if (classId && chapterId) {
+    appendKey(`${STUDENT_COURSEWARE_STORAGE_PREFIX}_${classId}_${chapterId}`)
+  }
+  if (classId) {
+    appendKey(`${STUDENT_COURSEWARE_STORAGE_PREFIX}_${classId}`)
+  }
+  if (teacherPeerId && chapterId) {
+    appendKey(`${STUDENT_COURSEWARE_STORAGE_PREFIX}_${teacherPeerId}_${chapterId}`)
+  }
+  if (teacherPeerId) {
+    appendKey(`${STUDENT_COURSEWARE_STORAGE_PREFIX}_${teacherPeerId}`)
+  }
+
+  return keys
+}
+
+const normalizeCoursewareItem = (item: any): CoursewareItem | null => {
+  const resourceId = firstNonEmptyString(item?.resourceId, item?.id)
+  if (!resourceId) return null
+
+  return {
+    resourceId,
+    fileName: firstNonEmptyString(item?.fileName, item?.resourceName, '未知文件'),
+    resourceUrl: firstNonEmptyString(item?.resourceUrl)
+  }
+}
+
+const clearStoredCourseware = () => {
+  if (typeof window === 'undefined') return
+  getCoursewareStorageKeys().forEach((key) => localStorage.removeItem(key))
+}
+
+const saveStoredCourseware = () => {
+  if (typeof window === 'undefined') return
+  const keys = getCoursewareStorageKeys()
+  if (keys.length === 0) return
+
+  if (receivedCoursewareList.value.length === 0) {
+    keys.forEach((key) => localStorage.removeItem(key))
+    return
+  }
+
+  const payload: StoredCoursewareState = {
+    list: receivedCoursewareList.value,
+    selectedResourceId: firstNonEmptyString(selectedResource.value?.resourceId),
+    expireAt: Date.now() + 2 * 60 * 60 * 1000
+  }
+
+  const serialized = JSON.stringify(payload)
+  keys.forEach((key) => localStorage.setItem(key, serialized))
+}
+
+const restoreStoredCourseware = () => {
+  if (typeof window === 'undefined') return
+
+  for (const key of getCoursewareStorageKeys()) {
+    const stored = localStorage.getItem(key)
+    if (!stored) continue
+
+    try {
+      const parsed = JSON.parse(stored)
+      const expireAt = Number(parsed?.expireAt || 0)
+      if (expireAt && expireAt < Date.now()) {
+        localStorage.removeItem(key)
+        continue
+      }
+      const list = Array.isArray(parsed?.list)
+        ? parsed.list.map(normalizeCoursewareItem).filter(Boolean)
+        : []
+
+      if (list.length === 0) continue
+
+      receivedCoursewareList.value = list as CoursewareItem[]
+      const selectedResourceId = firstNonEmptyString(parsed?.selectedResourceId)
+      const restoredIndex = selectedResourceId
+        ? receivedCoursewareList.value.findIndex((item) => item.resourceId === selectedResourceId)
+        : -1
+      selectedResourceIndex.value = restoredIndex >= 0 ? restoredIndex : 0
+      previewLoading.value = false
+      return
+    } catch {
+      localStorage.removeItem(key)
+    }
+  }
+}
 
 // 当前选中的资源
 const selectedResource = computed(() => {
@@ -427,6 +590,14 @@ const selectResource = (index: number) => {
     previewLoading.value = true
   }
 }
+
+watch(
+  [receivedCoursewareList, selectedResourceIndex, currentClassId, currentChapterId, currentTeacherPeerId],
+  () => {
+    saveStoredCourseware()
+  },
+  { deep: true }
+)
 
 // 获取资源图标类名
 const getResourceIconClass = (fileName: string) => {
@@ -540,6 +711,11 @@ const syncClassroomContext = (payload: any = {}) => {
   currentChapterName.value = nextChapterName
   currentTeacherPeerId.value = nextTeacherPeerId
   currentClassId.value = nextClassId
+}
+
+const isClassBeginMessage = (message: any) => {
+  const type = String(message?.type || '').trim().toUpperCase()
+  return type === 'CLASS_BEGIN' || type === 'CLASS_START'
 }
 
 const loadClassroomTasks = async () => {
@@ -685,6 +861,12 @@ const myPeerId = computed(() => peerJS.myPeerId.value)
 // 远程流
 const remoteVideoRef = ref<HTMLVideoElement | null>(null)
 const hasRemoteStream = computed(() => peerJS.remoteStream.value !== null)
+const isImmersiveMode = computed(() => hasRemoteStream.value || isDocumentFullscreen.value)
+
+const syncDocumentFullscreenState = () => {
+  if (typeof document === 'undefined') return
+  isDocumentFullscreen.value = !!document.fullscreenElement
+}
 
 // 连接状态
 const isConnected = computed(() => wsConnected.value || classStarted.value)
@@ -778,11 +960,11 @@ const connectNotifyWebSocket = () => {
       const message = JSON.parse(event.data)
 
       // 处理 CLASS_BEGIN 消息
-      if (message.type === 'CLASS_BEGIN') {
+      if (isClassBeginMessage(message)) {
         syncClassroomContext(message)
         const teacherPeerId = message.peerId || message.teacherPeerId // 老师的 PeerId
         // 从老师的 peerId 中提取 classId（格式：teacher_{classId}）
-        const classId = message.classId || currentClassId.value || (teacherPeerId ? teacherPeerId.replace('teacher_', '') : '') || '1996788444002480128'
+        const classId = message.classId || message.roomId || currentClassId.value || (teacherPeerId ? teacherPeerId.replace('teacher_', '') : '') || '1996788444002480128'
         console.log('[学生课堂] 收到上课通知! classId:', classId, 'teacherPeerId:', teacherPeerId)
         currentClassId.value = classId
         classStarted.value = true
@@ -817,12 +999,17 @@ const connectNotifyWebSocket = () => {
         console.log('[学生课堂] 收到下课通知!')
         classStarted.value = false
         clearOngoingClassroom()
+        clearStoredCourseware()
         setPauseAutoEnterClassroom(false)
         stopClassTimer(true)
         peerJS.destroy()
         latestTaskNotice.value = ''
         classroomTaskGroups.value = []
         showTaskModal.value = false
+        receivedCoursewareList.value = []
+        selectedResourceIndex.value = -1
+        previewLoading.value = false
+        showResourceModal.value = false
         // 显示下课弹窗
         showClassEndModal.value = true
       }
@@ -931,13 +1118,14 @@ const connectNotifyWebSocket = () => {
         if (Array.isArray(coursewareList) && coursewareList.length > 0) {
           // 添加到已收到的课件列表（去重）
           coursewareList.forEach((item: any) => {
-            const exists = receivedCoursewareList.value.some(c => c.resourceId === item.resourceId)
+            const normalizedItem = normalizeCoursewareItem(item)
+            if (!normalizedItem) return
+
+            const exists = receivedCoursewareList.value.some(
+              (courseware) => courseware.resourceId === normalizedItem.resourceId
+            )
             if (!exists) {
-              receivedCoursewareList.value.push({
-                resourceId: String(item.resourceId),
-                fileName: item.fileName || '未知文件',
-                resourceUrl: item.resourceUrl || ''
-              })
+              receivedCoursewareList.value.push(normalizedItem)
             }
           })
           console.log('[学生课堂] 课件列表已更新:', receivedCoursewareList.value)
@@ -973,12 +1161,14 @@ const connectNotifyWebSocket = () => {
           
           // 如果课件全部被撤回，关闭弹窗
           if (receivedCoursewareList.value.length === 0) {
+            clearStoredCourseware()
             showResourceModal.value = false
             selectedResourceIndex.value = -1
             previewLoading.value = false
           }
         } else {
           // 没有指定具体课件，全部撤回
+          clearStoredCourseware()
           receivedCoursewareList.value = []
           selectedResourceIndex.value = -1
           previewLoading.value = false
@@ -997,9 +1187,14 @@ const connectNotifyWebSocket = () => {
           classTimer = null
         }
         peerJS.destroy()
+        clearStoredCourseware()
         latestTaskNotice.value = ''
         classroomTaskGroups.value = []
         showTaskModal.value = false
+        receivedCoursewareList.value = []
+        selectedResourceIndex.value = -1
+        previewLoading.value = false
+        showResourceModal.value = false
         // 显示踢出弹窗
         showKickoutModal.value = true
       }
@@ -1050,6 +1245,7 @@ const handleBack = () => {
     setPauseAutoEnterClassroom(true)
   } else {
     clearOngoingClassroom()
+    clearStoredCourseware()
     setPauseAutoEnterClassroom(false)
   }
   if (notifyWs) {
@@ -1064,10 +1260,15 @@ const handleBack = () => {
 const handleClassEndConfirm = () => {
   showClassEndModal.value = false
   clearOngoingClassroom()
+  clearStoredCourseware()
   setPauseAutoEnterClassroom(false)
   stopClassTimer(true)
   latestTaskNotice.value = ''
   classroomTaskGroups.value = []
+  receivedCoursewareList.value = []
+  selectedResourceIndex.value = -1
+  previewLoading.value = false
+  showResourceModal.value = false
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -1080,10 +1281,15 @@ const handleClassEndConfirm = () => {
 const handleKickoutConfirm = () => {
   showKickoutModal.value = false
   clearOngoingClassroom()
+  clearStoredCourseware()
   setPauseAutoEnterClassroom(false)
   stopClassTimer(true)
   latestTaskNotice.value = ''
   classroomTaskGroups.value = []
+  receivedCoursewareList.value = []
+  selectedResourceIndex.value = -1
+  previewLoading.value = false
+  showResourceModal.value = false
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -1107,6 +1313,14 @@ const handleFullscreenConfirm = async () => {
 }
 
 onMounted(async () => {
+  if (typeof document !== 'undefined') {
+    syncDocumentFullscreenState()
+    document.addEventListener('fullscreenchange', syncDocumentFullscreenState)
+  }
+
+  restoreStoredClassroomContext()
+  restoreStoredCourseware()
+
   console.log('========================================')
   console.log('[学生课堂] 页面加载!')
   console.log('[学生课堂] PeerJS 服务器: localhost:9000')
@@ -1158,6 +1372,9 @@ onMounted(async () => {
 
 onUnmounted(() => {
   isUnmounted = true
+  if (typeof document !== 'undefined') {
+    document.removeEventListener('fullscreenchange', syncDocumentFullscreenState)
+  }
   if (notifyWs) {
     notifyWs.close()
     notifyWs = null
@@ -1566,6 +1783,7 @@ onUnmounted(() => {
 .task-modal-container {
   width: min(1200px, 94vw);
   height: min(86vh, 880px);
+  position: relative;
   background: #fff;
   border-radius: 20px;
   overflow: hidden;
@@ -1580,6 +1798,30 @@ onUnmounted(() => {
 .task-modal-workspace {
   height: 100%;
   background: #fff;
+}
+
+.task-modal-close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 12;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #667085;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  transition: all 0.2s ease;
+}
+
+.task-modal-close-btn:hover {
+  background: #fff;
+  color: #253046;
 }
 
 .task-modal-empty {
@@ -1767,30 +2009,53 @@ onUnmounted(() => {
 }
 
 .resource-modal-container {
-  width: 90vw;
-  max-width: 1200px;
-  height: 80vh;
+  width: min(96vw, 1600px);
+  height: min(92vh, 980px);
   background: #fff;
-  border-radius: 12px;
+  border-radius: 16px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 20px 54px rgba(16, 24, 40, 0.28);
 }
 
 .resource-modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 18px 24px;
   border-bottom: 1px solid #E5E5E5;
   background: #FAFAFA;
 }
 
 .resource-modal-title {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
   color: #333;
+}
+
+.resource-modal-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.resource-toggle-btn {
+  height: 36px;
+  padding: 0 14px;
+  border: 1px solid rgba(76, 217, 100, 0.24);
+  border-radius: 999px;
+  background: #F2FFF4;
+  color: #2F9A48;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.resource-toggle-btn:hover {
+  background: #E6F9EA;
+  border-color: rgba(76, 217, 100, 0.4);
 }
 
 .resource-close-btn {
@@ -1818,13 +2083,23 @@ onUnmounted(() => {
   overflow: hidden;
 }
 
+.resource-modal-body.is-sidebar-collapsed .resource-list-panel {
+  width: 0;
+  min-width: 0;
+  border-right: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* 左侧资源列表 */
 .resource-list-panel {
-  width: 240px;
+  width: 300px;
+  min-width: 300px;
   border-right: 1px solid #E5E5E5;
   display: flex;
   flex-direction: column;
   background: #FAFAFA;
+  transition: width 0.22s ease, min-width 0.22s ease, opacity 0.18s ease, border-color 0.18s ease;
 }
 
 .resource-list-header {
@@ -1840,18 +2115,18 @@ onUnmounted(() => {
 .resource-list {
   flex: 1;
   overflow-y: auto;
-  padding: 8px;
+  padding: 10px;
 }
 
 .resource-item {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 12px;
-  border-radius: 6px;
+  padding: 12px 14px;
+  border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .resource-item:hover {
@@ -1922,7 +2197,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #F5F5F5;
+  background: #EEF2F7;
   overflow: hidden;
   position: relative;
 }
@@ -1980,6 +2255,34 @@ onUnmounted(() => {
 }
 
 @media (max-width: 768px) {
+  .resource-modal-overlay {
+    padding: 12px;
+  }
+
+  .resource-modal-container {
+    width: 100%;
+    height: 92vh;
+    border-radius: 14px;
+  }
+
+  .resource-modal-header {
+    padding: 16px;
+  }
+
+  .resource-modal-actions {
+    gap: 8px;
+  }
+
+  .resource-toggle-btn {
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .resource-list-panel {
+    width: 220px;
+    min-width: 220px;
+  }
+
   .task-modal-overlay {
     padding: 12px;
   }
@@ -1988,6 +2291,11 @@ onUnmounted(() => {
     width: 100%;
     height: 88vh;
     border-radius: 14px;
+  }
+
+  .task-modal-close-btn {
+    top: 12px;
+    right: 12px;
   }
 
   .task-modal-header,

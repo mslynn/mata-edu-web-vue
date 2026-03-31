@@ -1,0 +1,228 @@
+{
+  "periods": [
+    {
+      "key": "2024-11-17",
+      "label": "2024-11-17",
+      "start": "2021-11-09",
+      "end": "2024-11-17",
+      "summaryCards": [
+        { "label": "学校总数", "value": "818", "note": "覆盖 16 个区县", "delta": "+12.8%", "theme": "metric-card--cyan" },
+        { "label": "教师人数", "value": "2,060", "note": "活跃率 81.3%", "delta": "+8.6%", "theme": "metric-card--blue" },
+        { "label": "学生人数", "value": "123,955", "note": "本月新增 3,426", "delta": "+15.2%", "theme": "metric-card--violet" }
+      ],
+      "left": {
+        "panelTitle": "区域人工智能课程开展",
+        "resourceBuild": {
+          "providedCourses": 471,
+          "competitionCount": 3,
+          "total": 15057,
+          "items": [
+            { "name": "教学资源文件", "value": 10067, "color": "#FFC94D" },
+            { "name": "教学设计文件", "value": 1957, "color": "#FF7FD8" },
+            { "name": "自定义上传资源", "value": 2042, "color": "#35E0D0" },
+            { "name": "学练资源类", "value": 991, "color": "#5B8EFF" }
+          ]
+        },
+        "liveCourses": [
+          { "name": "行知格物平台 — 演示学校学校行知格物", "status": "正在上课" },
+          { "name": "行知格物平台 — 演示学校学校行知格物", "status": "正在上课" },
+          { "name": "人工智能课堂 — 少儿创客实践", "status": "正在上课" },
+          { "name": "AI 课程拓展 — 创新实验班直播", "status": "正在上课" },
+          { "name": "创客机器人课 — 区域公开课", "status": "正在上课" }
+        ],
+        "rolloutMetrics": [
+          { "label": "累计课程数", "value": "10,565", "delta": "本周 +284", "color": "#63F0C2" },
+          { "label": "累计授课时长", "value": "3820.3h", "delta": "本周 +78.4", "color": "#66D4FF" },
+          { "label": "累计开课次数", "value": "5,978", "delta": "本周 +110", "color": "#FF89DA" },
+          { "label": "累计作品总数", "value": "2,805", "delta": "本周 +26", "color": "#FFC85F" },
+          { "label": "累计下发任务量", "value": "2,000", "delta": "本周 +30", "color": "#FF7F6E" }
+        ],
+        "taskRate": 47,
+        "activityRate": 6,
+        "works": {
+          "total": 2805,
+          "items": [
+            { "name": "uCode图形化", "value": 1410, "color": "#FF79CE" },
+            { "name": "uCode3", "value": 795, "color": "#7D8CFF" },
+            { "name": "uPython", "value": 600, "color": "#35E0D0" }
+          ],
+          "top": [
+            { "label": "Top1", "value": 2010, "name": "图形化编程" },
+            { "label": "Top2", "value": 795, "name": "代码编程" }
+          ]
+        },
+        "periodTrend": {
+          "labels": ["2021-11-09", "2022-11-28", "2023-12-17", "2024-11-17"],
+          "bar": [0, 12, 86, 63],
+          "line": [0, 8, 53, 47]
+        },
+        "openClassRank": {
+          "labels": ["深圳中学分校", "未来实验小学", "深圳实验学校", "力本中心小学", "南山育红小学"],
+          "values": [156, 138, 121, 102, 83]
+        }
+      },
+      "center": {
+        "legend": [
+          { "name": "引领示范区", "color": "#35E0D0" },
+          { "name": "高活跃区", "color": "#FF8C45" },
+          { "name": "协同覆盖区", "color": "#7D8CFF" }
+        ],
+        "provinceMetrics": [
+          { "name": "广东省", "value": 112, "level": "lead", "showLabel": true, "labelOffset": [22, 18] },
+          { "name": "北京市", "value": 73, "level": "lead", "showLabel": true, "labelOffset": [28, -18] },
+          { "name": "上海市", "value": 67, "level": "lead", "showLabel": true, "labelOffset": [30, 18] },
+          { "name": "江苏省", "value": 64, "level": "lead", "showLabel": true, "labelOffset": [28, -2] },
+          { "name": "浙江省", "value": 59, "level": "lead", "showLabel": true, "labelOffset": [32, 14] },
+          { "name": "山东省", "value": 54, "level": "growth", "showLabel": true, "labelOffset": [24, -14] },
+          { "name": "四川省", "value": 48, "level": "growth", "showLabel": true, "labelOffset": [-18, 8] },
+          { "name": "湖北省", "value": 42, "level": "growth", "showLabel": true, "labelOffset": [18, -4] },
+          { "name": "河南省", "value": 40, "level": "growth", "showLabel": true, "labelOffset": [18, -14] },
+          { "name": "福建省", "value": 36, "level": "growth", "showLabel": true, "labelOffset": [28, 18] },
+          { "name": "陕西省", "value": 31, "level": "stable", "showLabel": false },
+          { "name": "湖南省", "value": 34, "level": "growth", "showLabel": true, "labelOffset": [18, 18] },
+          { "name": "重庆市", "value": 24, "level": "stable", "showLabel": false },
+          { "name": "辽宁省", "value": 23, "level": "stable", "showLabel": false },
+          { "name": "安徽省", "value": 27, "level": "stable", "showLabel": false },
+          { "name": "广西壮族自治区", "value": 18, "level": "stable", "showLabel": false },
+          { "name": "云南省", "value": 16, "level": "stable", "showLabel": false },
+          { "name": "内蒙古自治区", "value": 28, "level": "stable", "showLabel": true, "labelOffset": [0, -22] },
+          { "name": "新疆维吾尔自治区", "value": 22, "level": "stable", "showLabel": true, "labelOffset": [0, -18] }
+        ],
+        "awards": [
+          { "type": "NOC", "name": "2024 鹏城智创赛", "stage": "2024 春季", "team": "黄埔生活队", "student": "孙佳豪", "school": "上海市嘉定区安亭小学", "scope": "全区" },
+          { "type": "WRC", "name": "2024 少年创客赛", "stage": "2024 春季", "team": "所向披靡队", "student": "李翔", "school": "上海市嘉定区王丁小学", "scope": "省奖" },
+          { "type": "WRC", "name": "2024 生成式编程赛", "stage": "2024 春季", "team": "星河启航队", "student": "张宇河", "school": "上海市嘉定区弘力小学", "scope": "特奖" },
+          { "type": "AIGC", "name": "2024 AI 主题创作赛", "stage": "2024 春季", "team": "青禾探索队", "student": "王思远", "school": "上海市嘉定区实验小学", "scope": "市奖" }
+        ]
+      },
+      "right": {
+        "radar": [94.14, 94.13, 94.17, 94.15, 94.18],
+        "certCount": 20218,
+        "reachRate": 74.65,
+        "distribution": {
+          "labels": ["二级", "三级", "四级", "五级", "六级", "八级"],
+          "seriesA": [82, 78, 73, 69, 62, 48],
+          "seriesB": [55, 58, 60, 49, 38, 26]
+        },
+        "specialCount": 290,
+        "specialDelta": "+26",
+        "teacherRank": {
+          "labels": ["刘勇名师工作室", "任丽明工作坊", "南山实验中心组", "科创联合教研组"],
+          "values": [96, 88, 79, 68]
+        }
+      }
+    },
+    {
+      "key": "2026-03-27",
+      "label": "2026-03-27",
+      "start": "2025-09-01",
+      "end": "2026-03-27",
+      "summaryCards": [
+        { "label": "学校总数", "value": "926", "note": "覆盖 19 个区县", "delta": "+9.6%", "theme": "metric-card--cyan" },
+        { "label": "教师人数", "value": "2,486", "note": "活跃率 84.5%", "delta": "+13.2%", "theme": "metric-card--blue" },
+        { "label": "学生人数", "value": "156,340", "note": "本月新增 5,218", "delta": "+18.7%", "theme": "metric-card--violet" }
+      ],
+      "left": {
+        "panelTitle": "区域人工智能课程开展",
+        "resourceBuild": {
+          "providedCourses": 618,
+          "competitionCount": 7,
+          "total": 18964,
+          "items": [
+            { "name": "教学资源文件", "value": 12068, "color": "#FFC94D" },
+            { "name": "教学设计文件", "value": 2145, "color": "#FF7FD8" },
+            { "name": "自定义上传资源", "value": 3210, "color": "#35E0D0" },
+            { "name": "学练资源类", "value": 1541, "color": "#5B8EFF" }
+          ]
+        },
+        "liveCourses": [
+          { "name": "人工智能课堂 — 示范区学校联动课程", "status": "正在上课" },
+          { "name": "行知格物平台 — 重点学校创新实验班", "status": "正在上课" },
+          { "name": "AI 课程共建 — 区域协同研修直播", "status": "正在上课" },
+          { "name": "智能编程课 — 教师联合教研示范", "status": "正在上课" },
+          { "name": "图像识别训练 — 区域展示课", "status": "正在上课" }
+        ],
+        "rolloutMetrics": [
+          { "label": "累计课程数", "value": "12,875", "delta": "本周 +336", "color": "#63F0C2" },
+          { "label": "累计授课时长", "value": "4662.5h", "delta": "本周 +96.2", "color": "#66D4FF" },
+          { "label": "累计开课次数", "value": "6,842", "delta": "本周 +142", "color": "#FF89DA" },
+          { "label": "累计作品总数", "value": "3,410", "delta": "本周 +41", "color": "#FFC85F" },
+          { "label": "累计下发任务量", "value": "2,486", "delta": "本周 +55", "color": "#FF7F6E" }
+        ],
+        "taskRate": 53,
+        "activityRate": 9,
+        "works": {
+          "total": 3410,
+          "items": [
+            { "name": "uCode图形化", "value": 1730, "color": "#FF79CE" },
+            { "name": "uCode3", "value": 980, "color": "#7D8CFF" },
+            { "name": "uPython", "value": 700, "color": "#35E0D0" }
+          ],
+          "top": [
+            { "label": "Top1", "value": 2360, "name": "图形化编程" },
+            { "label": "Top2", "value": 980, "name": "代码编程" }
+          ]
+        },
+        "periodTrend": {
+          "labels": ["2025-09-01", "2025-11-01", "2026-01-01", "2026-03-27"],
+          "bar": [42, 76, 91, 108],
+          "line": [22, 36, 44, 58]
+        },
+        "openClassRank": {
+          "labels": ["浦东新区实验校", "未来教育学校", "徐汇科创基地", "静安区创新中心", "闵行双语学校"],
+          "values": [186, 162, 144, 131, 119]
+        }
+      },
+      "center": {
+        "legend": [
+          { "name": "引领示范区", "color": "#35E0D0" },
+          { "name": "高活跃区", "color": "#FF8C45" },
+          { "name": "协同覆盖区", "color": "#7D8CFF" }
+        ],
+        "provinceMetrics": [
+          { "name": "广东省", "value": 128, "level": "lead", "showLabel": true, "labelOffset": [22, 18] },
+          { "name": "北京市", "value": 82, "level": "lead", "showLabel": true, "labelOffset": [28, -18] },
+          { "name": "上海市", "value": 76, "level": "lead", "showLabel": true, "labelOffset": [30, 18] },
+          { "name": "江苏省", "value": 72, "level": "lead", "showLabel": true, "labelOffset": [28, -2] },
+          { "name": "浙江省", "value": 68, "level": "lead", "showLabel": true, "labelOffset": [32, 14] },
+          { "name": "山东省", "value": 63, "level": "growth", "showLabel": true, "labelOffset": [24, -14] },
+          { "name": "四川省", "value": 54, "level": "growth", "showLabel": true, "labelOffset": [-18, 8] },
+          { "name": "湖北省", "value": 48, "level": "growth", "showLabel": true, "labelOffset": [18, -4] },
+          { "name": "河南省", "value": 47, "level": "growth", "showLabel": true, "labelOffset": [18, -14] },
+          { "name": "福建省", "value": 42, "level": "growth", "showLabel": true, "labelOffset": [28, 18] },
+          { "name": "陕西省", "value": 35, "level": "stable", "showLabel": false },
+          { "name": "湖南省", "value": 40, "level": "growth", "showLabel": true, "labelOffset": [18, 18] },
+          { "name": "重庆市", "value": 28, "level": "stable", "showLabel": false },
+          { "name": "辽宁省", "value": 26, "level": "stable", "showLabel": false },
+          { "name": "安徽省", "value": 30, "level": "stable", "showLabel": false },
+          { "name": "广西壮族自治区", "value": 22, "level": "stable", "showLabel": false },
+          { "name": "云南省", "value": 19, "level": "stable", "showLabel": false },
+          { "name": "内蒙古自治区", "value": 24, "level": "stable", "showLabel": true, "labelOffset": [0, -22] },
+          { "name": "新疆维吾尔自治区", "value": 22, "level": "stable", "showLabel": true, "labelOffset": [0, -18] }
+        ],
+        "awards": [
+          { "type": "NOC", "name": "2026 城市智创挑战赛", "stage": "2026 春季", "team": "智源先锋队", "student": "孙佳豪", "school": "上海市嘉定区安亭小学", "scope": "全区" },
+          { "type": "WRC", "name": "2026 少年创新实践赛", "stage": "2026 春季", "team": "未来方程队", "student": "李翔", "school": "上海市嘉定区王丁小学", "scope": "省奖" },
+          { "type": "WRC", "name": "2026 机器人创意赛", "stage": "2026 春季", "team": "星海穿越队", "student": "张宇河", "school": "上海市嘉定区弘力小学", "scope": "特奖" },
+          { "type": "AIGC", "name": "2026 AI 共创设计赛", "stage": "2026 春季", "team": "青禾实验队", "student": "王思远", "school": "上海市嘉定区实验小学", "scope": "市奖" }
+        ]
+      },
+      "right": {
+        "radar": [95.21, 94.88, 95.34, 93.92, 94.67],
+        "certCount": 24896,
+        "reachRate": 81.3,
+        "distribution": {
+          "labels": ["二级", "三级", "四级", "五级", "六级", "八级"],
+          "seriesA": [89, 84, 81, 78, 73, 61],
+          "seriesB": [64, 68, 66, 58, 47, 35]
+        },
+        "specialCount": 366,
+        "specialDelta": "+41",
+        "teacherRank": {
+          "labels": ["刘勇名师工作室", "任丽明工作坊", "浦东联合教研组", "未来创新共同体"],
+          "values": [99, 92, 86, 74]
+        }
+      }
+    }
+  ]
+}

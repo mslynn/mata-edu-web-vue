@@ -112,7 +112,11 @@ export function usePeerScreenShare() {
     }
 
     if (!navigator.mediaDevices?.getDisplayMedia) {
-      alert('浏览器不支持屏幕分享，请使用 Chrome/Edge/Firefox')
+      console.error('[PeerJS] 当前环境无法使用屏幕分享，请使用 HTTPS 或 localhost 访问', {
+        origin: window.location.origin,
+        isSecure: window.isSecureContext
+      })
+      alert('屏幕分享需要在 HTTPS 或 localhost 环境下使用')
       return false
     }
 

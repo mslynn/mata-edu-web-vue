@@ -126,7 +126,17 @@ export function usePeerJS() {
   // 老师端：开始屏幕分享
   const startScreenShare = async (): Promise<boolean> => {
     if (!navigator.mediaDevices?.getDisplayMedia) {
-      console.error('[PeerJS] 浏览器不支持屏幕分享')
+      const origin =
+        typeof window !== 'undefined' ? window.location.origin : 'unknown'
+      const isSecure =
+        typeof window !== 'undefined' ? window.isSecureContext : false
+      console.error(
+        '[PeerJS] 当前环境无法使用屏幕分享，请使用 HTTPS 或 localhost 访问',
+        { origin, isSecure }
+      )
+      if (typeof window !== 'undefined') {
+        alert('屏幕分享需要在 HTTPS 或 localhost 环境下使用')
+      }
       return false
     }
 

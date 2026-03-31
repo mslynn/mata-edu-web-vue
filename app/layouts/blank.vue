@@ -1,6 +1,6 @@
 <template>
   <div class="blank-layout">
-    <StudentEvaluationNoticeBridge v-if="isStudentRoute" />
+    <StudentEvaluationNoticeBridge v-if="shouldShowStudentNoticeBridge" />
     <slot />
   </div>
 </template>
@@ -9,7 +9,13 @@
 import { computed } from "vue";
 
 const route = useRoute();
-const isStudentRoute = computed(() => route.path.startsWith("/student"));
+const shouldShowStudentNoticeBridge = computed(() => {
+  if (!route.path.startsWith("/student")) {
+    return false;
+  }
+
+  return route.path !== "/student" && route.path !== "/student/classroom";
+});
 </script>
 
 <style scoped>

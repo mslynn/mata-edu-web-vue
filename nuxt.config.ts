@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : '192.168.0.68:8001'
+  : 'http://192.168.0.64:8001'
 
 // 预览服务地址
 
@@ -12,24 +12,34 @@ const previewBaseUrl = process.env.NODE_ENV === 'production'
   : 'https://edu-view.matatastudio.com'
   
 //编程平台iframe地址 
-// const toolCreateBaseUrl = process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/'
+// const toolCreateBaseUrl = process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/' ws://192.168.0.60:8001/resource/websocket
 
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production'
   ? 'wss://test-gateway.matatastudio.com/resource/websocket'
-  : 'ws://192.168.0.68:8001/resource/websocket'
+  : 'ws://192.168.0.64:8001/resource/websocket'
 
 
 
 // const signalingUrl = process.env.NUXT_PUBLIC_SIGNALING_URL || 'ws://192.168.0.59:8001/resource/websocket'
 
-console.log('NODE_ENV:', process.env.NODE_ENV)
-console.log('apiBaseUrl:', apiBaseUrl)
-console.log('previewBaseUrl:', previewBaseUrl)
-
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
+  app: {
+    head: {
+      title: 'AI智学云',
+      meta: [
+        { name: 'keywords', content: 'AI智学云,教育平台' },
+        { name: 'description', content: 'AI智学云-教育平台' }
+      ],
+      link: [
+        { rel: 'icon', type: 'image/png', href: '/key.png' },
+        { rel: 'shortcut icon', type: 'image/png', href: '/key.png' },
+        { rel: 'apple-touch-icon', href: '/key.png' }
+      ]
+    }
+  },
   devServer: {
     host: '0.0.0.0',
     port: 3001,
@@ -48,7 +58,7 @@ export default defineNuxtConfig({
       vincibotCreateUrl: process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/',
       nousCreateUrl: process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/',
       // WebRTC 信令服务器地址
-      signalingUrl: signalingUrl || 'ws://192.168.0.59:8001/resource/websocket',
+      signalingUrl: signalingUrl || 'ws://192.168.0.60:8001/resource/websocket',
     }
   },
 
@@ -89,6 +99,9 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: ['element-plus']
+    },
+    esbuild: {
+      drop: ['console', 'debugger']
     },
     // 定义环境变量（RSA密钥等）
     define: {

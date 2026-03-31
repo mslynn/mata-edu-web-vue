@@ -868,7 +868,7 @@
       :visible="showStudentManageModal"
       :class-id="route.query.classId as string"
       :initial-quick-login-data="quickLoginDataForModal"
-      @close="showStudentManageModal = false; quickLoginDataForModal = undefined"
+      @close="showStudentManageModal = false"
       @quick-login-change="handleQuickLoginChange"
     />
 
@@ -1035,6 +1035,44 @@
         </div>
       </div>
     </MModal>
+
+    <MModal
+      v-model="showClassDurationLimitModal"
+      custom-width="420px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="p-6 relative">
+        <button
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="handleClassDurationLimitConfirm"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+        </button>
+        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
+          {{ t("common.tips") }}
+        </h3>
+        <p class="text-[#4D4D4D] text-center mb-8 px-4">
+          {{ t("classroom.classDurationLimitReached") }}
+        </p>
+        <div class="flex items-center justify-center">
+          <button
+            class="w-[136px] h-[44px] bg-[#3EAEFF] text-white rounded-lg hover:bg-[#2E9EEF]"
+            @click="handleClassDurationLimitConfirm"
+          >
+            {{ t("common.confirm") }}
+          </button>
+        </div>
+      </div>
+    </MModal>
   </div>
 </template>
 
@@ -1072,7 +1110,11 @@ const peerJS = usePeerJS();
 
 let notifyWs: WebSocket | null = null
 let timer: ReturnType<typeof setInterval> | null = null
+let classBeginBroadcastTimer: ReturnType<typeof setInterval> | null = null
 const teacherPeerId = ref("");
+const CLASS_DURATION_LIMIT_SECONDS = 2 * 60 * 60;
+const CLASS_BEGIN_BROADCAST_INTERVAL = 3000;
+let hasClassDurationLimitTriggered = false;
 
 // 课堂计时（秒）
 const classTime = ref(0);
@@ -1106,6 +1148,7 @@ const showStudentManageModal = ref(false);
 
 // 下课确认弹窗
 const showEndClassModal = ref(false);
+const showClassDurationLimitModal = ref(false);
 
 // 传给学生管理弹窗的快捷登录数据
 const quickLoginDataForModal = ref<{ classCode: string; classCodePwd: string; expirationDate: string } | undefined>();
@@ -1114,6 +1157,54 @@ type QuickLoginInfo = {
   classCode: string;
   classCodePwd?: string;
   expirationDate?: string;
+};
+
+const TEACHER_QUICK_LOGIN_STORAGE_KEY = "teacher_quick_login_info";
+
+const getStoredQuickLoginInfo = (): QuickLoginInfo | null => {
+  if (typeof window === "undefined") return null;
+
+  const stored = localStorage.getItem(TEACHER_QUICK_LOGIN_STORAGE_KEY);
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored);
+    const expireAt = Number(parsed?.expireAt || 0);
+    if (expireAt && Date.now() > expireAt) {
+      localStorage.removeItem(TEACHER_QUICK_LOGIN_STORAGE_KEY);
+      return null;
+    }
+
+    const storedInfo: QuickLoginInfo = {
+      classCode: String(parsed?.classCode || ""),
+      classCodePwd: String(parsed?.classCodePwd || ""),
+      expirationDate: String(parsed?.expirationDate || ""),
+    };
+
+    return storedInfo.classCode ? storedInfo : null;
+  } catch {
+    localStorage.removeItem(TEACHER_QUICK_LOGIN_STORAGE_KEY);
+    return null;
+  }
+};
+
+const syncStoredQuickLoginInfo = (data?: QuickLoginInfo | null) => {
+  if (typeof window === "undefined") return;
+
+  if (!data?.classCode) {
+    localStorage.removeItem(TEACHER_QUICK_LOGIN_STORAGE_KEY);
+    return;
+  }
+
+  localStorage.setItem(
+    TEACHER_QUICK_LOGIN_STORAGE_KEY,
+    JSON.stringify({
+      classCode: data.classCode || "",
+      classCodePwd: data.classCodePwd || "",
+      expirationDate: data.expirationDate || "",
+      expireAt: Date.now() + 2 * 60 * 60 * 1000,
+    })
+  );
 };
 
 // 学生快捷登录提示
@@ -1128,6 +1219,12 @@ const applyQuickLoginInfo = (data?: QuickLoginInfo | null) => {
     classCode.value = data.classCode || "";
     loginPassword.value = data.classCodePwd || "";
     expireTime.value = data.expirationDate || "";
+    quickLoginDataForModal.value = {
+      classCode: data.classCode || "",
+      classCodePwd: data.classCodePwd || "",
+      expirationDate: data.expirationDate || "",
+    };
+    syncStoredQuickLoginInfo(data);
     showLoginTip.value = true;
     return;
   }
@@ -1135,11 +1232,19 @@ const applyQuickLoginInfo = (data?: QuickLoginInfo | null) => {
   classCode.value = "";
   loginPassword.value = "";
   expireTime.value = "";
+  quickLoginDataForModal.value = undefined;
+  syncStoredQuickLoginInfo(null);
   showLoginTip.value = false;
 };
 
 // 加载快捷登录信息
 const loadQuickLoginInfo = async () => {
+  const stored = getStoredQuickLoginInfo();
+  if (stored?.classCode) {
+    applyQuickLoginInfo(stored);
+    return;
+  }
+
   try {
     const data = await getQuickLoginInfo();
     applyQuickLoginInfo(data);
@@ -1161,6 +1266,13 @@ const handleQuickLoginChange = (data?: QuickLoginInfo | null) => {
     return;
   }
 
+  const stored = getStoredQuickLoginInfo();
+  if (stored?.classCode) {
+    applyQuickLoginInfo(stored);
+    loginTipCollapsed.value = false;
+    return;
+  }
+
   loadQuickLoginInfo();
 };
 
@@ -1168,6 +1280,14 @@ const handleQuickLoginChange = (data?: QuickLoginInfo | null) => {
 const autoEnableQuickLogin = async () => {
   const classId = route.query.classId as string;
   if (!classId) return;
+
+  const stored = getStoredQuickLoginInfo();
+  if (stored?.classCode) {
+    applyQuickLoginInfo(stored);
+    loginTipCollapsed.value = false;
+    return;
+  }
+
   try {
     const data = await createQuickLogin(classId);
     if (data && data.classCode) {
@@ -2273,6 +2393,34 @@ const handleEndClass = () => {
   showEndClassModal.value = true;
 };
 
+const stopClassroomTimer = () => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+};
+
+const clearStoredClassroomState = (classId: string, chapterId: string) => {
+  const classKey = `class_start_${classId}_${chapterId}`;
+  localStorage.removeItem(classKey);
+  localStorage.removeItem("ongoing_classroom");
+};
+
+const stopClassBeginBroadcast = () => {
+  if (classBeginBroadcastTimer) {
+    clearInterval(classBeginBroadcastTimer);
+    classBeginBroadcastTimer = null;
+  }
+};
+
+const navigateAfterClassEnd = (from: string, courseId: string) => {
+  if (from === "teacher") {
+    navigateTo("/teacher");
+    return;
+  }
+  navigateTo(`/system/course/${courseId}`);
+};
+
 const confirmEndClass = async () => {
   const chapterId = route.params.id as string;
   const classId = route.query.classId as string;
@@ -2293,21 +2441,41 @@ const confirmEndClass = async () => {
         console.error("停用快捷登录失败:", error);
       }
     }
-    // 璋冭瘯鏃ュ織
-    showEndClassModal.value = false
-    const classKey = `class_start_${classId}_${chapterId}`;
-    localStorage.removeItem(classKey);
-    // 清理课堂状态缓存
-    localStorage.removeItem("ongoing_classroom");
+    applyQuickLoginInfo(null);
     showEndClassModal.value = false;
-    if (from === "teacher") {
-      navigateTo("/teacher");
-      return;
-    }
-    navigateTo(`/system/course/${courseId}`);
+    showClassDurationLimitModal.value = false;
+    stopClassBeginBroadcast();
+    stopClassroomTimer();
+    clearStoredClassroomState(classId, chapterId);
+    hasClassDurationLimitTriggered = true;
+    navigateAfterClassEnd(from, courseId);
   } catch (error: any) {
     console.error('下课失败:', error)
   }
+};
+
+const handleClassDurationLimitReached = () => {
+  if (hasClassDurationLimitTriggered) {
+    return;
+  }
+  hasClassDurationLimitTriggered = true;
+  classTime.value = CLASS_DURATION_LIMIT_SECONDS;
+  showEndClassModal.value = false;
+  stopClassroomTimer();
+  showClassDurationLimitModal.value = true;
+};
+
+const syncClassTime = (startAt: number) => {
+  const elapsed = Math.max(0, Math.floor((Date.now() - startAt) / 1000));
+  if (elapsed >= CLASS_DURATION_LIMIT_SECONDS) {
+    handleClassDurationLimitReached();
+    return;
+  }
+  classTime.value = elapsed;
+};
+
+const handleClassDurationLimitConfirm = async () => {
+  await confirmEndClass();
 };
 
 const handleBack = () => {
@@ -2329,6 +2497,41 @@ const confirmBack = () => {
   navigateTo("/teacher");
 };
 
+const sendClassBeginNotification = () => {
+  const classId = String(route.query.classId || "").trim();
+  const courseId = String(route.query.courseId || "").trim();
+  const chapterId = String(route.params.id || "").trim();
+  const className = String(route.query.className || "").trim();
+  const peerId = String(teacherPeerId.value || classId || "").trim();
+
+  if (!classId || !peerId || !notifyWs || notifyWs.readyState !== WebSocket.OPEN) {
+    return;
+  }
+
+  const msg = JSON.stringify({
+    type: "CLASS_BEGIN",
+    peerId,
+    teacherPeerId: peerId,
+    classId,
+    courseId,
+    chapterId,
+    className,
+  });
+
+  notifyWs.send(msg);
+  console.log("[教师课堂] 已发送开课通知:", msg);
+};
+
+const startClassBeginBroadcast = () => {
+  stopClassBeginBroadcast();
+  classBeginBroadcastTimer = setInterval(() => {
+    if (!notifyWs || notifyWs.readyState !== WebSocket.OPEN) {
+      return;
+    }
+    sendClassBeginNotification();
+  }, CLASS_BEGIN_BROADCAST_INTERVAL);
+};
+
 onMounted(async () => {
   // 获取路由参数
   const chapterId = route.params.id as string;
@@ -2347,12 +2550,16 @@ onMounted(async () => {
     localStorage.setItem(classKey, startTime);
   }
   // 计算已上课时间
-  const elapsed = Math.floor((Date.now() - parseInt(startTime)) / 1000);
-  classTime.value = elapsed;
+  let startAt = Number.parseInt(startTime, 10);
+  if (!Number.isFinite(startAt) || startAt <= 0) {
+    startAt = Date.now();
+    localStorage.setItem(classKey, String(startAt));
+  }
+  syncClassTime(startAt);
 
   // 存储正在进行的课堂信息（供全局"回到课堂"按钮使用）
   // 有效时间为2小时
-  const expireAt = Date.now() + 2 * 60 * 60 * 1000;
+  const expireAt = startAt + CLASS_DURATION_LIMIT_SECONDS * 1000;
   localStorage.setItem(
     "ongoing_classroom",
     JSON.stringify({
@@ -2362,19 +2569,23 @@ onMounted(async () => {
       expireAt,
     })
   );
-  // 调试日志
 
   // 启动课堂计时器
-  timer = setInterval(() => {
-    classTime.value++;
-  }, 1000);
+  if (!showClassDurationLimitModal.value) {
+    timer = setInterval(() => {
+      syncClassTime(startAt);
+    }, 1000);
+  }
 
   // 加载快捷登录信息（autoQuickLogin=1 时自动开启）
-  if (route.query.autoQuickLogin === '1') {
+  const hasStoredQuickLogin = !!getStoredQuickLoginInfo()?.classCode;
+  if (hasStoredQuickLogin) {
+    applyQuickLoginInfo(getStoredQuickLoginInfo());
+  } else if (route.query.autoQuickLogin === '1') {
     showLoginTip.value = false;
-    autoEnableQuickLogin();
+    await autoEnableQuickLogin();
   } else {
-    loadQuickLoginInfo();
+    await loadQuickLoginInfo();
   }
 
   // 加载课件列表
@@ -2410,13 +2621,19 @@ const connectNotifyWebSocket = (classId: string) => {
   notifyWs = new WebSocket(wsUrl);
 
   notifyWs.onopen = () => {
-    // 璋冭瘯鏃ュ織
+    console.log("[教师课堂] 通知 WebSocket 已连接");
+    sendClassBeginNotification();
+    startClassBeginBroadcast();
   };
 
   notifyWs.onmessage = async (event) => {
-    // 璋冭瘯鏃ュ織
+    console.log("[教师课堂] 收到消息:", event.data);
     try {
       const message = JSON.parse(event.data);
+
+      if (message.type === "STUDENT_STATUS" && message.status === "online") {
+        sendClassBeginNotification();
+      }
 
       // 学生加入课堂
       if (message.type === "STUDENT_JOIN") {
@@ -2455,12 +2672,14 @@ const connectNotifyWebSocket = (classId: string) => {
   };
 
   notifyWs.onclose = () => {
+    stopClassBeginBroadcast();
     // 璋冭瘯鏃ュ織
   };
 };
 
 onUnmounted(() => {
-  if (timer) clearInterval(timer);
+  stopClassBeginBroadcast();
+  stopClassroomTimer();
   if (notifyWs) {
     notifyWs.close();
     notifyWs = null;

@@ -1,148 +1,191 @@
 <template>
   <div class="teacher-page">
-    <!-- 主内容区 -->
-    <div class="main-content">
-      <!-- 左侧主内容 -->
-      <section class="left-section">
-        <!-- 顶部三个授课卡片 -->
-        <div class="top-cards">
-          <template v-if="pageLoading">
-            <div v-for="i in 3" :key="i" class="action-card skeleton-card">
-              <el-skeleton animated :rows="0">
-                <template #template>
-                  <div
-                    style="
-                      display: flex;
-                      flex-direction: column;
-                      align-items: center;
-                      justify-content: center;
-                      height: 100%;
-                    "
-                  >
-                    <el-skeleton-item
-                      variant="rect"
-                      style="width: 120px; height: 120px; border-radius: 12px"
-                    />
-                    <el-skeleton-item
-                      variant="text"
-                      style="width: 60px; margin-top: 16px"
-                    />
-                  </div>
-                </template>
-              </el-skeleton>
+    <div class="teacher-dashboard">
+      <section class="dashboard-top-row">
+        <div class="dashboard-panel dashboard-panel--hero">
+          <div
+            class="dashboard-panel-title"
+            style="padding-top: 20px; padding-left: 20px"
+          >
+            教师中心
+          </div>
+          <div class="teacher-center-card" :style="teacherCenterCardStyle">
+            <div class="teacher-center-actions">
+              <button
+                type="button"
+                class="teacher-center-action teacher-center-action--primary"
+                @click="handleGoToClass"
+              >
+                授课
+              </button>
+              <button type="button" class="teacher-center-action" @click="goToLessons">
+                备课
+              </button>
+              <button type="button" class="teacher-center-action" @click="handleGoToTask">
+                任务
+              </button>
             </div>
-          </template>
-          <template v-else>
-            <!-- 备课 -->
-            <div class="action-card" @click="goToLessons">
-              <img
-                src="~/assets/images/one.png"
-                :alt="$t('teacher.prepare')"
-                class="card-icon"
-              />
-              <span class="card-label">{{ $t("teacher.prepare") }}</span>
-            </div>
-
-            <!-- 授课 -->
-            <div class="action-card" @click="handleGoToClass">
-              <img
-                src="~/assets/images/two.png"
-                :alt="$t('teacher.teach')"
-                class="card-icon"
-              />
-              <span class="card-label">{{ $t("teacher.teach") }}</span>
-            </div>
-
-            <!-- 作业 -->
-            <div class="action-card" @click="handleGoToTask">
-              <img
-                src="~/assets/images/three.png"
-                :alt="$t('teacher.homework')"
-                class="card-icon"
-              />
-              <span class="card-label">{{ $t("teacher.homework") }}</span>
-            </div>
-          </template>
+          </div>
         </div>
 
-        <!-- 下方内容区 -->
-        <div class="bottom-section">
-          <!-- 骨架屏状态 -->
-          <template v-if="pageLoading">
-            <div class="lesson-record">
-              <el-skeleton animated :rows="0">
-                <template #template>
-                  <div
-                    style="
-                      display: flex;
-                      align-items: center;
-                      justify-content: space-between;
-                      margin-bottom: 12px;
-                    "
-                  >
-                    <el-skeleton-item variant="text" style="width: 80px" />
-                    <el-skeleton-item
-                      variant="rect"
-                      style="width: 120px; height: 32px; border-radius: 4px"
-                    />
-                  </div>
-                  <el-skeleton-item
-                    variant="rect"
-                    style="
-                      width: 100%;
-                      height: 32px;
-                      border-radius: 4px;
-                      margin-bottom: 12px;
-                    "
-                  />
-                  <el-skeleton-item
-                    variant="rect"
-                    style="width: 100%; height: 200px; border-radius: 8px"
-                  />
-                </template>
-              </el-skeleton>
-            </div>
-            <div class="chapter-section" style="overflow: hidden">
-              <el-skeleton animated :rows="0">
-                <template #template>
-                  <div style="margin-bottom: 16px">
-                    <el-skeleton-item
-                      variant="rect"
-                      style="width: 140px; height: 36px; border-radius: 6px"
-                    />
-                  </div>
-                  <div class="chapter-grid">
-                    <div v-for="i in 3" :key="i" class="chapter-item">
+        <div class="dashboard-panel dashboard-panel--stats">
+          <div
+            class="dashboard-panel-title"
+            style="padding-top: 20px; padding-left: 20px"
+          >
+            信息
+          </div>
+          <div class="teacher-stats-grid">
+            <template v-if="pageLoading">
+              <div
+                v-for="i in 4"
+                :key="i"
+                class="teacher-stat-card teacher-stat-card--skeleton"
+              >
+                <el-skeleton animated :rows="0">
+                  <template #template>
+                    <div class="teacher-stat-skeleton">
                       <el-skeleton-item
-                        variant="rect"
-                        style="width: 100%; height: 180px; border-radius: 8px"
+                        variant="circle"
+                        style="width: 52px; height: 52px"
                       />
+                      <div class="teacher-stat-skeleton-content">
+                        <el-skeleton-item
+                          variant="text"
+                          style="width: 72px; margin-bottom: 12px"
+                        />
+                        <el-skeleton-item
+                          variant="text"
+                          style="width: 54px; height: 32px"
+                        />
+                      </div>
                     </div>
-                  </div>
-                </template>
-              </el-skeleton>
+                  </template>
+                </el-skeleton>
+              </div>
+            </template>
+            <template v-else>
+              <div
+                v-for="card in dashboardInfoCards"
+                :key="card.key"
+                class="teacher-stat-card"
+              >
+                <img :src="card.icon" :alt="card.label" class="teacher-stat-icon" />
+                <div class="teacher-stat-content">
+                  <div class="teacher-stat-label">{{ card.label }}</div>
+                  <div class="teacher-stat-value">{{ card.value }}</div>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-tool-row">
+        <div class="dashboard-panel dashboard-tool-panel">
+          <div class="dashboard-panel-header">
+            <span class="dashboard-panel-title">{{ $t("teacher.mataToolCenter") }}</span>
+          </div>
+          <div class="dashboard-tool-body">
+            <div class="dashboard-quick-grid dashboard-quick-grid--tools">
+              <button
+                v-for="item in dashboardToolCards"
+                :key="item.key"
+                type="button"
+                class="dashboard-quick-card dashboard-quick-card--plain"
+                @click="handleOpenTool(item.key)"
+              >
+                <span class="dashboard-quick-icon dashboard-quick-icon--tool">
+                  <img :src="item.image" :alt="item.label" />
+                </span>
+                <span class="dashboard-quick-label dashboard-quick-label--tool">{{
+                  item.label
+                }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-panel dashboard-tool-panel">
+          <div class="dashboard-panel-header">
+            <span class="dashboard-panel-title">{{
+              $t("teacher.aiPracticeCenter")
+            }}</span>
+          </div>
+          <div class="dashboard-tool-body">
+            <div class="dashboard-quick-grid dashboard-quick-grid--ai">
+              <button
+                v-for="item in dashboardAICards"
+                :key="item.key"
+                type="button"
+                class="dashboard-quick-card dashboard-quick-card--plain"
+                @click="handleOpenAIModal(item.key)"
+              >
+                <span class="dashboard-quick-icon dashboard-quick-icon--ai">
+                  <img :src="item.image" :alt="item.label" />
+                </span>
+                <span class="dashboard-quick-label dashboard-quick-label--ai">{{
+                  item.label
+                }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-panel dashboard-record-panel">
+        <div class="dashboard-record-header">
+          <span class="dashboard-panel-title">{{ $t("teacher.teachingRecord") }}</span>
+        </div>
+
+        <div class="dashboard-record-card">
+          <template v-if="pageLoading">
+            <div class="dashboard-record-toolbar">
+              <div class="dashboard-record-toolbar-main">
+                <el-skeleton-item
+                  variant="rect"
+                  style="width: 180px; height: 42px; border-radius: 999px"
+                />
+                <el-skeleton-item
+                  variant="rect"
+                  style="width: 220px; height: 42px; border-radius: 999px"
+                />
+              </div>
+              <el-skeleton-item
+                variant="rect"
+                style="width: 110px; height: 44px; border-radius: 999px"
+              />
+            </div>
+            <div class="dashboard-record-body dashboard-record-body--skeleton">
+              <el-skeleton-item
+                variant="rect"
+                style="width: 100%; height: 360px; border-radius: 24px"
+              />
+              <div class="dashboard-chapter-grid dashboard-chapter-grid--skeleton">
+                <el-skeleton-item
+                  v-for="i in 6"
+                  :key="i"
+                  variant="rect"
+                  style="width: 100%; height: 168px; border-radius: 24px"
+                />
+              </div>
             </div>
           </template>
-          <!-- 真实内容 -->
-          <template v-else>
-            <!-- 左侧：授课记录 -->
-            <div class="lesson-record">
-              <!-- 有授课记录时显示 -->
-              <template v-if="teachList.length > 0">
-                <div class="section-header">
-                  <span class="section-title">{{ $t("teacher.teachingRecord") }}</span>
-                  <MSelect
-                    v-model="selectedClassId"
-                    :options="classOptions"
-                    value-key="value"
-                    label-key="label"
-                    :placeholder="$t('teacher.selectClass')"
-                    class="class-select"
-                  />
-                </div>
+
+          <template v-else-if="teachList.length > 0">
+            <div class="dashboard-record-toolbar">
+              <div class="dashboard-record-toolbar-main">
+                <MSelect
+                  v-model="selectedClassId"
+                  :options="classOptions"
+                  value-key="value"
+                  label-key="label"
+                  :placeholder="$t('teacher.selectClass')"
+                  class="dashboard-select dashboard-select--class"
+                />
 
                 <div
-                  class="course-select-container"
+                  class="dashboard-course-select"
                   @mouseenter="showCoursePopover = true"
                   @mouseleave="showCoursePopover = false"
                 >
@@ -152,7 +195,7 @@
                     value-key="value"
                     label-key="label"
                     :placeholder="$t('teacher.selectCourse')"
-                    class="course-select"
+                    class="dashboard-select"
                   />
                   <Transition name="fade">
                     <div
@@ -164,456 +207,244 @@
                     </div>
                   </Transition>
                 </div>
+              </div>
 
-                <div class="lesson-card" @click="goToCourse">
+              <button
+                type="button"
+                class="dashboard-quick-login-btn"
+                @click="handleQuickLoginBtnClick"
+              >
+                {{ dashboardQuickLoginLabel }}
+              </button>
+            </div>
+
+            <div class="dashboard-record-body">
+              <div class="dashboard-course-column">
+                <div class="dashboard-course-card" @click="goToCourse">
                   <img
                     v-if="selectedCourse?.courseCoverUrl"
                     :src="selectedCourse.courseCoverUrl"
                     :alt="$t('common.courseCover')"
-                    class="lesson-cover"
+                    class="dashboard-course-cover"
                   />
-                  <div v-else class="lesson-cover lesson-cover-placeholder"></div>
-                </div>
-              </template>
-              <!-- 无授课记录时显示 -->
-              <template v-else>
-                <div class="section-header">
-                  <span class="section-title">{{ $t("teacher.teachingRecord") }}</span>
-                </div>
-                <div class="empty-record">{{ $t("teacher.noTeachingRecord") }}</div>
-              </template>
-            </div>
-
-            <!-- 中间：章节列表 -->
-            <div class="chapter-section">
-              <div class="section-header">
-                <div
-                  class="login-btn-wrapper"
-                  @mouseenter="showLoginPopover = true"
-                  @mouseleave="showLoginPopover = false"
-                >
-                  <MButton
-                    size="medium"
-                    class="quick-login-btn"
-                    @click="handleQuickLoginBtnClick"
+                  <div
+                    v-else
+                    class="dashboard-course-cover dashboard-course-cover--placeholder"
                   >
-                    {{
-                      quickLoginCode
-                        ? $t("teacher.viewLoginStatus")
-                        : $t("teacher.studentQuickLogin")
-                    }}
-                  </MButton>
-                  <!-- 气泡弹窗 -->
-                  <div v-show="showLoginPopover" class="login-popover">
-                    <div class="popover-arrow"></div>
-                    <div class="popover-content">
-                      <!-- 未开启快捷登录时显示提示 -->
-                      <template v-if="!quickLoginCode">
-                        <div class="popover-tip">{{ $t("teacher.quickLoginTip") }}</div>
-                      </template>
-                      <!-- 已开启快捷登录时显示详情 -->
-                      <template v-else>
-                        <div class="popover-title">{{ selectedClassName }}</div>
-                        <div class="popover-expire">
-                          （{{ $t("teacher.validFor2Hours") }}{{ quickLoginExpire
-                          }}{{ $t("teacher.expire") }}）
-                        </div>
-                        <div class="popover-info-card">
-                          <div class="popover-info-text">
-                            <div>{{ $t("teacher.classCode") }}{{ quickLoginCode }}</div>
-                            <div>
-                              {{ $t("teacher.unifiedPassword") }}{{ quickLoginPwd }}
-                            </div>
-                          </div>
-                          <button class="copy-btn" @click="copyCode">
-                            <svg
-                              width="14"
-                              height="14"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                            >
-                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                              <path
-                                d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                              />
-                            </svg>
-                            {{ $t("common.copy") }}
-                          </button>
-                        </div>
-                      </template>
-                    </div>
+                    暂无课程封面
                   </div>
                 </div>
               </div>
-              <div class="chapter-grid-wrapper">
-                <div class="chapter-grid">
+
+              <div class="dashboard-chapter-column">
+                <div v-if="chapterList.length > 0" class="dashboard-chapter-grid">
                   <div
                     v-for="chapter in chapterList"
                     :key="chapter.chapterId"
-                    class="chapter-item"
+                    class="dashboard-chapter-card"
                     :class="{ 'is-selected': selectedChapterId === chapter.chapterId }"
                     @click="selectedChapterId = chapter.chapterId"
                   >
-                    <div class="chapter-card">
-                      <span
-                        class="status-tag"
-                        :class="{
-                          'status-ended': getChapterStatus(chapter) === 0,
-                          'status-not-started': getChapterStatus(chapter) === 1,
-                          'status-last': getChapterStatus(chapter) === 2,
-                          'status-ongoing': getChapterStatus(chapter) === 3,
-                        }"
+                    <span
+                      class="dashboard-chapter-status"
+                      :class="{
+                        'status-ended': getChapterStatus(chapter) === 0,
+                        'status-not-started': getChapterStatus(chapter) === 1,
+                        'status-last': getChapterStatus(chapter) === 2,
+                        'status-ongoing': getChapterStatus(chapter) === 3,
+                      }"
+                    >
+                      {{ getChapterStatusText(chapter) }}
+                    </span>
+
+                    <span class="dashboard-chapter-name">
+                      {{ formatChapterName(chapter.chapterName) }}
+                    </span>
+
+                    <div class="dashboard-chapter-actions">
+                      <button
+                        type="button"
+                        class="dashboard-action-btn teach-btn"
+                        @click.stop="goToTeach(chapter)"
                       >
-                        {{ getChapterStatusText(chapter) }}
-                      </span>
-                      <span class="chapter-name">{{
-                        formatChapterName(chapter.chapterName)
-                      }}</span>
-                      <div class="chapter-actions">
-                        <button
-                          class="action-btn teach-btn"
-                          @click.stop="goToTeach(chapter)"
-                        >
-                          {{
-                            chapter.teachStatus === 1
-                              ? $t("teacher.backToClassroom")
-                              : chapter.teachStatus === 2
-                              ? $t("teacher.classAgain")
-                              : $t("teacher.goToClass")
-                          }}
-                        </button>
-                        <button
-                          v-if="chapter.teachStatus !== 1"
-                          class="action-btn prepare-btn"
-                          @click.stop="goToPrepare(chapter)"
-                        >
-                          {{
-                            chapter.teachStatus === 2
-                              ? $t("teacher.continuePrepare")
-                              : $t("teacher.goToPrepare")
-                          }}
-                        </button>
-                      </div>
+                        {{
+                          chapter.teachStatus === 1
+                            ? $t("teacher.backToClassroom")
+                            : chapter.teachStatus === 2
+                            ? $t("teacher.classAgain")
+                            : $t("teacher.goToClass")
+                        }}
+                      </button>
+                      <button
+                        v-if="chapter.teachStatus !== 1"
+                        type="button"
+                        class="dashboard-action-btn prepare-btn"
+                        @click.stop="goToPrepare(chapter)"
+                      >
+                        {{
+                          chapter.teachStatus === 2
+                            ? $t("teacher.continuePrepare")
+                            : $t("teacher.goToPrepare")
+                        }}
+                      </button>
                     </div>
                   </div>
-                  <div v-if="chapterList.length === 0" class="empty-chapter">
-                    {{ $t("teacher.noChapter") }}
-                  </div>
+                </div>
+                <div v-else class="dashboard-empty-state dashboard-empty-state--chapter">
+                  {{ $t("teacher.noChapter") }}
                 </div>
               </div>
             </div>
           </template>
+
+          <div v-else class="dashboard-empty-state">
+            {{ $t("teacher.noTeachingRecord") }}
+          </div>
         </div>
       </section>
 
-      <!-- 右侧边栏 -->
-      <aside class="right-sidebar">
-        <template v-if="pageLoading">
-          <!-- 工具中心骨架 -->
-          <div class="sidebar-card">
-            <el-skeleton animated :rows="0">
-              <template #template>
-                <div class="sidebar-header">
-                  <el-skeleton-item variant="text" style="width: 100px" />
-                </div>
-                <div class="tool-list">
-                  <div v-for="i in 3" :key="i" class="tool-item">
-                    <el-skeleton-item
-                      variant="rect"
-                      style="width: 90px; height: 90px; border-radius: 8px"
-                    />
-                    <el-skeleton-item
-                      variant="text"
-                      style="width: 50px; margin-top: 8px"
-                    />
+      <div
+        v-if="showAIModelSelectModal"
+        class="modal-overlay"
+        @click="closeAIModelSelectModal"
+      >
+        <div class="modal-content model-select-modal" @click.stop>
+          <div class="modal-header">
+            <span class="modal-title">{{
+              currentAIModel ? $t(currentAIModel.label) : ""
+            }}</span>
+            <button class="close-btn" @click="closeAIModelSelectModal">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M1 1l12 12M13 1l-12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body model-select-body">
+            <div class="model-select-section">
+              <div class="model-select-section-head">
+                <div>
+                  <div class="model-select-section-title">
+                    {{ $t("ai.createNewModel") }}
+                  </div>
+                  <div class="model-select-section-desc">
+                    {{ $t("ai.createNewModelDesc") }}
                   </div>
                 </div>
-              </template>
-            </el-skeleton>
-          </div>
-          <!-- AI 实践中心骨架 -->
-          <div class="sidebar-card">
-            <el-skeleton animated :rows="0">
-              <template #template>
-                <div class="sidebar-header">
-                  <el-skeleton-item variant="text" style="width: 100px" />
+                <button
+                  class="btn-confirm model-select-create-btn"
+                  @click="openAICreateModal"
+                >
+                  {{ $t("ai.createProject") }}
+                </button>
+              </div>
+            </div>
+
+            <div class="model-select-section">
+              <div class="model-select-section-head model-select-section-head--stack">
+                <div class="model-select-section-title-row">
+                  <div class="model-select-section-title">
+                    {{ $t("ai.myCreatedModels") }}
+                  </div>
+                  <span v-if="savedAIModels.length" class="model-select-count">{{
+                    savedAIModels.length
+                  }}</span>
                 </div>
-                <div class="tool-list">
-                  <div v-for="i in 4" :key="i" class="tool-item">
-                    <el-skeleton-item
-                      variant="rect"
-                      style="width: 90px; height: 90px; border-radius: 8px"
-                    />
-                    <el-skeleton-item
-                      variant="text"
-                      style="width: 50px; margin-top: 8px"
-                    />
+                <div class="model-select-section-desc">
+                  {{ $t("ai.myCreatedModelsDesc") }}
+                </div>
+              </div>
+
+              <div v-if="savedAIModelsLoading" class="model-list-empty">
+                {{ $t("common.loading") }}
+              </div>
+              <div v-else-if="!savedAIModels.length" class="model-list-empty">
+                {{ $t("ai.noCreatedModels") }}
+              </div>
+              <div v-else class="model-card-grid">
+                <div
+                  v-for="item in savedAIModels"
+                  :key="item.id"
+                  class="model-card"
+                  @click="handleOpenAISavedModel(item)"
+                >
+                  <button
+                    class="model-card-delete"
+                    type="button"
+                    @click.stop="handleDeleteAISavedModel(item)"
+                  >
+                    删除
+                  </button>
+                  <div class="model-card-cover">
+                    <img :src="getSavedAIModelCover(item.toolKey)" alt="" />
+                  </div>
+                  <div class="model-card-body">
+                    <div class="model-card-name">{{ item.name }}</div>
+                    <div class="model-card-time">
+                      {{ item.updatedAt ? formatSavedAIModelTime(item.updatedAt) : "-" }}
+                    </div>
                   </div>
                 </div>
-              </template>
-            </el-skeleton>
+              </div>
+            </div>
           </div>
-          <!-- 信息栏骨架 -->
-          <div class="info-section">
-            <el-skeleton animated :rows="0">
-              <template #template>
-                <el-skeleton-item
-                  variant="text"
-                  style="width: 60px; margin-bottom: 12px"
-                />
-                <div class="info-grid">
-                  <div v-for="i in 4" :key="i" class="info-card">
-                    <el-skeleton-item
-                      variant="text"
-                      style="width: 60px; margin-bottom: 8px"
-                    />
-                    <el-skeleton-item variant="text" style="width: 40px; height: 28px" />
-                  </div>
-                </div>
-              </template>
-            </el-skeleton>
+          <div class="modal-footer modal-footer--single">
+            <button class="btn-cancel" @click="closeAIModelSelectModal">
+              {{ $t("common.cancel") }}
+            </button>
           </div>
-        </template>
-        <template v-else>
-          <!-- 玛塔工具中心 -->
-          <div class="sidebar-card">
-            <div class="sidebar-header">
-              <span class="sidebar-title">{{ $t("teacher.mataToolCenter") }}</span>
-              <img
-                src="~/assets/images/diandian.png"
-                alt="more"
-                class="more-icon"
-                @click="goToToolCenter"
+        </div>
+      </div>
+
+      <div v-if="showAICreateModal" class="modal-overlay" @click="closeAICreateModal">
+        <div class="modal-content" @click.stop>
+          <div class="modal-header">
+            <span class="modal-title">{{
+              $t("ai.newModelTitle", {
+                name: currentAIModel ? $t(currentAIModel.label) : "",
+              })
+            }}</span>
+            <button class="close-btn" @click="closeAICreateModal">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M1 1l12 12M13 1l-12 12" />
+              </svg>
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="form-item">
+              <span class="form-label">{{ $t("ai.modelName") }}</span>
+              <input
+                v-model="aiModelName"
+                type="text"
+                class="form-input"
+                :placeholder="$t('ai.inputModelName')"
+                @keyup.enter="handleAIConfirm"
               />
             </div>
-            <div class="tool-list">
-              <div class="tool-item" @click="handleOpenTool('vincibot')">
-                <div class="tool-icon">
-                  <img src="../assets/images/tool1.png" alt="VinciBot" />
-                </div>
-                <span class="tool-name">VinciBot</span>
-              </div>
-
-              <div class="tool-item" @click="handleOpenTool('nous')">
-                <div class="tool-icon">
-                  <img src="../assets/images/tool2.png" alt="Nous" />
-                </div>
-                <span class="tool-name">Nous</span>
-              </div>
-              <div class="tool-item" @click="handleOpenTool('talemap')">
-                <div class="tool-icon">
-                  <img src="../assets/images/too4.png" alt="Nous" />
-                </div>
-                <span class="tool-name">MatataCode(TaleMap)</span>
-              </div>
-            </div>
           </div>
-
-          <!-- AI实践中心 -->
-          <div class="sidebar-card">
-            <div class="sidebar-header">
-              <span class="sidebar-title">{{ $t("teacher.aiPracticeCenter") }}</span>
-              <img src="~/assets/images/diandian.png" alt="more" class="more-icon" />
-            </div>
-            <div class="tool-list">
-              <div class="tool-item" @click="handleOpenAIModal('imageClassModel')">
-                <div class="tool-icon">
-                  <img src="~/assets/images/1.svg" alt="图像分类" />
-                </div>
-                <span class="tool-name">{{ $t("ai.imageClassModel") }}</span>
-              </div>
-              <div class="tool-item" @click="handleOpenAIModal('gestureClassModel')">
-                <div class="tool-icon">
-                  <img src="~/assets/images/2.svg" alt="手势分类" />
-                </div>
-                <span class="tool-name">{{ $t("ai.gestureClassModel") }}</span>
-              </div>
-              <div class="tool-item" @click="handleOpenAIModal('voiceClassModel')">
-                <div class="tool-icon">
-                  <img src="~/assets/images/3.svg" alt="语音分类" />
-                </div>
-                <span class="tool-name">{{ $t("ai.voiceClassModel") }}</span>
-              </div>
-              <div class="tool-item" @click="handleOpenAIModal('poseClassModel')">
-                <div class="tool-icon">
-                  <img src="~/assets/images/4.svg" alt="姿态分类" />
-                </div>
-                <span class="tool-name">{{ $t("ai.poseClassModel") }}</span>
-              </div>
-            </div>
+          <div class="modal-footer">
+            <button class="btn-cancel" @click="closeAICreateModal">
+              {{ $t("common.cancel") }}
+            </button>
+            <button class="btn-confirm" @click="handleAIConfirm">
+              {{ $t("common.confirm") }}
+            </button>
           </div>
-
-          <div
-            v-if="showAIModelSelectModal"
-            class="modal-overlay"
-            @click="closeAIModelSelectModal"
-          >
-            <div class="modal-content model-select-modal" @click.stop>
-              <div class="modal-header">
-                <span class="modal-title">{{
-                  currentAIModel ? $t(currentAIModel.label) : ""
-                }}</span>
-                <button class="close-btn" @click="closeAIModelSelectModal">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M1 1l12 12M13 1l-12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div class="modal-body model-select-body">
-                <div class="model-select-section">
-                  <div class="model-select-section-head">
-                    <div>
-                      <div class="model-select-section-title">
-                        {{ $t("ai.createNewModel") }}
-                      </div>
-                      <div class="model-select-section-desc">
-                        {{ $t("ai.createNewModelDesc") }}
-                      </div>
-                    </div>
-                    <button
-                      class="btn-confirm model-select-create-btn"
-                      @click="openAICreateModal"
-                    >
-                      {{ $t("ai.createProject") }}
-                    </button>
-                  </div>
-                </div>
-
-                <div class="model-select-section">
-                  <div class="model-select-section-head model-select-section-head--stack">
-                    <div class="model-select-section-title-row">
-                      <div class="model-select-section-title">
-                        {{ $t("ai.myCreatedModels") }}
-                      </div>
-                      <span v-if="savedAIModels.length" class="model-select-count">{{
-                        savedAIModels.length
-                      }}</span>
-                    </div>
-                    <div class="model-select-section-desc">
-                      {{ $t("ai.myCreatedModelsDesc") }}
-                    </div>
-                  </div>
-
-                  <div v-if="savedAIModelsLoading" class="model-list-empty">
-                    {{ $t("common.loading") }}
-                  </div>
-                  <div v-else-if="!savedAIModels.length" class="model-list-empty">
-                    {{ $t("ai.noCreatedModels") }}
-                  </div>
-                  <div v-else class="model-card-grid">
-                    <div
-                      v-for="item in savedAIModels"
-                      :key="item.id"
-                      class="model-card"
-                      @click="handleOpenAISavedModel(item)"
-                    >
-                      <button
-                        class="model-card-delete"
-                        type="button"
-                        @click.stop="handleDeleteAISavedModel(item)"
-                      >
-                        删除
-                      </button>
-                      <div class="model-card-cover">
-                        <img :src="getSavedAIModelCover(item.toolKey)" alt="" />
-                      </div>
-                      <div class="model-card-body">
-                        <div class="model-card-name">{{ item.name }}</div>
-                        <div class="model-card-time">
-                          {{
-                            item.updatedAt ? formatSavedAIModelTime(item.updatedAt) : "-"
-                          }}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="modal-footer modal-footer--single">
-                <button class="btn-cancel" @click="closeAIModelSelectModal">
-                  {{ $t("common.cancel") }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div v-if="showAICreateModal" class="modal-overlay" @click="closeAICreateModal">
-            <div class="modal-content" @click.stop>
-              <div class="modal-header">
-                <span class="modal-title">{{
-                  $t("ai.newModelTitle", {
-                    name: currentAIModel ? $t(currentAIModel.label) : "",
-                  })
-                }}</span>
-                <button class="close-btn" @click="closeAICreateModal">
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 14 14"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M1 1l12 12M13 1l-12 12" />
-                  </svg>
-                </button>
-              </div>
-              <div class="modal-body">
-                <div class="form-item">
-                  <span class="form-label">{{ $t("ai.modelName") }}</span>
-                  <input
-                    v-model="aiModelName"
-                    type="text"
-                    class="form-input"
-                    :placeholder="$t('ai.inputModelName')"
-                    @keyup.enter="handleAIConfirm"
-                  />
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn-cancel" @click="closeAICreateModal">
-                  {{ $t("common.cancel") }}
-                </button>
-                <button class="btn-confirm" @click="handleAIConfirm">
-                  {{ $t("common.confirm") }}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- 信息栏 -->
-          <div class="info-section">
-            <div class="sidebar-title mb-3">{{ $t("teacher.infoBar") }}</div>
-            <div class="info-grid">
-              <div class="info-card">
-                <div class="info-label">{{ $t("teacher.classCount") }}</div>
-                <div class="info-value">8</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">{{ $t("teacher.submittedWorks") }}</div>
-                <div class="info-value">1208</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">{{ $t("teacher.teachingHours") }}</div>
-                <div class="info-value">50</div>
-              </div>
-              <div class="info-card">
-                <div class="info-label">{{ $t("teacher.studentCount") }}</div>
-                <div class="info-value info-value--highlight">80</div>
-              </div>
-            </div>
-          </div>
-        </template>
-      </aside>
+        </div>
+      </div>
     </div>
 
     <!-- 开课设置弹窗 -->
@@ -799,10 +630,24 @@ import aigcCover1 from "~/assets/images/1.svg";
 import aigcCover2 from "~/assets/images/2.svg";
 import aigcCover3 from "~/assets/images/3.svg";
 import aigcCover4 from "~/assets/images/4.svg";
+import teacherCenterBanner from "~/assets/newimages/bg2.png";
+import statsClassIcon from "~/assets/newimages/988.png";
+import statsTeachingIcon from "~/assets/newimages/987.png";
+import statsOpusIcon from "~/assets/newimages/986.png";
+import statsStudentIcon from "~/assets/newimages/985.png";
+import tool2Icon from "~/assets/images/tool2.png";
+import tool1Icon from "~/assets/images/tool1.png";
+import tool4Icon from "~/assets/images/too4.png";
 
 const { t: $t, locale } = useI18n();
 const router = useRouter();
 const runtimeConfig = useRuntimeConfig();
+const teacherCenterCardStyle = {
+  backgroundImage: `url(${teacherCenterBanner})`,
+  backgroundRepeat: "no-repeat",
+  backgroundPosition: "center",
+  backgroundSize: "100% 100%",
+} as Record<string, string>;
 const {
   parseMessageData,
   getMessageType,
@@ -828,6 +673,7 @@ const {
   beginClass,
   getTeachList,
   getQuickLoginInfo,
+  getTeacherStats,
 } = useTeacher();
 const { getAiList, createAi, updateAi, deleteAi, deleteOss, ssoLogin } = aiAdmin();
 const { addOpus, uploadOSS } = personalcenterApi();
@@ -859,6 +705,20 @@ interface CourseItem {
   courseCoverUrl: string;
 }
 
+interface TeacherStats {
+  classCount: number;
+  opusCount: number;
+  teachHours: number;
+  studentCount: number;
+}
+
+const getDefaultTeacherStats = (): TeacherStats => ({
+  classCount: 0,
+  opusCount: 0,
+  teachHours: 0,
+  studentCount: 0,
+});
+
 // 使用 useAsyncData 加载授课记录（lazy 模式，先显示骨架屏）
 const { data: teachList, pending: teachListPending } = useAsyncData(
   "teacher-teach-list",
@@ -889,6 +749,69 @@ const { data: teachList, pending: teachListPending } = useAsyncData(
   }
 );
 
+const { data: teacherStats, pending: teacherStatsPending } = useAsyncData(
+  "teacher-stats",
+  async () => {
+    const data = await getTeacherStats();
+    return data;
+  },
+  {
+    lazy: true,
+    default: getDefaultTeacherStats,
+    transform: (data: any): TeacherStats => ({
+      classCount: Number(data?.classCount ?? 0),
+      opusCount: Number(data?.opusCount ?? 0),
+      teachHours: Number(data?.teachHours ?? 0),
+      studentCount: Number(data?.studentCount ?? 0),
+    }),
+  }
+);
+
+const dashboardInfoCards = computed(() => [
+  {
+    key: "classCount",
+    label: $t("teacher.classCount"),
+    value: teacherStats.value?.classCount ?? 0,
+    icon: statsClassIcon,
+  },
+  {
+    key: "teachingHours",
+    label: $t("teacher.teachingHours"),
+    value: teacherStats.value?.teachHours ?? 0,
+    icon: statsTeachingIcon,
+  },
+  {
+    key: "submittedWorks",
+    label: $t("teacher.submittedWorks"),
+    value: teacherStats.value?.opusCount ?? 0,
+    icon: statsOpusIcon,
+  },
+  {
+    key: "studentCount",
+    label: $t("teacher.studentCount"),
+    value: teacherStats.value?.studentCount ?? 0,
+    icon: statsStudentIcon,
+  },
+]);
+
+const dashboardToolCards = [
+  {
+    key: "vincibot",
+    label: "MatataCode（VinciBot）",
+    image: tool1Icon,
+  },
+  {
+    key: "nous",
+    label: "MatataCode（Nous）",
+    image: tool2Icon,
+  },
+  {
+    key: "talemap",
+    label: "MatataCode(TaleMap)",
+    image: tool4Icon,
+  },
+];
+
 const selectedClassId = ref<string | null>(null);
 const selectedCourseId = ref<string | null>(null);
 const selectedChapterId = ref<string | null>(null);
@@ -900,6 +823,12 @@ interface ChapterItem {
   chapterName: string;
   teachStatus: number;
   isLatestTeach: number;
+}
+interface OngoingClassroomInfo {
+  classId: string;
+  courseId: string;
+  chapterId: string;
+  expireAt?: number;
 }
 const chapterList = ref<ChapterItem[]>([]);
 
@@ -926,6 +855,111 @@ const loadChapterList = async () => {
     console.error("加载章节列表失败:", error);
     chapterList.value = [];
   }
+};
+
+const getStoredOngoingClassroom = (): OngoingClassroomInfo | null => {
+  if (typeof window === "undefined") return null;
+
+  const stored = localStorage.getItem("ongoing_classroom");
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored);
+    const classId = String(parsed?.classId || "").trim();
+    const courseId = String(parsed?.courseId || "").trim();
+    const chapterId = String(parsed?.chapterId || "").trim();
+    const expireAt = Number(parsed?.expireAt || 0);
+
+    if (!classId || !courseId || !chapterId) {
+      localStorage.removeItem("ongoing_classroom");
+      return null;
+    }
+
+    if (expireAt && Date.now() > expireAt) {
+      localStorage.removeItem("ongoing_classroom");
+      return null;
+    }
+
+    return {
+      classId,
+      courseId,
+      chapterId,
+      expireAt: expireAt || undefined,
+    };
+  } catch {
+    localStorage.removeItem("ongoing_classroom");
+    return null;
+  }
+};
+
+const clearStoredOngoingClassroom = () => {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("ongoing_classroom");
+};
+
+const buildTeacherClassroomUrl = (info: {
+  classId: string;
+  courseId: string;
+  chapterId: string;
+  className?: string;
+}) => {
+  const className = encodeURIComponent(info.className || "");
+  return `/system/classroom/${info.chapterId}?classId=${info.classId}&className=${className}&courseId=${info.courseId}&from=teacher&autoQuickLogin=1`;
+};
+
+const verifyOngoingClassroom = async () => {
+  const stored = getStoredOngoingClassroom();
+  if (!stored) return null;
+
+  try {
+    const data = await getTeachChapterList(stored.courseId, stored.classId);
+    const chapters = Array.isArray(data) ? data : [];
+    const matched = chapters.find(
+      (item: any) =>
+        String(item?.chapterId || "") === stored.chapterId &&
+        Number(item?.teachStatus ?? -1) === 1
+    );
+
+    if (matched) {
+      return stored;
+    }
+
+    clearStoredOngoingClassroom();
+    return null;
+  } catch (error) {
+    console.error("校验进行中课堂失败:", error);
+    return null;
+  }
+};
+
+const ensureNoOngoingClassroomBeforeStart = async (target: {
+  classId: string;
+  courseId: string;
+  chapterId: string;
+}) => {
+  const ongoing = await verifyOngoingClassroom();
+  if (!ongoing) return true;
+
+  const sameTarget =
+    ongoing.classId === target.classId &&
+    ongoing.courseId === target.courseId &&
+    ongoing.chapterId === target.chapterId;
+
+  const ongoingClassName =
+    teachList.value.find((item: any) => String(item.classId) === ongoing.classId)?.className || "";
+
+  if (sameTarget) {
+    navigateTo(
+      buildTeacherClassroomUrl({
+        ...ongoing,
+        className: ongoingClassName,
+      })
+    );
+    return false;
+  }
+
+  ElMessage.warning("当前已有进行中的课堂，请先结束后再开始新的课程");
+  return false;
 };
 
 // 监听 teachList 变化，自动选中第一个班级
@@ -1006,12 +1040,42 @@ onMounted(() => {
     minLoadingDone.value = true;
   }, 0);
 });
-const pageLoading = computed(() => !minLoadingDone.value || teachListPending.value);
+const pageLoading = computed(
+  () => !minLoadingDone.value || teachListPending.value || teacherStatsPending.value
+);
 
 // 从 quickLoginInfo 中解构出各个字段（保持响应式）
 const quickLoginCode = computed(() => quickLoginInfo.value.classCode);
 const quickLoginPwd = computed(() => quickLoginInfo.value.classCodePwd);
 const quickLoginExpire = computed(() => quickLoginInfo.value.expirationDate);
+const dashboardQuickLoginLabel = computed(() =>
+  quickLoginCode.value ? $t("teacher.viewLoginStatus") : $t("auth.classCodeLogin")
+);
+const TEACHER_QUICK_LOGIN_STORAGE_KEY = "teacher_quick_login_info";
+
+const syncTeacherQuickLoginCache = (data?: {
+  classCode?: string;
+  classCodePwd?: string;
+  expirationDate?: string;
+} | null) => {
+  if (typeof window === "undefined") return;
+
+  const classCode = String(data?.classCode || quickLoginCode.value || "").trim();
+  if (!classCode) {
+    localStorage.removeItem(TEACHER_QUICK_LOGIN_STORAGE_KEY);
+    return;
+  }
+
+  localStorage.setItem(
+    TEACHER_QUICK_LOGIN_STORAGE_KEY,
+    JSON.stringify({
+      classCode,
+      classCodePwd: String(data?.classCodePwd || quickLoginPwd.value || ""),
+      expirationDate: String(data?.expirationDate || quickLoginExpire.value || ""),
+      expireAt: Date.now() + 2 * 60 * 60 * 1000,
+    })
+  );
+};
 
 // 工具 iframe 弹窗相关
 const showToolIframeModal = ref(false);
@@ -1079,6 +1143,29 @@ const teacherAIItems: Record<string, TeacherAICardItem> = {
     cover: aigcCover4,
   },
 };
+
+const dashboardAICards = computed(() => [
+  {
+    key: "imageClassModel",
+    label: $t("ai.imageClassModel"),
+    image: aigcCover1,
+  },
+  {
+    key: "gestureClassModel",
+    label: $t("ai.gestureClassModel"),
+    image: aigcCover2,
+  },
+  {
+    key: "voiceClassModel",
+    label: $t("ai.voiceClassModel"),
+    image: aigcCover3,
+  },
+  {
+    key: "poseClassModel",
+    label: $t("ai.poseClassModel"),
+    image: aigcCover4,
+  },
+]);
 
 const AI_MODEL_DB_NAME = "mata-ai-models-db";
 const AI_MODEL_STORE_NAME = "models";
@@ -2002,6 +2089,9 @@ const onToolIframeLoad = () => {
 
 // 关闭工具 iframe 弹窗
 const closeToolIframeModal = () => {
+  const shouldRestoreAIModelSelect =
+    currentToolCacheKey.value.startsWith("ai:") && Boolean(currentAIModel.value);
+
   showToolIframeModal.value = false;
   currentToolUrl.value = "";
   currentToolName.value = "";
@@ -2009,6 +2099,11 @@ const closeToolIframeModal = () => {
   currentToolOnlyCreate.value = false;
   currentEmbeddedAI.value = false;
   currentToolCacheKey.value = "";
+
+  if (shouldRestoreAIModelSelect) {
+    showAIModelSelectModal.value = true;
+    void loadSavedAIModels();
+  }
 };
 
 onMounted(() => {
@@ -2071,6 +2166,7 @@ const handleQuickLoginConfirm = async () => {
   try {
     const result = await createQuickLogin(selectedQuickLoginClassId.value);
     showQuickLoginModal.value = false;
+    syncTeacherQuickLoginCache(result);
 
     // 获取选中的班级名称
     const selectedClass = quickLoginClassList.value.find(
@@ -2207,11 +2303,27 @@ const goToTeach = async (chapter: ChapterItem) => {
   const currentClassId = selectedClassId.value;
   const courseId = selectedCourseId.value;
   const chapterId = chapter.chapterId;
-  const classroomUrl = `/system/classroom/${chapterId}?classId=${currentClassId}&className=${encodeURIComponent(selectedClassName.value || "")}&courseId=${courseId}&from=teacher&autoQuickLogin=1`;
+  syncTeacherQuickLoginCache();
+  const classroomUrl = buildTeacherClassroomUrl({
+    classId: currentClassId,
+    className: selectedClassName.value || "",
+    courseId,
+    chapterId,
+  });
 
   // 如果是开课中状态，直接跳转
   if (chapter.teachStatus === 1) {
     navigateTo(classroomUrl);
+    return;
+  }
+
+  if (
+    !(await ensureNoOngoingClassroomBeforeStart({
+      classId: currentClassId,
+      courseId,
+      chapterId,
+    }))
+  ) {
     return;
   }
 
@@ -2226,6 +2338,7 @@ const goToTeach = async (chapter: ChapterItem) => {
     console.log("开始上课成功");
     navigateTo(classroomUrl);
   } catch (error: any) {
+    await loadChapterList();
     console.error("开始上课失败:", error);
   }
 };
@@ -2366,6 +2479,16 @@ const handleStartClassConfirm = async (data: {
   const className =
     startClassData.classList.find((item) => item.classId === data.classId)?.className || "";
 
+  if (
+    !(await ensureNoOngoingClassroomBeforeStart({
+      classId: data.classId,
+      courseId: data.courseId,
+      chapterId: data.chapterId,
+    }))
+  ) {
+    return;
+  }
+
   try {
     await beginClass({
       classId: data.classId,
@@ -2374,10 +2497,17 @@ const handleStartClassConfirm = async (data: {
       peerId,
     });
     console.log("开始上课成功");
+    syncTeacherQuickLoginCache();
     navigateTo(
-      `/system/classroom/${data.chapterId}?classId=${data.classId}&className=${encodeURIComponent(className)}&courseId=${data.courseId}&from=teacher&autoQuickLogin=1`
+      buildTeacherClassroomUrl({
+        classId: data.classId,
+        className,
+        courseId: data.courseId,
+        chapterId: data.chapterId,
+      })
     );
   } catch (error: any) {
+    await loadChapterList();
     console.error("开始上课失败:", error);
   }
 };
@@ -2385,111 +2515,758 @@ const handleStartClassConfirm = async (data: {
 
 <style scoped>
 .teacher-page {
-  min-height: calc(100vh - 70px);
-  overflow-y: auto;
-  padding: 20px 24px;
-}
-
-.main-content {
-  display: flex;
-  gap: 40px;
   min-height: 100%;
+  overflow: visible;
+  padding: 24px 0 36px;
 }
 
-/* 左侧主内容 */
-.left-section {
-  flex: 1;
-  min-width: 0;
+.teacher-dashboard {
   display: flex;
   flex-direction: column;
+  gap: 22px;
+  min-height: 100%;
+  width: 100%;
+  max-width: 1484px;
+  box-sizing: border-box;
+  padding: 0 0 32px;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
-/* 顶部三个卡片 */
-.top-cards {
-  display: flex;
+.dashboard-top-row {
+  display: grid;
+  grid-template-columns: minmax(0, 916px) minmax(0, 480px);
   gap: 40px;
-  margin-bottom: 24px;
-  flex-shrink: 0;
+  justify-content: space-between;
 }
 
-.action-card {
-  flex: 1;
-  height: 320px;
-  display: flex;
-  flex-direction: column;
+.dashboard-panel--hero {
+  width: 916px;
+  max-width: 916px;
+  justify-self: start;
+  /* background: #dfe9f7; */
+  border-color: #c8d8ee;
+  box-shadow: none;
+}
+
+.dashboard-panel--stats {
+  width: 480px;
+  justify-self: start;
+  /* background: #dfe9f7;
+  border-color: #c8d8ee; */
+  /* padding: 24px 28px 24px 20px; */
+  box-shadow: none;
+}
+
+.dashboard-tool-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.dashboard-panel {
+  box-sizing: border-box;
+  border-radius: 28px;
+  /* padding: 24px; */
+  /* background: rgba(255, 255, 255, 0.88); */
+  /* border: 1px solid rgba(217, 228, 243, 0.92); */
+  box-shadow: 0 16px 36px rgba(180, 194, 224, 0.18);
+}
+
+.dashboard-panel-title {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s, box-shadow 0.2s;
+  font-size: 16px;
+  font-weight: 600;
+  color: #4a5a78;
+  letter-spacing: 0.01em;
 }
 
-.action-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-}
-
-.card-icon {
-  width: 150px;
-  height: 150px;
-  object-fit: contain;
-  margin-bottom: 16px;
-}
-
-.card-label {
-  font-size: 14px;
-  color: #666;
-}
-
-/* 下方内容区 */
-.bottom-section {
-  display: flex;
-  gap: 24px;
-  flex: none;
-  min-height: 0;
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-}
-
-.section-header {
+.dashboard-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 18px;
 }
 
-.section-title {
-  font-size: 14px;
-  color: #666;
+.teacher-center-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 12px;
+  width: 100%;
+  aspect-ratio: 916 / 488;
+  padding: 0 40px 0 0;
+  border-radius: 26px;
+  overflow: hidden;
+}
+
+.teacher-center-actions {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  width: 180px;
+  position: relative;
+  z-index: 1;
+}
+
+.teacher-center-action {
+  height: 90px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+  color: #333333;
+  font-size: 30px;
+  /* color: #556178;
+  font-size: 22px;
+  font-weight: 500; */
+  letter-spacing: 0.04em;
+  box-shadow: 0 16px 24px rgba(75, 71, 154, 0.18);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.teacher-center-action:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 28px rgba(75, 71, 154, 0.24);
+}
+
+.teacher-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 34px;
+  row-gap: 34px;
+  margin-top: 40px;
+  height: 408px;
+  border-radius: 30px;
+  background: #ffffff;
+}
+
+.teacher-stat-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 138px;
+  padding: 60px 0 0 43px;
+  border-radius: 0;
+  background: transparent;
+  border: none;
+}
+
+.teacher-stat-card:nth-child(3),
+.teacher-stat-card:nth-child(4) {
+  padding-top: 0px !important;
+}
+
+.teacher-stat-card--skeleton {
+  padding: 0;
+  overflow: hidden;
+}
+
+.teacher-stat-skeleton {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  height: 100%;
+  padding: 18px;
+}
+
+.teacher-stat-skeleton-content {
+  flex: 1;
+}
+
+.teacher-stat-icon {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  object-fit: contain;
+  margin-top: 4px;
+}
+
+.teacher-stat-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  padding-top: 8px;
+}
+
+.teacher-stat-label {
+  display: flex;
+  align-items: center;
+  min-height: 60px;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #333;
   white-space: nowrap;
 }
 
-.class-select {
-  flex: 1;
+.teacher-stat-value {
+  font-size: 44px;
+  line-height: 0.95;
+  font-weight: 500;
+  color: #333;
+}
+
+.dashboard-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-tool-panel {
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.dashboard-tool-panel > .dashboard-panel-header {
+  margin-bottom: 15px;
+}
+
+.dashboard-tool-body {
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(217, 228, 243, 0.92);
+  box-shadow: 0 16px 36px rgba(180, 194, 224, 0.18);
+  padding: 80px 24px 80px;
+}
+
+.dashboard-quick-grid--tools {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-quick-grid--ai {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px 12px;
+}
+
+.dashboard-quick-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 146px;
+  padding: 18px 14px;
+  border: 1px solid rgba(223, 231, 245, 0.94);
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f7faff 100%);
+  cursor: pointer;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+
+.dashboard-quick-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(177, 196, 231, 0.96);
+  box-shadow: 0 16px 24px rgba(183, 198, 226, 0.22);
+}
+
+.dashboard-quick-card--plain {
+  min-height: auto;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.dashboard-quick-card--plain:hover {
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.dashboard-quick-icon {
+  width: 88px;
+  height: 88px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dashboard-quick-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.dashboard-quick-icon--tool,
+.dashboard-quick-icon--ai {
+  width: 92px;
+  height: 92px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.dashboard-quick-icon--tool img,
+.dashboard-quick-icon--ai img {
+  object-fit: cover;
+}
+
+.dashboard-quick-label {
+  font-size: 15px;
+  font-weight: 500;
+  color: #556178;
+  text-align: center;
+  line-height: 1.4;
+}
+
+.dashboard-quick-label--tool,
+.dashboard-quick-label--ai {
+  font-size: 14px;
+  color: #4a5a78;
+  white-space: nowrap;
+}
+
+.dashboard-record-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.dashboard-record-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
+.dashboard-record-heading {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
 }
 
-/* 登录按钮和气泡 */
-.login-btn-wrapper {
+.dashboard-record-subtitle {
+  font-size: 13px;
+  color: #8d9db7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard-record-card {
+  padding: 18px;
+  border-radius: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(217, 228, 243, 0.92);
+  box-shadow: 0 16px 36px rgba(180, 194, 224, 0.18);
+}
+
+.dashboard-record-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.dashboard-record-toolbar-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.dashboard-quick-login-btn {
+  height: 44px;
+  padding: 0 20px;
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #62728f;
+  font-size: 14px;
+  box-shadow: inset 0 0 0 1px rgba(205, 216, 233, 0.96);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+}
+
+.dashboard-quick-login-btn:hover {
+  transform: translateY(-1px);
+  color: #44526a;
+  box-shadow: inset 0 0 0 1px rgba(179, 194, 220, 0.96),
+    0 10px 18px rgba(180, 194, 224, 0.2);
+}
+
+.dashboard-record-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 15px;
+}
+
+.dashboard-select {
+  width: 100%;
+}
+
+.dashboard-select--class {
+  width: 200px;
+  min-width: 200px;
+}
+
+.dashboard-course-select {
   position: relative;
+  width: min(320px, 100%);
 }
 
-.quick-login-btn {
-  background: #ff9900 !important;
-  color: white !important;
-  border: none !important;
-  padding: 10px 24px !important;
-  font-size: 14px !important;
-  border-radius: 6px !important;
+.dashboard-record-body {
+  display: grid;
+  grid-template-columns: 280px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+  min-height: 0;
 }
 
-.quick-login-btn:hover {
-  background: #e68a00 !important;
+.dashboard-record-body--skeleton {
+  align-items: stretch;
+}
+
+.dashboard-course-column {
+  min-width: 0;
+}
+
+.dashboard-course-card {
+  height: 360px;
+  overflow: hidden;
+  border-radius: 24px;
+  border: 1px solid rgba(219, 228, 242, 0.95);
+  background: linear-gradient(180deg, #d6e4ff 0%, #bfcff3 100%);
+  box-shadow: 0 14px 30px rgba(177, 195, 228, 0.2);
+  cursor: pointer;
+}
+
+.dashboard-course-cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.28s ease;
+}
+
+.dashboard-course-card:hover .dashboard-course-cover {
+  transform: scale(1.03);
+}
+
+.dashboard-course-cover--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #58657f;
+  font-size: 16px;
+  background: linear-gradient(135deg, #f5a46c 0%, #e58d63 100%);
+}
+
+.dashboard-chapter-column {
+  min-width: 0;
+  max-height: min(640px, calc(100vh - 360px));
+  padding: 6px 6px 0 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+
+.dashboard-chapter-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-chapter-column::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dashboard-chapter-column::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(188, 198, 217, 0.9);
+}
+
+.dashboard-chapter-column::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-chapter-grid--skeleton {
+  align-content: start;
+}
+
+.dashboard-chapter-card {
+  position: relative;
+  min-height: 170px;
+  padding: 18px 16px 16px;
+  border-radius: 24px;
+  background: linear-gradient(180deg, #ffffff 0%, #f5f8ff 100%);
+  border: 1px solid rgba(220, 229, 243, 0.98);
+  box-shadow: 0 14px 24px rgba(180, 196, 224, 0.14);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.dashboard-chapter-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(199, 212, 234, 0.98);
+  box-shadow: 0 18px 28px rgba(180, 196, 224, 0.2);
+}
+
+.dashboard-chapter-card.is-selected {
+  border-color: #ff9900;
+  box-shadow: 0 18px 30px rgba(255, 153, 0, 0.18);
+}
+
+.dashboard-chapter-status {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 54px;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: #fff;
+}
+
+.dashboard-chapter-name {
+  display: block;
+  min-height: 72px;
+  margin-top: 26px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #46546d;
+  line-height: 1.45;
+  white-space: pre-line;
+}
+
+.dashboard-chapter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.dashboard-action-btn {
+  width: 100%;
+  min-height: 38px;
+  border-radius: 14px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.dashboard-action-btn:hover {
+  transform: translateY(-1px);
+}
+
+.dashboard-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+  border-radius: 24px;
+  border: 1px dashed rgba(202, 214, 235, 0.98);
+  background: linear-gradient(180deg, #fbfdff 0%, #f5f8ff 100%);
+  color: #8d9db7;
+  font-size: 14px;
+}
+
+.dashboard-empty-state--chapter {
+  min-height: 360px;
+}
+
+@media (max-width: 1550px) {
+  .dashboard-top-row {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+
+  .dashboard-panel--hero {
+    width: 100%;
+    max-width: none;
+  }
+
+  .dashboard-panel--stats {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1480px) {
+  .teacher-center-card {
+    padding-right: 28px;
+  }
+
+  .teacher-center-actions {
+    width: 152px;
+    gap: 12px;
+  }
+
+  .teacher-center-action {
+    height: 72px;
+    font-size: 24px;
+  }
+
+  .dashboard-record-body {
+    grid-template-columns: 240px minmax(0, 1fr);
+  }
+
+  .dashboard-chapter-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .dashboard-course-card {
+    height: 320px;
+  }
+}
+
+@media (max-width: 1360px) {
+  .teacher-center-card {
+    padding-right: 22px;
+  }
+
+  .teacher-center-actions {
+    width: 136px;
+    gap: 10px;
+  }
+
+  .teacher-center-action {
+    height: 64px;
+    font-size: 22px;
+  }
+
+  .dashboard-chapter-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1200px) {
+  .teacher-page {
+    padding: 18px 0 28px;
+  }
+
+  .teacher-dashboard {
+    padding: 22px;
+    border-radius: 24px;
+  }
+
+  .dashboard-top-row,
+  .dashboard-tool-row,
+  .dashboard-record-body {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-center-card {
+    min-height: auto;
+    height: auto;
+    aspect-ratio: 916 / 488;
+    padding: 20px;
+    background-size: cover;
+  }
+
+  .teacher-center-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .teacher-center-action {
+    flex: 1;
+    min-width: 120px;
+    font-size: 18px;
+  }
+
+  .dashboard-record-header,
+  .dashboard-record-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dashboard-record-toolbar-main {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .dashboard-select--class,
+  .dashboard-course-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .dashboard-course-card,
+  .dashboard-empty-state--chapter {
+    height: 280px;
+    min-height: 280px;
+  }
+
+  .dashboard-chapter-column {
+    max-height: none;
+    padding-right: 0;
+    overflow: visible;
+  }
+
+  .dashboard-chapter-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 960px) {
+  .dashboard-chapter-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .teacher-dashboard {
+    padding: 18px;
+    gap: 18px;
+  }
+
+  .dashboard-panel {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .teacher-center-card {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .teacher-center-actions {
+    flex-direction: column;
+  }
+
+  .teacher-center-action {
+    width: 100%;
+    font-size: 17px;
+  }
+
+  .teacher-stats-grid,
+  .dashboard-quick-grid,
+  .dashboard-chapter-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .teacher-stat-card {
+    min-height: 104px;
+  }
+
+  .dashboard-course-card,
+  .dashboard-empty-state,
+  .dashboard-empty-state--chapter {
+    min-height: 220px;
+    height: 220px;
+  }
 }
 
 .login-popover {

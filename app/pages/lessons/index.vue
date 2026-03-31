@@ -90,6 +90,8 @@
       <!-- 面包屑导航 -->
       <div class="px-6 py-4 bg-white border-b border-gray-200">
         <div class="flex items-center gap-2 text-sm text-gray-500">
+          <NuxtLink to="/teacher" class="hover:text-[#FF9900]">{{ $t('menu.home') }}</NuxtLink>
+          <span>></span>
           <NuxtLink to="/system/course" class="hover:text-[#FF9900]">{{ $t('course.myCourse') }}</NuxtLink>
           <span>></span>
           <span class="text-gray-800">{{ $t('prepare.title') }}</span>
@@ -618,12 +620,12 @@ onMounted(() => {
   transition: all 0.2s;
   white-space: nowrap;
   background: white;
-  border: 1px solid #1890FF;
-  color: #1890FF;
+  border: 1px solid #FF9900;
+  color: #FF9900;
 }
 
 .prepare-btn:hover {
-  background: #E6F4FF;
+  background: #FFF7E6;
 }
 
 .evaluation-list {

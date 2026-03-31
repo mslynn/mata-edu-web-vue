@@ -50,15 +50,15 @@ export const useAuth = () => {
     console.log('roleKey', roleKey)
     switch (roleKey) {
       case 'teacher':
-        return '/system/class'
-       case 'school_admin':
-        return '/system/user'
+        return '/teacher'
+      case 'school_admin':
+        return '/teacher'
       case 'student':
         return '/student'
-   
+
       case 'city_admin':
         return '/district'
-       case 'district_admin':
+      case 'district_admin':
         return '/district'
       default:
         return '/'

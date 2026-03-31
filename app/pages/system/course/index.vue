@@ -248,6 +248,7 @@ definePageMeta({
     layout: 'sidebar'
 })
 
+const router = useRouter()
 const { getCursorTreeMenu, getCursorList, createCursor, editCursor, deleteCursor, copyCursor } = cursorAdmin()
 
 // 获取当前用户ID

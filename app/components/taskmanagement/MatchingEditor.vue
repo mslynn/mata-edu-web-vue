@@ -65,12 +65,12 @@
                   <input 
                     v-model="item.content"
                     type="text"
-                    maxlength="20"
+                    maxlength="50"
                     :placeholder="$t('customExercise.matchItemPlaceholder')"
                     class="w-full h-8 px-2 pr-10 border rounded text-sm focus:outline-none focus:border-[#FF9900]"
                     :class="showError && !item.content?.trim() ? 'border-red-400' : 'border-gray-300'"
                   />
-                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ item.content?.length || 0 }}/20</span>
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ item.content?.length || 0 }}/50</span>
                 </div>
                 <!-- 图片上传 -->
                 <div v-else class="w-[280px]">
@@ -130,12 +130,12 @@
                   <input 
                     v-model="item.content"
                     type="text"
-                    maxlength="20"
+                    maxlength="50"
                     :placeholder="$t('customExercise.matchItemPlaceholder')"
                     class="w-full h-8 px-2 pr-10 border rounded text-sm focus:outline-none focus:border-[#FF9900]"
                     :class="showError && !item.content?.trim() ? 'border-red-400' : 'border-gray-300'"
                   />
-                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ item.content?.length || 0 }}/20</span>
+                  <span class="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400">{{ item.content?.length || 0 }}/50</span>
                 </div>
                 <!-- 图片上传 -->
                 <div v-else class="w-[280px]">

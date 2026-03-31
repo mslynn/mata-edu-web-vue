@@ -630,7 +630,19 @@ export const useTeacher = () => {
       throw error;
     }
   };
-
+  //查询教师统计数据
+    
+  const getTeacherStats = async () => {
+    try {
+      const response = await http.get("system/teach/stats");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询教师统计数据信息失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
   return {
     getTeacherMenu,
     getTeacherInfo,
@@ -671,5 +683,6 @@ export const useTeacher = () => {
     sendCourseware,
     withdrawSend,
     getGradeClassList,
+    getTeacherStats,
   };
 };

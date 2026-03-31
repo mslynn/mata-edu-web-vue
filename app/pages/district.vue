@@ -2,74 +2,67 @@
   <div class="flex-1 flex items-center justify-center p-4 md:p-8">
     <div class="flex flex-col md:flex-row gap-8 md:gap-20">
       <!-- 数据中心卡片 -->
-      <div 
-        class="card-wrapper cursor-pointer group"
-        @click="goToDataCenter"
-      >
+      <div class="card-wrapper cursor-pointer group" @click="goToDataCenter">
         <div class="card-border">
           <div class="card-content bg-[#FFFFFF]">
-            <img 
-              src="~/assets/images/datacenter.png" 
-              alt="数据中心" 
+            <img
+              src="~/assets/images/datacenter.png"
+              alt="数据中心"
               class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
-      </div>
-          <div class="card-title">{{ $t('city.datacenter')}}</div>
+          </div>
+          <div class="card-title">{{ $t("city.datacenter") }}</div>
         </div>
-    
       </div>
 
       <!-- 学校管理卡片 -->
-      <div 
-        class="card-wrapper cursor-pointer group"
-        @click="goToSchoolManage"
-      >
+      <div class="card-wrapper cursor-pointer group" @click="goToSchoolManage">
         <div class="card-border">
           <div class="card-content bg-[#FFFFFF]">
-            <img 
-              src="~/assets/images/manage.png" 
-              alt="学校管理" 
+            <img
+              src="~/assets/images/manage.png"
+              alt="学校管理"
               class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </div>
           <div class="card-title">{{ manageTitle }}</div>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { useI18n } from 'vue-i18n'
-import { useAuth } from '~/composables/api/useAuth'
+import { useI18n } from "vue-i18n";
+import { useAuth } from "~/composables/api/useAuth";
 
 definePageMeta({
-  layout: 'default'
-})
+  layout: "default",
+});
 
-const router = useRouter()
-const { t } = useI18n()
-const { user } = useAuth()
+const router = useRouter();
+const { t } = useI18n();
+const { user } = useAuth();
 
 // 根据角色显示不同的标题
 const manageTitle = computed(() => {
-  return user.value?.role_key === 'district_admin' ? t('school.schoolManage') : t('city.districtManage')
-})
+  return user.value?.role_key === "district_admin"
+    ? t("school.schoolManage")
+    : t("city.districtManage");
+});
 
 const goToDataCenter = () => {
-  // TODO: 跳转到数据中心页面
-  console.log('跳转到数据中心')
-}
+  router.push("/datacenter");
+};
 
 const goToSchoolManage = () => {
   // city_admin 跳转到市管理页面，其它角色跳转学校管理
-  if (user.value?.role_key === 'city_admin') {
-    router.push('/city')
+  if (user.value?.role_key === "city_admin") {
+    router.push("/city");
   } else {
-    router.push('/school')
+    router.push("/school");
   }
-}
+};
 </script>
 
 <style scoped>
@@ -106,7 +99,7 @@ const goToSchoolManage = () => {
     height: 420px;
     padding: 20px;
   }
-  
+
   .card-content {
     width: 306px;
     height: 306px;

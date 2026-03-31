@@ -2,29 +2,35 @@ import { computed, onMounted } from 'vue'
 import { useTeacher } from './useTeacher'
 
 // 本地默认图标（打包后为绝对可访问路径）
-const homeIcon = new URL('../../assets/images/home.png', import.meta.url).href
-const classIcon = new URL('../../assets/images/class.png', import.meta.url).href
-const courseIcon = new URL('../../assets/images/course.png', import.meta.url).href
-const toolsIcon = new URL('../../assets/images/tool.png', import.meta.url).href
-const aiIcon = new URL('../../assets/images/ai.png', import.meta.url).href
-const teacherIcon = new URL('../../assets/images/teacher.png', import.meta.url).href
-const studyIcon = new URL('../../assets/images/study.png', import.meta.url).href
-const eventIcon = new URL('../../assets/images/event.png', import.meta.url).href
+const homeIcon = new URL('../../assets/newimages/home.png', import.meta.url).href
+const classIcon = new URL('../../assets/newimages/class.png', import.meta.url).href
+const courseIcon = new URL('../../assets/newimages/cursorcenter.png', import.meta.url).href
+const toolsIcon = new URL('../../assets/newimages/tool.png', import.meta.url).href
+const aiIcon = new URL('../../assets/newimages/ai.png', import.meta.url).href
+const teacherIcon = new URL('../../assets/newimages/teacher.png', import.meta.url).href
+const studyIcon = new URL('../../assets/newimages/study.png', import.meta.url).href
+const eventIcon = new URL('../../assets/newimages/saishi.png', import.meta.url).href
 
-// 本地选中态图标（全部放在 assets/images 下，确保存在；若缺失将回退到普通态）
-const selectedHomeIcon = new URL('../../assets/images/selected-home.png', import.meta.url).href
-const selectedClassIcon = new URL('../../assets/images/selected-class.png', import.meta.url).href
-const selectedCourseIcon = new URL('../../assets/images/selected-course.png', import.meta.url).href
-const selectedToolIcon = new URL('../../assets/images/selected-tool.png', import.meta.url).href
-const selectedAiIcon = new URL('../../assets/images/selected-ai.png', import.meta.url).href
-const selectedStudyIcon = new URL('../../assets/images/selected-study.png', import.meta.url).href
-const selectedTeacherIcon = new URL('../../assets/images/selected-teacher.png', import.meta.url).href
-const selectedEventIcon = new URL('../../assets/images/selected-event.png', import.meta.url).href
+// 选中态不再切换图标，统一使用同一套新图标
+const selectedHomeIcon = homeIcon
+const selectedClassIcon = classIcon
+const selectedCourseIcon = courseIcon
+const selectedToolIcon = toolsIcon
+const selectedAiIcon = aiIcon
+const selectedStudyIcon = studyIcon
+const selectedTeacherIcon = teacherIcon
+const selectedEventIcon = eventIcon
 
 // 本地选中态图标（无单独选中图时回退到普通态）
 const localSelectedIcons: Record<string, string> = {
   '/teacher': selectedHomeIcon || homeIcon,
   '/system/class': selectedClassIcon || classIcon,
+  '/system/course': selectedCourseIcon || courseIcon,
+  '/system/tool': selectedToolIcon || toolsIcon,
+  '/system/ai': selectedAiIcon || aiIcon,
+  '/system/study': selectedStudyIcon || studyIcon,
+  '/system/growth': selectedTeacherIcon || teacherIcon,
+  '/system/event': selectedEventIcon || eventIcon,
   '/course': selectedCourseIcon || courseIcon,
   '/tools': selectedToolIcon || toolsIcon,
   '/tool': selectedToolIcon || toolsIcon,
@@ -48,6 +54,12 @@ const localSelectedIcons: Record<string, string> = {
 const localIcons: Record<string, string> = {
   '/teacher': homeIcon,
   '/system/class': classIcon,
+  '/system/course': courseIcon,
+  '/system/tool': toolsIcon,
+  '/system/ai': aiIcon,
+  '/system/study': studyIcon,
+  '/system/growth': teacherIcon,
+  '/system/event': eventIcon,
   '/course': courseIcon,
   '/tools': toolsIcon,
   '/tool': toolsIcon,
@@ -114,20 +126,14 @@ export const useTeacherNav = () => {
   const loadingState = useState<boolean>('teacher-nav-loading', () => false)
   const initializedState = useState<boolean>('teacher-nav-initialized', () => false)
 
-  // 客户端初始化时立即从 localStorage 读取，避免闪烁
-  if (import.meta.client && !initializedState.value) {
-    const stored = getStoredMenus()
-    if (stored.length) {
-      menuState.value = stored
-      initializedState.value = true
-    }
-    // 注意：如果没有缓存，不设置 initializedState，让后续可以继续尝试
-  }
-
   const menuItems = computed(() => menuState.value)
   const loading = computed(() => loadingState.value)
 
   const normalizeIcon = (icon?: string, path?: string, activeMenu?: string, label?: string) => {
+    // 优先使用本地新图标
+    if (path && localIcons[path]) return localIcons[path]
+    if (activeMenu && localIcons[activeMenu]) return localIcons[activeMenu]
+
     // 如果接口返回了绝对或以 / 开头的地址，优先用
     if (icon) {
       if (icon.startsWith('http://') || icon.startsWith('https://')) return icon
@@ -156,12 +162,7 @@ export const useTeacherNav = () => {
     label?: string,
     fallback?: string
   ) => {
-    // 接口选中态优先（绝对或 / 开头）
-    if (icon) {
-      if (icon.startsWith('http://') || icon.startsWith('https://')) return icon
-      if (icon.startsWith('/')) return icon
-    }
-    // 本地选中态映射，若不存在则回退普通态
+    // 选中态统一沿用普通图标
     if (path && localSelectedIcons[path]) return localSelectedIcons[path]
     if (activeMenu && localSelectedIcons[activeMenu]) return localSelectedIcons[activeMenu]
     // 关键词兜底
@@ -175,6 +176,34 @@ export const useTeacherNav = () => {
     if (hit('赛事') || hit('比赛')) return localSelectedIcons['/event'] || fallback || ''
     if (hit('账号') || hit('班级')) return localSelectedIcons['/system/class'] || fallback || ''
     return fallback || ''
+  }
+
+  const attachLocalIcons = (item: TeacherMenuItem): TeacherMenuItem => {
+    const icon = normalizeIcon(item.icon, item.path, item.activeMenu, item.label)
+    const iconSelected = normalizeSelectedIcon(
+      item.iconSelected,
+      item.path,
+      item.activeMenu,
+      item.label,
+      icon
+    )
+
+    return {
+      ...item,
+      icon,
+      iconSelected,
+    }
+  }
+
+  // 客户端初始化时立即从 localStorage 读取，避免闪烁
+  if (import.meta.client && !initializedState.value) {
+    const stored = getStoredMenus()
+    if (stored.length) {
+      menuState.value = stored.map(attachLocalIcons)
+      setStoredMenus(menuState.value)
+      initializedState.value = true
+    }
+    // 注意：如果没有缓存，不设置 initializedState，让后续可以继续尝试
   }
 
   // 将 component 路径转换为路由路径
@@ -239,11 +268,19 @@ export const useTeacherNav = () => {
           externalUrl: child.meta?.link || child.meta?.externalUrl || '', // 保存外部链接地址
         }
       })
-      .filter(Boolean) as TeacherMenuItem[]
+      .filter(Boolean)
+      .map((item) => attachLocalIcons(item as TeacherMenuItem)) as TeacherMenuItem[]
 
     // 默认首页
     return [
-      { label: '首页', path: '/teacher', component: '', activeMenu: 'home', icon: homeIcon, iconSelected: localSelectedIcons['/teacher'] },
+      attachLocalIcons({
+        label: '首页',
+        path: '/teacher',
+        component: '',
+        activeMenu: 'home',
+        icon: homeIcon,
+        iconSelected: localSelectedIcons['/teacher'],
+      }),
       ...mapped,
     ]
   }
@@ -260,8 +297,22 @@ export const useTeacherNav = () => {
     } catch (error) {
       // 回退默认菜单
       const defaultMenus = [
-        { label: '首页', path: '/teacher', component: '', activeMenu: 'home', icon: homeIcon, iconSelected: localSelectedIcons['/teacher'] },
-        { label: '班级管理', path: '/system/class', component: '', activeMenu: 'class', icon: classIcon, iconSelected: localSelectedIcons['/system/class'] },
+        attachLocalIcons({
+          label: '首页',
+          path: '/teacher',
+          component: '',
+          activeMenu: 'home',
+          icon: homeIcon,
+          iconSelected: localSelectedIcons['/teacher'],
+        }),
+        attachLocalIcons({
+          label: '班级管理',
+          path: '/system/class',
+          component: '',
+          activeMenu: 'class',
+          icon: classIcon,
+          iconSelected: localSelectedIcons['/system/class'],
+        }),
       ]
       menuState.value = defaultMenus
       setStoredMenus(defaultMenus)
