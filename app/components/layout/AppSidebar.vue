@@ -55,12 +55,13 @@
         >
           <span class="sidebar-account-avatar-shell">
             <img
-              :src="user?.avatar || defaultAvatar"
+              :src="resolvedAvatar"
               alt="用户头像"
               class="sidebar-account-avatar"
+              @error="handleAvatarError"
             />
           </span>
-          <span class="sidebar-account-label">账号登录</span>
+          <span class="sidebar-account-label">{{ displayUserRoleLabel }}</span>
         </button>
 
         <Transition name="dropdown">
@@ -128,7 +129,7 @@ import { useI18n } from "vue-i18n";
 import { useTeacherNav } from "~/composables/api/useTeacherNav";
 import { useAuth } from "~/composables/api/useAuth";
 import sidebarLogo from "~/assets/newimages/logo.png";
-import defaultAvatar from "~/assets/images/avatar.png";
+import defaultAvatar from "~/assets/newimages/user.png";
 
 const router = useRouter();
 const route = useRoute();
@@ -177,9 +178,35 @@ const displayUserName = computed(() => {
   );
 });
 
+const displayUserRoleLabel = computed(() => {
+  const roleName =
+    user.value?.role_name ||
+    user.value?.roleName ||
+    "";
+  if (String(roleName).trim()) {
+    return String(roleName).trim();
+  }
+
+  const roleKey = String(user.value?.role_key || user.value?.roleKey || "").trim();
+  const roleLabelMap: Record<string, string> = {
+    teacher: "教师",
+    student: "学生",
+    school_admin: "校级管理员",
+    district_admin: "区级管理员",
+    city_admin: "市级管理员",
+  };
+
+  return roleLabelMap[roleKey] || "账号登录";
+});
+
 const showModuleSwitch = computed(() => {
   const roleKey = user.value?.role_key;
   return roleKey === "city_admin" || roleKey === "district_admin";
+});
+
+const resolvedAvatar = computed(() => {
+  const avatar = String(user.value?.avatar || "").trim();
+  return avatar || defaultAvatar;
 });
 
 // 立即加载菜单（不等 onMounted）
@@ -278,6 +305,12 @@ const handleProfile = () => {
 const handleLogout = () => {
   showDropdown.value = false;
   logout();
+};
+
+const handleAvatarError = (event: Event) => {
+  const target = event.target as HTMLImageElement | null;
+  if (!target) return;
+  target.src = defaultAvatar;
 };
 
 const handleClickOutside = (event: MouseEvent) => {

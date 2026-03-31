@@ -25,7 +25,7 @@
       :class="loginType === 'trial' ? 'pt-[72px]' : 'pt-[104px]'"
     >
       <!-- 语言切换器 -->
-      <div class="absolute top-4 right-4 z-20">
+      <div class="hidden absolute top-4 right-4 z-20">
         <LanguageSwitcher />
       </div>
       <!-- 返回按钮（班级码登录、体验账号、忘记密码） -->

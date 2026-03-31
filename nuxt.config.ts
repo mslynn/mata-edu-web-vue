@@ -100,9 +100,9 @@ export default defineNuxtConfig({
     optimizeDeps: {
       include: ['element-plus']
     },
-    esbuild: {
-      drop: ['console', 'debugger']
-    },
+    // esbuild: {
+    //   drop: ['console', 'debugger']
+    // },
     // 定义环境变量（RSA密钥等）
     define: {
       'import.meta.env.VITE_APP_RSA_PUBLIC_KEY': JSON.stringify(process.env.VITE_APP_RSA_PUBLIC_KEY || 'MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBAKoR8mX0rGKLqzcWmOzbfj64K8ZIgOdHnzkXSOVOZbFu/TJhZ7rFAN+eaGkl3C4buccQd/EjEsj9ir7ijT7h96MCAwEAAQ=='),

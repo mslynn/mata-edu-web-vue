@@ -645,8 +645,8 @@ const runtimeConfig = useRuntimeConfig();
 const teacherCenterCardStyle = {
   backgroundImage: `url(${teacherCenterBanner})`,
   backgroundRepeat: "no-repeat",
-  backgroundPosition: "center",
-  backgroundSize: "100% 100%",
+  backgroundPosition: "left bottom",
+  backgroundSize: "cover",
 } as Record<string, string>;
 const {
   parseMessageData,
@@ -2536,14 +2536,15 @@ const handleStartClassConfirm = async (data: {
 
 .dashboard-top-row {
   display: grid;
-  grid-template-columns: minmax(0, 916px) minmax(0, 480px);
-  gap: 40px;
+  grid-template-columns: minmax(0, 1.55fr) minmax(360px, 1fr);
+  gap: clamp(14px, 1.6vw, 28px);
   justify-content: space-between;
+  align-items: start;
 }
 
 .dashboard-panel--hero {
-  width: 916px;
-  max-width: 916px;
+  width: 100%;
+  max-width: none;
   justify-self: start;
   /* background: #dfe9f7; */
   border-color: #c8d8ee;
@@ -2551,8 +2552,12 @@ const handleStartClassConfirm = async (data: {
 }
 
 .dashboard-panel--stats {
-  width: 480px;
+  width: 100%;
+  max-width: none;
   justify-self: start;
+  align-self: start;
+  padding-right: clamp(12px, 1.2vw, 18px);
+  box-sizing: border-box;
   /* background: #dfe9f7;
   border-color: #c8d8ee; */
   /* padding: 24px 28px 24px 20px; */
@@ -2598,8 +2603,9 @@ const handleStartClassConfirm = async (data: {
   justify-content: flex-end;
   margin-top: 12px;
   width: 100%;
-  aspect-ratio: 916 / 488;
-  padding: 0 40px 0 0;
+  height: clamp(280px, 30vw, 488px);
+  min-height: 280px;
+  padding: 0 clamp(10px, 2vw, 28px) 0 0;
   border-radius: 26px;
   overflow: hidden;
 }
@@ -2608,19 +2614,19 @@ const handleStartClassConfirm = async (data: {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 16px;
-  width: 180px;
+  gap: clamp(8px, 0.9vw, 14px);
+  width: clamp(120px, 14vw, 172px);
   position: relative;
   z-index: 1;
 }
 
 .teacher-center-action {
-  height: 90px;
+  height: clamp(56px, 6vw, 82px);
   border: none;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.94);
   color: #333333;
-  font-size: 30px;
+  font-size: clamp(18px, 2vw, 28px);
   /* color: #556178;
   font-size: 22px;
   font-weight: 500; */
@@ -2641,9 +2647,11 @@ const handleStartClassConfirm = async (data: {
   column-gap: 34px;
   row-gap: 34px;
   margin-top: 40px;
+  width: 100%;
   height: 408px;
   border-radius: 30px;
   background: #ffffff;
+  box-sizing: border-box;
 }
 
 .teacher-stat-card {
@@ -3086,36 +3094,18 @@ const handleStartClassConfirm = async (data: {
   min-height: 360px;
 }
 
-@media (max-width: 1550px) {
+@media (max-width: 1480px) {
   .dashboard-top-row {
-    grid-template-columns: 1fr;
-    gap: 22px;
+    grid-template-columns: minmax(0, 1.42fr) minmax(300px, 1fr);
   }
 
   .dashboard-panel--hero {
-    width: 100%;
-    max-width: none;
+    min-height: 360px;
   }
 
-  .dashboard-panel--stats {
-    width: 100%;
-    max-width: none;
-  }
-}
-
-@media (max-width: 1480px) {
   .teacher-center-card {
-    padding-right: 28px;
-  }
-
-  .teacher-center-actions {
-    width: 152px;
-    gap: 12px;
-  }
-
-  .teacher-center-action {
-    height: 72px;
-    font-size: 24px;
+    height: 360px;
+    min-height: 360px;
   }
 
   .dashboard-record-body {
@@ -3129,25 +3119,102 @@ const handleStartClassConfirm = async (data: {
   .dashboard-course-card {
     height: 320px;
   }
-}
 
-@media (max-width: 1360px) {
-  .teacher-center-card {
-    padding-right: 22px;
+  .teacher-stats-grid {
+    column-gap: 22px;
+    row-gap: 22px;
+    margin-top: 24px;
+    height: auto;
+    min-height: 340px;
   }
 
-  .teacher-center-actions {
-    width: 136px;
+  .teacher-stat-card {
+    min-height: 116px;
+    padding: 32px 0 0 20px;
     gap: 10px;
   }
 
-  .teacher-center-action {
-    height: 64px;
-    font-size: 22px;
+  .teacher-stat-card:nth-child(3),
+  .teacher-stat-card:nth-child(4) {
+    padding-top: 12px !important;
+  }
+
+  .teacher-stat-icon {
+    width: 52px;
+    height: 52px;
+    margin-top: 2px;
+  }
+
+  .teacher-stat-content {
+    gap: 8px;
+    padding-top: 4px;
+  }
+
+  .teacher-stat-label {
+    min-height: 46px;
+    font-size: 15px;
+  }
+
+  .teacher-stat-value {
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 1360px) {
+  .dashboard-top-row {
+    grid-template-columns: minmax(0, 1.32fr) minmax(260px, 1fr);
+  }
+
+  .dashboard-panel--hero {
+    min-height: 330px;
+  }
+
+  .teacher-center-card {
+    height: 330px;
+    min-height: 330px;
   }
 
   .dashboard-chapter-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .teacher-stats-grid {
+    column-gap: 16px;
+    row-gap: 16px;
+    margin-top: 18px;
+    min-height: 300px;
+  }
+
+  .teacher-stat-card {
+    min-height: 100px;
+    padding: 22px 0 0 14px;
+    gap: 8px;
+  }
+
+  .teacher-stat-card:nth-child(3),
+  .teacher-stat-card:nth-child(4) {
+    padding-top: 6px !important;
+  }
+
+  .teacher-stat-icon {
+    width: 46px;
+    height: 46px;
+  }
+
+  .teacher-stat-content {
+    gap: 6px;
+    padding-top: 2px;
+  }
+
+  .teacher-stat-label {
+    min-height: 40px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .teacher-stat-value {
+    font-size: 26px;
+    line-height: 1;
   }
 }
 
@@ -3161,29 +3228,45 @@ const handleStartClassConfirm = async (data: {
     border-radius: 24px;
   }
 
-  .dashboard-top-row,
-  .dashboard-tool-row,
+  .dashboard-top-row {
+    grid-template-columns: minmax(0, 1.18fr) minmax(220px, 1fr);
+  }
+
+  .dashboard-tool-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+
   .dashboard-record-body {
     grid-template-columns: 1fr;
   }
 
   .teacher-center-card {
-    min-height: auto;
-    height: auto;
-    aspect-ratio: 916 / 488;
-    padding: 20px;
-    background-size: cover;
+    height: 300px;
+    min-height: 300px;
   }
 
-  .teacher-center-actions {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .teacher-stats-grid {
+    margin-top: 12px;
+    min-height: 260px;
   }
 
-  .teacher-center-action {
-    flex: 1;
-    min-width: 120px;
-    font-size: 18px;
+  .teacher-stat-card {
+    padding: 18px 0 0 12px;
+  }
+
+  .teacher-stat-card:nth-child(3),
+  .teacher-stat-card:nth-child(4) {
+    padding-top: 0 !important;
+  }
+
+  .teacher-stat-label {
+    min-height: 36px;
+    font-size: 12px;
+  }
+
+  .teacher-stat-value {
+    font-size: 24px;
   }
 
   .dashboard-record-header,
@@ -3232,29 +3315,65 @@ const handleStartClassConfirm = async (data: {
     gap: 18px;
   }
 
+  .dashboard-top-row {
+    grid-template-columns: minmax(0, 1.08fr) minmax(168px, 1fr);
+    gap: 12px;
+  }
+
+  .dashboard-tool-row {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
   .dashboard-panel {
     padding: 18px;
     border-radius: 22px;
   }
 
   .teacher-center-card {
-    padding: 14px;
     border-radius: 22px;
+    height: 240px;
+    min-height: 240px;
   }
 
   .teacher-center-actions {
-    flex-direction: column;
+    width: clamp(120px, 34vw, 150px);
   }
 
   .teacher-center-action {
-    width: 100%;
-    font-size: 17px;
+    font-size: clamp(18px, 4vw, 22px);
   }
 
   .teacher-stats-grid,
   .dashboard-quick-grid,
   .dashboard-chapter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .teacher-stats-grid {
+    column-gap: 12px;
+    row-gap: 12px;
+    min-height: 230px;
+  }
+
+  .teacher-stat-card {
+    min-height: 84px;
+    padding: 12px 0 0 10px;
+    gap: 6px;
+  }
+
+  .teacher-stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .teacher-stat-label {
+    min-height: 28px;
+    font-size: 11px;
+  }
+
+  .teacher-stat-value {
+    font-size: 22px;
   }
 
   .teacher-stat-card {
