@@ -1,0 +1,57 @@
+html.teacher-page-use-outer-scroll,
+body.teacher-page-use-outer-scroll {
+  overflow-y: auto;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell,
+body.teacher-page-use-outer-scroll .sidebar-shell {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell-body,
+body.teacher-page-use-outer-scroll .sidebar-shell-body {
+  display: block;
+  height: auto;
+  min-height: 100vh;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell-main,
+body.teacher-page-use-outer-scroll .sidebar-shell-main,
+html.teacher-page-use-outer-scroll .sidebar-shell-content,
+body.teacher-page-use-outer-scroll .sidebar-shell-content {
+  overflow: visible;
+}
+
+html.teacher-page-use-outer-scroll .app-sidebar,
+body.teacher-page-use-outer-scroll .app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 20;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell-main,
+body.teacher-page-use-outer-scroll .sidebar-shell-main {
+  width: auto;
+  margin-left: 264px;
+  margin-right: 24px;
+}
+
+@media (min-width: 1280px) {
+  html.teacher-page-use-outer-scroll .sidebar-shell-main,
+  body.teacher-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 328px;
+    margin-right: 40px;
+  }
+}
+
+@media (min-width: 1536px) {
+  html.teacher-page-use-outer-scroll .sidebar-shell-main,
+  body.teacher-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 416px;
+    margin-right: 68px;
+  }
+}

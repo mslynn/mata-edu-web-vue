@@ -12,8 +12,7 @@
       <!-- User Info -->
       <div class="user-section">
         <div class="user-avatar">
-          <img v-if="avatarUrl" :src="avatarUrl" alt="" />
-          <img v-else src="~/assets/images/avatar.png" alt="" />
+          <img :src="resolvedAvatarUrl" alt="" @error="handleAvatarError" />
           <span class="role-tag">{{ displayRoleName }}</span>
         </div>
         <div class="user-info">
@@ -213,8 +212,11 @@
                   <h4 class="work-name">{{ work.opusName }}</h4>
                   <div class="work-date">{{ work.updateTime || work.createTime }}</div>
                   <div class="work-actions">
-                    <button class="action-link" @click="openEditModal(work.opusId)">
-                      {{ $t("personalCenter.edit") }}
+                    <button class="action-link" @click="openWorkEditModal(work.opusId)">
+                      编辑
+                    </button>
+                    <button class="action-link" @click="openProgramModal(work.opusId)">
+                      打开程序
                     </button>
                     <div class="more-dropdown">
                       <button class="more-btn">
@@ -254,8 +256,11 @@
                 <span class="col-name">{{ work.opusName }}</span>
                 <span class="col-date">{{ work.updateTime || work.createTime }}</span>
                 <span class="col-actions">
-                  <button class="list-action" @click="openEditModal(work.opusId)">
-                    {{ $t("personalCenter.edit") }}
+                  <button class="list-action" @click="openWorkEditModal(work.opusId)">
+                    编辑
+                  </button>
+                  <button class="list-action" @click="openProgramModal(work.opusId)">
+                    打开程序
                   </button>
                   <div class="list-more-dropdown">
                     <button class="list-action">{{ $t("personalCenter.more") }}</button>
@@ -465,6 +470,15 @@
                   </svg>
                 </button>
               </template>
+              <template v-else-if="uploadType === 'video' && uploadForm.previewUrl">
+                <video
+                  :src="uploadForm.previewUrl"
+                  class="preview-video full"
+                  controls
+                  preload="metadata"
+                  playsinline
+                ></video>
+              </template>
               <template v-else>
                 <img
                   v-if="uploadForm.workFileName"
@@ -548,7 +562,15 @@
                 @click="triggerVideoUpload"
               >
                 <template v-if="uploadForm.videoFileName">
-                  <img src="~/assets/images/tool3.png" alt="" class="file-preview-img" />
+                  <video
+                    v-if="uploadForm.previewUrl"
+                    :src="uploadForm.previewUrl"
+                    class="file-preview-video"
+                    preload="metadata"
+                    muted
+                    playsinline
+                  ></video>
+                  <img v-else src="~/assets/images/tool3.png" alt="" class="file-preview-img" />
                   <div class="file-overlay">
                     <svg
                       viewBox="0 0 24 24"
@@ -1033,12 +1055,14 @@ import { personalcenterApi } from "~/composables/api/personalcenter";
 import { aiAdmin } from "~/composables/api/ai";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import { ElMessage } from "element-plus";
+import defaultAvatar from "~/assets/newimages/user.png";
 
 definePageMeta({ layout: false });
 
 const router = useRouter();
 const runtimeConfig = useRuntimeConfig();
-const { user, logout } = useAuth();
+
+const { user, logout, syncUserInfo } = useAuth();
 const { t } = useI18n();
 const { ssoLogin, deleteOss } = aiAdmin();
 const {
@@ -1073,7 +1097,8 @@ const userName = computed(
 const schoolName = computed(() => userProfile.value?.user?.orgName || "");
 const accountId = computed(() => userProfile.value?.user?.userName || "");
 const phone = computed(() => userProfile.value?.user?.phonenumber || "");
-const avatarUrl = computed(() => userProfile.value?.user?.avatar || "");
+const avatarUrl = computed(() => String(userProfile.value?.user?.avatar || "").trim());
+const resolvedAvatarUrl = computed(() => avatarUrl.value || defaultAvatar);
 const displayRoleName = computed(() => {
   const roleKey =
     user.value?.role_key ||
@@ -1196,6 +1221,15 @@ const uploadForm = ref({
   imageList: [] as { url: string; ossId: string }[],
 });
 
+const revokeUploadPreviewUrl = () => {
+  if (typeof window === "undefined") return;
+
+  const previewUrl = String(uploadForm.value.previewUrl || "");
+  if (previewUrl.startsWith("blob:")) {
+    URL.revokeObjectURL(previewUrl);
+  }
+};
+
 const passwordForm = ref({
   oldPassword: "",
   newPassword: "",
@@ -1308,6 +1342,7 @@ const handleDeleteAccount = async () => {
 
 // 关闭上传弹窗并清空表单
 const closeUploadModal = () => {
+  revokeUploadPreviewUrl();
   showUploadModal.value = false;
   isEditMode.value = false;
   editOpusId.value = "";
@@ -1407,6 +1442,84 @@ const getToolReceiveMessageType = (fileName: string) => {
   return "ZIP_DATA";
 };
 
+const splitResourceValues = (value: unknown) =>
+  String(value || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const getResourceFileName = (url: unknown, fallback: string) => {
+  const rawUrl = String(url || "").trim();
+  if (!rawUrl) return fallback;
+
+  const cleanUrl = rawUrl.split("?")[0] || rawUrl;
+  const fileName = cleanUrl.split("/").pop();
+  return fileName || fallback;
+};
+
+const buildEditImageList = (detail: any) => {
+  const imageOssIds = splitResourceValues(detail?.picOssIds);
+  const arraySource = Array.isArray(detail?.imageList)
+    ? detail.imageList
+    : Array.isArray(detail?.picUrlList)
+      ? detail.picUrlList
+      : [];
+
+  if (arraySource.length > 0) {
+    return arraySource
+      .map((item: any, index: number) => {
+        if (typeof item === "string") {
+          return {
+            url: item,
+            ossId: imageOssIds[index] || "",
+          };
+        }
+
+        return {
+          url: String(item?.url || item?.picUrl || item?.resourceUrl || "").trim(),
+          ossId: String(item?.ossId || item?.picOssId || imageOssIds[index] || "").trim(),
+        };
+      })
+      .filter((item) => item.url);
+  }
+
+  const imageUrls = splitResourceValues(detail?.picUrl || detail?.picUrls);
+  return imageUrls.map((url, index) => ({
+    url,
+    ossId: imageOssIds[index] || "",
+  }));
+};
+
+const fillUploadFormForEdit = (detail: any, opusId: string) => {
+  revokeUploadPreviewUrl();
+
+  const nextToolValue = getOpusToolId(detail) === "nous" ? "nous" : "vinci";
+  const imageList = buildEditImageList(detail);
+  const hasWorkFile = Boolean(detail?.opusOssId);
+  const hasVideoFile = Boolean(detail?.videoOssId || detail?.videoUrl);
+
+  activeTool.value = nextToolValue;
+  isEditMode.value = true;
+  editOpusId.value = String(detail?.opusId || opusId);
+  uploadType.value = hasWorkFile ? "work" : hasVideoFile ? "video" : "image";
+  currentImageIndex.value = 0;
+  uploadForm.value = {
+    name: String(detail?.opusName || "").trim(),
+    description: String(detail?.opusDesc || "").trim(),
+    guide: String(detail?.opusGuide || "").trim(),
+    workFileName: hasWorkFile ? getOpusFileName(detail) : "",
+    workOssId: String(detail?.opusOssId || "").trim(),
+    coverUrl: String(detail?.coverUrl || "").trim(),
+    coverOssId: String(detail?.coverOssId || "").trim(),
+    previewUrl: String(detail?.videoUrl || "").trim(),
+    videoFileName: hasVideoFile
+      ? getResourceFileName(detail?.videoUrl, `${String(detail?.opusName || "video").trim() || "video"}.mp4`)
+      : "",
+    videoOssId: String(detail?.videoOssId || "").trim(),
+    imageList,
+  };
+};
+
 const closeToolIframeModal = () => {
   showToolIframeModal.value = false;
   currentToolUrl.value = "";
@@ -1452,13 +1565,27 @@ const onToolIframeLoad = () => {
   }, 300);
 };
 
-// 打开 iframe 编辑
-const openEditModal = async (opusId: string) => {
+const openWorkEditModal = async (opusId: string) => {
+  try {
+    uploading.value = true;
+    const detail = await getOpusDetail(opusId);
+    fillUploadFormForEdit(detail, opusId);
+    showUploadModal.value = true;
+  } catch (error: any) {
+    console.error("打开作品编辑弹窗失败:", error);
+    ElMessage.error(error.message || "打开编辑弹窗失败");
+  } finally {
+    uploading.value = false;
+  }
+};
+
+// 打开程序
+const openProgramModal = async (opusId: string) => {
   try {
     uploading.value = true;
     const detail = await getOpusDetail(opusId);
     if (!detail?.opusOssId) {
-      ElMessage.warning("当前作品缺少可编辑文件");
+      ElMessage.warning("当前作品缺少程序文件");
       return;
     }
 
@@ -1475,8 +1602,8 @@ const openEditModal = async (opusId: string) => {
     toolIframeLoading.value = true;
     showToolIframeModal.value = true;
   } catch (error: any) {
-    console.error("打开作品编辑失败:", error);
-    ElMessage.error(error.message || "打开作品编辑失败");
+    console.error("打开程序失败:", error);
+    ElMessage.error(error.message || "打开程序失败");
   } finally {
     uploading.value = false;
   }
@@ -1783,8 +1910,11 @@ const handleVideoFileChange = async (e: Event) => {
   try {
     uploading.value = true;
     const result = await uploadOSS(file);
+    revokeUploadPreviewUrl();
     uploadForm.value.videoFileName = file.name;
     uploadForm.value.videoOssId = result.ossId;
+    uploadForm.value.previewUrl =
+      typeof window !== "undefined" ? URL.createObjectURL(file) : "";
     ElMessage.success(t("personalCenter.uploadSuccess"));
   } catch (error: any) {
     ElMessage.error(error.message || t("personalCenter.uploadFailed"));
@@ -2048,9 +2178,16 @@ const loadUserProfile = async () => {
   try {
     const data = await getProfile();
     userProfile.value = data;
+    syncUserInfo(data?.user || null);
   } catch (error: any) {
     console.error("获取用户信息失败:", error);
   }
+};
+
+const handleAvatarError = (event: Event) => {
+  const target = event.target as HTMLImageElement | null;
+  if (!target) return;
+  target.src = defaultAvatar;
 };
 
 // 初始化加载
@@ -2063,6 +2200,7 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
+  revokeUploadPreviewUrl();
   window.removeEventListener("message", handleToolIframeMessage);
 });
 
@@ -2816,10 +2954,10 @@ const handleBack = () => router.back();
   text-align: center;
 }
 .col-actions {
-  width: 220px;
+  width: 300px;
   display: flex;
   gap: 8px;
-  justify-content: space-around;
+  justify-content: flex-start;
 }
 
 .list-action {
@@ -2952,6 +3090,7 @@ const handleBack = () => router.back();
 /* List More Dropdown */
 .list-more-dropdown {
   position: relative;
+  margin-left: auto;
 }
 
 .list-dropdown-menu {
@@ -3506,6 +3645,21 @@ const handleBack = () => router.back();
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+.preview-video.full {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.file-preview-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  background: #000;
+  display: block;
 }
 
 /* Modal Footer */

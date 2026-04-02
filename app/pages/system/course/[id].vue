@@ -54,16 +54,16 @@
 
     <!-- 主体内容 -->
     <div ref="courseMainRef" class="course-main">
-      <div class="chapter-sidebar">
-        <div class="sidebar-title">{{ $t('course.chapterDetails') }}</div>
-        <div class="chapter-list">
-          <div v-for="chapter in chapters" :key="chapter.id" class="chapter-item"
+      <div class="course-chapter-sidebar">
+        <div class="course-sidebar-title">{{ $t('course.chapterDetails') }}</div>
+        <div class="course-chapter-list">
+          <div v-for="chapter in chapters" :key="chapter.id" class="course-chapter-item"
             :class="{ active: activeChapter === chapter.id }" @click="activeChapter = chapter.id">
-            <span class="chapter-name">{{ chapter.name }}</span>
-            <div class="chapter-actions">
-              <button class="action-btn prepare-btn" @click.stop="handlePrepare(chapter)">{{ chapter.isPrepare === 1 ?
+            <span class="course-chapter-name">{{ chapter.name }}</span>
+            <div class="course-chapter-actions">
+              <button class="course-action-btn course-prepare-btn" @click.stop="handlePrepare(chapter)">{{ chapter.isPrepare === 1 ?
                 $t('course.continuePrepare') : $t('course.startPrepare') }}</button>
-              <button class="action-btn start-btn" @click.stop="handleStartClass(chapter)">{{ $t('course.startClass')
+              <button class="course-action-btn course-start-btn" @click.stop="handleStartClass(chapter)">{{ $t('course.startClass')
                 }}</button>
             </div>
           </div>
@@ -159,13 +159,14 @@ import { ref, reactive, watch, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { cursorAdmin } from '~/composables/api/curosr'
 import { useTeacher } from '~/composables/api/useTeacher'
+import { ElMessage } from '~/components/ui'
 
 const { locale, t } = useI18n()
 definePageMeta({ layout: 'default' })
 
 const route = useRoute()
 const { getCursorDetail, startPrepare, getChapterResourceList } = cursorAdmin()
-const { getTeachChapterList, getClassListNoPage, getCourseMenuTree } = useTeacher()
+const { getTeachChapterList, getClassListNoPage, getCourseMenuTree, getTeacherStatus } = useTeacher()
 
 // 加载课程详情函数
 const loadCourseDetail = async () => {
@@ -416,6 +417,21 @@ const startClassData = reactive({
   initialCourseId: '',
   initialChapterId: ''
 })
+const ongoingClassroomBlockedMessage = "需先结束当前课程才能开始新的课程"
+
+const ensureNoOngoingClassroomBeforeStart = async () => {
+  try {
+    const status = await getTeacherStatus()
+    if (status?.isTeach) {
+      ElMessage.error(ongoingClassroomBlockedMessage)
+      return false
+    }
+  } catch (error) {
+    console.error('校验进行中课堂失败:', error)
+  }
+
+  return true
+}
 
 // 班级切换时不再需要更新课程列表（班级和课程独立）
 const handleClassChange = (classId: string) => {
@@ -488,6 +504,10 @@ const handlePrepare = async (chapter: { id: number; name: string; isPrepare: num
 
 const handleStartClass = async (chapter: { id: number; name: string }) => {
   console.log('开始上课:', chapter)
+
+  if (!(await ensureNoOngoingClassroomBeforeStart())) {
+    return
+  }
 
   // 设置初始数据 
   startClassData.initialCourseId = String(route.params.id)
@@ -743,7 +763,7 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   min-height: 0;
 }
 
-.chapter-sidebar {
+.course-chapter-sidebar {
   width: 440px;
   border-radius: 10px;
   flex-shrink: 0;
@@ -754,7 +774,7 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   margin-right: 13px;
 }
 
-.sidebar-title {
+.course-sidebar-title {
   text-align: center;
   padding: 16px 20px;
   font-weight: 400;
@@ -763,13 +783,13 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   flex-shrink: 0;
 }
 
-.chapter-list {
+.course-chapter-list {
   padding: 8px 0;
   flex: 1;
   overflow-y: auto;
 }
 
-.chapter-item {
+.course-chapter-item {
   position: relative;
   display: flex;
   align-items: center;
@@ -782,22 +802,22 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   border-bottom: 1px solid #eee;
 }
 
-.chapter-item:hover {
+.course-chapter-item:hover {
   background: #FFF8F0;
   color: #FF9900;
 }
 
-.chapter-item.active {
+.course-chapter-item.active {
   background: #FFF8F0;
   color: #FF9900;
 }
 
-.chapter-name {
+.course-chapter-name {
   flex: 1;
   /* min-width: 0; */
 }
 
-.chapter-actions {
+.course-chapter-actions {
   position: absolute;
   right: 12px;
   top: 50%;
@@ -808,11 +828,11 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   transition: opacity 0.2s;
 }
 
-.chapter-item:hover .chapter-actions {
+.course-chapter-item:hover .course-chapter-actions {
   opacity: 1;
 }
 
-.action-btn {
+.course-action-btn {
   padding: 4px 10px;
   font-size: 11px;
   border-radius: 4px;
@@ -821,23 +841,23 @@ const handleStartClass = async (chapter: { id: number; name: string }) => {
   white-space: nowrap;
 }
 
-.prepare-btn {
+.course-prepare-btn {
   background: white;
   border: 1px solid #FF9900;
   color: #FF9900;
 }
 
-.prepare-btn:hover {
+.course-prepare-btn:hover {
   background: #FFF8F0;
 }
 
-.start-btn {
+.course-start-btn {
   background: #FF9900;
   border: 1px solid #FF9900;
   color: white;
 }
 
-.start-btn:hover {
+.course-start-btn:hover {
   background: #E68A00;
   border-color: #E68A00;
 }

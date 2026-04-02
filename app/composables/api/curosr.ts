@@ -207,7 +207,7 @@ export const cursorAdmin = () => {
       }
 
       const response = await http.get(
-        "/system/course/resource/list",
+        "/system/course/resource/visible/list",
         queryParams,
       );
       if (response.code !== 200) {

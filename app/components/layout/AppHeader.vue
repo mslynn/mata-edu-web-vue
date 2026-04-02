@@ -20,12 +20,13 @@
         
         <!-- 用户头像下拉菜单 -->
         <div class="relative" ref="dropdownRef">
-          <img 
-            :src="user?.avatar || defaultAvatar" 
-            alt="Avatar" 
-            class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 transition-all"
-            @click="toggleDropdown"
-          />
+        <img 
+          :src="resolvedAvatar" 
+          alt="Avatar" 
+          class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 transition-all"
+          @click="toggleDropdown"
+          @error="handleAvatarError"
+        />
           
           <!-- 下拉菜单 -->
           <Transition name="dropdown">
@@ -35,7 +36,6 @@
             >
               <div class="px-4 py-2 border-b border-gray-100">
                 <p class="text-sm font-medium text-gray-800 truncate">{{ displayUserName }}</p>
-                <p class="text-xs text-gray-400 truncate">{{ user?.role_name || '' }}</p>
               </div>
               <!-- 模块切换 - 仅市/区管理员显示 -->
               <button 
@@ -85,7 +85,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
 import { useI18n } from 'vue-i18n'
-import defaultAvatar from '~/assets/images/avatar.png'
+import defaultAvatar from '~/assets/newimages/user.png'
 import logoZh from '~/assets/images/logo.png'
 import logoEn from '~/assets/images/logo_en.png'
 
@@ -116,6 +116,17 @@ const displayUserName = computed(() => {
 const showModuleSwitch = computed(() => {
   const roleKey = user.value?.role_key
   return roleKey === 'city_admin' || roleKey === 'district_admin'
+})
+
+const resolvedAvatar = computed(() => {
+  const avatar = String(
+    user.value?.avatar ||
+    user.value?.avatarUrl ||
+    user.value?.headImg ||
+    user.value?.headimg ||
+    ''
+  ).trim()
+  return avatar || defaultAvatar
 })
 
 const toggleDropdown = () => {
@@ -150,6 +161,12 @@ const handleProfile = () => {
 const handleLogout = () => {
   showDropdown.value = false
   logout()
+}
+
+const handleAvatarError = (event: Event) => {
+  const target = event.target as HTMLImageElement | null
+  if (!target) return
+  target.src = defaultAvatar
 }
 
 // 点击外部关闭下拉菜单

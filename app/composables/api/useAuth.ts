@@ -29,17 +29,71 @@ interface LoginResponse {
 export const useAuth = () => {
   const http = useHttp()
   const { t } = useI18n()
-  
+
+  const normalizeUserInfo = (rawUser: any) => {
+    if (!rawUser || typeof rawUser !== 'object') return null
+
+    return {
+      ...rawUser,
+      user_id: rawUser.user_id || rawUser.userId || rawUser.id || '',
+      user_name: rawUser.user_name || rawUser.userName || rawUser.username || '',
+      nick_name: rawUser.nick_name || rawUser.nickName || rawUser.nickname || '',
+      nickName: rawUser.nickName || rawUser.nick_name || rawUser.nickname || '',
+      userName: rawUser.userName || rawUser.user_name || rawUser.username || '',
+      nickname: rawUser.nickname || rawUser.nickName || rawUser.nick_name || '',
+      avatar: String(
+        rawUser.avatar ||
+        rawUser.avatarUrl ||
+        rawUser.headImg ||
+        rawUser.headimg ||
+        ''
+      ).trim(),
+      role_key: rawUser.role_key || rawUser.roleKey || '',
+      role_name: rawUser.role_name || rawUser.roleName || '',
+      roleKey: rawUser.roleKey || rawUser.role_key || '',
+      roleName: rawUser.roleName || rawUser.role_name || '',
+    }
+  }
+
   // 从 localStorage 初始化用户信息
   const getUserFromStorage = () => {
     if (process.client) {
       const stored = localStorage.getItem('user_info')
-      return stored ? JSON.parse(stored) : null
+      return stored ? normalizeUserInfo(JSON.parse(stored)) : null
     }
     return null
   }
   
   const user = useState<any>('auth-user', () => getUserFromStorage())
+
+  const syncUserInfo = (rawUser: any) => {
+    const normalizedUser = normalizeUserInfo(rawUser)
+    user.value = normalizedUser
+
+    if (import.meta.client) {
+      if (normalizedUser) {
+        localStorage.setItem('user_info', JSON.stringify(normalizedUser))
+      } else {
+        localStorage.removeItem('user_info')
+      }
+    }
+
+    return normalizedUser
+  }
+
+  const clearClassroomSessionCache = () => {
+    if (!import.meta.client) return
+
+    localStorage.removeItem('ongoing_classroom')
+    localStorage.removeItem('student_ongoing_classroom')
+    localStorage.removeItem('teacher_quick_login_info')
+
+    Object.keys(localStorage).forEach((key) => {
+      if (key.startsWith('class_start_')) {
+        localStorage.removeItem(key)
+      }
+    })
+  }
 
   // token 状态（从 localStorage 同步）
   const token = computed(() => http.getToken())
@@ -85,8 +139,7 @@ export const useAuth = () => {
       
       if (response.code === 200 && response.data?.user) {
         const userInfo = response.data.user
-        // 转换为统一的用户信息格式（与现有代码兼容）
-        const formattedUser = {
+        const formattedUser = normalizeUserInfo({
           user_id: userInfo.userId,
           user_name: userInfo.username,
           nick_name: userInfo.nickname,
@@ -94,15 +147,9 @@ export const useAuth = () => {
           avatar: userInfo.avatar,
           role_key: userInfo.roleKey,
           role_name: userInfo.roleName
-        }
-        
-        // 更新用户状态
-        user.value = formattedUser
-        
-        // 保存到 localStorage
-        if (import.meta.client) {
-          localStorage.setItem('user_info', JSON.stringify(formattedUser))
-        }
+        })
+
+        syncUserInfo(formattedUser)
         
         return formattedUser
       }
@@ -158,11 +205,7 @@ export const useAuth = () => {
       } catch (e) {
         console.warn('获取用户信息失败，使用登录返回的用户信息')
         // 如果 getUser 失败，使用登录接口返回的用户信息
-        userInfo = response.data.user_info
-        user.value = userInfo
-        if (import.meta.client && userInfo) {
-          localStorage.setItem('user_info', JSON.stringify(userInfo))
-        }
+        userInfo = syncUserInfo(response.data.user_info)
       }
       
       // 登录成功提示
@@ -190,9 +233,9 @@ export const useAuth = () => {
       
       // 接口成功后，清除本地数据并跳转
       http.removeToken()
-      user.value = null
+      syncUserInfo(null)
       if (process.client) {
-        localStorage.removeItem('user_info')
+        clearClassroomSessionCache()
         localStorage.removeItem('teacher-nav-menus') // 清除侧边栏菜单缓存
         // 跳转到登录页 - 使用 window.location.href 硬刷新
         window.location.href = '/'
@@ -293,6 +336,7 @@ export const useAuth = () => {
     resetPassword,
     getClassCodeLoginList,
     getPeerjsToken,
-    getUser
+    getUser,
+    syncUserInfo
   }
 }

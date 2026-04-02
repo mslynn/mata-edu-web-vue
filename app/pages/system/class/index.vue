@@ -2475,7 +2475,7 @@ onMounted(async () => {
 const loadStudentPassword = async () => {
   try {
     const data = await getStudentPassword();
-    studentPassword.value = data || "";
+    studentPassword.value = data.studentPwd || "";
   } catch (error) {
     console.error("获取学生统一密码失败:", error);
   }
@@ -2740,6 +2740,9 @@ const handleConfirmDisableQuickLogin = async () => {
     isQuickLoginEnabled.value = false;
     quickLoginClassId.value = null;
     quickLoginData.value = {};
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("teacher_quick_login_info");
+    }
     showDisableQuickLoginModal.value = false;
     ElMessage.info(t("class.quickLoginDisabled"));
   } catch (error) {

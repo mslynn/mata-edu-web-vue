@@ -295,6 +295,17 @@
               >
                 <polyline points="15 18 9 12 15 6" />
               </svg>
+
+                       <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
             </button>
             <div
               class="card-grid-scroll"
@@ -613,8 +624,8 @@ import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 
 import ai1Icon from "~/assets/images/ai1.png";
 import ai2Icon from "~/assets/images/ai2.png";
-import ai3Icon from "~/assets/images/ai3.png";
-import ai4Icon from "~/assets/images/ai4.png";
+import ai3Icon from "~/assets/images/ai4.png";
+import ai4Icon from "~/assets/images/ai3.png";
 import ai5Icon from "~/assets/images/ai5.png";
 
 // AIGC 卡片封面图
@@ -626,6 +637,15 @@ import aigcCover4 from "~/assets/images/4.svg";
 definePageMeta({
   layout: "sidebar",
 });
+
+const AI_OUTER_SCROLL_CLASS = "ai-page-use-outer-scroll";
+
+const toggleAIOuterScroll = (enabled: boolean) => {
+  if (typeof document === "undefined") return;
+
+  document.documentElement.classList.toggle(AI_OUTER_SCROLL_CLASS, enabled);
+  document.body.classList.toggle(AI_OUTER_SCROLL_CLASS, enabled);
+};
 
 const router = useRouter();
 const route = useRoute();
@@ -1727,6 +1747,7 @@ const onIframeLoad = () => {
 };
 
 onMounted(() => {
+  toggleAIOuterScroll(true);
   if (embedded.value) {
     pageLoading.value = false;
   } else {
@@ -1746,6 +1767,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  toggleAIOuterScroll(false);
   window.removeEventListener("resize", checkAllArrows);
   window.removeEventListener("message", handleIframeMessage);
 });
@@ -1753,11 +1775,11 @@ onUnmounted(() => {
 
 <style scoped>
 .ai-center-page {
-  height: calc(100vh - 70px);
+  min-height: calc(100vh - 70px);
   background: #f5f5f5;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ai-center-page--embedded {
@@ -1801,7 +1823,7 @@ onUnmounted(() => {
 
 .content-area {
   flex: 1;
-  overflow-y: auto;
+  overflow: visible;
   padding: 0 30px 30px;
 }
 
@@ -2443,5 +2465,65 @@ onUnmounted(() => {
   color: #666;
   font-size: 14px;
   background: #f5f5f5;
+}
+</style>
+
+<style>
+html.ai-page-use-outer-scroll,
+body.ai-page-use-outer-scroll {
+  overflow-y: auto;
+}
+
+html.ai-page-use-outer-scroll .sidebar-shell,
+body.ai-page-use-outer-scroll .sidebar-shell {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+html.ai-page-use-outer-scroll .sidebar-shell-body,
+body.ai-page-use-outer-scroll .sidebar-shell-body {
+  display: block;
+  height: auto;
+  min-height: 100vh;
+}
+
+html.ai-page-use-outer-scroll .sidebar-shell-main,
+body.ai-page-use-outer-scroll .sidebar-shell-main,
+html.ai-page-use-outer-scroll .sidebar-shell-content,
+body.ai-page-use-outer-scroll .sidebar-shell-content {
+  overflow: visible;
+}
+
+html.ai-page-use-outer-scroll .app-sidebar,
+body.ai-page-use-outer-scroll .app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 20;
+}
+
+html.ai-page-use-outer-scroll .sidebar-shell-main,
+body.ai-page-use-outer-scroll .sidebar-shell-main {
+  width: auto;
+  margin-left: 264px;
+  margin-right: 24px;
+}
+
+@media (min-width: 1280px) {
+  html.ai-page-use-outer-scroll .sidebar-shell-main,
+  body.ai-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 328px;
+    margin-right: 40px;
+  }
+}
+
+@media (min-width: 1536px) {
+  html.ai-page-use-outer-scroll .sidebar-shell-main,
+  body.ai-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 416px;
+    margin-right: 68px;
+  }
 }
 </style>

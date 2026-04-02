@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 60 60">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #9ef028;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 3px;
+      }
+    </style>
+  </defs>
+  <g id="组_1712" data-name="组 1712" transform="translate(-1608.52 -441.401)">
+    <circle id="椭圆_186" data-name="椭圆 186" class="cls-1" cx="30" cy="30" r="30" transform="translate(1608.52 441.401)"/>
+    <g id="组_1679" data-name="组 1679" transform="translate(-3.355)">
+      <circle id="椭圆_188" data-name="椭圆 188" class="cls-2" cx="5.408" cy="5.408" r="5.408" transform="translate(1630.961 458.48)"/>
+      <circle id="椭圆_189" data-name="椭圆 189" class="cls-2" cx="3.679" cy="3.679" r="3.679" transform="translate(1644.35 462.97)"/>
+      <path id="路径_2088" data-name="路径 2088" class="cls-2" d="M1655.592,478.981a7.787,7.787,0,0,0-7.169-7.214,7.6,7.6,0,0,0-2.334.2,12.132,12.132,0,0,1,2.479,6.552c.02.289.029.578.028.863a6.743,6.743,0,0,1-.632,2.831h4.923a2.711,2.711,0,0,0,2.723-2.681C1655.61,479.352,1655.6,479.167,1655.592,478.981Z"/>
+      <path id="路径_2089" data-name="路径 2089" class="cls-2" d="M1644.6,479.376c0-.194-.005-.39-.018-.587a8.228,8.228,0,0,0-16.437.565v.03a2.868,2.868,0,0,0,2.884,2.832h10.687A2.871,2.871,0,0,0,1644.6,479.376Z"/>
+    </g>
+  </g>
+</svg>

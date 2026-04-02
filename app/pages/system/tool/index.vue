@@ -202,7 +202,17 @@ const {
 
 // 页面骨架屏（最少显示 300ms）
 const pageLoading = ref(true);
+const TOOL_OUTER_SCROLL_CLASS = "tool-page-use-outer-scroll";
+
+const toggleToolOuterScroll = (enabled: boolean) => {
+  if (typeof document === "undefined") return;
+
+  document.documentElement.classList.toggle(TOOL_OUTER_SCROLL_CLASS, enabled);
+  document.body.classList.toggle(TOOL_OUTER_SCROLL_CLASS, enabled);
+};
+
 onMounted(() => {
+  toggleToolOuterScroll(true);
   setTimeout(() => {
     pageLoading.value = false;
   }, 300);
@@ -767,6 +777,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+  toggleToolOuterScroll(false);
   window.removeEventListener("message", handleIframeMessage);
 });
 
@@ -830,6 +841,7 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 .tool-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  grid-auto-rows: 1fr;
   gap: 24px;
 }
 
@@ -840,6 +852,7 @@ const handleDownloadGooglePlay = (tool: Tool) => {
   display: flex;
   flex-direction: column;
   min-height: 220px;
+  height: 100%;
 }
 
 .tool-content {
@@ -881,6 +894,17 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 .tool-right {
   flex: 1;
   min-width: 0;
+}
+
+.tool-right > p {
+  margin: 0;
+}
+
+.tool-right > p:first-child {
+  font-size: 16px;
+  line-height: 1.6;
+  color: #333;
+  margin-bottom: 6px;
 }
 
 .tool-desc {
@@ -931,6 +955,67 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 @media (max-width: 1400px) {
   .tool-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1400px) and (max-width: 1600px) {
+  .tool-center-page {
+    padding: 22px 20px;
+  }
+
+  .page-title {
+    margin-bottom: 18px;
+  }
+
+  .tool-grid {
+    gap: 16px;
+  }
+
+  .tool-card {
+    padding: 18px;
+    min-height: 198px;
+    border-radius: 18px;
+  }
+
+  .tool-content {
+    gap: 14px;
+  }
+
+  .tool-left {
+    width: 68px;
+  }
+
+  .tool-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 14px;
+    margin-bottom: 8px;
+  }
+
+  .tool-name {
+    font-size: 11px;
+  }
+
+  .tool-right > p:first-child {
+    font-size: 14px;
+    line-height: 1.55;
+    margin-bottom: 4px;
+  }
+
+  .tool-desc {
+    font-size: 12px;
+    line-height: 1.65;
+  }
+
+  .tool-actions {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .btn-primary,
+  .btn-outline {
+    padding: 7px 16px;
+    font-size: 12px;
   }
 }
 
@@ -1042,5 +1127,65 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 .loading-text {
   font-size: 14px;
   color: #666;
+}
+</style>
+
+<style>
+html.tool-page-use-outer-scroll,
+body.tool-page-use-outer-scroll {
+  overflow-y: auto;
+}
+
+html.tool-page-use-outer-scroll .sidebar-shell,
+body.tool-page-use-outer-scroll .sidebar-shell {
+  height: auto;
+  min-height: 100vh;
+  overflow: visible;
+}
+
+html.tool-page-use-outer-scroll .sidebar-shell-body,
+body.tool-page-use-outer-scroll .sidebar-shell-body {
+  display: block;
+  height: auto;
+  min-height: 100vh;
+}
+
+html.tool-page-use-outer-scroll .sidebar-shell-main,
+body.tool-page-use-outer-scroll .sidebar-shell-main,
+html.tool-page-use-outer-scroll .sidebar-shell-content,
+body.tool-page-use-outer-scroll .sidebar-shell-content {
+  overflow: visible;
+}
+
+html.tool-page-use-outer-scroll .app-sidebar,
+body.tool-page-use-outer-scroll .app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 20;
+}
+
+html.tool-page-use-outer-scroll .sidebar-shell-main,
+body.tool-page-use-outer-scroll .sidebar-shell-main {
+  width: auto;
+  margin-left: 264px;
+  margin-right: 24px;
+}
+
+@media (min-width: 1280px) {
+  html.tool-page-use-outer-scroll .sidebar-shell-main,
+  body.tool-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 328px;
+    margin-right: 40px;
+  }
+}
+
+@media (min-width: 1536px) {
+  html.tool-page-use-outer-scroll .sidebar-shell-main,
+  body.tool-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 416px;
+    margin-right: 68px;
+  }
 }
 </style>

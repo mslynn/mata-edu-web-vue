@@ -37,9 +37,10 @@
           <div class="student-user-entry" ref="dropdownRef">
             <button type="button" class="student-user-trigger" @click="toggleDropdown">
               <img
-                :src="user?.avatar || defaultAvatar"
+                :src="resolvedAvatar"
                 alt="用户头像"
                 class="student-user-avatar"
+                @error="handleAvatarError"
               />
             </button>
 
@@ -47,7 +48,6 @@
               <div v-if="showDropdown" class="student-user-dropdown">
                 <div class="student-user-dropdown-head">
                   <p class="student-user-dropdown-name">{{ displayUserName }}</p>
-                  <p class="student-user-dropdown-role">{{ user?.role_name || "" }}</p>
                 </div>
 
                 <button
@@ -281,7 +281,7 @@ import { personalcenterApi } from "~/composables/api/personalcenter";
 import { student } from "~/composables/api/student";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import { ElMessage } from "~/components/ui";
-import defaultAvatar from "~/assets/images/avatar.png";
+import defaultAvatar from "~/assets/newimages/user.png";
 import studentLogo from "~/assets/newimages/logo.png";
 import tool2Icon from "~/assets/images/tool2.png";
 import tool1Icon from "~/assets/images/tool1.png";
@@ -449,6 +449,17 @@ const displayUserName = computed(() => {
 const showModuleSwitch = computed(() => {
   const roleKey = user.value?.role_key;
   return roleKey === "city_admin" || roleKey === "district_admin";
+});
+
+const resolvedAvatar = computed(() => {
+  const avatar = String(
+    user.value?.avatar ||
+    user.value?.avatarUrl ||
+    user.value?.headImg ||
+    user.value?.headimg ||
+    ""
+  ).trim();
+  return avatar || defaultAvatar;
 });
 
 // 上课通知弹窗
@@ -989,6 +1000,12 @@ const handleClickOutside = (event: MouseEvent) => {
   if (dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
     showDropdown.value = false;
   }
+};
+
+const handleAvatarError = (event: Event) => {
+  const target = event.target as HTMLImageElement | null;
+  if (!target) return;
+  target.src = defaultAvatar;
 };
 
 // 连接 WebSocket 监听上课通知

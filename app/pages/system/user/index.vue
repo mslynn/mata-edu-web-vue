@@ -145,41 +145,41 @@
             <div class="flex-1 overflow-x-auto overflow-y-auto min-h-0">
               <MTable :columns="teacherTableColumns" :data="teacherList" :loading="teacherLoading"
                 :selected-keys="selectedTeacherIds" :selectable="teacherActiveAction === 'batch'" row-key="userId"
-                show-index class="teacher-table min-w-[700px]" @select="handleTeacherSelect" @select-all="handleTeacherSelectAll">
-                <template #teacherName="{ row }">
-                  <span class="truncate block max-w-[100px]">{{ row.teacherName || '-' }}</span>
+                show-index class="teacher-table min-w-[640px]" @select="handleTeacherSelect" @select-all="handleTeacherSelectAll">
+                <template #nickName="{ row }">
+                  <span class="teacher-table-name truncate block">{{ row.nickName || '-' }}</span>
                 </template>
-                <template #teacherAccount="{ row }">
-                  <span class="truncate block max-w-[120px]">{{ row.teacherAccount || '-' }}</span>
+                <template #userName="{ row }">
+                  <span class="teacher-table-account truncate block">{{ row.userName || '-' }}</span>
                 </template>
-                <template #phone="{ row }">
-                  <span>{{ row.phone || '-' }}</span>
+                <template #phonenumber="{ row }">
+                  <span>{{ row.phonenumber || '-' }}</span>
                 </template>
                 <template #createTime="{ row }">
                   <span>{{ row.createTime || '-' }}</span>
                 </template>
                 <template #action="{ row }">
-                  <div class="flex items-center justify-center gap-1 xl:gap-2 flex-nowrap">
+                  <div class="teacher-table-actions flex items-center justify-center gap-1 xl:gap-2 flex-nowrap">
                     <button :class="[
-                      'px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
                       teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900] hover:text-[#FF9900]'
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleTransferTeacherClass(row)">
                       {{ $t('user.transfer') }}
                     </button>
                     <button :class="[
-                      'px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
                       teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900] hover:text-[#FF9900]'
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleResetTeacherPassword(row)">
                       {{ $t('user.reset') }}
                     </button>
                     <button :class="[
-                      'px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
                       teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900] hover:text-[#FF9900]'
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleEditTeacher(row)">
                       {{ $t('common.edit') }}
                     </button>
                     <button :class="[
-                      'px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
                       teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]'
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleDeleteTeacher(row)">
                       {{ $t('common.delete') }}
@@ -696,12 +696,50 @@
           </p>
         </div>
 
+        <p
+          v-if="!isEditTeacher && shouldShowRemainingTeacherCount"
+          class="text-[13px] text-[#FF4D4F] mt-4 leading-relaxed"
+        >
+          *剩余可添加教师人数:{{ remainingTeacherCount }}人
+        </p>
+
         <!-- 底部按钮 -->
         <div class="flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[50px] bg-white border border-[#E5E5E5] rounded-[8px] text-[#333] hover:border-[#999] text-[15px] transition-all"
             @click="showTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[50px] bg-[#FF9900] text-white rounded-[8px] hover:bg-[#E68A00] text-[15px] transition-all"
             @click="handleConfirmTeacher">{{ $t('common.confirm') }}</button>
+        </div>
+      </div>
+    </MModal>
+
+    <MModal
+      v-model="showTeacherLimitModal"
+      custom-width="420px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="p-8 relative">
+        <button
+          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          @click="showTeacherLimitModal = false"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <h3 class="text-center text-[18px] font-medium text-[#4D4D4D] mb-8">提示</h3>
+        <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed px-4">
+          可创建教师账号已达最大限制，请联系管理员人员申请开通更多账号。
+        </p>
+        <div class="flex justify-center mt-8">
+          <button
+            class="w-[136px] h-[44px] bg-[#40A9FF] text-white rounded-[8px] hover:bg-[#2f96eb] transition-colors"
+            @click="showTeacherLimitModal = false"
+          >
+            确定
+          </button>
         </div>
       </div>
     </MModal>
@@ -1479,6 +1517,7 @@ const {
   deleteGroup,
   updateGroup,
   getGroupMemberList,
+  getLimit,
 } = useTeacher();
 
 // ==================== 左侧面板 Tab 导航 ====================
@@ -1506,8 +1545,19 @@ const handleNavChange = async (value: string) => {
 const teacherTabList = computed(() => [{ label: t('user.teacherManagement'), value: 'teacher' }])
 const teacherActiveTab = ref('teacher')
 const teacherSearchKeyword = ref('')
-const teacherPassword = ref('')
-const teacherDefaultPasswordDisplay = computed(() => teacherPassword.value || '123456')
+type TeacherPasswordInfo = {
+  teacherPwd?: string
+  studentPwd?: string
+}
+const teacherPassword = ref<TeacherPasswordInfo | null>(null)
+const teacherDefaultPasswordDisplay = computed(
+  () => teacherPassword.value?.teacherPwd || '123456'
+)
+const remainingTeacherCount = ref<number | null>(null)
+const showTeacherLimitModal = ref(false)
+const shouldShowRemainingTeacherCount = computed(
+  () => remainingTeacherCount.value !== null && remainingTeacherCount.value > 0
+)
 type TeacherActionType = 'normal' | 'batch'
 const teacherActiveAction = ref<TeacherActionType>('normal')
 const teacherLoading = ref(false)
@@ -1575,6 +1625,72 @@ const handleTeacherPhoneInput = (event: Event) => {
 const handleTeacherCountryChange = (country: any) => {
   phoneMaxLength.value = Number(country?.maxLength) || 11
   teacherForm.phone = (teacherForm.phone || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
+}
+
+const currentSchoolOrgId = computed(() => String(schoolList.value?.[0]?.id || '').trim())
+
+const parseRemainingTeacherCount = (data: any) => {
+  if (data == null) return null
+
+  const rawValue =
+    typeof data === 'number' || typeof data === 'string'
+      ? Number(data)
+      : Number.NaN
+
+  if (Number.isFinite(rawValue)) {
+    return rawValue
+  }
+
+  const directCandidates = [
+    data?.remainCount,
+    data?.remainingCount,
+    data?.remainNum,
+    data?.remainingNum,
+    data?.surplusNum,
+    data?.leftNum,
+    data?.teacherRemainCount,
+    data?.teacherRemainingCount,
+    data?.schoolTeacherRemainCount,
+  ]
+
+  for (const candidate of directCandidates) {
+    const value = Number(candidate)
+    if (Number.isFinite(value)) {
+      return value
+    }
+  }
+
+  const limitCandidates = [
+    data?.limit,
+    data?.maxCount,
+    data?.maxNum,
+    data?.teacherLimit,
+    data?.schoolTeacherLimit,
+  ]
+
+  for (const candidate of limitCandidates) {
+    const value = Number(candidate)
+    if (Number.isFinite(value)) {
+      return Math.max(value - teacherPagination.total, 0)
+    }
+  }
+
+  return null
+}
+
+const fetchRemainingTeacherCount = async () => {
+  if (!currentSchoolOrgId.value) {
+    remainingTeacherCount.value = null
+    return
+  }
+
+  try {
+    const data = await getLimit({ orgId: currentSchoolOrgId.value })
+    remainingTeacherCount.value = parseRemainingTeacherCount(data)
+  } catch (error) {
+    console.error('获取教师剩余人数失败:', error)
+    remainingTeacherCount.value = null
+  }
 }
 
 // 班级转让教师列表列配置
@@ -1648,6 +1764,7 @@ const fetchTeacherList = async () => {
     })
     teacherList.value = result.list
     teacherPagination.total = result.total
+    await fetchRemainingTeacherCount()
   } catch (error: any) {
     console.error('获取教师列表失败:', error)
   } finally {
@@ -1663,7 +1780,7 @@ const handleTeacherSearch = () => {
 const fetchTeacherPassword = async () => {
   try {
     const pwd = await schoolUserApi.getTeacherPassword()
-    teacherPassword.value = pwd || '123456'
+    teacherPassword.value = pwd || null
   } catch (error) {
     console.error('获取教师密码失败', error)
   }
@@ -1699,7 +1816,17 @@ const handleTeacherSelectAll = (selected: boolean) => {
 }
 const handleTeacherSelectAllToggle = (e: Event) => { handleTeacherSelectAll((e.target as HTMLInputElement).checked) }
 
-const handleCreateTeacher = () => {
+const handleCreateTeacher = async () => {
+  if (!currentSchoolOrgId.value) {
+    await fetchSchoolInfo()
+    await fetchRemainingTeacherCount()
+  }
+
+  if (remainingTeacherCount.value === 0) {
+    showTeacherLimitModal.value = true
+    return
+  }
+
   isEditTeacher.value = false
   addTeacherTab.value = 'import'
   teacherForm.id = ''
@@ -1761,12 +1888,12 @@ const handleConfirmTeacher = async () => {
         ElMessage.success(t('common.editSuccess'))
       } else {
         // 获取第一个组织的 id 作为 orgId
-        const orgId = schoolList.value?.[0]?.id || ''
+        const orgId = currentSchoolOrgId.value
         await schoolUserApi.createTeacher({ orgId, nickName: teacherName, phonenumber: teacherForm.phone, countryCode: teacherForm.countryCode })
         ElMessage.success(t('common.createSuccess'))
       }
       showTeacherModal.value = false
-      fetchTeacherList()
+      await fetchTeacherList()
     } catch (error: any) {
       // useHttp/useSchoolUser already show API error message; avoid duplicate toast here.
       console.error('确认教师信息失败:', error)
@@ -1833,7 +1960,7 @@ const handleBatchResetTeacherPassword = () => {
   if (selectedTeacherIds.value.length === 0) { ElMessage.warning(t('user.noTeacherToReset')); return }
   resetTeacherIds.value = [...selectedTeacherIds.value]
   resetTeacherConfirmText.value = t('user.batchResetConfirmText', { count: selectedTeacherIds.value.length })
-  resetTeacherPassword.value = teacherPassword.value || ''
+  resetTeacherPassword.value = teacherPassword.value?.teacherPwd || ''
   showResetTeacherPassword.value = false
   isBatchResetTeacher.value = true
   showResetTeacherModal.value = true
@@ -1878,7 +2005,7 @@ const handleTeacherFileChange = async (e: Event) => {
       await schoolUserApi.importTeacher(file, orgId)
 
       showTeacherModal.value = false
-      fetchTeacherList()
+      await fetchTeacherList()
     } catch (error: any) {
      console.log(error)
     }
@@ -1907,7 +2034,7 @@ const handleConfirmImportTeacher = async () => {
   try {
     const orgId = schoolList.value?.[0]?.id || ''
     await schoolUserApi.importTeacher(importTeacherFile.value, orgId)
-    ElMessage.success(t('common.importSuccess')); showImportTeacherModal.value = false; fetchTeacherList()
+    ElMessage.success(t('common.importSuccess')); showImportTeacherModal.value = false; await fetchTeacherList()
   } catch (error: any) {
     console.error('导入教师失败:', error)
   }
@@ -2367,7 +2494,7 @@ const loadStudentList = async (classId?: string) => {
 const loadStudentPassword = async () => {
   try {
     const data = await getStudentPassword();
-    studentPassword.value = data || "";
+    studentPassword.value = data.studentPwd || "";
   } catch (error) {
     console.error("获取学生统一密码失败:", error);
   }
@@ -2593,6 +2720,9 @@ const handleConfirmDisableQuickLogin = async () => {
     isQuickLoginEnabled.value = false;
     quickLoginClassId.value = null;
     quickLoginData.value = {};
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("teacher_quick_login_info");
+    }
     showDisableQuickLoginModal.value = false;
     ElMessage.info(t('user.quickLoginDisabled'));
   } catch (error) { console.error("停用快捷登录失败:", error); }
@@ -3121,10 +3251,10 @@ const handleTabChange = (newTab: string) => {
 };
 
 // 初始化
-onMounted(() => {
-  fetchTeacherList();
+onMounted(async () => {
+  await fetchSchoolInfo();
+  await fetchTeacherList();
   fetchTeacherPassword();
-  fetchSchoolInfo();
   // 预加载快捷登录状态，切换到班级管理时能直接显示
   loadQuickLoginStatus();
 });
@@ -3252,5 +3382,46 @@ onMounted(() => {
   border-bottom: none !important;
   padding-top: 16px;
   padding-bottom: 16px;
+}
+
+.teacher-table-name {
+  max-width: 96px;
+}
+
+.teacher-table-account {
+  max-width: 120px;
+}
+
+@media (min-width: 1400px) and (max-width: 1600px) {
+  .left-panel {
+    width: 240px !important;
+  }
+
+  .main-panel {
+    padding: 12px;
+  }
+
+  .teacher-table :deep(thead th),
+  .teacher-table :deep(tbody td) {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .teacher-table-actions {
+    gap: 6px;
+  }
+
+  .teacher-table-action-btn {
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  .teacher-table-name {
+    max-width: 72px;
+  }
+
+  .teacher-table-account {
+    max-width: 104px;
+  }
 }
 </style>

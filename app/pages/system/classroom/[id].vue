@@ -1289,6 +1289,17 @@ const autoEnableQuickLogin = async () => {
   }
 
   try {
+    const currentQuickLogin = await getQuickLoginInfo();
+    if (currentQuickLogin?.classCode) {
+      applyQuickLoginInfo(currentQuickLogin);
+      loginTipCollapsed.value = false;
+      return;
+    }
+  } catch (error) {
+    console.error("获取快捷登录状态失败:", error);
+  }
+
+  try {
     const data = await createQuickLogin(classId);
     if (data && data.classCode) {
       applyQuickLoginInfo(data);

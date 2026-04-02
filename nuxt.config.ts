@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.64:8001'
+  : 'http://192.168.0.55:8001'
 
 // 预览服务地址
 
@@ -17,7 +17,7 @@ const previewBaseUrl = process.env.NODE_ENV === 'production'
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production'
   ? 'wss://test-gateway.matatastudio.com/resource/websocket'
-  : 'ws://192.168.0.64:8001/resource/websocket'
+  : 'ws://192.168.0.55:8001/resource/websocket'
 
 
 
@@ -28,7 +28,7 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   app: {
     head: {
-      title: 'AI智学云',
+      title: 'AI智学云-教育平台',
       meta: [
         { name: 'keywords', content: 'AI智学云,教育平台' },
         { name: 'description', content: 'AI智学云-教育平台' }

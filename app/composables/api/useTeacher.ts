@@ -176,8 +176,14 @@ export const useTeacher = () => {
   const resetPassword = async (ids: string[], password?: string) => {
     try {
       const payload = password ? { ids, password } : { ids };
-      const headers = password ? { isEncrypt: "true" } : {};
-      const response = await http.post("/system/student/reset", payload, headers);
+      const headers: Record<string, string> | undefined = password
+        ? { isEncrypt: "true" }
+        : undefined;
+      const response = await http.post(
+        "/system/student/reset",
+        payload,
+        headers,
+      );
       if (response.code !== 200) {
         throw new Error(response.msg || "重置密码失败");
       }
@@ -189,14 +195,15 @@ export const useTeacher = () => {
   //查询年级班级列表（排除指定班级)
   const getGradeClassList = async (classId?: string) => {
     try {
-      const response = await http.get(`/system/class/grade/exclude/${classId}`) ;
+      const response = await http.get(`/system/class/grade/exclude/${classId}`);
       if (response.code !== 200) {
         throw new Error(response.msg || "查询年级班级列表列表失败");
       }
       return response.data;
-    } catch (error: any) {      throw error;
+    } catch (error: any) {
+      throw error;
     }
-  }
+  };
   //移班
   const transferClass = async (data: {
     ids: string[];
@@ -215,7 +222,10 @@ export const useTeacher = () => {
   const removeStudent = async (ids: string[], password?: string) => {
     try {
       const response = password
-        ? await http.request(`/system/student/${ids.join(",")}`, { method: "DELETE", params: { password } })
+        ? await http.request(`/system/student/${ids.join(",")}`, {
+            method: "DELETE",
+            params: { password },
+          })
         : await http.del(`/system/student/${ids.join(",")}`);
       if (response.code !== 200) {
         throw new Error(response.msg || "删除学生失败");
@@ -268,7 +278,7 @@ export const useTeacher = () => {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -306,7 +316,7 @@ export const useTeacher = () => {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -349,7 +359,7 @@ export const useTeacher = () => {
             Authorization: token ? `Bearer ${token}` : "",
           },
           body: formData,
-        }
+        },
       );
 
       const result = await response.json();
@@ -457,7 +467,10 @@ export const useTeacher = () => {
   const deleteGroup = async (ids: string[], password?: string) => {
     try {
       const response = password
-        ? await http.request(`/system/team/${ids.join(",")}`, { method: "DELETE", params: { password } })
+        ? await http.request(`/system/team/${ids.join(",")}`, {
+            method: "DELETE",
+            params: { password },
+          })
         : await http.del(`/system/team/${ids.join(",")}`);
       return response.data;
     } catch (error: any) {
@@ -602,7 +615,7 @@ export const useTeacher = () => {
     try {
       const response = await http.post("/system/teach/courseware/send", {
         ...data,
-        peerId: Number(data.peerId)
+        peerId: Number(data.peerId),
       });
       return response.data;
     } catch (error: any) {
@@ -623,7 +636,7 @@ export const useTeacher = () => {
     try {
       const response = await http.post("/system/teach/courseware/revoke", {
         ...data,
-        peerId: Number(data.peerId)
+        peerId: Number(data.peerId),
       });
       return response.data;
     } catch (error: any) {
@@ -631,7 +644,7 @@ export const useTeacher = () => {
     }
   };
   //查询教师统计数据
-    
+
   const getTeacherStats = async () => {
     try {
       const response = await http.get("system/teach/stats");
@@ -643,6 +656,29 @@ export const useTeacher = () => {
       throw error;
     }
   };
+  //获取组织下用户数量限制
+  const getLimit = async (data: { orgId?: string }) => {
+    try {
+      const response = await http.get("/system/org/getLimit", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "获取组织下用户数量限制失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查询教师授课状态
+   
+  const getTeacherStatus = async () => {
+    try {
+      const response = await http.get("/system/teach/status");
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
   return {
     getTeacherMenu,
     getTeacherInfo,
@@ -684,5 +720,7 @@ export const useTeacher = () => {
     withdrawSend,
     getGradeClassList,
     getTeacherStats,
+    getLimit,
+    getTeacherStatus,
   };
 };

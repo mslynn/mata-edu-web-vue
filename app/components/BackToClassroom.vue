@@ -34,10 +34,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useTeacher } from '~/composables/api/useTeacher'
 
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
+const { getTeacherStatus } = useTeacher()
 
 // 正在进行的课堂信息
 const ongoingClass = ref<{
@@ -110,39 +112,9 @@ const fetchOngoingClass = async () => {
     
     // 有缓存，先显示按钮
     ongoingClass.value = data
-    
-    // 调接口验证课堂是否还在进行中
-    const config = useRuntimeConfig()
-    const token = localStorage.getItem('token')
-    const headers: Record<string, string> = {
-      'Content-Type': 'application/json'
-    }
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`
-    }
-    
-    // 获取该章节的状态
-    const chapterRes = await $fetch<any>('/system/teach/chapter/list', {
-      baseURL: config.public.apiBaseUrl as string,
-      headers,
-      params: {
-        courseId: data.courseId,
-        classId: data.classId
-      }
-    })
-    
-    const chapters = chapterRes?.data
-    if (!chapters || !Array.isArray(chapters)) {
-      // 接口异常，保持当前状态
-      return
-    }
-    
-    // 检查该章节是否还在上课中
-    const ongoingChapter = chapters.find((c: any) => 
-      String(c.chapterId) === String(data.chapterId) && c.teachStatus === 1
-    )
-    
-    if (!ongoingChapter) {
+
+    const status = await getTeacherStatus()
+    if (!status?.isTeach) {
       // 课堂已结束，清除缓存
       localStorage.removeItem('ongoing_classroom')
       ongoingClass.value = null
@@ -198,7 +170,7 @@ defineExpose({
 .back-to-classroom-btn {
   position: fixed;
   left: 24px;
-  bottom: 24px;
+  bottom: 120px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -212,6 +184,18 @@ defineExpose({
   box-shadow: 0 4px 16px rgba(255, 153, 0, 0.4);
   transition: all 0.3s ease;
   z-index: 9999;
+}
+
+@media (min-width: 1024px) {
+  .back-to-classroom-btn {
+    left: 148px;
+  }
+}
+
+@media (max-height: 860px) {
+  .back-to-classroom-btn {
+    bottom: 108px;
+  }
 }
 
 .back-to-classroom-btn:hover {
@@ -278,37 +262,49 @@ defineExpose({
 }
 
 .modal-content {
-  background: white;
-  border-radius: 16px;
-  padding: 32px 40px;
+  width: min(420px, calc(100vw - 32px));
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 36px 40px 32px;
   text-align: center;
-  max-width: 360px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 18px 48px rgba(17, 24, 39, 0.18);
 }
 
 .modal-icon {
-  margin-bottom: 16px;
+  width: 76px;
+  height: 76px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #FFF7E6;
 }
 
 .modal-title {
   font-size: 18px;
   font-weight: 600;
-  color: #333;
-  margin: 0 0 12px;
+  color: #303133;
+  margin: 0 0 14px;
 }
 
 .modal-desc {
   font-size: 14px;
-  color: #666;
-  margin: 0 0 24px;
-  line-height: 1.5;
+  color: #606266;
+  margin: 0 0 28px;
+  line-height: 1.7;
 }
 
 .modal-btn {
-  padding: 12px 48px;
+  min-width: 136px;
+  height: 44px;
+  padding: 0 28px;
   background: #FF9900;
   border: none;
-  border-radius: 24px;
+  border-radius: 999px;
   color: white;
   font-size: 14px;
   font-weight: 500;

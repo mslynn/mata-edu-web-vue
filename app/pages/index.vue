@@ -195,14 +195,30 @@ const { login, isLoggedIn: isAuthenticated, token, logout, applyTrialAccount, re
 const { allowNavigation } = usePreventBack();
 // 是否正在跳转（防止布局闪烁）
 const isNavigating = ref(false);
+const getLayoutByRole = (roleKey?: string) => {
+  switch (roleKey) {
+    case "teacher":
+    case "school_admin":
+      return "sidebar";
+    case "student":
+      return "blank";
+    case "city_admin":
+    case "district_admin":
+      return "default";
+    default:
+      return "auth";
+  }
+};
 // 根据登录状态动态切换布局（跳转时不切换）
 // 只在客户端执行，避免 hydration 错误
 if (import.meta.client) {
   watch(
-    isAuthenticated,
-    (authenticated) => {
+    [isAuthenticated, () => user.value?.role_key || user.value?.roleKey || ""],
+    ([authenticated, roleKey]) => {
       if (!isNavigating.value) {
-        setPageLayout(authenticated ? "default" : "auth");
+        setPageLayout(
+          authenticated ? getLayoutByRole(String(roleKey || "")) : "auth"
+        );
       }
       // 如果已登录，自动跳转到对应页面
       if (authenticated && user.value) {

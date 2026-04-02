@@ -7,7 +7,7 @@
         <DeleteCourseModal v-model:visible="showDeleteModal" @confirm="confirmDeleteCourse" />
 
         <!-- 右侧内容区 -->
-        <div class="flex-1 flex flex-col p-4 min-h-0 overflow-hidden w-[96.5%] mx-auto">
+        <div class="flex-1 flex flex-col p-4 w-[96.5%] mx-auto">
             <!-- 顶部分类标签 + 创建按钮 -->
             <div class="flex items-center justify-between mb-4 flex-shrink-0">
                 <!-- 一级分类标签 -->
@@ -55,12 +55,12 @@
                     </button>
                 </div>
                 <!-- 右侧筛选 -->
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3 min-w-0">
                     <!-- 开通状态筛选（自定义和共享课程不显示） -->
-                    <div v-if="activeCategory !== 'custom' && activeCategory !== 'shared'" class="flex items-center gap-2">
-                        <span class="text-sm text-gray-500">{{ $t('common.openStatus') }}</span>
+                    <div v-if="activeCategory !== 'custom' && activeCategory !== 'shared'" class="flex items-center gap-2 shrink-0">
+                        <span class="text-sm text-gray-500 whitespace-nowrap">{{ $t('common.openStatus') }}</span>
                         <!-- 自定义下拉框 -->
-                        <div class="relative">
+                        <div class="relative shrink-0">
                             <button type="button"
                                 class="flex items-center justify-center gap-2 w-[108px] h-[42px] px-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-600 hover:border-[#FF9900] transition-colors"
                                 @click="showStatusDropdown = !showStatusDropdown">
@@ -88,9 +88,9 @@
                             </Transition>
                         </div>
                     </div>
-                    <div class="relative">
+                    <div class="relative min-w-0">
                         <input v-model="searchKeyword" type="text" :placeholder="$t('common.searchPlaceholder')"
-                            class="pl-9 pr-4 w-[267px] h-[42px] border border-gray-200 rounded-[10px] text-sm outline-none focus:border-[#FF9900]" />
+                            class="pl-9 pr-4 w-[220px] xl:w-[240px] 2xl:w-[267px] h-[42px] border border-gray-200 rounded-[10px] text-sm outline-none focus:border-[#FF9900]" />
                         <svg class="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
                             stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -113,7 +113,7 @@
             </div>
 
             <!-- 课程列表区域 -->
-            <div class="flex-1 bg-white rounded-lg border border-dashed border-gray-300 p-6 overflow-auto">
+            <div class="flex-1 bg-white rounded-lg border border-dashed border-gray-300 p-6 overflow-visible">
                 <!-- 骨架屏 -->
                 <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                     <div v-for="i in 10" :key="i" class="w-full aspect-[265/380] rounded-[20px] border border-gray-200 pt-[5%] px-[8%]">
@@ -529,6 +529,15 @@ const handleAddToMyCourse = async (course: any) => {
 // 开通状态下拉框
 const showStatusDropdown = ref(false)
 const { t } = useI18n()
+const COURSE_OUTER_SCROLL_CLASS = 'course-page-use-outer-scroll'
+
+const toggleCourseOuterScroll = (enabled: boolean) => {
+    if (typeof document === 'undefined') return
+
+    document.documentElement.classList.toggle(COURSE_OUTER_SCROLL_CLASS, enabled)
+    document.body.classList.toggle(COURSE_OUTER_SCROLL_CLASS, enabled)
+}
+
 const statusOptions = computed(() => [
     { label: t('common.all'), value: '' },
     { label: t('common.opened'), value: 'opened' },
@@ -551,6 +560,7 @@ const closeDropdown = (e: MouseEvent) => {
 }
 
 onMounted(() => {
+    toggleCourseOuterScroll(true)
     initUserInfo()
     if (process.client) {
         loadMenuData()
@@ -559,6 +569,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
+    toggleCourseOuterScroll(false)
     document.removeEventListener('click', closeDropdown)
     if (searchTimer) {
         clearTimeout(searchTimer)
@@ -750,8 +761,8 @@ watch(searchKeyword, () => {
 
 <style scoped>
 .course-page {
-    height: calc(100vh - 70px);
-    overflow: hidden;
+    min-height: calc(100vh - 70px);
+    overflow: visible;
 }
 
 .course-cover {
@@ -839,5 +850,65 @@ watch(searchKeyword, () => {
 .tooltip-wrapper:hover .tooltip-content {
     opacity: 1;
     visibility: visible;
+}
+</style>
+
+<style>
+html.course-page-use-outer-scroll,
+body.course-page-use-outer-scroll {
+    overflow-y: auto;
+}
+
+html.course-page-use-outer-scroll .sidebar-shell,
+body.course-page-use-outer-scroll .sidebar-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+}
+
+html.course-page-use-outer-scroll .sidebar-shell-body,
+body.course-page-use-outer-scroll .sidebar-shell-body {
+    display: block;
+    height: auto;
+    min-height: 100vh;
+}
+
+html.course-page-use-outer-scroll .sidebar-shell-main,
+body.course-page-use-outer-scroll .sidebar-shell-main,
+html.course-page-use-outer-scroll .sidebar-shell-content,
+body.course-page-use-outer-scroll .sidebar-shell-content {
+    overflow: visible;
+}
+
+html.course-page-use-outer-scroll .app-sidebar,
+body.course-page-use-outer-scroll .app-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 20;
+}
+
+html.course-page-use-outer-scroll .sidebar-shell-main,
+body.course-page-use-outer-scroll .sidebar-shell-main {
+    width: auto;
+    margin-left: 264px;
+    margin-right: 24px;
+}
+
+@media (min-width: 1280px) {
+    html.course-page-use-outer-scroll .sidebar-shell-main,
+    body.course-page-use-outer-scroll .sidebar-shell-main {
+        margin-left: 328px;
+        margin-right: 40px;
+    }
+}
+
+@media (min-width: 1536px) {
+    html.course-page-use-outer-scroll .sidebar-shell-main,
+    body.course-page-use-outer-scroll .sidebar-shell-main {
+        margin-left: 416px;
+        margin-right: 68px;
+    }
 }
 </style>

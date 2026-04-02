@@ -2,14 +2,14 @@ import { computed, onMounted } from 'vue'
 import { useTeacher } from './useTeacher'
 
 // 本地默认图标（打包后为绝对可访问路径）
-const homeIcon = new URL('../../assets/newimages/home.png', import.meta.url).href
-const classIcon = new URL('../../assets/newimages/class.png', import.meta.url).href
-const courseIcon = new URL('../../assets/newimages/cursorcenter.png', import.meta.url).href
-const toolsIcon = new URL('../../assets/newimages/tool.png', import.meta.url).href
-const aiIcon = new URL('../../assets/newimages/ai.png', import.meta.url).href
-const teacherIcon = new URL('../../assets/newimages/teacher.png', import.meta.url).href
-const studyIcon = new URL('../../assets/newimages/study.png', import.meta.url).href
-const eventIcon = new URL('../../assets/newimages/saishi.png', import.meta.url).href
+const homeIcon = new URL('../../assets/newimages/home.svg', import.meta.url).href
+const classIcon = new URL('../../assets/newimages/class.svg', import.meta.url).href
+const courseIcon = new URL('../../assets/newimages/cursor.svg', import.meta.url).href
+const toolsIcon = new URL('../../assets/newimages/tool.svg', import.meta.url).href
+const aiIcon = new URL('../../assets/newimages/ai.svg', import.meta.url).href
+const teacherIcon = new URL('../../assets/newimages/student.svg', import.meta.url).href
+const studyIcon = new URL('../../assets/newimages/study.svg', import.meta.url).href
+const eventIcon = new URL('../../assets/newimages/saishi.svg', import.meta.url).href
 
 // 选中态不再切换图标，统一使用同一套新图标
 const selectedHomeIcon = homeIcon

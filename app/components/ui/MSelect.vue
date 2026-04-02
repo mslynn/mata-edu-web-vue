@@ -142,20 +142,18 @@ const filteredOptions = computed(() => {
 const updateDropdownPosition = () => {
   if (!triggerRef.value) return
   const rect = triggerRef.value.getBoundingClientRect()
-  const scrollTop = window.scrollY || document.documentElement.scrollTop
-  const scrollLeft = window.scrollX || document.documentElement.scrollLeft
   
-  let left = rect.left + scrollLeft
+  let left = rect.left
   if (props.placement === 'bottom-end') {
-    left = rect.right + scrollLeft
+    left = rect.right
   } else if (props.placement === 'bottom-center') {
-    left = rect.left + rect.width / 2 + scrollLeft
+    left = rect.left + rect.width / 2
   }
   
   dropdownStyle.value = {
-    top: `${rect.bottom + scrollTop + 4}px`,
+    top: `${rect.bottom + 4}px`,
     left: props.placement === 'bottom-end' ? 'auto' : `${left}px`,
-    right: props.placement === 'bottom-end' ? `${window.innerWidth - rect.right - scrollLeft}px` : 'auto',
+    right: props.placement === 'bottom-end' ? `${window.innerWidth - rect.right}px` : 'auto',
     width: `${rect.width}px`,
     transform: props.placement === 'bottom-center' ? 'translateX(-50%)' : 'none'
   }

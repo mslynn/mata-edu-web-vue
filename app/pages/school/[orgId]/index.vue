@@ -132,6 +132,13 @@
           {{ $t('schoolAdmin.adminCreateTip') }}{{ teacherPassword || 'XXXXXX' }}
         </p>
 
+        <p
+          v-if="!isEditTeacher && shouldShowRemainingAdminCount"
+          class="text-sm text-[#FF4D4F] mt-4 leading-relaxed"
+        >
+          *剩余可添加校管理员人数:{{ remainingAdminCount }}人
+        </p>
+
         <!-- 按钮组 -->
         <div class="flex items-center justify-center gap-4 mt-8">
           <button 
@@ -145,6 +152,40 @@
             @click="handleConfirmTeacher"
           >
             {{ $t('common.confirm') }}
+          </button>
+        </div>
+      </div>
+    </MModal>
+
+    <MModal
+      v-model="showAdminLimitModal"
+      custom-width="420px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="p-8 relative">
+        <button
+          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          @click="showAdminLimitModal = false"
+        >
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+        <h3 class="text-center text-[18px] font-medium text-[#4D4D4D] mb-8">提示</h3>
+
+        <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed px-4">
+          可创建校管理员账号已达最大限制，请联系管理员人员申请开通更多账号。
+        </p>
+
+        <div class="flex justify-center mt-8">
+          <button
+            class="w-[136px] h-[44px] bg-[#40A9FF] text-white rounded-[8px] hover:bg-[#2f96eb] transition-colors"
+            @click="showAdminLimitModal = false"
+          >
+            确定
           </button>
         </div>
       </div>
@@ -216,7 +257,7 @@ const route = useRoute()
 const router = useRouter()
 // const { getSchoolDetail } = districtAdmin()
 const schoolUserApi = useSchoolUser()
-const { getStudentPassword } = useTeacher()
+const { getStudentPassword, getLimit } = useTeacher()
 
 // 学校ID
 const orgId = computed(() => route.params.orgId as string)
@@ -235,6 +276,11 @@ const loading = ref(false)
 
 // 教师统一密码
 const teacherPassword = ref('')
+const remainingAdminCount = ref<number | null>(null)
+const showAdminLimitModal = ref(false)
+const shouldShowRemainingAdminCount = computed(
+  () => remainingAdminCount.value !== null && remainingAdminCount.value > 0
+)
 
 // 表格列配置
 const teacherTableColumns = computed(() => [
@@ -294,9 +340,73 @@ const handleCountryChange = (country: any) => {
 const fetchTeacherPassword = async () => {
   try {
     const pwd = await getStudentPassword(orgId.value)
-    teacherPassword.value = pwd || 'xxxxxxxx'
+    teacherPassword.value = pwd.teacherPwd || 'xxxxxxxx'
   } catch (error) {
     console.error('获取教师密码失败', error)
+  }
+}
+
+const parseRemainingAdminCount = (data: any) => {
+  if (data == null) return null
+
+  const rawValue =
+    typeof data === 'number' || typeof data === 'string'
+      ? Number(data)
+      : Number.NaN
+
+  if (Number.isFinite(rawValue)) {
+    return rawValue
+  }
+
+  const directCandidates = [
+    data?.remainCount,
+    data?.remainingCount,
+    data?.remainNum,
+    data?.remainingNum,
+    data?.surplusNum,
+    data?.leftNum,
+    data?.adminRemainCount,
+    data?.schoolAdminRemainCount,
+    data?.schoolAdminRemainingCount,
+  ]
+
+  for (const candidate of directCandidates) {
+    const value = Number(candidate)
+    if (Number.isFinite(value)) {
+      return value
+    }
+  }
+
+  const limitCandidates = [
+    data?.limit,
+    data?.maxCount,
+    data?.maxNum,
+    data?.adminLimit,
+    data?.schoolAdminLimit,
+  ]
+
+  for (const candidate of limitCandidates) {
+    const value = Number(candidate)
+    if (Number.isFinite(value)) {
+      return Math.max(value - total.value, 0)
+    }
+  }
+
+  return null
+}
+
+const fetchRemainingAdminCount = async () => {
+  if (!orgId.value) {
+    remainingAdminCount.value = null
+    return
+  }
+
+  try {
+    const data = await getLimit({ orgId: orgId.value })
+    remainingAdminCount.value = parseRemainingAdminCount(data)
+  } catch (error) {
+    console.error('获取校管理员剩余人数失败:', error)
+    remainingAdminCount.value = null
   }
 }
 
@@ -312,6 +422,7 @@ const fetchTeacherList = async () => {
     })
     tableData.value = result.list
     total.value = result.total
+    await fetchRemainingAdminCount()
   } catch (error: any) {
     console.error('获取校管理员列表失败:', error)
   } finally {
@@ -332,6 +443,11 @@ const handleBack = () => {
 
 // 创建管理员
 const handleCreateAdmin = () => {
+  if (remainingAdminCount.value === 0) {
+    showAdminLimitModal.value = true
+    return
+  }
+
   isEditTeacher.value = false
   teacherForm.id = ''
   teacherForm.teacherName = ''
@@ -385,7 +501,7 @@ const handleConfirmTeacher = async () => {
       ElMessage.success(t('common.createSuccess'))
     }
     showTeacherModal.value = false
-    fetchTeacherList()
+    await fetchTeacherList()
   } catch (error: any) { 
     // 错误提示由全局处理，这里不重复显示
   }
@@ -403,7 +519,7 @@ const handleConfirmDeleteTeacher = async () => {
     await schoolUserApi.deleteTeacher(deleteTeacherIds.value, undefined, orgId.value)
     ElMessage.success(t('common.deleteSuccess'))
     showDeleteTeacherModal.value = false
-    fetchTeacherList()
+    await fetchTeacherList()
   } catch (error: any) {
     console.error('删除校管理员失败:', error)
   }
@@ -437,7 +553,7 @@ const handleExport = async () => {
 }
 
 // 初始化加载
-onMounted(() => {
+onMounted(async () => {
   //   new Promise((resolve) => {
   //   Promise.all([
 
@@ -446,8 +562,8 @@ onMounted(() => {
   //   })
   // })
   // fetchSchoolInfo(),
-    fetchTeacherPassword(),
-    fetchTeacherList()
+  await fetchTeacherPassword()
+  await fetchTeacherList()
 })
 
 // 监听分页变化

@@ -238,11 +238,11 @@
               <div class="center-award-board__row center-award-board__row--head">
                 <span>赛事类型</span>
                 <span>赛事名称</span>
-                <span>届次</span>
+                <span>赛季</span>
                 <span>获奖队伍</span>
                 <span>获奖学生</span>
-                <span>获奖学校</span>
-                <span>覆盖区域</span>
+                <span>归属学校</span>
+                <span>获奖名次</span>
               </div>
               <div
                 v-for="row in centerAwardRows"
@@ -297,7 +297,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { datacenterApi } from "~/composables/api/datacenter";
 import chinaGeoJson from "~/data/china-map.json";
 import cockpitMock from "~/data/datacenter-mock.json";
 import VChart from "vue-echarts";
@@ -325,6 +326,27 @@ definePageMeta({
 });
 
 const route = useRoute();
+const { getEventHonorPage } = datacenterApi();
+type DataCenterPeriod = (typeof cockpitMock.periods)[number];
+type ProvinceMetric = DataCenterPeriod["center"]["provinceMetrics"][number];
+type DrillFeatureMeta = {
+  adcode: string;
+  childrenNum: number;
+  level: string;
+};
+type MapClickParams = {
+  componentSubType?: string;
+  name?: string;
+};
+type EventHonorRow = {
+  type: string;
+  name: string;
+  stage: string;
+  team: string;
+  student: string;
+  school: string;
+  scope: string;
+};
 
 use([
   CanvasRenderer,
@@ -342,21 +364,29 @@ use([
   RadarComponent,
 ]);
 
-const periods = cockpitMock.periods;
+const periods = cockpitMock.periods as DataCenterPeriod[];
 const LARGE_SCREEN_DESIGN_WIDTH = 1920;
 const LARGE_SCREEN_DESIGN_HEIGHT = 1080;
+const defaultPeriod = periods[0] as DataCenterPeriod;
+const DEFAULT_PROVINCE_NAME = "广东省";
 const selectedPeriodIndex = ref(periods.length - 1);
 const liveCourseListRef = ref<HTMLElement | null>(null);
 let liveCourseScrollTimer: ReturnType<typeof setInterval> | null = null;
 const viewportWidth = ref(LARGE_SCREEN_DESIGN_WIDTH);
 const viewportHeight = ref(LARGE_SCREEN_DESIGN_HEIGHT);
-const selectedProvinceName = ref("广东省");
+const selectedProvinceName = ref(DEFAULT_PROVINCE_NAME);
+const selectedProvinceAdcode = ref<string | null>(null);
 const drillProvinceName = ref<string | null>(null);
 const drillProvinceAdcode = ref<string | null>(null);
+const selectedCityName = ref<string | null>(null);
+const selectedCityAdcode = ref<string | null>(null);
 const drillCityName = ref<string | null>(null);
 const drillCityAdcode = ref<string | null>(null);
+const selectedDistrictName = ref<string | null>(null);
+const selectedDistrictAdcode = ref<string | null>(null);
 const provinceGeoJsonCache = ref<Record<string, any>>({});
 const cityGeoJsonCache = ref<Record<string, any>>({});
+const eventHonorRows = ref<EventHonorRow[]>([]);
 const worksLegendLabelMap: Record<string, string> = {
   uCode图形化: "vinci",
   uCode3: "nous",
@@ -372,10 +402,13 @@ const filteredChinaGeoJson = {
   }),
 };
 registerMap("china", filteredChinaGeoJson as any);
-const provinceAdcodeMap = new Map(
+const provinceAdcodeMap = new Map<string, string>(
   (filteredChinaGeoJson.features || [])
-    .map((feature: any) => [feature?.properties?.name, String(feature?.properties?.adcode || "")])
-    .filter(([name, adcode]: any) => name && adcode)
+    .map((feature: any) => [
+      feature?.properties?.name,
+      String(feature?.properties?.adcode || ""),
+    ])
+    .filter(([name, adcode]: any) => name && adcode) as [string, string][]
 );
 const provinceMapLoaderMap = new Map(
   Object.entries(provinceMapModuleLoaders)
@@ -385,13 +418,16 @@ const provinceMapLoaderMap = new Map(
     })
     .filter(Boolean) as [string, () => Promise<any>][]
 );
-const provinceCoordinateMap = new Map(
+const provinceCoordinateMap = new Map<string, [number, number]>(
   (filteredChinaGeoJson.features || [])
     .map((feature: any) => [
       feature?.properties?.name,
       feature?.properties?.centroid || feature?.properties?.center,
     ])
-    .filter(([name, coord]: any) => name && Array.isArray(coord) && coord.length === 2)
+    .filter(([name, coord]: any) => name && Array.isArray(coord) && coord.length === 2) as [
+      string,
+      [number, number]
+    ][]
 );
 
 const switchPeriod = (nextIndex: number) => {
@@ -399,7 +435,9 @@ const switchPeriod = (nextIndex: number) => {
   selectedPeriodIndex.value = nextIndex;
 };
 
-const currentPeriod = computed(() => periods[selectedPeriodIndex.value] || periods[0]);
+const currentPeriod = computed<DataCenterPeriod>(
+  () => periods[selectedPeriodIndex.value] ?? defaultPeriod
+);
 const getWorksLegendLabel = (name: string) => worksLegendLabelMap[name] || name;
 const parseMetricValue = (value: string | number) =>
   Number(String(value ?? 0).replace(/,/g, "")) || 0;
@@ -490,15 +528,13 @@ const largeScreenScale = computed(() =>
   )
 );
 const isLargeScreenScaled = computed(() => largeScreenScale.value > 1.02);
-const viewportDebugText = computed(
-  () => {
-    if (isViewportOverrideLimited.value) {
-      return `模拟 ${requestedViewportWidth.value} x ${requestedViewportHeight.value} | 当前窗口不足，建议用 capture 脚本截图`;
-    }
-
-    return `模拟分辨率 ${effectiveViewportWidth.value} x ${effectiveViewportHeight.value} | 缩放 ${largeScreenScale.value}x`;
+const viewportDebugText = computed(() => {
+  if (isViewportOverrideLimited.value) {
+    return `模拟 ${requestedViewportWidth.value} x ${requestedViewportHeight.value} | 当前窗口不足，建议用 capture 脚本截图`;
   }
-);
+
+  return `模拟分辨率 ${effectiveViewportWidth.value} x ${effectiveViewportHeight.value} | 缩放 ${largeScreenScale.value}x`;
+});
 const dataCenterShellStyle = computed(() => {
   if (!isLargeScreenScaled.value) return {};
 
@@ -511,6 +547,10 @@ const dataCenterShellStyle = computed(() => {
 });
 const canGoBack = computed(() => Boolean(drillProvinceName.value));
 const currentMapSubtitle = computed(() => {
+  if (selectedDistrictName.value && drillCityName.value) {
+    return `点击左上角返回${getProvinceShortName(drillCityName.value)}视图`;
+  }
+
   if (drillCityName.value && drillProvinceName.value) {
     return `点击左上角返回${getProvinceShortName(drillProvinceName.value)}视图`;
   }
@@ -522,6 +562,10 @@ const currentMapSubtitle = computed(() => {
   return "学校规模分布、区域覆盖热度与重点省份联动情况";
 });
 const currentMapCornerLabel = computed(() => {
+  if (selectedDistrictName.value) {
+    return getProvinceShortName(selectedDistrictName.value);
+  }
+
   if (drillCityName.value) {
     return getProvinceShortName(drillCityName.value);
   }
@@ -555,6 +599,10 @@ const currentMapLayoutSize = computed(() => {
   return "92%";
 });
 const mapBackButtonText = computed(() => {
+  if (selectedDistrictName.value && drillCityName.value) {
+    return `返回${getProvinceShortName(drillCityName.value)}`;
+  }
+
   if (drillCityName.value && drillProvinceName.value) {
     return `返回${getProvinceShortName(drillProvinceName.value)}`;
   }
@@ -573,9 +621,12 @@ const tooltipSafePosition = (
   _rect: any,
   size: any
 ) => {
-  const [x, y] = point;
-  const [contentWidth, contentHeight] = size.contentSize;
-  const [viewWidth, viewHeight] = size.viewSize;
+  const x = point?.[0] ?? 0;
+  const y = point?.[1] ?? 0;
+  const contentWidth = size?.contentSize?.[0] ?? 0;
+  const contentHeight = size?.contentSize?.[1] ?? 0;
+  const viewWidth = size?.viewSize?.[0] ?? 0;
+  const viewHeight = size?.viewSize?.[1] ?? 0;
   const offset = 14;
   const left =
     x + offset + contentWidth > viewWidth ? x - contentWidth - offset : x + offset;
@@ -597,12 +648,48 @@ const centerSummaryTotals = computed(() => ({
     currentPeriod.value.summaryCards.find((item) => item.label === "学生人数")?.value ?? 0
   ),
 }));
-const centerAwardRows = computed(() => currentPeriod.value.center.awards || []);
+const normalizeAreaCode = (adcode?: string | null) => {
+  const code = String(adcode || "").trim();
+  if (!code) return "";
+  if (code.length === 6 && code.endsWith("0000")) return code.slice(0, 2);
+  if (code.length === 6 && code.endsWith("00")) return code.slice(0, 4);
+  return code;
+};
+const normalizeEventHonorRow = (row: any): EventHonorRow => ({
+  type: String(row?.type || row?.eventType || row?.honorType || row?.competitionType || "-"),
+  name: String(row?.name || row?.eventName || row?.honorName || row?.matchName || "-"),
+  stage: String(row?.stage || row?.season || row?.eventSeason || row?.seasonName || "-"),
+  team: String(row?.team || row?.teamName || row?.awardTeam || row?.groupName || "-"),
+  student: String(
+    row?.student ||
+      row?.studentName ||
+      row?.studentNames ||
+      row?.awardStudent ||
+      row?.userName ||
+      "-"
+  ),
+  school: String(row?.school || row?.schoolName || row?.orgName || row?.belongSchool || "-"),
+  scope: String(row?.scope || row?.rank || row?.awardLevel || row?.awardRank || "-"),
+});
+const fetchEventHonorRows = async () => {
+  try {
+    const rows = await getEventHonorPage({
+      provinceCode: normalizeAreaCode(selectedProvinceAdcode.value),
+      cityCode: normalizeAreaCode(selectedCityAdcode.value),
+      districtCode: normalizeAreaCode(selectedDistrictAdcode.value),
+    });
+    eventHonorRows.value = Array.isArray(rows) ? rows.map(normalizeEventHonorRow) : [];
+  } catch (error) {
+    console.error("获取赛事荣誉公告列表失败:", error);
+    eventHonorRows.value = [];
+  }
+};
+const centerAwardRows = computed(() => eventHonorRows.value);
 const currentProvinceMetrics = computed(() => {
   const totalSchools = centerSummaryTotals.value.schools || 1;
 
   return currentPeriod.value.center.provinceMetrics
-    .map((item: any) => {
+    .map((item: ProvinceMetric) => {
       const coordinate = provinceCoordinateMap.get(item.name);
       if (!coordinate) return null;
 
@@ -610,20 +697,18 @@ const currentProvinceMetrics = computed(() => {
         ...item,
         coordinate,
         shortName: getProvinceShortName(item.name),
-        teacherCount: Math.round((item.value / totalSchools) * centerSummaryTotals.value.teachers),
-        studentCount: Math.round((item.value / totalSchools) * centerSummaryTotals.value.students),
+        teacherCount: Math.round(
+          (item.value / totalSchools) * centerSummaryTotals.value.teachers
+        ),
+        studentCount: Math.round(
+          (item.value / totalSchools) * centerSummaryTotals.value.students
+        ),
       };
     })
     .filter(Boolean);
 });
 const currentProvinceMetricMap = computed(
-  () =>
-    new Map(
-      currentProvinceMetrics.value.map((item: any) => [
-        item.name,
-        item,
-      ])
-    )
+  () => new Map(currentProvinceMetrics.value.map((item: any) => [item.name, item]))
 );
 const allProvinceMapData = computed(() =>
   (filteredChinaGeoJson.features || [])
@@ -644,8 +729,8 @@ const currentDrillMapKey = computed(() =>
   drillCityAdcode.value
     ? `city-${drillCityAdcode.value}`
     : drillProvinceAdcode.value
-      ? `province-${drillProvinceAdcode.value}`
-      : "china"
+    ? `province-${drillProvinceAdcode.value}`
+    : "china"
 );
 const currentDrillGeoJson = computed(() => {
   if (drillCityAdcode.value) {
@@ -660,7 +745,7 @@ const currentDrillGeoJson = computed(() => {
 });
 const currentDrillFeatureMetaMap = computed(
   () =>
-    new Map(
+    new Map<string, DrillFeatureMeta>(
       ((currentDrillGeoJson.value?.features || []) as any[])
         .map((feature: any) => {
           const properties = feature?.properties || {};
@@ -678,7 +763,7 @@ const currentDrillFeatureMetaMap = computed(
             },
           ];
         })
-        .filter(Boolean) as [string, { adcode: string; childrenNum: number; level: string }][]
+        .filter(Boolean) as [string, DrillFeatureMeta][]
     )
 );
 const loadProvinceGeoJson = async (adcode: string) => {
@@ -719,20 +804,26 @@ const loadCityGeoJson = async (adcode: string) => {
   registerMap(`city-${adcode}`, geoJson as any);
   return geoJson;
 };
-const handleMapClick = async (params: any) => {
-  if (params?.componentSubType !== "map" || !params?.name) {
+const handleMapClick = async (params: MapClickParams) => {
+  const regionName = String(params?.name || "").trim();
+  if (params?.componentSubType !== "map" || !regionName) {
     return;
   }
 
   if (!drillProvinceAdcode.value) {
-    const adcode = provinceAdcodeMap.get(params.name);
+    const adcode = provinceAdcodeMap.get(regionName);
     if (!adcode) return;
 
     const geoJson = await loadProvinceGeoJson(adcode);
     if (!geoJson) return;
 
-    selectedProvinceName.value = params.name;
-    drillProvinceName.value = params.name;
+    selectedProvinceName.value = regionName;
+    selectedProvinceAdcode.value = adcode;
+    selectedCityName.value = null;
+    selectedCityAdcode.value = null;
+    selectedDistrictName.value = null;
+    selectedDistrictAdcode.value = null;
+    drillProvinceName.value = regionName;
     drillProvinceAdcode.value = adcode;
     drillCityName.value = null;
     drillCityAdcode.value = null;
@@ -740,10 +831,16 @@ const handleMapClick = async (params: any) => {
   }
 
   if (drillCityAdcode.value) {
+    const districtMeta = currentDrillFeatureMetaMap.value.get(regionName);
+    if (!districtMeta?.adcode) {
+      return;
+    }
+    selectedDistrictName.value = regionName;
+    selectedDistrictAdcode.value = districtMeta.adcode;
     return;
   }
 
-  const featureMeta = currentDrillFeatureMetaMap.value.get(params.name);
+  const featureMeta = currentDrillFeatureMetaMap.value.get(regionName);
   if (!featureMeta?.adcode || featureMeta.childrenNum <= 0) {
     return;
   }
@@ -751,16 +848,32 @@ const handleMapClick = async (params: any) => {
   const geoJson = await loadCityGeoJson(featureMeta.adcode);
   if (!geoJson) return;
 
-  drillCityName.value = params.name;
+  selectedCityName.value = regionName;
+  selectedCityAdcode.value = featureMeta.adcode;
+  selectedDistrictName.value = null;
+  selectedDistrictAdcode.value = null;
+  drillCityName.value = regionName;
   drillCityAdcode.value = featureMeta.adcode;
 };
 const handleMapBack = () => {
+  if (selectedDistrictAdcode.value) {
+    selectedDistrictName.value = null;
+    selectedDistrictAdcode.value = null;
+    return;
+  }
+
   if (drillCityAdcode.value) {
+    selectedCityName.value = null;
+    selectedCityAdcode.value = null;
     drillCityName.value = null;
     drillCityAdcode.value = null;
     return;
   }
 
+  selectedCityName.value = null;
+  selectedCityAdcode.value = null;
+  selectedDistrictName.value = null;
+  selectedDistrictAdcode.value = null;
   drillProvinceName.value = null;
   drillProvinceAdcode.value = null;
   drillCityName.value = null;
@@ -780,9 +893,11 @@ const trendChartData = computed(() => {
     categories[startIndex] = label;
 
     preparePattern.forEach((rate, patternIndex) => {
-      prepareSeries[startIndex + patternIndex] = Math.round((trend.bar[labelIndex] || 0) * rate);
+      prepareSeries[startIndex + patternIndex] = Math.round(
+        (trend.bar[labelIndex] || 0) * rate
+      );
       classSeries[startIndex + patternIndex] = Math.round(
-        (trend.line[labelIndex] || 0) * classPattern[patternIndex]
+        (trend.line[labelIndex] || 0) * (classPattern[patternIndex] ?? 0)
       );
     });
   });
@@ -1128,152 +1243,154 @@ const chinaMapOption = computed(() => ({
       },
     },
   },
-  series: drillProvinceName.value && currentDrillGeoJson.value
-    ? [
-        {
-          type: "map",
-          map: currentDrillMapKey.value,
-          geoIndex: 0,
-          selectedMode: false,
-          roam: false,
-          aspectScale: 0.95,
-          itemStyle: {
-            areaColor: "rgba(28, 82, 176, 0.9)",
-            borderColor: "rgba(83, 207, 255, 0.88)",
-            borderWidth: 1.4,
-            shadowColor: "rgba(27, 112, 255, 0.28)",
-            shadowBlur: 18,
-          },
-          emphasis: {
-            label: {
-              show: false,
-            },
+  series:
+    drillProvinceName.value && currentDrillGeoJson.value
+      ? [
+          {
+            type: "map",
+            map: currentDrillMapKey.value,
+            geoIndex: 0,
+            selectedMode: false,
+            roam: false,
+            aspectScale: 0.95,
             itemStyle: {
-              areaColor: "rgba(228, 68, 92, 0.92)",
-              borderColor: "rgba(255, 187, 198, 0.98)",
-              borderWidth: 1.9,
-              shadowColor: "rgba(228, 68, 92, 0.36)",
-              shadowBlur: 24,
+              areaColor: "rgba(28, 82, 176, 0.9)",
+              borderColor: "rgba(83, 207, 255, 0.88)",
+              borderWidth: 1.4,
+              shadowColor: "rgba(27, 112, 255, 0.28)",
+              shadowBlur: 18,
             },
-          },
-          data: (currentDrillGeoJson.value.features || [])
-            .map((feature: any) => feature?.properties?.name)
-            .filter(Boolean)
-            .map((name: string) => ({
-              name,
-              value: 0,
-            })),
-          label: {
-            show: false,
-          },
-        },
-      ]
-    : [
-        {
-          type: "map",
-          map: "china",
-          geoIndex: 0,
-          selectedMode: "single",
-          roam: false,
-          aspectScale: 0.95,
-          itemStyle: {
-            areaColor: "rgba(28, 82, 176, 0.9)",
-            borderColor: "rgba(83, 207, 255, 0.88)",
-            borderWidth: 1.4,
-            shadowColor: "rgba(27, 112, 255, 0.28)",
-            shadowBlur: 18,
-          },
-          emphasis: {
-            label: {
-              show: false,
-            },
-            itemStyle: {
-              areaColor: "rgba(228, 68, 92, 0.92)",
-              borderColor: "rgba(255, 187, 198, 0.98)",
-              borderWidth: 1.9,
-              shadowColor: "rgba(228, 68, 92, 0.36)",
-              shadowBlur: 24,
-            },
-          },
-          select: {
-            label: {
-              show: false,
-            },
-            itemStyle: {
-              areaColor: "rgba(228, 68, 92, 0.92)",
-              borderColor: "rgba(255, 187, 198, 0.98)",
-              borderWidth: 1.9,
-              shadowColor: "rgba(228, 68, 92, 0.36)",
-              shadowBlur: 24,
-            },
-          },
-          data: allProvinceMapData.value,
-          label: {
-            show: false,
-          },
-        },
-        {
-          type: "scatter",
-          coordinateSystem: "geo",
-          zlevel: 3,
-          silent: true,
-          symbolSize: 8,
-          itemStyle: {
-            color: "#52EAFF",
-            borderColor: "rgba(200, 249, 255, 0.96)",
-            borderWidth: 1.5,
-            shadowBlur: 12,
-            shadowColor: "rgba(82, 234, 255, 0.28)",
-          },
-          data: currentProvinceMetrics.value.map((item: any) => ({
-            name: item.name,
-            value: item.coordinate,
-            metric: item,
-          })),
-        },
-        {
-          type: "scatter",
-          coordinateSystem: "geo",
-          zlevel: 4,
-          silent: true,
-          symbolSize: 1,
-          itemStyle: {
-            color: "transparent",
-          },
-          tooltip: {
-            show: false,
-          },
-          label: {
-            show: true,
-            position: "inside",
-            formatter: (params: any) => `{value|${formatMetricValue(params.data.metric.value)}}`,
-            padding: [3, 7],
-            borderRadius: 4,
-            backgroundColor: "#E94966",
-            borderWidth: 0,
-            shadowColor: "rgba(233, 73, 102, 0.34)",
-            shadowBlur: 10,
-            rich: {
-              value: {
-                color: "#FFFFFF",
-                fontSize: 11,
-                fontWeight: 700,
-                lineHeight: 12,
+            emphasis: {
+              label: {
+                show: false,
+              },
+              itemStyle: {
+                areaColor: "rgba(228, 68, 92, 0.92)",
+                borderColor: "rgba(255, 187, 198, 0.98)",
+                borderWidth: 1.9,
+                shadowColor: "rgba(228, 68, 92, 0.36)",
+                shadowBlur: 24,
               },
             },
+            data: (currentDrillGeoJson.value.features || [])
+              .map((feature: any) => feature?.properties?.name)
+              .filter(Boolean)
+              .map((name: string) => ({
+                name,
+                value: 0,
+              })),
+            label: {
+              show: false,
+            },
           },
-          data: currentProvinceMetrics.value
-            .filter((item: any) => item.showLabel)
-            .map((item: any) => ({
+        ]
+      : [
+          {
+            type: "map",
+            map: "china",
+            geoIndex: 0,
+            selectedMode: "single",
+            roam: false,
+            aspectScale: 0.95,
+            itemStyle: {
+              areaColor: "rgba(28, 82, 176, 0.9)",
+              borderColor: "rgba(83, 207, 255, 0.88)",
+              borderWidth: 1.4,
+              shadowColor: "rgba(27, 112, 255, 0.28)",
+              shadowBlur: 18,
+            },
+            emphasis: {
+              label: {
+                show: false,
+              },
+              itemStyle: {
+                areaColor: "rgba(228, 68, 92, 0.92)",
+                borderColor: "rgba(255, 187, 198, 0.98)",
+                borderWidth: 1.9,
+                shadowColor: "rgba(228, 68, 92, 0.36)",
+                shadowBlur: 24,
+              },
+            },
+            select: {
+              label: {
+                show: false,
+              },
+              itemStyle: {
+                areaColor: "rgba(228, 68, 92, 0.92)",
+                borderColor: "rgba(255, 187, 198, 0.98)",
+                borderWidth: 1.9,
+                shadowColor: "rgba(228, 68, 92, 0.36)",
+                shadowBlur: 24,
+              },
+            },
+            data: allProvinceMapData.value,
+            label: {
+              show: false,
+            },
+          },
+          {
+            type: "scatter",
+            coordinateSystem: "geo",
+            zlevel: 3,
+            silent: true,
+            symbolSize: 8,
+            itemStyle: {
+              color: "#52EAFF",
+              borderColor: "rgba(200, 249, 255, 0.96)",
+              borderWidth: 1.5,
+              shadowBlur: 12,
+              shadowColor: "rgba(82, 234, 255, 0.28)",
+            },
+            data: currentProvinceMetrics.value.map((item: any) => ({
               name: item.name,
               value: item.coordinate,
               metric: item,
-              label: {
-                offset: item.labelOffset || [0, 0],
-              },
             })),
-        },
-      ],
+          },
+          {
+            type: "scatter",
+            coordinateSystem: "geo",
+            zlevel: 4,
+            silent: true,
+            symbolSize: 1,
+            itemStyle: {
+              color: "transparent",
+            },
+            tooltip: {
+              show: false,
+            },
+            label: {
+              show: true,
+              position: "inside",
+              formatter: (params: any) =>
+                `{value|${formatMetricValue(params.data.metric.value)}}`,
+              padding: [3, 7],
+              borderRadius: 4,
+              backgroundColor: "#E94966",
+              borderWidth: 0,
+              shadowColor: "rgba(233, 73, 102, 0.34)",
+              shadowBlur: 10,
+              rich: {
+                value: {
+                  color: "#FFFFFF",
+                  fontSize: 11,
+                  fontWeight: 700,
+                  lineHeight: 12,
+                },
+              },
+            },
+            data: currentProvinceMetrics.value
+              .filter((item: any) => item.showLabel)
+              .map((item: any) => ({
+                name: item.name,
+                value: item.coordinate,
+                metric: item,
+                label: {
+                  offset: item.labelOffset || [0, 0],
+                },
+              })),
+          },
+        ],
 }));
 
 const studentRadarOption = computed(() => ({
@@ -1368,10 +1485,20 @@ const startLiveCourseAutoScroll = () => {
 };
 
 onMounted(() => {
+  selectedProvinceAdcode.value = provinceAdcodeMap.get(DEFAULT_PROVINCE_NAME) || null;
   updateViewportSize();
   window.addEventListener("resize", updateViewportSize);
   startLiveCourseAutoScroll();
 });
+
+watch(
+  [selectedProvinceAdcode, selectedCityAdcode, selectedDistrictAdcode],
+  () => {
+    if (!selectedProvinceAdcode.value) return;
+    fetchEventHonorRows();
+  },
+  { immediate: true }
+);
 
 onBeforeUnmount(() => {
   if (typeof window !== "undefined") {
@@ -2122,8 +2249,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   padding-bottom: 12px;
-  background:
-    linear-gradient(180deg, rgba(19, 54, 150, 0.32), rgba(7, 18, 48, 0.92)),
+  background: linear-gradient(180deg, rgba(19, 54, 150, 0.32), rgba(7, 18, 48, 0.92)),
     linear-gradient(90deg, rgba(79, 117, 220, 0.08) 1px, transparent 1px),
     linear-gradient(rgba(79, 117, 220, 0.08) 1px, transparent 1px);
   background-size: auto, 22px 22px, 22px 22px;
@@ -2249,8 +2375,7 @@ onBeforeUnmount(() => {
   overflow: hidden;
   padding-top: 32px;
   border-radius: 18px;
-  background:
-    linear-gradient(180deg, rgba(14, 40, 112, 0.14), rgba(9, 22, 63, 0)),
+  background: linear-gradient(180deg, rgba(14, 40, 112, 0.14), rgba(9, 22, 63, 0)),
     linear-gradient(90deg, rgba(88, 130, 255, 0.06) 1px, transparent 1px),
     linear-gradient(rgba(88, 130, 255, 0.05) 1px, transparent 1px);
   background-size: auto, 14px 14px, 14px 14px;
@@ -2307,8 +2432,7 @@ onBeforeUnmount(() => {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background:
-    radial-gradient(circle at 50% 58%, rgba(44, 132, 255, 0.2), transparent 36%),
+  background: radial-gradient(circle at 50% 58%, rgba(44, 132, 255, 0.2), transparent 36%),
     linear-gradient(180deg, rgba(84, 140, 255, 0.06), rgba(84, 140, 255, 0));
   pointer-events: none;
 }
@@ -2362,7 +2486,9 @@ onBeforeUnmount(() => {
 
 .center-award-board__row {
   display: grid;
-  grid-template-columns: 72px minmax(150px, 1.4fr) 90px minmax(108px, 1fr) 88px minmax(160px, 1.45fr) 78px;
+  grid-template-columns:
+    72px minmax(150px, 1.4fr) 90px minmax(108px, 1fr) 88px minmax(160px, 1.45fr)
+    78px;
   gap: 10px;
   align-items: center;
   min-width: 760px;
@@ -2438,6 +2564,5 @@ onBeforeUnmount(() => {
   .center-award-board__row {
     min-width: 860px;
   }
-
 }
 </style>

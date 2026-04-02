@@ -61,14 +61,13 @@
               @error="handleAvatarError"
             />
           </span>
-          <span class="sidebar-account-label">{{ displayUserRoleLabel }}</span>
+          <span class="sidebar-account-label">{{ displayUserName }}</span>
         </button>
 
         <Transition name="dropdown">
           <div v-if="showDropdown" class="sidebar-user-dropdown">
             <div class="sidebar-user-dropdown-head">
               <p class="sidebar-user-dropdown-name">{{ displayUserName }}</p>
-              <p class="sidebar-user-dropdown-role">{{ user?.role_name || "" }}</p>
             </div>
 
             <button
@@ -119,6 +118,54 @@
         </div>
       </Transition>
     </Teleport>
+
+    <MModal
+      v-model="showLogoutConfirmModal"
+      custom-width="420px"
+      :show-footer="false"
+      :show-close="false"
+      :close-on-click-modal="false"
+      content-class="sidebar-logout-modal-content"
+    >
+      <template #header>
+        <div class="sidebar-logout-modal-header">
+          <h3 class="sidebar-logout-modal-title">确认退出</h3>
+          <button
+            type="button"
+            class="sidebar-logout-modal-close"
+            @click="showLogoutConfirmModal = false"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+      </template>
+
+      <div class="sidebar-logout-modal-body">
+        <p class="sidebar-logout-modal-text">
+          是否确定退出登录，退出后上课中课程也会自动结束上课
+        </p>
+        <div class="sidebar-logout-modal-actions">
+          <button
+            type="button"
+            class="sidebar-logout-modal-btn sidebar-logout-modal-btn--cancel"
+            :disabled="logoutConfirmLoading"
+            @click="showLogoutConfirmModal = false"
+          >
+            取消
+          </button>
+          <button
+            type="button"
+            class="sidebar-logout-modal-btn sidebar-logout-modal-btn--confirm"
+            :disabled="logoutConfirmLoading"
+            @click="handleConfirmLogout"
+          >
+            {{ logoutConfirmLoading ? "处理中..." : "确定" }}
+          </button>
+        </div>
+      </div>
+    </MModal>
   </aside>
 </template>
 
@@ -128,6 +175,8 @@ import { useRoute } from "vue-router";
 import { useI18n } from "vue-i18n";
 import { useTeacherNav } from "~/composables/api/useTeacherNav";
 import { useAuth } from "~/composables/api/useAuth";
+import { useTeacher } from "~/composables/api/useTeacher";
+import { ElMessage } from "~/components/ui";
 import sidebarLogo from "~/assets/newimages/logo.png";
 import defaultAvatar from "~/assets/newimages/user.png";
 
@@ -136,6 +185,7 @@ const route = useRoute();
 const { locale, t } = useI18n();
 const { menuItems, loadMenus } = useTeacherNav();
 const { user, logout } = useAuth();
+const { endClass, stopQuickLogin, getTeacherStatus } = useTeacher();
 
 interface SidebarMenuItem {
   label: string;
@@ -166,6 +216,69 @@ const showComingSoonModal = ref(false);
 const prefetchedPaths = new Set<string>();
 const showDropdown = ref(false);
 const dropdownRef = ref<HTMLElement | null>(null);
+const showLogoutConfirmModal = ref(false);
+const logoutConfirmLoading = ref(false);
+
+type OngoingClassroomInfo = {
+  classId: string;
+  courseId: string;
+  chapterId: string;
+  expireAt?: number;
+};
+
+const getStoredOngoingClassroom = (): OngoingClassroomInfo | null => {
+  if (typeof window === "undefined") return null;
+
+  const stored = localStorage.getItem("ongoing_classroom");
+  if (!stored) return null;
+
+  try {
+    const parsed = JSON.parse(stored);
+    const classId = String(parsed?.classId || "").trim();
+    const courseId = String(parsed?.courseId || "").trim();
+    const chapterId = String(parsed?.chapterId || "").trim();
+    const expireAt = Number(parsed?.expireAt || 0);
+
+    if (!classId || !courseId || !chapterId) {
+      localStorage.removeItem("ongoing_classroom");
+      return null;
+    }
+
+    if (expireAt && Date.now() > expireAt) {
+      localStorage.removeItem("ongoing_classroom");
+      return null;
+    }
+
+    return {
+      classId,
+      courseId,
+      chapterId,
+      expireAt: expireAt || undefined,
+    };
+  } catch {
+    localStorage.removeItem("ongoing_classroom");
+    return null;
+  }
+};
+
+const getActiveOngoingClassroom = async () => {
+  const stored = getStoredOngoingClassroom();
+  if (!stored) return null;
+
+  try {
+    const status = await getTeacherStatus();
+    if (status?.isTeach) {
+      return stored;
+    }
+  } catch (error) {
+    console.error("校验进行中课堂失败:", error);
+  }
+
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("ongoing_classroom");
+  }
+  return null;
+};
 
 const displayUserName = computed(() => {
   return (
@@ -178,34 +291,19 @@ const displayUserName = computed(() => {
   );
 });
 
-const displayUserRoleLabel = computed(() => {
-  const roleName =
-    user.value?.role_name ||
-    user.value?.roleName ||
-    "";
-  if (String(roleName).trim()) {
-    return String(roleName).trim();
-  }
-
-  const roleKey = String(user.value?.role_key || user.value?.roleKey || "").trim();
-  const roleLabelMap: Record<string, string> = {
-    teacher: "教师",
-    student: "学生",
-    school_admin: "校级管理员",
-    district_admin: "区级管理员",
-    city_admin: "市级管理员",
-  };
-
-  return roleLabelMap[roleKey] || "账号登录";
-});
-
 const showModuleSwitch = computed(() => {
   const roleKey = user.value?.role_key;
   return roleKey === "city_admin" || roleKey === "district_admin";
 });
 
 const resolvedAvatar = computed(() => {
-  const avatar = String(user.value?.avatar || "").trim();
+  const avatar = String(
+    user.value?.avatar ||
+    user.value?.avatarUrl ||
+    user.value?.headImg ||
+    user.value?.headimg ||
+    ""
+  ).trim();
   return avatar || defaultAvatar;
 });
 
@@ -302,9 +400,49 @@ const handleProfile = () => {
   router.push("/personalcenter");
 };
 
-const handleLogout = () => {
+const handleLogout = async () => {
   showDropdown.value = false;
+
+  const ongoingClassroom = await getActiveOngoingClassroom();
+  if (ongoingClassroom) {
+    showLogoutConfirmModal.value = true;
+    return;
+  }
+
   logout();
+};
+
+const handleConfirmLogout = async () => {
+  const ongoingClassroom = await getActiveOngoingClassroom();
+  if (!ongoingClassroom) {
+    showLogoutConfirmModal.value = false;
+    logout();
+    return;
+  }
+
+  logoutConfirmLoading.value = true;
+  try {
+    await endClass({
+      classId: ongoingClassroom.classId,
+      courseId: ongoingClassroom.courseId,
+      chapterId: ongoingClassroom.chapterId,
+      peerId: ongoingClassroom.classId,
+    });
+
+    try {
+      await stopQuickLogin(ongoingClassroom.classId);
+    } catch (error) {
+      console.error("退出登录时停用快捷登录失败:", error);
+    }
+
+    showLogoutConfirmModal.value = false;
+    await logout();
+  } catch (error: any) {
+    console.error("退出登录时自动结束课堂失败:", error);
+    ElMessage.error(error?.message || "自动结束课堂失败，请稍后重试");
+  } finally {
+    logoutConfirmLoading.value = false;
+  }
 };
 
 const handleAvatarError = (event: Event) => {
@@ -603,5 +741,97 @@ watch(locale, () => {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+:deep(.sidebar-logout-modal-content) {
+  padding: 0 36px 32px !important;
+}
+
+.sidebar-logout-modal-header {
+  position: relative;
+  width: 100%;
+  padding: 6px 0 2px;
+}
+
+.sidebar-logout-modal-title {
+  margin: 0;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  color: #303133;
+  line-height: 1.4;
+}
+
+.sidebar-logout-modal-close {
+  position: absolute;
+  right: -8px;
+  top: -2px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: #909399;
+  cursor: pointer;
+  padding: 0;
+}
+
+.sidebar-logout-modal-close svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+  margin: 0 auto;
+}
+
+.sidebar-logout-modal-body {
+  text-align: center;
+}
+
+.sidebar-logout-modal-text {
+  margin: 18px 0 28px;
+  font-size: 16px;
+  line-height: 1.75;
+  color: #303133;
+}
+
+.sidebar-logout-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+}
+
+.sidebar-logout-modal-btn {
+  width: 130px;
+  height: 38px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sidebar-logout-modal-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.sidebar-logout-modal-btn--cancel {
+  border: 1px solid #bfe3ff;
+  background: #ffffff;
+  color: #40a9ff;
+}
+
+.sidebar-logout-modal-btn--cancel:hover:not(:disabled) {
+  background: #f3f9ff;
+}
+
+.sidebar-logout-modal-btn--confirm {
+  border: 1px solid #40a9ff;
+  background: #40a9ff;
+  color: #ffffff;
+}
+
+.sidebar-logout-modal-btn--confirm:hover:not(:disabled) {
+  background: #2f9bf0;
+  border-color: #2f9bf0;
 }
 </style>

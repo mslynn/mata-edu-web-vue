@@ -7,10 +7,6 @@ import { ElMessage } from 'element-plus'
 import { generateAesKey, encryptWithAes, encryptBase64 } from '~/utils/crypto'
 import { encrypt } from '~/utils/jsencrypt'
 
-// 基础配置 - 从环境变量读取
-const config = useRuntimeConfig()
-const BASE_URL = config.public.apiBaseUrl 
-
 // 加密请求头名称
 const ENCRYPT_HEADER = 'encrypt-key'
 
@@ -23,6 +19,10 @@ interface RequestOptions {
 }
 
 export const useHttp = () => {
+  // 只能在 composable 执行时读取 Nuxt 运行时配置，避免模块导入阶段报错
+  const config = useRuntimeConfig()
+  const baseUrl = config.public.apiBaseUrl
+
   // 获取 token
   const getToken = () => {
     if (import.meta.client) {
@@ -41,7 +41,8 @@ export const useHttp = () => {
   // 清除 token
   const removeToken = () => {
     if (import.meta.client) {
-      localStorage.removeItem('token')
+      localStorage.clear()
+      sessionStorage.clear()
     }
   }
 
@@ -129,7 +130,7 @@ export const useHttp = () => {
     
     try {
       const response = await $fetch<T>(url, {
-        baseURL: BASE_URL,
+        baseURL: baseUrl,
         method,
         body: processedBody,
         params,
