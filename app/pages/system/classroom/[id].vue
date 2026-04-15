@@ -1111,6 +1111,8 @@ const peerJS = usePeerJS();
 let notifyWs: WebSocket | null = null
 let timer: ReturnType<typeof setInterval> | null = null
 let classBeginBroadcastTimer: ReturnType<typeof setInterval> | null = null
+let notifyReconnectTimer: ReturnType<typeof setTimeout> | null = null
+let isTeacherClassroomUnmounted = false
 const teacherPeerId = ref("");
 const CLASS_DURATION_LIMIT_SECONDS = 2 * 60 * 60;
 const CLASS_BEGIN_BROADCAST_INTERVAL = 3000;
@@ -2214,7 +2216,7 @@ const resetTaskPanelState = () => {
 };
 
 const loadTaskList = async () => {
-  const chapterId = Number(route.params.id);
+  const chapterId = String(route.params.id || "").trim();
   const classId = String(route.query.classId || "");
   if (!chapterId || !classId) {
     taskListData.value = [];
@@ -2424,6 +2426,13 @@ const stopClassBeginBroadcast = () => {
   }
 };
 
+const clearNotifyReconnectTimer = () => {
+  if (notifyReconnectTimer) {
+    clearTimeout(notifyReconnectTimer);
+    notifyReconnectTimer = null;
+  }
+};
+
 const navigateAfterClassEnd = (from: string, courseId: string) => {
   if (from === "teacher") {
     navigateTo("/teacher");
@@ -2437,6 +2446,7 @@ const confirmEndClass = async () => {
   const classId = route.query.classId as string;
   const courseId = route.query.courseId as string;
   const from = String(route.query.from || "").trim();
+  const className = String(route.query.className || "").trim();
 
   try {
     await endClass({
@@ -2444,6 +2454,12 @@ const confirmEndClass = async () => {
       courseId,
       chapterId,
       peerId: teacherPeerId.value,
+    });
+    sendClassEndNotification({
+      classId,
+      courseId,
+      chapterId,
+      className,
     });
     if (classId) {
       try {
@@ -2533,6 +2549,38 @@ const sendClassBeginNotification = () => {
   console.log("[教师课堂] 已发送开课通知:", msg);
 };
 
+const sendClassEndNotification = ({
+  classId,
+  courseId,
+  chapterId,
+  className,
+}: {
+  classId: string;
+  courseId: string;
+  chapterId: string;
+  className?: string;
+}) => {
+  const peerId = String(teacherPeerId.value || classId || "").trim();
+
+  if (!classId || !peerId || !notifyWs || notifyWs.readyState !== WebSocket.OPEN) {
+    console.warn("[教师课堂] 下课时通知 WebSocket 未连接，未显式发送 CLASS_END");
+    return;
+  }
+
+  const msg = JSON.stringify({
+    type: "CLASS_END",
+    peerId,
+    teacherPeerId: peerId,
+    classId,
+    courseId,
+    chapterId,
+    className: String(className || "").trim(),
+  });
+
+  notifyWs.send(msg);
+  console.log("[教师课堂] 已发送下课通知:", msg);
+};
+
 const startClassBeginBroadcast = () => {
   stopClassBeginBroadcast();
   classBeginBroadcastTimer = setInterval(() => {
@@ -2619,6 +2667,12 @@ onMounted(async () => {
 
 // 连接通知 WebSocket（监听 STUDENT_JOIN）
 const connectNotifyWebSocket = (classId: string) => {
+  clearNotifyReconnectTimer();
+  if (notifyWs) {
+    notifyWs.onclose = null;
+    notifyWs.close();
+    notifyWs = null;
+  }
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   let wsUrl = signalingUrl;
   if (token) {
@@ -2629,15 +2683,17 @@ const connectNotifyWebSocket = (classId: string) => {
   }
 
   // 璋冭瘯鏃ュ織
-  notifyWs = new WebSocket(wsUrl);
+  const ws = new WebSocket(wsUrl);
+  notifyWs = ws;
 
-  notifyWs.onopen = () => {
+  ws.onopen = () => {
+    clearNotifyReconnectTimer();
     console.log("[教师课堂] 通知 WebSocket 已连接");
     sendClassBeginNotification();
     startClassBeginBroadcast();
   };
 
-  notifyWs.onmessage = async (event) => {
+  ws.onmessage = async (event) => {
     console.log("[教师课堂] 收到消息:", event.data);
     try {
       const message = JSON.parse(event.data);
@@ -2682,16 +2738,35 @@ const connectNotifyWebSocket = (classId: string) => {
     }
   };
 
-  notifyWs.onclose = () => {
+  ws.onclose = () => {
+    if (notifyWs === ws) {
+      notifyWs = null;
+    }
     stopClassBeginBroadcast();
-    // 璋冭瘯鏃ュ織
+    if (isTeacherClassroomUnmounted) {
+      return;
+    }
+    clearNotifyReconnectTimer();
+    notifyReconnectTimer = setTimeout(() => {
+      if (isTeacherClassroomUnmounted) {
+        return;
+      }
+      connectNotifyWebSocket(classId);
+    }, 3000);
+  };
+
+  ws.onerror = (error) => {
+    console.error("[教师课堂] 通知 WebSocket 错误:", error);
   };
 };
 
 onUnmounted(() => {
+  isTeacherClassroomUnmounted = true;
+  clearNotifyReconnectTimer();
   stopClassBeginBroadcast();
   stopClassroomTimer();
   if (notifyWs) {
+    notifyWs.onclose = null;
     notifyWs.close();
     notifyWs = null;
   }

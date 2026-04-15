@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2026-03-02 16:30:59
- * @LastEditTime: 2026-03-23 17:43:40
+ * @LastEditTime: 2026-04-03 12:10:07
  * @LastEditors: lynn
  * @Description: In User Settings Edit
  * @FilePath: \mata-edu-web\app\composables\api\student.ts
@@ -247,7 +247,9 @@ export const student = () => {
       "evaluationId" in evaluationIdOrPayload
         ? {
             evaluationId: evaluationIdOrPayload.evaluationId,
-            answers: normalizeStudentTaskAnswers(evaluationIdOrPayload.answers || []),
+            answers: normalizeStudentTaskAnswers(
+              evaluationIdOrPayload.answers || [],
+            ),
           }
         : {
             evaluationId: evaluationIdOrPayload,
@@ -274,7 +276,9 @@ export const student = () => {
     picOssIdsArg?: string,
   ) => {
     const payload: SubmitProgramTaskPayload =
-      typeof taskIdOrPayload === "object" && taskIdOrPayload !== null && "taskId" in taskIdOrPayload
+      typeof taskIdOrPayload === "object" &&
+      taskIdOrPayload !== null &&
+      "taskId" in taskIdOrPayload
         ? {
             taskId: taskIdOrPayload.taskId,
             opusName: taskIdOrPayload.opusName,
@@ -302,7 +306,7 @@ export const student = () => {
     }
   };
   //查看编程任务详情
-  const getStudentTaskChapterDetail= async (taskId: string) => {
+  const getStudentTaskChapterDetail = async (taskId: string) => {
     try {
       const response = await http.get(`/system/task/program/detail/${taskId}`);
       if (response.code !== 200) {
@@ -312,8 +316,19 @@ export const student = () => {
     } catch (error: any) {
       throw error;
     }
-
-  } ;
+  };
+  //学生进入课堂（创建上课记录）
+  const getLessonEnter = async (data: { peerId: string }) => {
+    try {
+      const response = await http.get("/system/student/lesson/enter", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "获取学生进入课堂（创建上课记录）失败");
+      }
+      return response.rows;
+    } catch (error: any) {
+      throw error;
+    }
+  };
 
   return {
     getStudentList,
@@ -327,5 +342,6 @@ export const student = () => {
     submitEvaluation,
     studentSubmitTask,
     getStudentTaskChapterDetail,
+    getLessonEnter,
   };
 };

@@ -629,7 +629,7 @@
   min-height: 360px;
 }
 
-@media (min-width: 1490px) and (max-width: 1919px) {
+@media (min-width: 1490px) and (max-width: 1879px) {
   .teacher-page {
     padding: 16px 0 24px;
   }
@@ -813,7 +813,7 @@
   }
 }
 
-@media (min-width: 1920px) and (max-width: 2559px) {
+@media (min-width: 1880px) and (max-width: 2559px) {
   .teacher-page {
     padding: 18px 0 28px;
   }
@@ -924,7 +924,7 @@
   }
 }
 
-@media (min-width: 1920px) and (max-width: 2100px) {
+@media (min-width: 1880px) and (max-width: 2100px) {
   .teacher-dashboard {
     max-width: 1420px;
   }

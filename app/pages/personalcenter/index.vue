@@ -502,9 +502,47 @@
               </p>
               <div
                 class="file-upload-box"
-                :class="{ uploaded: uploadForm.workFileName }"
+                :class="{
+                  uploaded: uploadForm.workFileName,
+                  'file-upload-box--uploading': isWorkChunkUploading,
+                }"
                 @click="triggerWorkUpload"
               >
+                <div
+                  v-if="isWorkChunkUploading || workChunkStatus === 'error'"
+                  class="file-upload-progress-mask"
+                >
+                  <div
+                    class="file-upload-progress-card"
+                    :class="{ 'file-upload-progress-card--error': workChunkStatus === 'error' }"
+                  >
+                    <div class="file-upload-progress-ring">
+                      <svg viewBox="0 0 72 72" aria-hidden="true">
+                        <circle class="file-upload-progress-track" cx="36" cy="36" :r="UPLOAD_PROGRESS_RADIUS" />
+                        <circle
+                          class="file-upload-progress-value"
+                          cx="36"
+                          cy="36"
+                          :r="UPLOAD_PROGRESS_RADIUS"
+                          :stroke-dasharray="UPLOAD_PROGRESS_CIRCUMFERENCE"
+                          :stroke-dashoffset="workProgressOffset"
+                        />
+                      </svg>
+                      <strong>{{ workProgressPercent }}%</strong>
+                    </div>
+                    <span v-if="workChunkStatus === 'error'" class="file-upload-progress-text">
+                      上传失败
+                    </span>
+                    <button
+                      v-if="isWorkChunkUploading"
+                      type="button"
+                      class="file-upload-cancel"
+                      @click.stop="handleCancelWorkUpload"
+                    >
+                      取消上传
+                    </button>
+                  </div>
+                </div>
                 <template v-if="uploadForm.workFileName">
                   <img src="~/assets/images/tool3.png" alt="" class="file-preview-img" />
                   <div class="file-overlay">
@@ -547,6 +585,9 @@
                 style="display: none"
                 @change="handleWorkFileChange"
               />
+              <p v-if="workChunkStatus === 'error' && workChunkErrorMessage" class="upload-status-tip upload-status-tip--error">
+                {{ workChunkErrorMessage }}
+              </p>
             </div>
             <!-- File Upload - Video -->
             <div v-else-if="uploadType === 'video'" class="file-upload-section">
@@ -558,10 +599,60 @@
               </p>
               <div
                 class="file-upload-box"
-                :class="{ uploaded: uploadForm.videoFileName }"
+                :class="{
+                  uploaded: uploadForm.videoFileName,
+                  'file-upload-box--uploading': isVideoChunkUploading,
+                }"
                 @click="triggerVideoUpload"
               >
+                <div
+                  v-if="isVideoChunkUploading || videoChunkStatus === 'error'"
+                  class="file-upload-progress-mask"
+                >
+                  <div
+                    class="file-upload-progress-card"
+                    :class="{ 'file-upload-progress-card--error': videoChunkStatus === 'error' }"
+                  >
+                    <div class="file-upload-progress-ring">
+                      <svg viewBox="0 0 72 72" aria-hidden="true">
+                        <circle class="file-upload-progress-track" cx="36" cy="36" :r="UPLOAD_PROGRESS_RADIUS" />
+                        <circle
+                          class="file-upload-progress-value"
+                          cx="36"
+                          cy="36"
+                          :r="UPLOAD_PROGRESS_RADIUS"
+                          :stroke-dasharray="UPLOAD_PROGRESS_CIRCUMFERENCE"
+                          :stroke-dashoffset="videoProgressOffset"
+                        />
+                      </svg>
+                      <strong>{{ videoProgressPercent }}%</strong>
+                    </div>
+                    <span v-if="videoChunkStatus === 'error'" class="file-upload-progress-text">
+                      上传失败
+                    </span>
+                    <button
+                      v-if="isVideoChunkUploading"
+                      type="button"
+                      class="file-upload-cancel"
+                      @click.stop="handleCancelVideoUpload"
+                    >
+                      取消上传
+                    </button>
+                  </div>
+                </div>
                 <template v-if="uploadForm.videoFileName">
+                  <button
+                    v-if="!isVideoChunkUploading"
+                    class="file-delete-btn"
+                    type="button"
+                    aria-label="删除视频"
+                    @click.stop="removeVideoFile"
+                  >
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M18 6L6 18" />
+                      <path d="M6 6l12 12" />
+                    </svg>
+                  </button>
                   <video
                     v-if="uploadForm.previewUrl"
                     :src="uploadForm.previewUrl"
@@ -610,6 +701,9 @@
                 style="display: none"
                 @change="handleVideoFileChange"
               />
+              <p v-if="videoChunkStatus === 'error' && videoChunkErrorMessage" class="upload-status-tip upload-status-tip--error">
+                {{ videoChunkErrorMessage }}
+              </p>
             </div>
             <!-- File Upload - Image (Multi) -->
             <div v-else-if="uploadType === 'image'" class="file-upload-section">
@@ -643,8 +737,44 @@
                 <div
                   v-if="uploadForm.imageList.length < 6"
                   class="image-upload-add"
+                  :class="{ 'file-upload-box--uploading': isImageChunkUploading }"
                   @click="triggerImageUpload"
                 >
+                  <div
+                    v-if="isImageChunkUploading || imageChunkStatus === 'error'"
+                    class="file-upload-progress-mask"
+                  >
+                    <div
+                      class="file-upload-progress-card"
+                      :class="{ 'file-upload-progress-card--error': imageChunkStatus === 'error' }"
+                    >
+                      <div class="file-upload-progress-ring">
+                        <svg viewBox="0 0 72 72" aria-hidden="true">
+                          <circle class="file-upload-progress-track" cx="36" cy="36" :r="UPLOAD_PROGRESS_RADIUS" />
+                          <circle
+                            class="file-upload-progress-value"
+                            cx="36"
+                            cy="36"
+                            :r="UPLOAD_PROGRESS_RADIUS"
+                            :stroke-dasharray="UPLOAD_PROGRESS_CIRCUMFERENCE"
+                            :stroke-dashoffset="imageProgressOffset"
+                          />
+                        </svg>
+                        <strong>{{ imageProgressPercent }}%</strong>
+                      </div>
+                      <span v-if="imageChunkStatus === 'error'" class="file-upload-progress-text">
+                        上传失败
+                      </span>
+                      <button
+                        v-if="isImageChunkUploading"
+                        type="button"
+                        class="file-upload-cancel"
+                        @click.stop="handleCancelImageUpload"
+                      >
+                        取消上传
+                      </button>
+                    </div>
+                  </div>
                   <span class="add-btn">{{ $t("personalCenter.clickUpload") }}</span>
                 </div>
               </div>
@@ -656,6 +786,9 @@
                 style="display: none"
                 @change="handleImageFileChange"
               />
+              <p v-if="imageChunkStatus === 'error' && imageChunkErrorMessage" class="upload-status-tip upload-status-tip--error">
+                {{ imageChunkErrorMessage }}
+              </p>
             </div>
           </div>
           <div class="modal-right">
@@ -710,9 +843,47 @@
               }}</label>
               <div
                 class="cover-upload-box"
-                :class="{ uploaded: uploadForm.coverUrl }"
+                :class="{
+                  uploaded: uploadForm.coverUrl,
+                  'file-upload-box--uploading': isCoverChunkUploading,
+                }"
                 @click="triggerCoverUpload"
               >
+                <div
+                  v-if="isCoverChunkUploading || coverChunkStatus === 'error'"
+                  class="file-upload-progress-mask"
+                >
+                  <div
+                    class="file-upload-progress-card"
+                    :class="{ 'file-upload-progress-card--error': coverChunkStatus === 'error' }"
+                  >
+                    <div class="file-upload-progress-ring">
+                      <svg viewBox="0 0 72 72" aria-hidden="true">
+                        <circle class="file-upload-progress-track" cx="36" cy="36" :r="UPLOAD_PROGRESS_RADIUS" />
+                        <circle
+                          class="file-upload-progress-value"
+                          cx="36"
+                          cy="36"
+                          :r="UPLOAD_PROGRESS_RADIUS"
+                          :stroke-dasharray="UPLOAD_PROGRESS_CIRCUMFERENCE"
+                          :stroke-dashoffset="coverProgressOffset"
+                        />
+                      </svg>
+                      <strong>{{ coverProgressPercent }}%</strong>
+                    </div>
+                    <span v-if="coverChunkStatus === 'error'" class="file-upload-progress-text">
+                      上传失败
+                    </span>
+                    <button
+                      v-if="isCoverChunkUploading"
+                      type="button"
+                      class="file-upload-cancel"
+                      @click.stop="handleCancelCoverUpload"
+                    >
+                      取消上传
+                    </button>
+                  </div>
+                </div>
                 <template v-if="uploadForm.coverUrl">
                   <img :src="uploadForm.coverUrl" alt="" class="cover-preview" />
                   <div class="cover-overlay">
@@ -755,6 +926,9 @@
                 style="display: none"
                 @change="handleCoverFileChange"
               />
+              <p v-if="coverChunkStatus === 'error' && coverChunkErrorMessage" class="upload-status-tip upload-status-tip--error">
+                {{ coverChunkErrorMessage }}
+              </p>
             </div>
           </div>
         </div>
@@ -1053,6 +1227,7 @@ import { useAuth } from "~/composables/api/useAuth";
 import { useI18n } from "vue-i18n";
 import { personalcenterApi } from "~/composables/api/personalcenter";
 import { aiAdmin } from "~/composables/api/ai";
+import { useChunkUpload } from "~/composables/useChunkUpload";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import { ElMessage } from "element-plus";
 import defaultAvatar from "~/assets/newimages/user.png";
@@ -1200,6 +1375,76 @@ const pagination = ref({
 });
 const uploading = ref(false);
 const currentImageIndex = ref(0);
+const imageUploadCancelled = ref(false);
+const UPLOAD_PROGRESS_RADIUS = 24;
+const UPLOAD_PROGRESS_CIRCUMFERENCE = 2 * Math.PI * UPLOAD_PROGRESS_RADIUS;
+const {
+  status: workChunkStatus,
+  progressPercent: workProgressPercent,
+  errorMessage: workChunkErrorMessage,
+  isUploading: isWorkChunkUploading,
+  start: startWorkChunkUpload,
+  cancel: cancelWorkChunkUpload,
+  reset: resetWorkChunkUpload,
+} = useChunkUpload({
+  chunkSize: 5 * 1024 * 1024,
+  defaultErrorMessage: "作品文件分片上传失败，请重试",
+});
+const {
+  status: videoChunkStatus,
+  progressPercent: videoProgressPercent,
+  errorMessage: videoChunkErrorMessage,
+  isUploading: isVideoChunkUploading,
+  start: startVideoChunkUpload,
+  cancel: cancelVideoChunkUpload,
+  reset: resetVideoChunkUpload,
+} = useChunkUpload({
+  chunkSize: 5 * 1024 * 1024,
+  defaultErrorMessage: "视频分片上传失败，请重试",
+});
+const {
+  status: coverChunkStatus,
+  progressPercent: coverProgressPercent,
+  errorMessage: coverChunkErrorMessage,
+  isUploading: isCoverChunkUploading,
+  start: startCoverChunkUpload,
+  cancel: cancelCoverChunkUpload,
+  reset: resetCoverChunkUpload,
+} = useChunkUpload({
+  chunkSize: 5 * 1024 * 1024,
+  defaultErrorMessage: "封面图片分片上传失败，请重试",
+});
+const {
+  status: imageChunkStatus,
+  progressPercent: imageProgressPercent,
+  errorMessage: imageChunkErrorMessage,
+  isUploading: isImageChunkUploading,
+  start: startImageChunkUpload,
+  cancel: cancelImageChunkUpload,
+  reset: resetImageChunkUpload,
+} = useChunkUpload({
+  chunkSize: 5 * 1024 * 1024,
+  defaultErrorMessage: "图片分片上传失败，请重试",
+});
+const workProgressOffset = computed(
+  () => UPLOAD_PROGRESS_CIRCUMFERENCE * (1 - workProgressPercent.value / 100)
+);
+const videoProgressOffset = computed(
+  () => UPLOAD_PROGRESS_CIRCUMFERENCE * (1 - videoProgressPercent.value / 100)
+);
+const coverProgressOffset = computed(
+  () => UPLOAD_PROGRESS_CIRCUMFERENCE * (1 - coverProgressPercent.value / 100)
+);
+const imageProgressOffset = computed(
+  () => UPLOAD_PROGRESS_CIRCUMFERENCE * (1 - imageProgressPercent.value / 100)
+);
+const isAnyChunkUploading = computed(
+  () =>
+    isWorkChunkUploading.value ||
+    isVideoChunkUploading.value ||
+    isCoverChunkUploading.value ||
+    isImageChunkUploading.value
+);
 
 // File input refs
 const workFileInput = ref<HTMLInputElement | null>(null);
@@ -1227,6 +1472,108 @@ const revokeUploadPreviewUrl = () => {
   const previewUrl = String(uploadForm.value.previewUrl || "");
   if (previewUrl.startsWith("blob:")) {
     URL.revokeObjectURL(previewUrl);
+  }
+};
+
+const revokeBlobPreviewUrl = (url: unknown) => {
+  if (typeof window === "undefined") return;
+
+  const previewUrl = String(url || "");
+  if (previewUrl.startsWith("blob:")) {
+    URL.revokeObjectURL(previewUrl);
+  }
+};
+
+const resolveUploadedImageUrl = (result: any, file: File) => {
+  const remoteUrl = String(result?.url || "").trim();
+  if (remoteUrl) {
+    return remoteUrl;
+  }
+  if (typeof window !== "undefined") {
+    return URL.createObjectURL(file);
+  }
+  return "";
+};
+
+const revokeSupplementalPreviewUrls = () => {
+  revokeBlobPreviewUrl(uploadForm.value.coverUrl);
+  uploadForm.value.imageList.forEach((item) => revokeBlobPreviewUrl(item.url));
+};
+
+const handleCancelWorkUpload = async () => {
+  if (!isWorkChunkUploading.value) return;
+
+  try {
+    const cancelled = await cancelWorkChunkUpload();
+    if (!cancelled) return;
+
+    ElMessage.success("取消上传成功");
+  } catch (error: any) {
+    ElMessage.error(error.message || "取消上传失败");
+  } finally {
+    if (workFileInput.value) {
+      workFileInput.value.value = "";
+    }
+    uploading.value = false;
+    resetWorkChunkUpload();
+  }
+};
+
+const handleCancelVideoUpload = async () => {
+  if (!isVideoChunkUploading.value) return;
+
+  try {
+    const cancelled = await cancelVideoChunkUpload();
+    if (!cancelled) return;
+
+    ElMessage.success("取消上传成功");
+  } catch (error: any) {
+    ElMessage.error(error.message || "取消上传失败");
+  } finally {
+    if (videoFileInput.value) {
+      videoFileInput.value.value = "";
+    }
+    uploading.value = false;
+    resetVideoChunkUpload();
+  }
+};
+
+const handleCancelCoverUpload = async () => {
+  if (!isCoverChunkUploading.value) return;
+
+  try {
+    const cancelled = await cancelCoverChunkUpload();
+    if (!cancelled) return;
+
+    ElMessage.success("取消上传成功");
+  } catch (error: any) {
+    ElMessage.error(error.message || "取消上传失败");
+  } finally {
+    if (coverFileInput.value) {
+      coverFileInput.value.value = "";
+    }
+    uploading.value = false;
+    resetCoverChunkUpload();
+  }
+};
+
+const handleCancelImageUpload = async () => {
+  if (!isImageChunkUploading.value) return;
+
+  imageUploadCancelled.value = true;
+  try {
+    const cancelled = await cancelImageChunkUpload();
+    if (!cancelled) return;
+
+    ElMessage.success("取消上传成功");
+  } catch (error: any) {
+    ElMessage.error(error.message || "取消上传失败");
+  } finally {
+    uploading.value = false;
+    if (imageFileInput.value) {
+      imageFileInput.value.value = "";
+    }
+    resetImageChunkUpload();
   }
 };
 
@@ -1342,7 +1689,18 @@ const handleDeleteAccount = async () => {
 
 // 关闭上传弹窗并清空表单
 const closeUploadModal = () => {
+  if (isAnyChunkUploading.value) {
+    ElMessage.warning("文件还在上传中，请先取消上传");
+    return;
+  }
+
   revokeUploadPreviewUrl();
+  revokeSupplementalPreviewUrls();
+  imageUploadCancelled.value = false;
+  resetWorkChunkUpload();
+  resetVideoChunkUpload();
+  resetCoverChunkUpload();
+  resetImageChunkUpload();
   showUploadModal.value = false;
   isEditMode.value = false;
   editOpusId.value = "";
@@ -1365,6 +1723,10 @@ const closeUploadModal = () => {
 
 // 切换上传类型
 const changeUploadType = (type: string) => {
+  if (isAnyChunkUploading.value) {
+    ElMessage.warning("文件还在上传中，请先取消上传");
+    return;
+  }
   uploadType.value = type;
   console.log("切换到:", type, "uploadType.value:", uploadType.value);
 };
@@ -1457,7 +1819,7 @@ const getResourceFileName = (url: unknown, fallback: string) => {
   return fileName || fallback;
 };
 
-const buildEditImageList = (detail: any) => {
+const buildEditImageList = (detail: any): Array<{ url: string; ossId: string }> => {
   const imageOssIds = splitResourceValues(detail?.picOssIds);
   const arraySource = Array.isArray(detail?.imageList)
     ? detail.imageList
@@ -1480,7 +1842,7 @@ const buildEditImageList = (detail: any) => {
           ossId: String(item?.ossId || item?.picOssId || imageOssIds[index] || "").trim(),
         };
       })
-      .filter((item) => item.url);
+      .filter((item: { url: string; ossId: string }) => item.url);
   }
 
   const imageUrls = splitResourceValues(detail?.picUrl || detail?.picUrls);
@@ -1492,6 +1854,12 @@ const buildEditImageList = (detail: any) => {
 
 const fillUploadFormForEdit = (detail: any, opusId: string) => {
   revokeUploadPreviewUrl();
+  revokeSupplementalPreviewUrls();
+  imageUploadCancelled.value = false;
+  resetWorkChunkUpload();
+  resetVideoChunkUpload();
+  resetCoverChunkUpload();
+  resetImageChunkUpload();
 
   const nextToolValue = getOpusToolId(detail) === "nous" ? "nous" : "vinci";
   const imageList = buildEditImageList(detail);
@@ -1828,21 +2196,37 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
 
 // 触发作品文件上传
 const triggerWorkUpload = () => {
+  if (isAnyChunkUploading.value) {
+    ElMessage.warning("请等待当前上传完成或先取消上传");
+    return;
+  }
   workFileInput.value?.click();
 };
 
 // 触发封面上传
 const triggerCoverUpload = () => {
+  if (isAnyChunkUploading.value) {
+    ElMessage.warning("请等待当前上传完成或先取消上传");
+    return;
+  }
   coverFileInput.value?.click();
 };
 
 // 触发视频上传
 const triggerVideoUpload = () => {
+  if (isAnyChunkUploading.value) {
+    ElMessage.warning("请等待当前上传完成或先取消上传");
+    return;
+  }
   videoFileInput.value?.click();
 };
 
 // 触发图片上传
 const triggerImageUpload = () => {
+  if (isAnyChunkUploading.value) {
+    ElMessage.warning("请等待当前上传完成或先取消上传");
+    return;
+  }
   imageFileInput.value?.click();
 };
 
@@ -1852,8 +2236,8 @@ const getWorkExtension = () => {
     case "vinci":
       return ".mc";
     case "nous":
-      return ".mc";
-
+      return ".sb3";
+    default:
       return "";
   }
 };
@@ -1874,7 +2258,10 @@ const handleWorkFileChange = async (e: Event) => {
 
   try {
     uploading.value = true;
-    const result = await uploadOSS(file);
+    const result = await startWorkChunkUpload(file);
+    if (!result) {
+      return;
+    }
     uploadForm.value.workFileName = file.name;
     uploadForm.value.workOssId = result.ossId;
     ElMessage.success(t("personalCenter.uploadSuccess"));
@@ -1891,6 +2278,8 @@ const handleVideoFileChange = async (e: Event) => {
   const input = e.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file) return;
+
+  resetVideoChunkUpload();
 
   // 检查文件类型
   const fileName = file.name.toLowerCase();
@@ -1909,7 +2298,10 @@ const handleVideoFileChange = async (e: Event) => {
 
   try {
     uploading.value = true;
-    const result = await uploadOSS(file);
+    const result = await startVideoChunkUpload(file);
+    if (!result) {
+      return;
+    }
     revokeUploadPreviewUrl();
     uploadForm.value.videoFileName = file.name;
     uploadForm.value.videoOssId = result.ossId;
@@ -1921,6 +2313,17 @@ const handleVideoFileChange = async (e: Event) => {
   } finally {
     uploading.value = false;
     input.value = "";
+  }
+};
+
+const removeVideoFile = () => {
+  revokeUploadPreviewUrl();
+  resetVideoChunkUpload();
+  uploadForm.value.videoFileName = "";
+  uploadForm.value.videoOssId = "";
+  uploadForm.value.previewUrl = "";
+  if (videoFileInput.value) {
+    videoFileInput.value.value = "";
   }
 };
 
@@ -1938,7 +2341,12 @@ const handleImageFileChange = async (e: Event) => {
     return;
   }
 
-  for (const file of Array.from(files)) {
+  const candidateFiles = Array.from(files);
+  let successCount = 0;
+
+  imageUploadCancelled.value = false;
+
+  for (const file of candidateFiles) {
     // 检查文件类型
     const fileName = file.name.toLowerCase();
     if (
@@ -1959,23 +2367,37 @@ const handleImageFileChange = async (e: Event) => {
 
     try {
       uploading.value = true;
-      const result = await uploadOSS(file);
+      const result = await startImageChunkUpload(file);
+      if (!result) {
+        if (imageUploadCancelled.value) {
+          break;
+        }
+        continue;
+      }
+      const previewUrl = resolveUploadedImageUrl(result, file);
       uploadForm.value.imageList.push({
-        url: result.url,
+        url: previewUrl,
         ossId: result.ossId,
       });
+      currentImageIndex.value = uploadForm.value.imageList.length - 1;
+      successCount++;
     } catch (error: any) {
       ElMessage.error(error.message || t("personalCenter.uploadFailed"));
+      break;
     }
   }
 
   uploading.value = false;
   input.value = "";
-  ElMessage.success(t("personalCenter.uploadSuccess"));
+  if (successCount > 0 && !imageUploadCancelled.value) {
+    ElMessage.success(t("personalCenter.uploadSuccess"));
+  }
+  imageUploadCancelled.value = false;
 };
 
 // 删除图片
 const removeImage = (index: number) => {
+  revokeBlobPreviewUrl(uploadForm.value.imageList[index]?.url);
   uploadForm.value.imageList.splice(index, 1);
   if (currentImageIndex.value >= uploadForm.value.imageList.length) {
     currentImageIndex.value = Math.max(0, uploadForm.value.imageList.length - 1);
@@ -2020,8 +2442,12 @@ const handleCoverFileChange = async (e: Event) => {
 
   try {
     uploading.value = true;
-    const result = await uploadOSS(file);
-    uploadForm.value.coverUrl = result.url;
+    const result = await startCoverChunkUpload(file);
+    if (!result) {
+      return;
+    }
+    revokeBlobPreviewUrl(uploadForm.value.coverUrl);
+    uploadForm.value.coverUrl = resolveUploadedImageUrl(result, file);
     uploadForm.value.coverOssId = result.ossId;
     ElMessage.success(t("personalCenter.uploadSuccess"));
   } catch (error: any) {
@@ -2034,6 +2460,11 @@ const handleCoverFileChange = async (e: Event) => {
 
 // 提交作品
 const handleSubmitWork = async () => {
+  if (isAnyChunkUploading.value) {
+    ElMessage.warning("文件还在上传中，请稍后再提交");
+    return;
+  }
+
   if (!uploadForm.value.name) {
     ElMessage.warning(t("personalCenter.pleaseInputWorkName"));
     return;
@@ -2201,6 +2632,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   revokeUploadPreviewUrl();
+  revokeSupplementalPreviewUrls();
   window.removeEventListener("message", handleToolIframeMessage);
 });
 
@@ -3349,6 +3781,9 @@ const handleBack = () => router.back();
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+  background: #fafafa;
 }
 
 .image-upload-add:hover {
@@ -3578,6 +4013,13 @@ const handleBack = () => router.back();
   border-color: #d9d9d9;
 }
 
+.file-upload-box--uploading {
+  border-style: solid;
+  border-color: rgba(255, 174, 74, 0.78);
+  background: linear-gradient(180deg, #fffdfa 0%, #fff8f0 100%);
+  box-shadow: 0 10px 24px rgba(255, 153, 0, 0.08);
+}
+
 .file-upload-icon {
   width: 36px;
   height: 36px;
@@ -3610,6 +4052,37 @@ const handleBack = () => router.back();
   object-fit: cover;
 }
 
+.file-delete-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  color: #ff6b6b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 12;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s, background 0.2s, color 0.2s;
+}
+
+.file-delete-btn:hover {
+  background: #ff6b6b;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+.file-delete-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
 .file-overlay {
   position: absolute;
   top: 0;
@@ -3639,6 +4112,120 @@ const handleBack = () => router.back();
 .file-overlay span {
   font-size: 12px;
   color: white;
+}
+
+.file-upload-progress-mask {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, rgba(255, 253, 250, 0.9) 0%, rgba(255, 248, 240, 0.92) 100%);
+  backdrop-filter: blur(2px);
+}
+
+.file-upload-progress-card {
+  width: 88px;
+  min-height: 84px;
+  padding: 8px 8px 10px;
+  border-radius: 16px;
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #edf1fb 0%, #e7ecf9 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 8px 18px rgba(148, 165, 210, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.file-upload-progress-card--error {
+  background: linear-gradient(180deg, #fff1f1 0%, #ffe7e7 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 8px 18px rgba(255, 107, 107, 0.12);
+}
+
+.file-upload-progress-ring {
+  position: relative;
+  width: 48px;
+  height: 48px;
+}
+
+.file-upload-progress-ring svg {
+  width: 48px;
+  height: 48px;
+  transform: rotate(-90deg);
+}
+
+.file-upload-progress-track,
+.file-upload-progress-value {
+  fill: none;
+  stroke-width: 6;
+}
+
+.file-upload-progress-track {
+  stroke: rgba(255, 179, 87, 0.22);
+}
+
+.file-upload-progress-value {
+  stroke: #ffad4e;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.2s ease;
+}
+
+.file-upload-progress-ring strong {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.file-upload-progress-text {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  color: #e05b5b;
+}
+
+.file-upload-cancel {
+  min-width: 82px;
+  height: 28px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #53b7ff 0%, #39a5ff 100%);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(57, 165, 255, 0.18);
+  transition: background 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.file-upload-cancel:hover {
+  background: linear-gradient(180deg, #45afff 0%, #2497f7 100%);
+  transform: translateY(-1px);
+}
+
+.upload-status-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.upload-status-tip--error {
+  color: #ff4d4f;
 }
 
 .preview-image.full {

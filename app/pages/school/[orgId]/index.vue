@@ -545,7 +545,7 @@ const handleConfirmResetTeacher = async () => {
 // 导出
 const handleExport = async () => {
   try {
-    await schoolUserApi.exportTeacherInfo('校管理员账号信息.xlsx')
+    await schoolUserApi.exportTeacherInfo('校管理员账号信息.xlsx', orgId.value)
     ElMessage.success(t('common.exportSuccess'))
   } catch (error: any) {
     ElMessage.error(error.message || t('common.exportFailed'))

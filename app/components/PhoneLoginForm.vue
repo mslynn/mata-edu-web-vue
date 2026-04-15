@@ -48,7 +48,7 @@
             { 'is-counting': countdown > 0 },
             'bg-primary text-white'
           ]"
-          :disabled="countdown > 0" 
+          :disabled="countdown > 0 || isSendingCode" 
           @click="handleSendCode"
         >
           {{ countdown > 0 ? `${countdown}${t('auth.resendAfter')}` : t('auth.getCode') }}
@@ -61,6 +61,12 @@
     <div class="text-right mb-6 px-4">
       <a href="#" class="text-gray-400 text-xs hover:text-[#e8a063] no-underline" @click.prevent="handleTogglePasswordLogin">{{ t('auth.passwordLogin') }}</a>
     </div>
+
+    <CloudflareTurnstileDialog
+      v-model="showTurnstileDialog"
+      :site-key="turnstileSiteKey"
+      @success="handleTurnstileSuccess"
+    />
   </div>
 </template>
 
@@ -73,6 +79,7 @@ import { useAuth } from '~/composables/api/useAuth'
 const { $i18n } = useNuxtApp()
 const t = (key: string) => $i18n.t(key)
 const { getSmsCode } = useAuth();
+const turnstileSiteKey = String(useRuntimeConfig().public.turnstileSiteKey || '')
 
 interface Props {
   modelValue: {
@@ -100,6 +107,9 @@ const phoneErrorMsg = ref(t('auth.pleaseInputPhone'))
 const countryCode = ref('86') // 默认中国大陆
 const phoneMaxLength = ref(11)
 const countryCodeSelectorRef = ref<InstanceType<typeof import('./CountryCodeSelector.vue').default> | null>(null)
+const showTurnstileDialog = ref(false)
+const isSendingCode = ref(false)
+const pendingSmsPhone = ref('')
 
 const handleCountryChange = (country: Country) => {
   phoneMaxLength.value = country.maxLength
@@ -144,8 +154,18 @@ const validatePhone = (phone: string): { valid: boolean; message: string } => {
   return { valid: true, message: '' }
 }
 
+const startCountdown = () => {
+  countdown.value = 60
+  const timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
+
 const handleSendCode = async () => {
-  if (countdown.value > 0) return
+  if (countdown.value > 0 || isSendingCode.value) return
   
   const phone = props.modelValue.phone.trim()
   
@@ -159,29 +179,46 @@ const handleSendCode = async () => {
   
   // 清除手机号错误状态
   emit('update:errors', { ...props.errors, phone: false })
-  
+
+  if (!turnstileSiteKey) {
+    ElMessage.warning(t('auth.turnstileSiteKeyMissing'))
+    return
+  }
+
+  pendingSmsPhone.value = phone
+  showTurnstileDialog.value = true
+}
+
+const handleTurnstileSuccess = async (turnstileToken: string) => {
+  const phone = pendingSmsPhone.value || props.modelValue.phone.trim()
+
+  if (!phone || isSendingCode.value) {
+    showTurnstileDialog.value = false
+    return
+  }
+
+  showTurnstileDialog.value = false
+  isSendingCode.value = true
+
   try {
-    // 调用发送验证码接口 - 参数为 phonenumber
-    console.log('📤 发送验证码:', { phonenumber: phone })
-    await getSmsCode(phone)
-    console.log('✅ 验证码发送成功')
+    const response = await getSmsCode(phone, turnstileToken)
+
+    if (response?.code !== 200) {
+      phoneErrorMsg.value = response?.msg || t('auth.codeSendFailed')
+      emit('update:errors', { ...props.errors, phone: true })
+      return
+    }
+
     ElMessage.success(t('auth.codeSendSuccess'))
-    
-    // 发送验证码事件
+
     emit('send-code')
-    
-    // 开始60s倒计时
-    countdown.value = 60
-    const timer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        clearInterval(timer)
-      }
-    }, 1000)
+    startCountdown()
   } catch (error: any) {
-    console.error('❌ 验证码发送失败:', error)
     phoneErrorMsg.value = error?.data?.msg || error?.message || t('auth.codeSendFailed')
     emit('update:errors', { ...props.errors, phone: true })
+  } finally {
+    isSendingCode.value = false
+    pendingSmsPhone.value = ''
   }
 }
 

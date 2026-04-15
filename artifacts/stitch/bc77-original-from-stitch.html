@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=1920, initial-scale=1.0" name="viewport"/>
+<title>智慧教育云平台 - 首页</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-error-container": "#65000b",
+                        "surface-container-low": "#f2f4f5",
+                        "on-secondary-container": "#4b38c5",
+                        "primary-dim": "#0050ab",
+                        "error-container": "#f56965",
+                        "outline": "#767c7e",
+                        "tertiary-fixed-dim": "#f3953a",
+                        "surface-container-high": "#e5e9eb",
+                        "primary-container": "#a4c1ff",
+                        "on-tertiary-container": "#552c00",
+                        "primary-fixed": "#a4c1ff",
+                        "on-error": "#fff7f6",
+                        "error": "#ac3434",
+                        "surface-container-lowest": "#ffffff",
+                        "outline-variant": "#aeb3b5",
+                        "on-secondary-fixed": "#381eb3",
+                        "primary": "#005bc2",
+                        "error-dim": "#70030f",
+                        "background": "#f8f9fa",
+                        "surface-container-highest": "#dee3e5",
+                        "inverse-surface": "#0c0f10",
+                        "on-background": "#2e3335",
+                        "on-secondary": "#fcf7ff",
+                        "surface-container": "#ebeef0",
+                        "surface-tint": "#005bc2",
+                        "on-surface": "#2e3335",
+                        "on-primary-fixed-variant": "#004291",
+                        "surface-variant": "#dee3e5",
+                        "on-secondary-fixed-variant": "#5543cf",
+                        "inverse-on-surface": "#9b9d9e",
+                        "primary-fixed-dim": "#8eb3ff",
+                        "on-tertiary-fixed-variant": "#623400",
+                        "surface": "#f8f9fa",
+                        "tertiary-container": "#ffa44f",
+                        "on-primary": "#f9f8ff",
+                        "secondary": "#5948d3",
+                        "on-primary-fixed": "#002658",
+                        "inverse-primary": "#4b8eff",
+                        "on-primary-container": "#003a80",
+                        "secondary-fixed-dim": "#d5cfff",
+                        "secondary-container": "#e4dfff",
+                        "surface-dim": "#d5dbdd",
+                        "on-tertiary": "#fff7f4",
+                        "tertiary-fixed": "#ffa44f",
+                        "secondary-dim": "#4d39c7",
+                        "tertiary-dim": "#7f4400",
+                        "tertiary": "#904e00",
+                        "secondary-fixed": "#e4dfff",
+                        "on-surface-variant": "#5a6062",
+                        "surface-bright": "#f8f9fa",
+                        "on-tertiary-fixed": "#351900"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans", "PingFang SC"],
+                        "body": ["Manrope", "PingFang SC"],
+                        "label": ["Manrope", "PingFang SC"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Manrope', 'PingFang SC', sans-serif; background-color: #f8f9fa; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .card-pattern {
+            background-color: #ffffff;
+            background-image: radial-gradient(#005bc225 1.5px, transparent 1.5px);
+            background-size: 16px 16px;
+        }
+        .card-gradient {
+            background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(242,244,245,0.8) 100%);
+        }
+        /* Lock page to 1920px width */
+        .page-container {
+            width: 1920px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body class="text-on-background antialiased overflow-x-auto">
+<div class="page-container">
+<!-- SideNavBar Component -->
+<aside class="h-screen w-64 fixed left-auto top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50">
+<div class="text-2xl font-black text-[#2e3335] mb-8 px-4 flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-3xl" data-weight="fill">school</span>
+<div class="flex flex-col">
+<span class="leading-none">教育平台</span>
+<span class="text-[10px] font-medium text-on-surface-variant uppercase tracking-wider mt-1">数字馆长系统</span>
+</div>
+</div>
+<nav class="flex-1 space-y-2">
+<!-- Active: 首页 -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#">
+<span class="material-symbols-outlined" data-weight="fill">home</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">group</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">班级管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">construction</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">psychology</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">AI 实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">trending_up</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">教师成长</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">emoji_events</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">竞赛中心</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-outline-variant/10">
+<div class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl">
+<img alt="教师头像" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR0EHEsckca4JuG6FYiQ5PMDfHBVDZCzHIRbaUwtyiOTN-KXkBuU4-ne0P6Ct_N8IL_RrT8CyubYvaMXeLnhBLqvtkZiKprSMdhH241SiuA3cvJi65m-fJ8pFqRd4BZa6BLYvOWH9Ma7Ee-FYvnhDlRSkGxFtA6a52xYV7huqoEX6gpvKdInDXIG3T7fGQr1R-Sqtmuil9tqbvrNfS16EAfOmD4SG7_CC-p2ckuO8pChG4Twa4HS0q5ajVnuDYfWxqnv9Xgesh"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">王明老师</p>
+<p class="text-[10px] text-on-surface-variant">高级讲师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- TopNavBar Component -->
+<header class="fixed top-0 left-auto h-16 flex justify-between items-center px-8 bg-[#f8f9fa]/80 backdrop-blur-md z-40" style="width: calc(1920px - 16rem); margin-left: 16rem;">
+<div class="flex items-center gap-4">
+<h1 class="text-xl font-bold text-[#2e3335] font-headline">智慧教育云平台</h1>
+<div class="ml-8 relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-sm">search</span>
+<input class="bg-surface-container-highest border-none rounded-full pl-10 pr-4 py-2 text-sm w-96 focus:ring-2 focus:ring-primary/20 transition-all" placeholder="搜索课程、工具或资源..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-4 text-on-surface-variant">
+<button class="hover:text-[#005bc2] transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<button class="hover:text-[#005bc2] transition-colors"><span class="material-symbols-outlined">help</span></button>
+<button class="hover:text-[#005bc2] transition-colors"><span class="material-symbols-outlined">settings</span></button>
+</div>
+<div class="h-8 w-px bg-outline-variant/20 mx-2"></div>
+<div class="flex items-center gap-3">
+<img alt="教师个人资料" class="w-8 h-8 rounded-full" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA3IO4h70HXKBCdIeO1xVTlo1mNIuvnMrKaeTjFTERPLOGL_ZN5APeXQfa23eS5nw3aRdED-sVQukCK9aHioefGckk9Qo7IDCcj8hcQMxJpM5CULWBNBleaC_xDn1lvKqGTWMpg65CCfpkGpXD1D3e1_x8cZ3aN9Tgb_R-myQYtyY_AX-Mz0hjZKF8S94R4EAMzsTjnDrNNvKczd0JSJY0ICZdYrE2oqfLehVJ1o4DOQLirHBmQnHgFxw9TcYxhJVbUtQaX_Y44"/>
+<span class="text-sm font-medium">王明老师</span>
+</div>
+</div>
+</header>
+<!-- Main Content Area -->
+<main class="ml-64 mt-16 p-10 min-h-screen">
+<!-- Hero & Info Section -->
+<div class="grid grid-cols-12 gap-8 mb-12">
+<!-- Teaching Center Hero (70%) -->
+<section class="col-span-8 bg-gradient-to-br from-primary to-primary-dim rounded-3xl p-12 relative overflow-hidden flex items-center min-h-[400px]">
+<div class="relative z-10 w-3/5">
+<h2 class="text-5xl font-black text-white mb-6 leading-tight">欢迎回来，开启今天的<br/>智慧教学之旅</h2>
+<p class="text-white/80 text-xl mb-10 font-medium">您的 AI 助教已经准备就绪，随时为您提供课程支持。</p>
+<div class="flex gap-4">
+<button class="bg-white text-primary px-10 py-5 rounded-2xl font-bold flex items-center gap-3 shadow-xl hover:scale-105 transition-transform">
+<span class="material-symbols-outlined">play_circle</span> 去上课
+                        </button>
+<button class="bg-white/20 backdrop-blur-md text-white border border-white/30 px-10 py-5 rounded-2xl font-bold flex items-center gap-3 hover:bg-white/30 transition-all">
+<span class="material-symbols-outlined">edit_note</span> 去备课
+                        </button>
+<button class="bg-white/20 backdrop-blur-md text-white border border-white/30 px-10 py-5 rounded-2xl font-bold flex items-center gap-3 hover:bg-white/30 transition-all">
+<span class="material-symbols-outlined">assignment</span> 任务管理
+                        </button>
+</div>
+</div>
+<!-- Mascot Image -->
+<div class="absolute right-0 bottom-0 h-full w-2/5 flex items-end justify-end p-8">
+<img alt="可爱机器人吉祥物" class="h-[90%] object-contain" data-alt="playful and friendly 3D robot mascot with rounded white body and blue glowing screen face, waving in a friendly educational environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDHggtglKLASeWLwG5S9ZcgiP5IIMMXI2tsOBhE_RibbLFTFr6puFwq9rfXHBAPhCdjzYtMTMBznxhSROZdSwJum19chdSEDoLUMAruqrjimzZgVdTo_a1I1y3K6vbdc3BSmf85WYEPQNzc34MmOTw1ahqVqSjQjPjaHLgC6h8p6m-wx7TcXvEnROhSIyxtCgWMMB0Q5r7uRsya0W2n_x-MANXu7TbysCyC26Ag9hqmYBLER4kU3Yu-Yb0ZM2dKUAc1SWdXmOPQ"/>
+</div>
+<!-- Decorative Elements -->
+<div class="absolute top-[-10%] right-[-10%] w-80 h-80 bg-white/10 rounded-full blur-3xl"></div>
+<div class="absolute bottom-[-10%] left-[-5%] w-64 h-64 bg-secondary/20 rounded-full blur-2xl"></div>
+</section>
+<!-- Info Cards Section (30%) -->
+<section class="col-span-4 grid grid-cols-2 gap-6">
+<div class="bg-white p-8 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+<div class="w-14 h-14 rounded-2xl bg-secondary-container flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary text-3xl" data-weight="fill">groups</span>
+</div>
+<div>
+<p class="text-on-surface-variant text-base font-medium">班级数</p>
+<p class="text-4xl font-black text-on-surface">3</p>
+</div>
+</div>
+<div class="bg-white p-8 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+<div class="w-14 h-14 rounded-2xl bg-primary-container flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-primary text-3xl" data-weight="fill">history_edu</span>
+</div>
+<div>
+<p class="text-on-surface-variant text-base font-medium">授课课时</p>
+<p class="text-4xl font-black text-on-surface">4</p>
+</div>
+</div>
+<div class="bg-white p-8 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+<div class="w-14 h-14 rounded-2xl bg-tertiary-container flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-tertiary text-3xl" data-weight="fill">palette</span>
+</div>
+<div>
+<p class="text-on-surface-variant text-base font-medium">提交作品数</p>
+<p class="text-4xl font-black text-on-surface">0</p>
+</div>
+</div>
+<div class="bg-white p-8 rounded-3xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow">
+<div class="w-14 h-14 rounded-2xl bg-error-container/20 flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-error text-3xl" data-weight="fill">person_pin</span>
+</div>
+<div>
+<p class="text-on-surface-variant text-base font-medium">学生人数</p>
+<p class="text-4xl font-black text-on-surface">60</p>
+</div>
+</div>
+</section>
+</div>
+<!-- Tool Center Section -->
+<section class="mb-12">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h3 class="text-3xl font-bold text-on-surface">工具中心</h3>
+<p class="text-on-surface-variant text-lg font-medium mt-1">配套智能教具，激发无限创意</p>
+</div>
+<a class="text-primary font-bold text-lg flex items-center gap-1 hover:underline" href="#">查看全部 <span class="material-symbols-outlined text-base">arrow_forward</span></a>
+</div>
+<div class="grid grid-cols-3 gap-8">
+<div class="bg-white p-10 rounded-3xl flex flex-col items-center text-center group hover:bg-primary transition-all cursor-pointer border border-outline-variant/10">
+<div class="w-32 h-32 bg-surface-container-low rounded-3xl flex items-center justify-center mb-8 group-hover:bg-white/20 transition-colors">
+<img alt="MatataCode VinciBot Logo" class="w-20 h-20 object-contain" data-alt="professional logo icon for educational coding software VinciBot, sleek and modern tech aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA7wS2Z_qXzRTP6tF_2coEoN0IWmvpTAU4bdSlmJKAiz1srkEqAEe9WkNNeG7kUGBcSYRefbgfTA--0Gg41VsO3gfWghyDCge5RWBqtlJ8Tap3X09uPVy6DNX7GjU0iBbZNhZ6BCExauw4EqAybdtx2iq8V-gmVTXEjus8VPFIkrn3Gq80YiLl_iGh4IOAIkwCHuAxNxtzhYI5xYXnHd2RM63M5DtMpLAdu1ZWEVv-wDXJqCB7dFYW2q-cbW9sS7jht6XWbJx4R"/>
+</div>
+<h4 class="text-xl font-bold group-hover:text-white">MatataCode (VinciBot)</h4>
+<p class="text-on-surface-variant text-base mt-3 group-hover:text-white/80">专为 VinciBot 设计的图形化编程环境</p>
+</div>
+<div class="bg-white p-10 rounded-3xl flex flex-col items-center text-center group hover:bg-primary transition-all cursor-pointer border border-outline-variant/10">
+<div class="w-32 h-32 bg-surface-container-low rounded-3xl flex items-center justify-center mb-8 group-hover:bg-white/20 transition-colors">
+<img alt="MatataCode Nous Logo" class="w-20 h-20 object-contain" data-alt="stylized logo for educational platform Nous, featuring abstract cognitive patterns in primary colors" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2nDfl0MzlNFmb-wGI9Y9P1VPvhkxqVzYq6pTsVzUdHr2m_yjjQw0w52hnUSnA3q-8ZMcOEZGm3xaU67d6h2JHgmbBh__fCDFM5VOr13rNcLGSdF-gvEXxxgvbj1pIz-VNpT4LBDJBgSeshC2GOc-IIxdWMTIj_w1U53ORZxGzG-JnitLpJ6cafmb--GjNMvnRcC6Q60HEx167VaCglUWuUnanhrMK2TBIJc-d4iUFZQsJbdm-VLzjJS6NOsU6heNPARptHYMD"/>
+</div>
+<h4 class="text-xl font-bold group-hover:text-white">MatataCode (Nous)</h4>
+<p class="text-on-surface-variant text-base mt-3 group-hover:text-white/80">深度学习与神经科学启蒙工具</p>
+</div>
+<div class="bg-white p-10 rounded-3xl flex flex-col items-center text-center group hover:bg-primary transition-all cursor-pointer border border-outline-variant/10">
+<div class="w-32 h-32 bg-surface-container-low rounded-3xl flex items-center justify-center mb-8 group-hover:bg-white/20 transition-colors">
+<img alt="MatataCode TaleMap Logo" class="w-20 h-20 object-contain" data-alt="colorful and friendly logo for storytelling map application TaleMap, playful child-focused design" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBO_UlMLy0mmxV9Xe__lHEzG0KYL1l2MqvYega_6DPAy0ywDpVrSG6P7tA81o88OSpeZrvDZiJnec08zrUx3FfFOgNp7RLtLiqRKJ71jt89Ggc-60bT_lk05npqf66zUklu8pOsqeIY91vQL9Q3qO0EWM00Ubv7ZAWrHzH4Nya53_5CTHXSlscuy0AzATuR5BhDVoMKp6tlrRdBgep07MzBU5wRQrILV63hmTIwWXFuwOJmvFxdFHSKG0jXBLTuTwcFITDazCiA"/>
+</div>
+<h4 class="text-xl font-bold group-hover:text-white">MatataCode (TaleMap)</h4>
+<p class="text-on-surface-variant text-base mt-3 group-hover:text-white/80">将编程与故事创作完美结合</p>
+</div>
+</div>
+</section>
+<!-- AI Practice Center Section -->
+<section class="mb-12">
+<div class="flex justify-between items-end mb-8">
+<div>
+<h3 class="text-3xl font-bold text-on-surface">AI 实践中心</h3>
+<p class="text-on-surface-variant text-lg font-medium mt-1">通过机器学习，让机器变得更“聪明”</p>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-8">
+<div class="bg-white rounded-3xl overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group border border-outline-variant/10">
+<div class="h-52 bg-[#e4dfff] relative overflow-hidden">
+<img alt="图像分类训练" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" data-alt="vibrant illustration showing a futuristic camera analyzing different fruits like apples and oranges, tech-educational style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCbwKlXwUDTdzZ3X30hT925P3iDZNg-WaHvFRc5d0t3FiiS1CPnPHWa0MtZvrh9sOqWzMVJQ8BW36ZdxxGdPk529aFXVqYq0oZqauklXe_5vFRUBbKv_4eHST_VPYFHNhVnIq7D2kpi6rimQ0JxcRVFHsk8HB1XefaZj5cDgc95seP46yDaokMwhA5Ni2mkUig0ErmZSfKgnPkUeMPe46MRW2eyzQ_3P6BlGy58_2uSw34zHBZpNILtchGETYZK6qk7A2cgTHfq"/>
+<div class="absolute inset-0 bg-gradient-to-t from-secondary/40 to-transparent"></div>
+</div>
+<div class="p-6">
+<h4 class="font-bold text-xl">图像分类训练</h4>
+</div>
+</div>
+<div class="bg-white rounded-3xl overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group border border-outline-variant/10">
+<div class="h-52 bg-primary-container relative overflow-hidden">
+<img alt="手势分类训练" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" data-alt="creative illustration of a human hand making different signs while being tracked by digital glowing lines" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBb8Odb9ik_O-x2VEqYrH7Jbqv_wiI6OvcS1z4uoR_9o4aLM9CCnn7Ai6bMXJ00iyfmDo7OAMTrGoXHwBQxtzluMFafXpS01A9khRZjpsE9J53qAL7JUa-50bpSroqE2Ok_t3g4xx99lDRiVXYvrDOf94ghh_DRYsISZD3SPMI786P_kDGelrHSFjLfUm_cvhATLrEVr6HLJ-iZ-u-Nak3bt372AUk5KMl-kaiqAH10wK-6zNcI7KmoVXfNvNXoMuTuX3fKZqIm"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/40 to-transparent"></div>
+</div>
+<div class="p-6">
+<h4 class="font-bold text-xl">手势分类训练</h4>
+</div>
+</div>
+<div class="bg-white rounded-3xl overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group border border-outline-variant/10">
+<div class="h-52 bg-tertiary-container relative overflow-hidden">
+<img alt="语音分类训练" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" data-alt="abstract colorful sound waves and a microphone icon, symbolizing speech recognition technology training" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDfOR9lomyxeb5YLQEOXK_JlDAN_bw9Ch3t6nBD2evb24XNdC1OMSQA98pOUNNYG6AQ2dLLXmZf1FP8Gnp5guWyOPtmFaZErVDsGMrY0Izestm3MyyiOX1WD_QGOM_yaVnJCAx2Ic-ykdrUneu57MKvUOAmKixZ4NU35v2T9WdfiLUYS7fMAaZm8q6s2AI-XV7gUxPmirZuwo_tS-CNvKxXEoJBOgJyURajt_VpJzY7qjs8GIG44OSuh9855IsQPPtBbZLn5P3O"/>
+<div class="absolute inset-0 bg-gradient-to-t from-tertiary/40 to-transparent"></div>
+</div>
+<div class="p-6">
+<h4 class="font-bold text-xl">语音分类训练</h4>
+</div>
+</div>
+<div class="bg-white rounded-3xl overflow-hidden hover:shadow-xl transition-shadow cursor-pointer group border border-outline-variant/10">
+<div class="h-52 bg-error-container relative overflow-hidden">
+<img alt="姿态分类训练" class="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" data-alt="digital skeleton tracking of a person doing yoga poses, educational visualization of artificial intelligence pose estimation" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB86rWP6EJD4x93Nrw1_2Esgjqs_HtRThsba22jQcPHtC-RrEfWxBmf0uvFnN6ZvQRfpGqZKghJy_5F68v9W01sUvEahraAkerC8PWVKS28qKcsAwkKoSaZma-8pTIzKTOzjihVXzjuDAO65S08wODtbD5G2dTH9-xE3jcZoLfvpxgDZvlB7KJLLyVIOJetcnbeVg6rOITLD1JPc_blIxBDyVU6HJSk8JLktEp6rB28T6qXTHtUMDZx1M7_Ri6JOwWvzTA7IVQ9"/>
+<div class="absolute inset-0 bg-gradient-to-t from-error/40 to-transparent"></div>
+</div>
+<div class="p-6">
+<h4 class="font-bold text-xl">姿态分类训练</h4>
+</div>
+</div>
+</div>
+</section>
+<!-- Teaching History Section -->
+<section class="pb-16">
+<div class="flex justify-between items-center mb-10">
+<div>
+<h3 class="text-3xl font-bold text-on-surface">授课记录</h3>
+<p class="text-on-surface-variant text-lg font-medium mt-1">延续您的教学进度，高效开展后续课程</p>
+</div>
+<div class="flex gap-6">
+<select class="bg-white border-none rounded-2xl px-8 py-4 text-base font-bold shadow-sm focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer">
+<option>一年级(1)班</option>
+<option>一年级(2)班</option>
+<option>二年级(3)班</option>
+</select>
+<select class="bg-white border-none rounded-2xl px-8 py-4 text-base font-bold shadow-sm focus:ring-2 focus:ring-primary/20 appearance-none cursor-pointer">
+<option>L1 基础课</option>
+<option>L2 进阶课</option>
+<option>AI 实践课</option>
+</select>
+</div>
+</div>
+<!-- Course Grid (10 Cards) -->
+<div class="grid grid-cols-5 gap-8">
+<!-- Card 1 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-green-100 text-green-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Already Finished</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">01 课 你好，玛塔机器人</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">02 课 农场动物在哪里</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-tertiary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">03 课 颜色大冒险</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-error/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">04 课 森林舞会</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">05 课 形状大变身</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 6 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">06 课 数字小英雄</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 7 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-tertiary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">07 课 海洋探秘</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 8 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-error/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">08 课 太空之旅</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 9 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">09 课 逻辑大迷宫</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+<!-- Card 10 -->
+<div class="card-pattern bg-white rounded-3xl p-8 shadow-sm hover:shadow-lg transition-all border border-outline-variant/30 flex flex-col gap-6 relative overflow-hidden">
+<div class="absolute inset-0 bg-gradient-to-br from-secondary/10 to-transparent pointer-events-none"></div>
+<div class="flex justify-between items-start relative z-10">
+<span class="bg-orange-100 text-orange-700 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-wider">Not Started</span>
+<button class="text-on-surface-variant hover:text-primary transition-colors"><span class="material-symbols-outlined">more_vert</span></button></div>
+<h5 class="font-bold text-xl text-on-surface relative z-10 leading-snug">10 课 毕业设计展</h5>
+<div class="grid grid-cols-2 gap-3 mt-auto relative z-10">
+<button class="bg-primary text-white py-3 rounded-xl text-sm font-bold hover:bg-primary-dim transition-colors shadow-sm">去上课</button>
+<button class="bg-white/90 backdrop-blur-sm text-primary py-3 rounded-xl text-sm font-bold hover:bg-surface-container-high transition-colors border border-primary/20">去备课</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Floating AI Assistant Button -->
+<button class="fixed bottom-12 right-12 w-20 h-20 bg-primary rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 active:scale-95 transition-all z-50">
+<span class="material-symbols-outlined text-4xl">smart_toy</span>
+</button>
+</div>
+</body></html>

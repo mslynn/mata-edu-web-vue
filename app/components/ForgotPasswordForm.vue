@@ -49,7 +49,7 @@
             { 'is-counting': countdown > 0 },
             'bg-primary text-white'
           ]"
-          :disabled="countdown > 0" 
+          :disabled="countdown > 0 || isSendingCode" 
           @click="handleSendCode"
         >
           {{ countdown > 0 ? `${countdown}${t('auth.resendAfter')}` : t('auth.sendCode') }}
@@ -141,6 +141,12 @@
     >
       {{ t('auth.submit') }}
     </button>
+
+    <CloudflareTurnstileDialog
+      v-model="showTurnstileDialog"
+      :site-key="turnstileSiteKey"
+      @success="handleTurnstileSuccess"
+    />
   </div>
 </template>
 
@@ -153,6 +159,7 @@ const { $i18n } = useNuxtApp()
 const t = (key: string) => $i18n.t(key)
 
 const { getSmsCode } = useAuth()
+const turnstileSiteKey = String(useRuntimeConfig().public.turnstileSiteKey || '')
 
 const emit = defineEmits<{
   'submit': [data: typeof formData]
@@ -164,6 +171,9 @@ const countdown = ref(0)
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 const phoneMaxLength = computed(() => (countryCode.value === '852' ? 8 : 11))
+const showTurnstileDialog = ref(false)
+const isSendingCode = ref(false)
+const pendingSmsPhone = ref('')
 
 const formData = reactive({
   phone: '',
@@ -203,8 +213,18 @@ const validatePhone = (phone: string): boolean => {
   return false
 }
 
+const startCountdown = () => {
+  countdown.value = 60
+  const timer = setInterval(() => {
+    countdown.value--
+    if (countdown.value <= 0) {
+      clearInterval(timer)
+    }
+  }, 1000)
+}
+
 const handleSendCode = async () => {
-  if (countdown.value > 0) return
+  if (countdown.value > 0 || isSendingCode.value) return
   
   const phone = formData.phone.trim()
   
@@ -223,25 +243,42 @@ const handleSendCode = async () => {
   }
   
   errors.phone = ''
-  
+
+  if (!turnstileSiteKey) {
+    ElMessage.warning(t('auth.turnstileSiteKeyMissing'))
+    return
+  }
+
+  pendingSmsPhone.value = phone
+  showTurnstileDialog.value = true
+}
+
+const handleTurnstileSuccess = async (turnstileToken: string) => {
+  const phone = pendingSmsPhone.value || formData.phone.trim()
+
+  if (!phone || isSendingCode.value) {
+    showTurnstileDialog.value = false
+    return
+  }
+
+  showTurnstileDialog.value = false
+  isSendingCode.value = true
+
   try {
-    // 调用发送验证码接口
-    console.log('📤 重置密码-发送验证码:', phone)
-    await getSmsCode(phone)
-    console.log('✅ 验证码发送成功')
+    const response = await getSmsCode(phone, turnstileToken)
+
+    if (response?.code !== 200) {
+      errors.phone = response?.msg || t('auth.codeSendFailed')
+      return
+    }
+
     ElMessage.success(t('auth.codeSendSuccess'))
-    
-    // 开始60s倒计时
-    countdown.value = 60
-    const timer = setInterval(() => {
-      countdown.value--
-      if (countdown.value <= 0) {
-        clearInterval(timer)
-      }
-    }, 1000)
+    startCountdown()
   } catch (error: any) {
-    console.error('❌ 验证码发送失败:', error)
     errors.phone = error?.data?.msg || error?.message || t('auth.codeSendFailed')
+  } finally {
+    isSendingCode.value = false
+    pendingSmsPhone.value = ''
   }
 }
 

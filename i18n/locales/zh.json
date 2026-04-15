@@ -85,6 +85,14 @@
     "getCode": "获取验证码",
     "resendAfter": "s 后重发",
     "passwordLogin": "密码登录",
+    "turnstileDialogTitle": "安全校验",
+    "turnstileDialogDescription": "请先完成人机校验，再发送短信验证码",
+    "turnstileVerifyPrompt": "请在下方完成安全校验",
+    "turnstileVerifySuccess": "校验通过，正在发送验证码...",
+    "turnstileVerifyFailed": "安全校验失败，请重试",
+    "turnstileExpired": "校验已过期，请重新验证",
+    "turnstileLoadFailed": "安全校验加载失败，请稍后重试",
+    "turnstileSiteKeyMissing": "未配置 Cloudflare Turnstile 站点公钥",
     "searchCountry": "搜索国家/地区",
     "phoneErrorLength": "手机号长度不正确",
     "phoneErrorFormat": "手机号格式不正确",
@@ -825,7 +833,7 @@
     "remarks": "描述"
   },
   "tool": {
-    "pageTitle": "你身边的AI学习与创作工具箱",
+    "pageTitle": "玛塔工具中心",
     "startCreate": "开始创作",
     "downloadMobile": "下载客户端",
     "downloadDesktop": "下载桌面端",

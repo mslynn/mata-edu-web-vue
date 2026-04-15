@@ -42,6 +42,7 @@
                 class="student-user-avatar"
                 @error="handleAvatarError"
               />
+              <span class="student-user-name">{{ displayUserName }}</span>
             </button>
 
             <Transition name="dropdown">
@@ -182,7 +183,7 @@
 
             <div
               class="center-card student-panel-card"
-              @click="handleUnavailableCenterClick"
+              @click="goStudyCenter"
             >
               <div class="center-card-title">学情中心</div>
               <div class="center-icon">
@@ -208,6 +209,132 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showStudentAIModelSelectModal"
+      class="modal-overlay"
+      @click="closeStudentAIModelSelectModal"
+    >
+      <div class="modal-content model-select-modal" @click.stop>
+        <div class="modal-header">
+          <span class="modal-title">{{ currentStudentAIModel?.label || "" }}</span>
+          <button class="close-btn" @click="closeStudentAIModelSelectModal">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M1 1l12 12M13 1l-12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body model-select-body">
+          <div class="model-select-section">
+            <div class="model-select-section-head">
+              <div>
+                <div class="model-select-section-title">新建模型</div>
+                <div class="model-select-section-desc">
+                  从空白开始创建一个新的模型项目。
+                </div>
+              </div>
+              <button class="btn-confirm model-select-create-btn" @click="openStudentAICreateModal">
+                创建项目
+              </button>
+            </div>
+          </div>
+
+          <div class="model-select-section">
+            <div class="model-select-section-head model-select-section-head--stack">
+              <div class="model-select-section-title-row">
+                <div class="model-select-section-title">我的模型</div>
+                <span v-if="savedStudentAIModels.length" class="model-select-count">
+                  {{ savedStudentAIModels.length }}
+                </span>
+              </div>
+              <div class="model-select-section-desc">继续编辑你已创建的模型。</div>
+            </div>
+
+            <div v-if="savedStudentAIModelsLoading" class="model-list-empty">加载中...</div>
+            <div v-else-if="!savedStudentAIModels.length" class="model-list-empty">
+              暂无已创建模型
+            </div>
+            <div v-else class="model-card-grid">
+              <div
+                v-for="item in savedStudentAIModels"
+                :key="item.id"
+                class="model-card"
+                @click="handleOpenStudentAISavedModel(item)"
+              >
+                <button
+                  class="model-card-delete"
+                  type="button"
+                  @click.stop="handleDeleteStudentAISavedModel(item)"
+                >
+                  删除
+                </button>
+                <div class="model-card-cover">
+                  <img :src="getSavedStudentAIModelCover(item.toolKey)" alt="" />
+                </div>
+                <div class="model-card-body">
+                  <div class="model-card-name">{{ item.name }}</div>
+                  <div class="model-card-time">
+                    {{ item.updatedAt ? formatSavedStudentAIModelTime(item.updatedAt) : "-" }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer modal-footer--single">
+          <button class="btn-cancel" @click="closeStudentAIModelSelectModal">取消</button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showStudentAICreateModal"
+      class="modal-overlay"
+      @click="closeStudentAICreateModal"
+    >
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <span class="modal-title">
+            {{ currentStudentAIModel ? `新建${currentStudentAIModel.label}` : "新建模型" }}
+          </span>
+          <button class="close-btn" @click="closeStudentAICreateModal">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M1 1l12 12M13 1l-12 12" />
+            </svg>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-item">
+            <span class="form-label">名称</span>
+            <input
+              v-model="studentAIModelName"
+              type="text"
+              class="form-input"
+              placeholder="请输入模型名称"
+              @keyup.enter="handleStudentAIConfirm"
+            />
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-cancel" @click="closeStudentAICreateModal">取消</button>
+          <button class="btn-confirm" @click="handleStudentAIConfirm">确定</button>
         </div>
       </div>
     </div>
@@ -275,6 +402,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from "vue";
+import { ElMessageBox } from "element-plus";
 import { useAuth } from "~/composables/api/useAuth";
 import { aiAdmin } from "~/composables/api/ai";
 import { personalcenterApi } from "~/composables/api/personalcenter";
@@ -302,7 +430,7 @@ definePageMeta({
 
 const config = useRuntimeConfig();
 const { logout, user } = useAuth();
-const { ssoLogin, createAi } = aiAdmin();
+const { ssoLogin, getAiList, createAi, updateAi, deleteAi, deleteOss } = aiAdmin();
 const { addOpus, uploadOSS } = personalcenterApi();
 const { getStudentList } = student();
 const {
@@ -314,13 +442,17 @@ const {
   toWorkFile,
   toUploadFile,
   uploadFileToOSS,
+  downloadFileFromOSS,
   isMessageFromIframe,
+  postFileBufferToIframe,
 } = useIframeFileBridge();
 const router = useRouter();
 const STUDENT_ONGOING_CLASSROOM_KEY = "student_ongoing_classroom";
 const STUDENT_PAUSE_AUTO_ENTER_KEY = "student_pause_auto_enter_classroom";
 const STUDENT_CLASS_TIMER_STATE_KEY = "student_classroom_timer_state";
+const STUDENT_LESSON_ENTER_STATE_KEY = "student_classroom_lesson_enter";
 const STUDENT_CLASSROOM_CONFIRM_TIMEOUT = 10000;
+const STUDENT_NOTIFY_HEARTBEAT_INTERVAL = 30000;
 const STUDENT_TALEMAP_URL =
   "https://www.mediafire.com/file_premium/rz1j080mpbsdhus/MatataCode-TaleMap-v1.0.0-win-x64.exe/file";
 
@@ -330,6 +462,39 @@ type StudentDashboardAIKey =
   | "gestureClassModel"
   | "voiceClassModel"
   | "poseClassModel";
+
+type StudentDashboardAICardItem = {
+  key: StudentDashboardAIKey;
+  label: string;
+  image: string;
+};
+
+type SavedStudentAIModelRecord = {
+  id: string;
+  toolKey: StudentDashboardAIKey;
+  name: string;
+  updatedAt: number;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  zipBlob: Blob;
+  ossId?: string;
+  optType?: string;
+  url?: string;
+};
+
+type SavedStudentAIModelListItem = {
+  id: string;
+  toolKey: StudentDashboardAIKey;
+  name: string;
+  updatedAt: number;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  ossId?: string;
+  optType?: string;
+  url?: string;
+};
 
 const learningCenterData = reactive({
   chapterName: "暂无",
@@ -362,11 +527,7 @@ const studentDashboardToolCards: Array<{
     image: tool4Icon,
   },
 ];
-const studentDashboardAICards: Array<{
-  key: StudentDashboardAIKey;
-  label: string;
-  image: string;
-}> = [
+const studentDashboardAICards: StudentDashboardAICardItem[] = [
   {
     key: "imageClassModel",
     label: "图像分类训练",
@@ -374,17 +535,17 @@ const studentDashboardAICards: Array<{
   },
   {
     key: "gestureClassModel",
-    label: "手势分类模型",
+    label: "手势分类训练",
     image: aigcCover2,
   },
   {
     key: "voiceClassModel",
-    label: "语音分类模型",
+    label: "语音分类训练",
     image: aigcCover3,
   },
   {
     key: "poseClassModel",
-    label: "姿态分类模型",
+    label: "姿态分类训练",
     image: aigcCover4,
   },
 ];
@@ -406,6 +567,9 @@ const STUDENT_HOME_AI_OPT_TYPE_MAP: Record<StudentDashboardAIKey, string> = {
   voiceClassModel: "audio_cls",
   poseClassModel: "pose_cls",
 };
+const STUDENT_AI_MODEL_DB_NAME = "mata-ai-models-db";
+const STUDENT_AI_MODEL_STORE_NAME = "models";
+const STUDENT_AI_TM_ZIP_RECEIVE_MESSAGE_TYPE = "receive-tm-zip";
 const showWorkbenchIframeModal = ref(false);
 const currentWorkbenchUrl = ref("");
 const currentWorkbenchName = ref("");
@@ -413,9 +577,20 @@ const currentWorkbenchKind = ref<"tool" | "ai" | "">("");
 const currentWorkbenchToolId = ref<StudentDashboardToolKey | "">("");
 const currentWorkbenchAiOptType = ref("");
 const currentWorkbenchAiProjectName = ref("");
+const currentWorkbenchCacheKey = ref("");
 const workbenchIframeLoading = ref(true);
 const workbenchIframeRef = ref<HTMLIFrameElement | null>(null);
 const savingWorkbench = ref(false);
+const savedStudentAIProjectZipCache = new Map<string, File>();
+const showStudentAIModelSelectModal = ref(false);
+const showStudentAICreateModal = ref(false);
+const currentStudentAIModel = ref<StudentDashboardAICardItem | null>(null);
+const studentAIModelName = ref("");
+const currentEditingStudentAIModelId = ref("");
+const currentEditingStudentAIOssId = ref("");
+const isEditingStudentAIModel = ref(false);
+const savedStudentAIModels = ref<SavedStudentAIModelListItem[]>([]);
+const savedStudentAIModelsLoading = ref(false);
 
 interface StudentClassroomInfo {
   classId?: string;
@@ -478,6 +653,7 @@ let storedClassroomValidationTimer: ReturnType<typeof setTimeout> | null = null;
 
 // WebSocket 连接
 let notifyWs: WebSocket | null = null;
+let notifyHeartbeatTimer: ReturnType<typeof setInterval> | null = null;
 const signalingUrl =
   (config.public.signalingUrl as string) || "ws://192.168.0.55:8001/resource/websocket";
 
@@ -545,7 +721,8 @@ const buildStudentToolIframeUrl = async (toolId: "vincibot" | "nous") => {
 
 const buildStudentAiIframeUrl = async (
   toolKey: StudentDashboardAIKey,
-  projectName: string
+  projectName: string,
+  optId = ""
 ) => {
   const type = STUDENT_HOME_AI_TYPE_MAP[toolKey];
   if (!type) {
@@ -557,7 +734,7 @@ const buildStudentAiIframeUrl = async (
     token
   )}&type=${type}&projectName=${encodeURIComponent(
     projectName
-  )}&lang=zh&ch=aiedu&type2=opt`;
+  )}&lang=zh&ch=aiedu&type2=opt${optId ? `&optId=${encodeURIComponent(optId)}` : ""}`;
 };
 
 const downloadZipFile = (zipFile: File) => {
@@ -571,7 +748,266 @@ const downloadZipFile = (zipFile: File) => {
   window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
 };
 
+const openStudentAIModelDb = () => {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    if (typeof window === "undefined" || !window.indexedDB) {
+      reject(new Error("当前环境不支持 IndexedDB"));
+      return;
+    }
+
+    const request = window.indexedDB.open(STUDENT_AI_MODEL_DB_NAME, 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(STUDENT_AI_MODEL_STORE_NAME)) {
+        db.createObjectStore(STUDENT_AI_MODEL_STORE_NAME, { keyPath: "id" });
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error("打开本地模型库失败"));
+  });
+};
+
+const saveStudentAIModelRecord = async (record: SavedStudentAIModelRecord) => {
+  const db = await openStudentAIModelDb();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(STUDENT_AI_MODEL_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(STUDENT_AI_MODEL_STORE_NAME);
+
+    store.put(record);
+    transaction.oncomplete = () => {
+      db.close();
+      resolve();
+    };
+    transaction.onerror = () => {
+      reject(transaction.error || new Error("保存本地模型失败"));
+    };
+  });
+};
+
+const getStudentAIModelRecord = async (modelId: string) => {
+  const db = await openStudentAIModelDb();
+
+  return new Promise<SavedStudentAIModelRecord | null>((resolve, reject) => {
+    const transaction = db.transaction(STUDENT_AI_MODEL_STORE_NAME, "readonly");
+    const store = transaction.objectStore(STUDENT_AI_MODEL_STORE_NAME);
+    const request = store.get(modelId);
+
+    request.onsuccess = () =>
+      resolve((request.result as SavedStudentAIModelRecord | undefined) || null);
+    request.onerror = () => reject(request.error || new Error("读取模型文件失败"));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () =>
+      reject(transaction.error || new Error("读取模型文件失败"));
+  });
+};
+
+const deleteStudentAIModelRecord = async (modelId: string) => {
+  const db = await openStudentAIModelDb();
+
+  await new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(STUDENT_AI_MODEL_STORE_NAME, "readwrite");
+    const store = transaction.objectStore(STUDENT_AI_MODEL_STORE_NAME);
+    const request = store.delete(modelId);
+
+    request.onsuccess = () => resolve();
+    request.onerror = () => reject(request.error || new Error("删除本地模型失败"));
+    transaction.oncomplete = () => db.close();
+    transaction.onerror = () =>
+      reject(transaction.error || new Error("删除本地模型失败"));
+  });
+};
+
+const generateStudentAIModelId = () => {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+
+  return `student-ai-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+};
+
+const getStudentAICacheKey = (toolKey: StudentDashboardAIKey, modelId: string) =>
+  `ai:${toolKey}:${modelId}`;
+
+const getSavedStudentAIModelCover = (toolKey: StudentDashboardAIKey) => {
+  return studentDashboardAICardMap[toolKey]?.image || aigcCover1;
+};
+
+const formatSavedStudentAIModelTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleString("zh-CN", {
+    hour12: false,
+  });
+};
+
+const getStudentAIToolKeyByOptType = (optType?: string) => {
+  const toolKeyMap: Record<string, StudentDashboardAIKey> = {
+    image_cls: "imageClassModel",
+    gesture_cls: "gestureClassModel",
+    audio_cls: "voiceClassModel",
+    pose_cls: "poseClassModel",
+  };
+
+  return optType ? toolKeyMap[optType] || null : null;
+};
+
+const getStudentAIFileNameFromUrl = (url?: string, fallbackName = "project.zip") => {
+  if (!url) {
+    return fallbackName;
+  }
+
+  try {
+    const pathname = new URL(url).pathname;
+    const lastSegment = pathname.split("/").filter(Boolean).pop();
+    return lastSegment ? decodeURIComponent(lastSegment) : fallbackName;
+  } catch {
+    return fallbackName;
+  }
+};
+
+const normalizeStudentAIModelTimestamp = (
+  value: unknown,
+  fallbackValue = Date.now()
+) => {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    const parsed = new Date(value).getTime();
+    return Number.isNaN(parsed) ? fallbackValue : parsed;
+  }
+
+  return fallbackValue;
+};
+
+const resetStudentAIModelState = (clearCurrentModel = true) => {
+  showStudentAIModelSelectModal.value = false;
+  showStudentAICreateModal.value = false;
+  studentAIModelName.value = "";
+  savedStudentAIModels.value = [];
+  savedStudentAIModelsLoading.value = false;
+
+  if (clearCurrentModel) {
+    currentStudentAIModel.value = null;
+    currentEditingStudentAIModelId.value = "";
+    currentEditingStudentAIOssId.value = "";
+    isEditingStudentAIModel.value = false;
+  }
+};
+
+const loadSavedStudentAIModels = async () => {
+  if (!currentStudentAIModel.value) {
+    savedStudentAIModels.value = [];
+    return;
+  }
+
+  savedStudentAIModelsLoading.value = true;
+
+  try {
+    const targetOptType = STUDENT_HOME_AI_OPT_TYPE_MAP[currentStudentAIModel.value.key] || "";
+    const userId = getCurrentUserId();
+    const response = await getAiList({
+      optType: targetOptType,
+      userId,
+    });
+    const list = Array.isArray(response)
+      ? response
+      : response?.rows || response?.list || response?.records || [];
+
+    savedStudentAIModels.value = list
+      .filter((item: any) => !targetOptType || item.optType === targetOptType)
+      .map((item: any) => {
+        const modelName = item.optName || item.name || item.projectName || "-";
+        const toolKey =
+          getStudentAIToolKeyByOptType(item.optType) || currentStudentAIModel.value?.key;
+
+        return {
+          id: String(
+            item.optId || item.id || item.aiId || item.ossId || generateStudentAIModelId()
+          ),
+          toolKey: toolKey || currentStudentAIModel.value?.key || "imageClassModel",
+          name: modelName,
+          updatedAt: normalizeStudentAIModelTimestamp(
+            item.updateTime || item.updatedAt || item.createTime,
+            0
+          ),
+          fileName:
+            item.fileName || getStudentAIFileNameFromUrl(item.url, `${modelName}.zip`),
+          mimeType: item.mimeType || "application/octet-stream",
+          size: Number(item.size || 0),
+          ossId: item.ossId ? String(item.ossId) : "",
+          optType: item.optType || "",
+          url: item.url || "",
+        } satisfies SavedStudentAIModelListItem;
+      })
+      .sort(
+        (a: SavedStudentAIModelListItem, b: SavedStudentAIModelListItem) =>
+          b.updatedAt - a.updatedAt
+      );
+  } catch (error) {
+    console.error("加载学生首页 AI 模型列表失败:", error);
+    savedStudentAIModels.value = [];
+  } finally {
+    savedStudentAIModelsLoading.value = false;
+  }
+};
+
+const downloadStudentAIModelZipFile = async (item: SavedStudentAIModelListItem) => {
+  const fallbackFileName =
+    item.fileName || getStudentAIFileNameFromUrl(item.url, `${item.name || "project"}.zip`);
+
+  if (item.url) {
+    const response = await fetch(item.url);
+    if (!response.ok) {
+      throw new Error(`下载模型文件失败: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    return new File([blob], fallbackFileName, {
+      type: item.mimeType || blob.type || "application/zip",
+      lastModified: item.updatedAt || Date.now(),
+    });
+  }
+
+  if (item.ossId) {
+    return downloadFileFromOSS(
+      item.ossId,
+      fallbackFileName,
+      item.mimeType || "application/zip"
+    );
+  }
+
+  return null;
+};
+
+const openStudentAIIframe = async (
+  tool: StudentDashboardAICardItem,
+  projectName: string,
+  modelId: string
+) => {
+  currentWorkbenchKind.value = "ai";
+  currentWorkbenchToolId.value = "";
+  currentWorkbenchAiOptType.value = STUDENT_HOME_AI_OPT_TYPE_MAP[tool.key] || "";
+  currentWorkbenchAiProjectName.value = projectName;
+  currentWorkbenchName.value = tool.label;
+  currentWorkbenchCacheKey.value = getStudentAICacheKey(tool.key, modelId);
+  currentWorkbenchUrl.value = await buildStudentAiIframeUrl(
+    tool.key,
+    projectName,
+    isEditingStudentAIModel.value ? modelId : ""
+  );
+  workbenchIframeLoading.value = true;
+  showStudentAIModelSelectModal.value = false;
+  showStudentAICreateModal.value = false;
+  showWorkbenchIframeModal.value = true;
+};
+
 const closeWorkbenchIframeModal = () => {
+  const shouldRestoreAIModelSelect =
+    currentWorkbenchKind.value === "ai" && Boolean(currentStudentAIModel.value);
+
   showWorkbenchIframeModal.value = false;
   currentWorkbenchUrl.value = "";
   currentWorkbenchName.value = "";
@@ -579,12 +1015,42 @@ const closeWorkbenchIframeModal = () => {
   currentWorkbenchToolId.value = "";
   currentWorkbenchAiOptType.value = "";
   currentWorkbenchAiProjectName.value = "";
+  currentWorkbenchCacheKey.value = "";
   workbenchIframeLoading.value = true;
   savingWorkbench.value = false;
+
+  if (shouldRestoreAIModelSelect) {
+    showStudentAIModelSelectModal.value = true;
+    void loadSavedStudentAIModels();
+  }
+};
+
+const postCachedStudentAIZipToWorkbenchIframe = async () => {
+  if (currentWorkbenchKind.value !== "ai" || !currentWorkbenchCacheKey.value) {
+    return;
+  }
+
+  const zipFile = savedStudentAIProjectZipCache.get(currentWorkbenchCacheKey.value);
+  if (!zipFile) {
+    return;
+  }
+
+  await postFileBufferToIframe({
+    file: zipFile,
+    iframeUrl: currentWorkbenchUrl.value,
+    iframeWindow: workbenchIframeRef.value?.contentWindow,
+    type: STUDENT_AI_TM_ZIP_RECEIVE_MESSAGE_TYPE,
+    additionalData: {
+      optId: currentEditingStudentAIModelId.value || undefined,
+    },
+  });
 };
 
 const onWorkbenchIframeLoad = () => {
   workbenchIframeLoading.value = false;
+  window.setTimeout(() => {
+    void postCachedStudentAIZipToWorkbenchIframe();
+  }, 300);
 };
 
 const handleOpenTool = (toolId: StudentDashboardToolKey) => {
@@ -603,6 +1069,7 @@ const handleOpenTool = (toolId: StudentDashboardToolKey) => {
     currentWorkbenchToolId.value = toolId;
     currentWorkbenchAiOptType.value = "";
     currentWorkbenchAiProjectName.value = "";
+    currentWorkbenchCacheKey.value = "";
     currentWorkbenchName.value = tool.label;
     currentWorkbenchUrl.value = await buildStudentToolIframeUrl(toolId);
     workbenchIframeLoading.value = true;
@@ -619,19 +1086,145 @@ const handleOpenStudentAIModal = (key: StudentDashboardAIKey) => {
     return;
   }
 
-  void (async () => {
-    currentWorkbenchKind.value = "ai";
-    currentWorkbenchToolId.value = "";
-    currentWorkbenchAiOptType.value = STUDENT_HOME_AI_OPT_TYPE_MAP[key] || "";
-    currentWorkbenchAiProjectName.value = aiCard.label;
-    currentWorkbenchName.value = aiCard.label;
-    currentWorkbenchUrl.value = await buildStudentAiIframeUrl(key, aiCard.label);
-    workbenchIframeLoading.value = true;
-    showWorkbenchIframeModal.value = true;
-  })().catch((error) => {
-    console.error("打开学生首页 AI 实践失败:", error);
+  currentStudentAIModel.value = aiCard;
+  studentAIModelName.value = "";
+  savedStudentAIModels.value = [];
+  showStudentAIModelSelectModal.value = true;
+  void loadSavedStudentAIModels();
+};
+
+const closeStudentAIModelSelectModal = () => {
+  resetStudentAIModelState();
+};
+
+const openStudentAICreateModal = () => {
+  studentAIModelName.value = "";
+  showStudentAIModelSelectModal.value = false;
+  showStudentAICreateModal.value = true;
+};
+
+const closeStudentAICreateModal = () => {
+  showStudentAICreateModal.value = false;
+  studentAIModelName.value = "";
+
+  if (currentStudentAIModel.value) {
+    showStudentAIModelSelectModal.value = true;
+    return;
+  }
+
+  resetStudentAIModelState();
+};
+
+const handleStudentAIConfirm = async () => {
+  if (!currentStudentAIModel.value) {
+    return;
+  }
+
+  const trimmedName = studentAIModelName.value.trim();
+  if (!trimmedName) {
+    ElMessage.warning("请输入模型名称");
+    return;
+  }
+
+  isEditingStudentAIModel.value = false;
+  currentEditingStudentAIModelId.value = generateStudentAIModelId();
+  currentEditingStudentAIOssId.value = "";
+
+  try {
+    await openStudentAIIframe(
+      currentStudentAIModel.value,
+      trimmedName,
+      currentEditingStudentAIModelId.value
+    );
+  } catch (error) {
+    console.error("打开学生首页 AI 创建弹窗失败:", error);
     ElMessage.error(error instanceof Error ? error.message : "打开 AI 实践失败");
-  });
+  }
+};
+
+const handleOpenStudentAISavedModel = async (item: SavedStudentAIModelListItem) => {
+  if (!currentStudentAIModel.value) {
+    return;
+  }
+
+  try {
+    const cacheKey = getStudentAICacheKey(item.toolKey, item.id);
+    const cachedFile = savedStudentAIProjectZipCache.get(cacheKey);
+    if (cachedFile) {
+      isEditingStudentAIModel.value = true;
+      currentEditingStudentAIModelId.value = item.id;
+      currentEditingStudentAIOssId.value = item.ossId || "";
+      await openStudentAIIframe(currentStudentAIModel.value, item.name, item.id);
+      return;
+    }
+
+    const localRecord = await getStudentAIModelRecord(item.id);
+    if (localRecord) {
+      const localFile = new File([localRecord.zipBlob], localRecord.fileName, {
+        type: localRecord.mimeType || "application/octet-stream",
+        lastModified: localRecord.updatedAt,
+      });
+      savedStudentAIProjectZipCache.set(cacheKey, localFile);
+      isEditingStudentAIModel.value = true;
+      currentEditingStudentAIModelId.value = item.id;
+      currentEditingStudentAIOssId.value = item.ossId || localRecord.ossId || "";
+      await openStudentAIIframe(currentStudentAIModel.value, item.name, item.id);
+      return;
+    }
+
+    const remoteFile = await downloadStudentAIModelZipFile(item);
+    if (remoteFile) {
+      savedStudentAIProjectZipCache.set(cacheKey, remoteFile);
+      await saveStudentAIModelRecord({
+        id: item.id,
+        toolKey: item.toolKey,
+        name: item.name,
+        updatedAt: item.updatedAt || Date.now(),
+        fileName: remoteFile.name,
+        mimeType: remoteFile.type || item.mimeType || "application/octet-stream",
+        size: remoteFile.size,
+        zipBlob: remoteFile,
+        ossId: item.ossId || "",
+        optType: item.optType || "",
+        url: item.url || "",
+      });
+      isEditingStudentAIModel.value = true;
+      currentEditingStudentAIModelId.value = item.id;
+      currentEditingStudentAIOssId.value = item.ossId || "";
+      await openStudentAIIframe(currentStudentAIModel.value, item.name, item.id);
+      return;
+    }
+
+    ElMessage.error("读取模型文件失败");
+  } catch (error) {
+    console.error("学生首页读取 AI 模型文件失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "读取模型文件失败");
+  }
+};
+
+const handleDeleteStudentAISavedModel = async (item: SavedStudentAIModelListItem) => {
+  try {
+    await ElMessageBox.confirm(`确认删除模型“${item.name}”吗？`, "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+  } catch {
+    return;
+  }
+
+  try {
+    await deleteAi(item.id);
+    await deleteStudentAIModelRecord(item.id);
+    savedStudentAIProjectZipCache.delete(getStudentAICacheKey(item.toolKey, item.id));
+    savedStudentAIModels.value = savedStudentAIModels.value.filter(
+      (model) => model.id !== item.id
+    );
+    ElMessage.success("删除成功");
+  } catch (error) {
+    console.error("学生首页删除 AI 模型失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "删除失败");
+  }
 };
 
 const handleWorkbenchToolMessage = async (messageData: any, messageType: string) => {
@@ -764,6 +1357,25 @@ const handleWorkbenchAIMessage = async (messageData: any, messageType: string) =
       throw new Error("AI模型文件格式不正确");
     }
 
+    const activeToolKey = currentStudentAIModel.value?.key;
+    const saveMode = isEditingStudentAIModel.value ? "edit" : "create";
+    if (!activeToolKey) {
+      throw new Error("当前 AI 模型上下文不存在");
+    }
+
+    const previousCacheKey = currentWorkbenchCacheKey.value;
+    if (previousCacheKey) {
+      savedStudentAIProjectZipCache.set(previousCacheKey, uploadFile);
+    }
+
+    if (isEditingStudentAIModel.value && currentEditingStudentAIOssId.value) {
+      try {
+        await deleteOss(currentEditingStudentAIOssId.value);
+      } catch (error) {
+        console.warn("学生首页删除旧 OSS 对象失败，继续上传新文件:", error);
+      }
+    }
+
     const uploadResult = await uploadFileToOSS(uploadFile, "上传AI模型文件失败");
     const userId = getCurrentUserId();
     const optName =
@@ -775,15 +1387,55 @@ const handleWorkbenchAIMessage = async (messageData: any, messageType: string) =
       throw new Error("AI模型保存参数不完整");
     }
 
-    await createAi({
-      optName,
+    let finalModelId = currentEditingStudentAIModelId.value || generateStudentAIModelId();
+    if (isEditingStudentAIModel.value && currentEditingStudentAIModelId.value) {
+      await updateAi({
+        optId: currentEditingStudentAIModelId.value,
+        optName,
+        optType: currentWorkbenchAiOptType.value,
+        userId,
+        ossId: uploadResult.ossId,
+      });
+      finalModelId = currentEditingStudentAIModelId.value;
+    } else {
+      const createResult = await createAi({
+        optName,
+        optType: currentWorkbenchAiOptType.value,
+        userId,
+        ossId: uploadResult.ossId,
+      });
+      finalModelId = String(
+        createResult?.optId || createResult?.id || currentEditingStudentAIModelId.value || finalModelId
+      );
+    }
+
+    const finalCacheKey = getStudentAICacheKey(activeToolKey, finalModelId);
+    currentEditingStudentAIModelId.value = finalModelId;
+    currentEditingStudentAIOssId.value = String(uploadResult.ossId);
+    currentWorkbenchCacheKey.value = finalCacheKey;
+    currentWorkbenchAiProjectName.value = optName;
+    savedStudentAIProjectZipCache.set(finalCacheKey, uploadFile);
+    if (previousCacheKey && previousCacheKey !== finalCacheKey) {
+      savedStudentAIProjectZipCache.delete(previousCacheKey);
+    }
+
+    await saveStudentAIModelRecord({
+      id: finalModelId,
+      toolKey: activeToolKey,
+      name: optName,
+      updatedAt: Date.now(),
+      fileName: uploadFile.name,
+      mimeType: uploadFile.type || "application/octet-stream",
+      size: uploadFile.size,
+      zipBlob: uploadFile,
+      ossId: String(uploadResult.ossId),
       optType: currentWorkbenchAiOptType.value,
-      userId,
-      ossId: uploadResult.ossId,
+      url: uploadResult?.url || "",
     });
 
-    ElMessage.success("AI模型已保存");
-    closeWorkbenchIframeModal();
+    isEditingStudentAIModel.value = true;
+    await loadSavedStudentAIModels();
+    ElMessage.success(saveMode === "edit" ? "保存成功" : "创建成功");
   } catch (error) {
     console.error("保存学生首页 AI 模型失败:", error);
     ElMessage.error(error instanceof Error ? error.message : "保存 AI 模型失败");
@@ -854,6 +1506,35 @@ const clearStoredClassroomValidationTimer = () => {
     clearTimeout(storedClassroomValidationTimer);
     storedClassroomValidationTimer = null;
   }
+};
+
+const clearNotifyHeartbeatTimer = () => {
+  if (notifyHeartbeatTimer) {
+    clearInterval(notifyHeartbeatTimer);
+    notifyHeartbeatTimer = null;
+  }
+};
+
+const startNotifyHeartbeat = () => {
+  clearNotifyHeartbeatTimer();
+  notifyHeartbeatTimer = setInterval(() => {
+    if (!notifyWs || notifyWs.readyState !== WebSocket.OPEN) {
+      return;
+    }
+
+    const heartbeatMsg = JSON.stringify({ type: "HEARTBEAT" });
+    notifyWs.send(heartbeatMsg);
+    console.log(
+      `[学生端] 心跳发送（每${STUDENT_NOTIFY_HEARTBEAT_INTERVAL / 1000}秒）:`,
+      heartbeatMsg,
+      new Date().toLocaleTimeString("zh-CN", { hour12: false })
+    );
+  }, STUDENT_NOTIFY_HEARTBEAT_INTERVAL);
+};
+
+const clearStudentLessonEnterState = () => {
+  if (typeof window === "undefined") return;
+  sessionStorage.removeItem(STUDENT_LESSON_ENTER_STATE_KEY);
 };
 
 const updateBackToClassroomEntry = () => {
@@ -992,6 +1673,7 @@ const handleLogout = () => {
   }
   clearOngoingClassroom();
   clearClassTimerState();
+  clearStudentLessonEnterState();
   setPauseAutoEnterClassroom(false);
   logout();
 };
@@ -1019,6 +1701,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   clearStoredClassroomValidationTimer();
+  clearNotifyHeartbeatTimer();
   if (notifyWs) {
     notifyWs.close();
     notifyWs = null;
@@ -1030,6 +1713,7 @@ onUnmounted(() => {
 // 连接通知 WebSocket
 const connectNotifyWebSocket = () => {
   // 如果已经有连接，先关闭
+  clearNotifyHeartbeatTimer();
   if (notifyWs) {
     console.log("[学生端] 关闭旧的 WebSocket 连接");
     notifyWs.close();
@@ -1054,6 +1738,7 @@ const connectNotifyWebSocket = () => {
     const statusMsg = JSON.stringify({ type: "STUDENT_STATUS", status: "online" });
     notifyWs?.send(statusMsg);
     console.log("[学生端] 发送:", statusMsg);
+    startNotifyHeartbeat();
     scheduleStoredClassroomValidation();
   };
 
@@ -1090,6 +1775,7 @@ const connectNotifyWebSocket = () => {
         console.log("[学生端] 收到下课通知");
         clearOngoingClassroom();
         clearClassTimerState();
+        clearStudentLessonEnterState();
         setPauseAutoEnterClassroom(false);
         ElMessage.info("老师已下课");
       }
@@ -1099,6 +1785,7 @@ const connectNotifyWebSocket = () => {
   };
 
   notifyWs.onclose = () => {
+    clearNotifyHeartbeatTimer();
     console.log("[学生端] WebSocket 断开");
   };
 
@@ -1109,6 +1796,10 @@ const connectNotifyWebSocket = () => {
 
 const goLessonsRecord = () => {
   router.push("/student/lessonsrecord");
+};
+
+const goStudyCenter = () => {
+  router.push("/system/study");
 };
 
 const handleUnavailableCenterClick = () => {
@@ -1171,12 +1862,11 @@ const handleUnavailableCenterClick = () => {
 .student-user-trigger {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
+  gap: 10px;
+  min-height: 40px;
   padding: 0;
   border: none;
-  border-radius: 50%;
+  border-radius: 999px;
   background: transparent;
   cursor: pointer;
 }
@@ -1436,6 +2126,309 @@ const handleUnavailableCenterClick = () => {
   color: #5d6a83;
 }
 
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2200;
+}
+
+.modal-content {
+  width: 480px;
+  max-width: 90vw;
+  overflow: hidden;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  animation: modalFadeIn 0.3s ease;
+}
+
+.model-select-modal {
+  width: 620px;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #ff9900;
+  color: #ffffff;
+}
+
+.modal-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.close-btn {
+  display: flex;
+  padding: 4px;
+  border: none;
+  background: transparent;
+  color: #ffffff;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s ease;
+}
+
+.close-btn:hover {
+  opacity: 1;
+}
+
+.modal-body {
+  padding: 40px 48px;
+}
+
+.model-select-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 28px 32px;
+}
+
+.model-select-section {
+  border: 1px solid #f0e4d0;
+  border-radius: 14px;
+  padding: 18px 20px;
+  background: linear-gradient(180deg, #fffdf8 0%, #fff9f0 100%);
+}
+
+.model-select-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.model-select-section-head--stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.model-select-section-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.model-select-section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333333;
+}
+
+.model-select-section-desc {
+  margin-top: 6px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #8a6a3f;
+}
+
+.model-select-count {
+  min-width: 24px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #fff1d9;
+  color: #ff9900;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.model-select-create-btn {
+  width: auto;
+  min-width: 120px;
+  padding: 0 20px;
+  flex-shrink: 0;
+}
+
+.model-card-grid {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 14px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.model-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid #f3d7a7;
+  border-radius: 14px;
+  background: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.model-card:hover {
+  transform: translateY(-2px);
+  border-color: #ff9900;
+  box-shadow: 0 10px 18px rgba(255, 153, 0, 0.12);
+}
+
+.model-card-delete {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 2;
+  min-width: 52px;
+  height: 28px;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 77, 79, 0.92);
+  color: #ffffff;
+  font-size: 12px;
+  line-height: 28px;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.model-card:hover .model-card-delete {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.model-card-delete:hover {
+  background: #ff4d4f;
+}
+
+.model-card-cover {
+  height: 96px;
+  background: #f3f3f3;
+}
+
+.model-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.student-user-name {
+  max-width: 120px;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  color: #40566f;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-card-body {
+  padding: 10px 12px 12px;
+}
+
+.model-card-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #333333;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-card-time {
+  margin-top: 6px;
+  font-size: 11px;
+  color: #999999;
+}
+
+.model-list-empty {
+  margin-top: 16px;
+  border: 1px dashed #e5d3b6;
+  border-radius: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #999999;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.form-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.form-label {
+  width: 40px;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: #333333;
+}
+
+.form-input {
+  flex: 1;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.form-input:focus {
+  border-color: #ff9900;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 20px 48px 40px;
+}
+
+.modal-footer--single {
+  padding-top: 0;
+}
+
+.btn-confirm {
+  width: 120px;
+  height: 40px;
+  border: none;
+  border-radius: 4px;
+  background: #ff9900;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-confirm:hover {
+  background: #e68a00;
+}
+
+.btn-cancel {
+  width: 120px;
+  height: 40px;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #666666;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel:hover {
+  border-color: #999999;
+  color: #333333;
+}
+
 .iframe-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1598,10 +2591,19 @@ const handleUnavailableCenterClick = () => {
   }
 
   .student-home-info,
-  .student-user-trigger,
   .student-user-avatar {
     width: 36px;
     height: 36px;
+  }
+
+  .student-user-trigger {
+    min-height: 36px;
+    gap: 8px;
+  }
+
+  .student-user-name {
+    max-width: 96px;
+    font-size: 14px;
   }
 
   .main-content {
@@ -1673,6 +2675,16 @@ const handleUnavailableCenterClick = () => {
 
   .student-panel-icon-label {
     font-size: 14px;
+  }
+
+  .model-select-modal {
+    width: calc(100vw - 48px);
+  }
+
+  .modal-body,
+  .modal-footer {
+    padding-left: 28px;
+    padding-right: 28px;
   }
 
   .center-cards {
@@ -1807,6 +2819,36 @@ const handleUnavailableCenterClick = () => {
     margin-top: 30px;
   }
 
+  .model-select-body,
+  .modal-body,
+  .modal-footer {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .model-select-section-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .model-select-create-btn,
+  .btn-confirm,
+  .btn-cancel {
+    width: 100%;
+  }
+
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .model-card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+
+  .model-card-cover {
+    height: 82px;
+  }
+
   .learning-center-card {
     min-height: 420px;
     padding: 24px 20px;
@@ -1842,6 +2884,17 @@ const handleUnavailableCenterClick = () => {
 .dropdown-leave-to {
   opacity: 0;
   transform: translateY(-8px);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* 上课通知弹窗样式 */

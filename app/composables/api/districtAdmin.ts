@@ -1,7 +1,7 @@
 /**
  * 区管理员 API
  */
-import { useHttp } from "./useHttp";
+import { getCurrentContentLanguage, useHttp } from "./useHttp";
 
 export interface Teacher {
   userId: string;
@@ -92,7 +92,8 @@ const exportSchoolInfo = async () => {
       method: 'POST',
       headers: {
         'Authorization': token ? `Bearer ${token}` : '',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Content-Language': getCurrentContentLanguage()
       }
     })
     

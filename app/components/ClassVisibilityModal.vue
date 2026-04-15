@@ -1,22 +1,22 @@
 <template>
   <Transition name="modal">
-    <div v-if="visible" class="modal-overlay" @click.self="handleClose">
+    <div v-if="visible" class="class-visibility-overlay" @click.self="handleClose">
       <div class="modal-container">
-        <button class="close-btn" @click="handleClose">
+        <button class="class-visibility-close-btn" @click="handleClose">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M18 6L6 18M6 6l12 12" />
           </svg>
         </button>
         
-        <h2 class="modal-title">{{ $t('course.setVisibleClassTitle') }}</h2>
+        <h2 class="class-visibility-title">{{ $t('course.setVisibleClassTitle') }}</h2>
         
         <div class="tab-section">
           <span class="tab-label active">{{ $t('course.selectVisibleClass') }}</span>
           <span class="tab-hint">{{ $t('course.classTakenCourseHint') }}</span>
         </div>
         
-        <div class="class-list">
-          <label v-for="cls in classList" :key="cls.id" class="class-item">
+        <div class="class-visibility-list">
+          <label v-for="cls in classList" :key="cls.id" class="class-visibility-item">
             <input 
               type="checkbox" 
               :checked="selectedClasses.includes(cls.id)"
@@ -25,16 +25,16 @@
               class="class-checkbox"
               :class="{ disabled: cls.isClassed }"
             />
-            <span class="class-name">
+            <span class="class-visibility-name">
               {{ cls.name }}
               <span v-if="cls.isClassed" class="taken-hint">{{ $t('course.classTakenCourse') }}</span>
             </span>
           </label>
         </div>
         
-        <div class="modal-footer">
-          <button class="btn-cancel" @click="handleClose">{{ $t('common.cancel') }}</button>
-          <button class="btn-confirm" :disabled="loading" @click="handleConfirm">
+        <div class="class-visibility-footer">
+          <button class="class-visibility-btn-cancel" @click="handleClose">{{ $t('common.cancel') }}</button>
+          <button class="class-visibility-btn-confirm" :disabled="loading" @click="handleConfirm">
             {{ loading ? '保存中...' : $t('common.confirm') }}
           </button>
         </div>
@@ -128,7 +128,7 @@ const handleConfirm = async () => {
 </script>
 
 <style scoped>
-.modal-overlay {
+.class-visibility-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -153,7 +153,7 @@ const handleConfirm = async () => {
   box-shadow: 0 0 19px 1px rgba(145, 145, 145, 0.2);
 }
 
-.close-btn {
+.class-visibility-close-btn {
   position: absolute;
   top: 20px;
   right: 20px;
@@ -163,9 +163,9 @@ const handleConfirm = async () => {
   color: #999;
   padding: 4px;
 }
-.close-btn:hover { color: #666; }
+.class-visibility-close-btn:hover { color: #666; }
 
-.modal-title {
+.class-visibility-title {
   font-size: 20px;
   font-weight: 500;
   color: #333;
@@ -204,7 +204,7 @@ const handleConfirm = async () => {
   color: #999;
 }
 
-.class-list {
+.class-visibility-list {
   background: white;
   border: 1px solid #ddd;
   border-radius: 0 8px 8px 8px;
@@ -214,9 +214,10 @@ const handleConfirm = async () => {
   overflow-y: auto;
 }
 
-.class-item {
+.class-visibility-item {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: 12px;
   padding: 10px 0;
   cursor: pointer;
@@ -266,7 +267,7 @@ const handleConfirm = async () => {
   border-color: white;
 }
 
-.class-name {
+.class-visibility-name {
   font-size: 14px;
   color: #333;
 }
@@ -276,14 +277,14 @@ const handleConfirm = async () => {
   font-size: 13px;
 }
 
-.modal-footer {
+.class-visibility-footer {
   display: flex;
   justify-content: center;
   gap: 20px;
   margin-top: 30px;
 }
 
-.btn-cancel, .btn-confirm {
+.class-visibility-btn-cancel, .class-visibility-btn-confirm {
   min-width: 120px;
   padding: 12px 40px;
   border-radius: 8px;
@@ -291,24 +292,24 @@ const handleConfirm = async () => {
   cursor: pointer;
 }
 
-.btn-cancel {
+.class-visibility-btn-cancel {
   background: white;
   border: 1px solid #ddd;
   color: #666;
 }
-.btn-cancel:hover {
+.class-visibility-btn-cancel:hover {
   background: #f5f5f5;
 }
 
-.btn-confirm {
+.class-visibility-btn-confirm {
   background: #FF9900;
   border: 1px solid #FF9900;
   color: white;
 }
-.btn-confirm:hover {
+.class-visibility-btn-confirm:hover {
   background: #E68A00;
 }
-.btn-confirm:disabled {
+.class-visibility-btn-confirm:disabled {
   background: #ccc;
   border-color: #ccc;
   cursor: not-allowed;

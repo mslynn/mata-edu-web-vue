@@ -43,33 +43,33 @@
     </Transition>
 
     <Transition name="modal-fade">
-      <div v-if="modelValue" class="modal-overlay" @click.self="handleCancel">
+      <div v-if="modelValue" class="create-course-overlay" @click.self="handleCancel">
         <Transition name="modal-scale" appear>
-          <div v-if="modelValue" class="modal-container" :class="{ 'modal-container-en': isEnglish }">
+          <div v-if="modelValue" class="create-course-modal" :class="{ 'create-course-modal--en': isEnglish }">
             <!-- 关闭按钮 -->
-            <button class="close-btn" @click="handleCancel">
+            <button class="create-course-close-btn" @click="handleCancel">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
             <!-- 标题 -->
-            <h2 class="modal-title">{{ isEditMode ? $t('course.editCourse') : $t('course.createCourse') }}</h2>
+            <h2 class="create-course-title">{{ isEditMode ? $t('course.editCourse') : $t('course.createCourse') }}</h2>
 
             <!-- 加载状态 -->
-            <div v-if="detailLoading" class="loading-overlay">
-              <div class="loading-spinner"></div>
-              <span class="loading-text">{{ $t('common.loading') }}</span>
+            <div v-if="detailLoading" class="create-course-loading-overlay">
+              <div class="create-course-loading-spinner"></div>
+              <span class="create-course-loading-text">{{ $t('common.loading') }}</span>
             </div>
 
             <!-- 内容区域 -->
-            <div class="modal-content" :class="{ 'opacity-50 pointer-events-none': detailLoading }">
+            <div class="create-course-content" :class="{ 'opacity-50 pointer-events-none': detailLoading }">
               <!-- 课程名称 -->
               <div class="form-row">
-                <label class="form-label"><span class="required">*</span>{{ $t('course.courseName') }}：</label>
+                <label class="create-course-form-label"><span class="required">*</span>{{ $t('course.courseName') }}：</label>
                 <div class="form-input-wrapper">
                   <input v-model="formData.name" type="text" :placeholder="$t('course.pleaseInputCourseName')"
-                    maxlength="20" class="form-input" :class="{ 'input-error': errors.name }"
+                    maxlength="20" class="create-course-input" :class="{ 'input-error': errors.name }"
                     @input="clearError('name')" />
                   <span class="char-count">{{ formData.name.length }} / 20</span>
                   <Transition name="error-fade">
@@ -80,7 +80,7 @@
 
               <!-- 封面 -->
               <div class="form-row items-start">
-                <label class="form-label mt-4">{{ $t('common.courseCover') }}：</label>
+                <label class="create-course-form-label mt-4">{{ $t('common.courseCover') }}：</label>
                 <div class="cover-section">
                   <div class="cover-preview">
                     <img v-if="formData.coverUrl" :src="formData.coverUrl" :alt="$t('common.courseCover')"
@@ -100,7 +100,7 @@
 
               <!-- 课程章节 -->
               <div class="form-row items-start">
-                <label class="form-label mt-3"><span class="required">*</span>{{ $t('course.courseChapter') }}：</label>
+                <label class="create-course-form-label mt-3"><span class="required">*</span>{{ $t('course.courseChapter') }}：</label>
                 <div class="form-input-wrapper">
                   <div class="chapters-wrapper" :class="{ 'wrapper-error': errors.chapters }">
                     <div class="chapters-header">
@@ -110,7 +110,7 @@
                       </button>
                     </div>
                     <div class="chapters-list">
-                      <div v-for="(chapter, index) in visibleChapters" :key="chapter.id" class="chapter-item"
+                      <div v-for="(chapter, index) in visibleChapters" :key="chapter.id" class="create-course-chapter-item"
                         draggable="true" @dragstart="handleDragStart($event, index)"
                         @dragover.prevent="handleDragOver($event, index)" @drop="handleDrop($event, index)"
                         @dragend="handleDragEnd"
@@ -118,7 +118,7 @@
                         <input v-model="chapter.name" type="text" :placeholder="$t('course.pleaseInputChapterName')"
                           maxlength="20" class="chapter-input" @input="clearError('chapters')" />
                         <span class="chapter-count">{{ chapter.name.length }} / 20</span>
-                        <div v-if="index > 0" class="chapter-actions">
+                        <div v-if="index > 0" class="create-course-chapter-actions">
                           <span class="drag-handle">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -143,7 +143,7 @@
 
               <!-- 简介 -->
               <div class="form-row items-start">
-                <label class="form-label mt-3">{{ $t('course.description') }}：</label>
+                <label class="create-course-form-label mt-3">{{ $t('course.description') }}：</label>
                 <div class="form-input-wrapper">
                   <textarea v-model="formData.description" :placeholder="$t('course.pleaseInputDesc')" maxlength="500"
                     rows="4" class="form-textarea"></textarea>
@@ -153,7 +153,7 @@
 
               <!-- 课程权限 -->
               <div class="form-row">
-                <label class="form-label">{{ $t('course.coursePermission') }}：</label>
+                <label class="create-course-form-label">{{ $t('course.coursePermission') }}：</label>
                 <div class="permission-section">
                   <div class="permission-radios">
                     <label class="radio-label">
@@ -174,9 +174,9 @@
             </div>
 
             <!-- 底部按钮 -->
-            <div class="modal-footer">
-              <button class="btn-cancel" @click="handleCancel">{{ $t('common.cancel') }}</button>
-              <button class="btn-confirm" @click="handleConfirm">{{ isEditMode ? $t('course.saveChanges') :
+            <div class="create-course-footer">
+              <button class="create-course-btn-cancel" @click="handleCancel">{{ $t('common.cancel') }}</button>
+              <button class="create-course-btn-confirm" @click="handleConfirm">{{ isEditMode ? $t('course.saveChanges') :
                 $t('course.completeCreate') }}</button>
             </div>
           </div>
@@ -608,7 +608,7 @@ const confirmClose = () => {
   }
 }
 
-.modal-overlay {
+.create-course-overlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -621,7 +621,7 @@ const confirmClose = () => {
   z-index: 1000;
 }
 
-.modal-container {
+.create-course-modal {
   background: white;
   border-radius: 14px;
   width: 665px;
@@ -636,15 +636,15 @@ const confirmClose = () => {
 }
 
 /* 英文环境下加宽弹窗 */
-.modal-container-en {
+.create-course-modal--en {
   width: 780px;
 }
 
-.modal-container-en .form-label {
+.create-course-modal--en .create-course-form-label {
   width: 140px;
 }
 
-.close-btn {
+.create-course-close-btn {
   position: absolute;
   right: 20px;
   top: 20px;
@@ -654,11 +654,11 @@ const confirmClose = () => {
   transition: color 0.2s;
 }
 
-.close-btn:hover {
+.create-course-close-btn:hover {
   color: #333;
 }
 
-.modal-title {
+.create-course-title {
   font-size: 20px;
   font-weight: 500;
   color: #333;
@@ -666,7 +666,7 @@ const confirmClose = () => {
   margin-bottom: 32px;
 }
 
-.modal-content {
+.create-course-content {
   flex: 1;
 }
 
@@ -675,7 +675,7 @@ const confirmClose = () => {
   margin-bottom: 15px;
 }
 
-.form-label {
+.create-course-form-label {
   width: 90px;
   flex-shrink: 0;
   font-size: 14px;
@@ -696,7 +696,7 @@ const confirmClose = () => {
   position: relative;
 }
 
-.form-input {
+.create-course-input {
   width: 100%;
   height: 40px;
   padding: 0 60px 0 16px;
@@ -707,20 +707,20 @@ const confirmClose = () => {
   transition: border-color 0.2s;
 }
 
-.form-input:hover,
-.form-input:focus {
+.create-course-input:hover,
+.create-course-input:focus {
   border-color: #FF9900;
 }
 
-.form-input.input-error {
+.create-course-input.input-error {
   border-color: #ff4d4f;
 }
 
-.form-input.input-error:focus {
+.create-course-input.input-error:focus {
   border-color: #ff4d4f;
 }
 
-.form-input::placeholder {
+.create-course-input::placeholder {
   color: #bbb;
 }
 
@@ -878,32 +878,34 @@ const confirmClose = () => {
   overflow-y: auto;
 }
 
-.chapter-item {
+.create-course-chapter-item {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex-direction: row;
   position: relative;
   transition: all 0.2s;
 }
 
-.chapter-item.dragging {
+.create-course-chapter-item.dragging {
   opacity: 0.5;
 }
 
-.chapter-item.drag-over {
+.create-course-chapter-item.drag-over {
   border-top: 2px solid #FF9900;
 }
 
-.chapter-actions {
+.create-course-chapter-actions {
   display: flex;
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  position: static;
   opacity: 0;
   transition: opacity 0.2s;
 }
 
-.chapter-item:hover .chapter-actions {
+.create-course-chapter-item:hover .create-course-chapter-actions {
   opacity: 1;
 }
 
@@ -1055,14 +1057,14 @@ const confirmClose = () => {
 }
 
 /* 底部按钮 */
-.modal-footer {
+.create-course-footer {
   display: flex;
   justify-content: center;
   gap: 20px;
   margin-top: 32px;
 }
 
-.btn-cancel {
+.create-course-btn-cancel {
   min-width: 100px;
   padding: 10px 32px;
   border: 1px solid #FF9900;
@@ -1074,11 +1076,11 @@ const confirmClose = () => {
   transition: all 0.2s;
 }
 
-.btn-cancel:hover {
+.create-course-btn-cancel:hover {
   background: #FFF7E6;
 }
 
-.btn-confirm {
+.create-course-btn-confirm {
   min-width: 122px;
   padding: 10px 32px;
   border: none;
@@ -1090,12 +1092,12 @@ const confirmClose = () => {
   transition: all 0.2s;
 }
 
-.btn-confirm:hover {
+.create-course-btn-confirm:hover {
   background: #E68A00;
 }
 
 /* 加载状态 */
-.loading-overlay {
+.create-course-loading-overlay {
   position: absolute;
   top: 50%;
   left: 50%;
@@ -1107,7 +1109,7 @@ const confirmClose = () => {
   z-index: 10;
 }
 
-.loading-spinner {
+.create-course-loading-spinner {
   width: 32px;
   height: 32px;
   border: 3px solid #f3f3f3;
@@ -1126,7 +1128,7 @@ const confirmClose = () => {
   }
 }
 
-.loading-text {
+.create-course-loading-text {
   font-size: 14px;
   color: #666;
 }

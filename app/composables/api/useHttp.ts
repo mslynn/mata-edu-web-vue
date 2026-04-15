@@ -18,6 +18,11 @@ interface RequestOptions {
   headers?: Record<string, string>
 }
 
+export const getCurrentContentLanguage = () => {
+  const locale = import.meta.client ? (localStorage.getItem('locale') || 'zh') : 'zh'
+  return locale === 'en' ? 'en_US' : 'zh_CN'
+}
+
 export const useHttp = () => {
   // 只能在 composable 执行时读取 Nuxt 运行时配置，避免模块导入阶段报错
   const config = useRuntimeConfig()
@@ -87,8 +92,7 @@ export const useHttp = () => {
     }
     
     // 添加语言标识到请求头
-    const locale = import.meta.client ? (localStorage.getItem('locale') || 'zh') : 'zh'
-    headers['Content-Language'] = locale === 'en' ? 'en_US' : 'zh_CN'
+    headers['Content-Language'] = getCurrentContentLanguage()
     
     // 检查是否需要加密
     const needEncrypt = headers['isEncrypt'] === 'true'

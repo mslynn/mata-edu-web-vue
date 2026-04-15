@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#ebeef0",
+                    "primary-fixed-dim": "#8eb3ff",
+                    "on-primary-fixed-variant": "#004291",
+                    "tertiary": "#904e00",
+                    "inverse-on-surface": "#9b9d9e",
+                    "surface-bright": "#f8f9fa",
+                    "tertiary-dim": "#7f4400",
+                    "on-error-container": "#65000b",
+                    "surface-container-high": "#e5e9eb",
+                    "inverse-surface": "#0c0f10",
+                    "on-primary-container": "#003a80",
+                    "secondary-fixed-dim": "#d5cfff",
+                    "on-background": "#2e3335",
+                    "outline": "#767c7e",
+                    "on-tertiary": "#fff7f4",
+                    "on-tertiary-fixed": "#351900",
+                    "primary-dim": "#0050ab",
+                    "on-secondary-container": "#4b38c5",
+                    "error-container": "#f56965",
+                    "tertiary-fixed": "#ffa44f",
+                    "secondary": "#5948d3",
+                    "error-dim": "#70030f",
+                    "primary-container": "#a4c1ff",
+                    "surface-container-highest": "#dee3e5",
+                    "on-primary-fixed": "#002658",
+                    "tertiary-container": "#ffa44f",
+                    "error": "#ac3434",
+                    "on-surface-variant": "#5a6062",
+                    "background": "#f8f9fa",
+                    "on-surface": "#2e3335",
+                    "on-secondary": "#fcf7ff",
+                    "secondary-dim": "#4d39c7",
+                    "on-secondary-fixed-variant": "#5543cf",
+                    "on-tertiary-fixed-variant": "#623400",
+                    "surface-container-low": "#f2f4f5",
+                    "surface-tint": "#005bc2",
+                    "on-tertiary-container": "#552c00",
+                    "inverse-primary": "#4b8eff",
+                    "surface-container-lowest": "#ffffff",
+                    "on-secondary-fixed": "#381eb3",
+                    "on-error": "#fff7f6",
+                    "tertiary-fixed-dim": "#f3953a",
+                    "surface": "#f8f9fa",
+                    "secondary-container": "#e4dfff",
+                    "surface-variant": "#dee3e5",
+                    "secondary-fixed": "#e4dfff",
+                    "outline-variant": "#aeb3b5",
+                    "on-primary": "#f9f8ff",
+                    "primary-fixed": "#a4c1ff",
+                    "surface-dim": "#d5dbdd",
+                    "primary": "#005bc2"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "1rem",
+                    "xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans", "PingFang SC", "sans-serif"],
+                    "body": ["Manrope", "PingFang SC", "sans-serif"],
+                    "label": ["Manrope", "PingFang SC", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Manrope', sans-serif; background-color: #f8f9fa; color: #2e3335; }
+        .headline-font { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .glass-panel { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); }
+        .gradient-primary { background: linear-gradient(135deg, #005bc2 0%, #a4c1ff 100%); }
+        .max-w-1920 { max-width: 1920px; width: 1920px; }
+    </style>
+</head>
+<body class="bg-background flex flex-col items-center">
+<!-- Main Container set to 1920px and centered -->
+<div class="max-w-1920 bg-background min-h-screen">
+<!-- Top Navigation Bar -->
+<nav class="w-full sticky top-0 z-50 bg-[#f8f9fa] border-none shadow-none flex justify-between items-center px-12 py-6">
+<div class="flex items-center gap-12">
+<span class="text-3xl font-bold bg-gradient-to-r from-[#005bc2] to-[#a4c1ff] bg-clip-text text-transparent font-['Plus_Jakarta_Sans'] tracking-tight">Lumina Academy</span>
+<div class="hidden md:flex gap-10 items-center">
+<a class="text-[#2e3335] text-lg font-['Plus_Jakarta_Sans'] font-semibold hover:text-[#005bc2] transition-colors duration-200" href="#">Curriculum</a>
+<a class="text-[#2e3335] text-lg font-['Plus_Jakarta_Sans'] font-semibold hover:text-[#005bc2] transition-colors duration-200" href="#">Resources</a>
+<a class="text-[#2e3335] text-lg font-['Plus_Jakarta_Sans'] font-semibold hover:text-[#005bc2] transition-colors duration-200" href="#">Community</a>
+</div>
+</div>
+<div class="flex items-center gap-6">
+<button class="p-3 rounded-full hover:bg-surface-container transition-colors text-[#2e3335]">
+<span class="material-symbols-outlined text-2xl">notifications</span>
+</button>
+<button class="p-3 rounded-full hover:bg-surface-container transition-colors text-[#2e3335]">
+<span class="material-symbols-outlined text-2xl">settings</span>
+</button>
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="User profile avatar" class="w-full h-full object-cover" data-alt="close-up portrait of a professional educator with a friendly smile, soft natural studio lighting, clean background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWZp6e-1tQ0S0jtScU3qgHCKCgMebkFvxmHl5Asw-xYtFV0anmd2F73LpVjENNYcjszrIPlpcSfwMlBg6xKkG2HYdXYr-cFvcGEX1RrNxvg1dNUV_dRsbN_Cj2F7IrnH8o2CrTj5KKZ1HMi_jWJiitZfOgTdOyeWJU3ZQl1zeAC3Q17aAGXVdwmfUg4A5VTAB0AiMQ4RDZ7SGfh204Bujo75ERvLh6K04j5KE-WxXegF_lywAWC6J8v1WThR1ttfdDEQaItPu9"/>
+</div>
+</div>
+</nav>
+<div class="flex min-h-screen">
+<!-- Sidebar -->
+<aside class="flex flex-col h-screen w-80 sticky top-0 bg-[#f2f4f5] border-none p-8 gap-y-3">
+<div class="flex items-center gap-4 mb-12">
+<div class="w-14 h-14 rounded-2xl gradient-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div>
+<h2 class="text-xl font-black text-[#2e3335] font-['Plus_Jakarta_Sans']">Tool Center</h2>
+<p class="text-sm text-on-surface-variant">AI Software Hub</p>
+</div>
+</div>
+<nav class="flex flex-col gap-2">
+<a class="flex items-center gap-4 px-6 py-4 bg-[#ffffff] text-[#005bc2] rounded-xl shadow-sm transition-all duration-200 translate-x-1" href="#">
+<span class="material-symbols-outlined text-2xl">apps</span>
+<span class="font-bold text-lg">All Tools</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#2e3335] hover:bg-[#dee3e5] rounded-xl transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-2xl">grid_view</span>
+<span class="font-medium text-lg">Windows</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#2e3335] hover:bg-[#dee3e5] rounded-xl transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-2xl">laptop_mac</span>
+<span class="font-medium text-lg">macOS</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#2e3335] hover:bg-[#dee3e5] rounded-xl transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-2xl">smartphone</span>
+<span class="font-medium text-lg">Mobile</span>
+</a>
+<a class="flex items-center gap-4 px-6 py-4 text-[#2e3335] hover:bg-[#dee3e5] rounded-xl transition-all duration-200" href="#">
+<span class="material-symbols-outlined text-2xl">extension</span>
+<span class="font-medium text-lg">AI Extensions</span>
+</a>
+</nav>
+<div class="mt-auto pt-8 border-t border-outline-variant/10 flex flex-col gap-2">
+<button class="mb-6 gradient-primary text-white py-4 rounded-xl font-bold text-lg shadow-lg shadow-primary/20 active:scale-95 transition-transform">Submit Tool</button>
+<a class="flex items-center gap-4 px-6 py-3 text-[#2e3335] text-base hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">help_outline</span>
+                        Help Center
+                    </a>
+<a class="flex items-center gap-4 px-6 py-3 text-[#2e3335] text-base hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined text-xl">description</span>
+                        Documentation
+                    </a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 px-12 py-8 space-y-16 overflow-x-hidden">
+<!-- Hero Banner -->
+<section class="relative overflow-hidden rounded-2xl h-[480px] gradient-primary flex items-center px-24">
+<div class="relative z-10 max-w-3xl">
+<h1 class="text-white text-6xl font-extrabold headline-font mb-8 leading-tight">激发无限创意<br/>数字工具赋能智慧教学</h1>
+<p class="text-white/80 text-2xl font-body max-w-xl mb-12 leading-relaxed">
+                            通过最先进的 AI 与编程工具，探索未来教育的无限可能。为每一个创意提供触手可及的实现路径。
+                        </p>
+<div class="flex gap-6">
+<button class="bg-white text-primary px-10 py-5 rounded-xl text-xl font-bold shadow-xl flex items-center gap-3 hover:bg-surface-container-low transition-all">
+                                立即开始 <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="absolute right-0 bottom-0 w-3/5 h-full opacity-90 pointer-events-none">
+<img alt="3D illustration" class="w-full h-full object-cover mix-blend-screen" data-alt="a futuristic 3D render of vibrant abstract geometric shapes and translucent glowing elements, soft volumetric lighting, teal and blue color palette" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk1c_6ZDuQwwgDFOjqPfih4MXVYL3VustVas6xDTBKdfNS0Zbpbmku_25sTY7ETEhkbVdhQRCVBmrjBS3Nqy_2pjyVZ0j-H958SyarZkcdEPk-MTnzqFYg6hs-mF9WXGAihiob6gGjUydnYo4fkhRZJrx2WsjrwLxKOUjFVwBLNSQsdwXPuAd84V6WfZtYypbXnT5Scp0SbTHfj_fwRjcpAQFx8C_E1h_oyqSVeGcUCwRXGOVtp_ZITTbQYw2R9a4OdJ9snShr"/>
+</div>
+</section>
+<!-- Featured Section: VinciBot & Nous -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-stretch">
+<!-- Featured tool (VinciBot) -->
+<div class="lg:col-span-8 bg-surface-container-lowest rounded-2xl p-16 relative overflow-hidden flex flex-col md:flex-row items-center gap-16 group">
+<div class="flex-1 z-10">
+<span class="bg-secondary-container text-on-secondary-container px-5 py-2 rounded-full text-base font-bold mb-8 inline-block">核心工具</span>
+<h2 class="text-5xl font-extrabold headline-font mb-6 text-on-surface">MatataCode (VinciBot)</h2>
+<p class="text-on-surface-variant text-xl leading-relaxed mb-10">
+                                专为 VinciBot 打造的高级编程环境。支持图形化编程与 Python 自由切换，帮助学生从逻辑启蒙平滑过渡到代码编写，释放机器人教育的真实潜力。
+                            </p>
+<div class="grid grid-cols-2 gap-6 max-w-lg">
+<button class="flex items-center justify-center gap-3 px-8 py-4 bg-surface-container-high rounded-xl hover:bg-primary hover:text-white transition-all font-bold text-lg">
+<span class="material-symbols-outlined text-2xl">grid_view</span> Windows
+                                </button>
+<button class="flex items-center justify-center gap-3 px-8 py-4 bg-surface-container-high rounded-xl hover:bg-primary hover:text-white transition-all font-bold text-lg">
+<span class="material-symbols-outlined text-2xl">laptop_mac</span> macOS
+                                </button>
+<button class="flex items-center justify-center gap-3 px-8 py-4 bg-surface-container-high rounded-xl hover:bg-primary hover:text-white transition-all font-bold text-lg">
+<span class="material-symbols-outlined text-2xl">phone_iphone</span> App Store
+                                </button>
+<button class="flex items-center justify-center gap-3 px-8 py-4 bg-surface-container-high rounded-xl hover:bg-primary hover:text-white transition-all font-bold text-lg">
+<span class="material-symbols-outlined text-2xl">android</span> Google Play
+                                </button>
+</div>
+</div>
+<div class="flex-1 relative h-full min-h-[400px] w-full flex items-center justify-center">
+<img alt="Robot image" class="w-full h-full max-h-[450px] object-contain transform group-hover:scale-105 transition-transform duration-500" data-alt="a sleek white educational robot with digital eyes in a clean modern classroom setting, high-tech aesthetic, soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC72gi7bfVQVrikI0_fNaDuOaeH713czdBBrhxDNE5VDmKmCQ5Tg7au1naWJsYOxisG7S3efFPt4cYvH40J3tgDsTTzijSAKK81DkS3pSgksFNjg3Ujx08wp-Oy6zmz51MKyZIwjGDKqZZRboDikVrDIpPmWfVBa4CRjabtKjAv3lEqvFPNlGfW0eka5jZjclF-jBzh9_Cr5zJiTXuJMkUtQXYobri_jfkzHSyFbNVGaryjAYKVFS8ZrEJF2OJ-EWxWqc9SPAwc"/>
+</div>
+</div>
+<!-- MatataCode (Nous) -->
+<div class="lg:col-span-4 bg-surface-container-low rounded-2xl p-10 flex flex-col">
+<div class="w-full h-64 rounded-xl overflow-hidden mb-8 bg-white">
+<img alt="Portrait image" class="w-full h-full object-cover" data-alt="a smart young student interacting with a transparent digital holographic interface, futuristic education concept, vibrant cinematic lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD3uDzMkgi9ekBadf2rWv6uiXOqsCaxOwvnDEuKSv2_wZxRu71BCsrG8eQJBqFrzp_lWZB70acWb58mJEkINguVh8c6C_znOjGF9wL2cn-ATZJiC-Sj7SQKJDAFHDlzM8SNce5RB_tH6PANU6Og2f6zZKdd_hp4Y1NYrGGRFuEqMp0JuEz_1IMj_H6jx3clEsSThCtK6trLImeHSXhDi7XKvUsa93TpnUieFnkrR31W56oLAF5gWArrCB2uxPKTmStKo209TJuh"/>
+</div>
+<h3 class="text-3xl font-bold headline-font mb-4">MatataCode (Nous)</h3>
+<p class="text-on-surface-variant text-base mb-8 flex-grow leading-relaxed">
+                            面向更高阶的人工智能算法学习平台，通过 Nous 控制系统，学生可以深入探索计算机视觉与神经网络的基础应用。
+                        </p>
+<div class="space-y-4 mt-auto">
+<button class="w-full flex items-center justify-center gap-3 px-8 py-4 bg-white rounded-xl hover:bg-primary hover:text-white transition-all font-bold text-lg shadow-sm">
+<span class="material-symbols-outlined text-2xl">grid_view</span> Windows 下载
+                            </button>
+<button class="w-full flex items-center justify-center gap-3 px-8 py-4 bg-white rounded-xl hover:bg-primary hover:text-white transition-all font-bold text-lg shadow-sm">
+<span class="material-symbols-outlined text-2xl">laptop_mac</span> macOS 下载
+                            </button>
+</div>
+</div>
+</section>
+<!-- Other Tools Grid Layout -->
+<section class="grid grid-cols-1 md:grid-cols-3 gap-10">
+<!-- Card 1: Kids -->
+<div class="bg-surface-container-lowest rounded-2xl p-10 flex flex-col h-full border border-outline-variant/10 shadow-sm">
+<div class="w-20 h-20 rounded-3xl bg-red-50 flex items-center justify-center text-red-500 mb-8">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">child_care</span>
+</div>
+<h4 class="text-2xl font-bold headline-font mb-4">MatataCode (Kids)</h4>
+<p class="text-on-surface-variant text-base mb-10 flex-grow leading-relaxed">
+                            无文字纯图形化编程，专为 4-7 岁儿童设计。通过游戏化的关卡，培养早期逻辑思维。
+                        </p>
+<div class="grid grid-cols-1 gap-4">
+<button class="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container-low rounded-xl hover:bg-red-500 hover:text-white transition-all text-base font-bold">
+<span class="material-symbols-outlined text-2xl">tablet</span> iPadOS
+                            </button>
+<button class="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container-low rounded-xl hover:bg-red-500 hover:text-white transition-all text-base font-bold">
+<span class="material-symbols-outlined text-2xl">android</span> Android
+                            </button>
+</div>
+</div>
+<!-- Card 2: TaleMap -->
+<div class="bg-surface-container-lowest rounded-2xl p-10 flex flex-col h-full border border-outline-variant/10 shadow-sm">
+<div class="w-20 h-20 rounded-3xl bg-blue-50 flex items-center justify-center text-blue-500 mb-8">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">map</span>
+</div>
+<h4 class="text-2xl font-bold headline-font mb-4">MatataCode (TaleMap)</h4>
+<p class="text-on-surface-variant text-base mb-10 flex-grow leading-relaxed">
+                            基于地图叙事的编程探索工具。结合地理、历史与逻辑，在虚拟世界中完成各种极具故事感的挑战任务。
+                        </p>
+<div class="grid grid-cols-1 gap-4">
+<button class="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container-low rounded-xl hover:bg-blue-500 hover:text-white transition-all text-base font-bold">
+<span class="material-symbols-outlined text-2xl">language</span> Web Version
+                            </button>
+<button class="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container-low rounded-xl hover:bg-blue-500 hover:text-white transition-all text-base font-bold">
+<span class="material-symbols-outlined text-2xl">grid_view</span> Windows
+                            </button>
+</div>
+</div>
+<!-- Card 3: MatataXplore -->
+<div class="bg-surface-container-lowest rounded-2xl p-10 flex flex-col h-full border border-outline-variant/10 shadow-sm">
+<div class="w-20 h-20 rounded-3xl bg-purple-50 flex items-center justify-center text-purple-500 mb-8">
+<span class="material-symbols-outlined text-5xl" style="font-variation-settings: 'FILL' 1;">explore</span>
+</div>
+<h4 class="text-2xl font-bold headline-font mb-4">MatataXplore</h4>
+<p class="text-on-surface-variant text-base mb-10 flex-grow leading-relaxed">
+                            多维实验数据采集与分析中心。配合硬件传感器，将真实世界的物理参数实时转化为可视化数据。
+                        </p>
+<div class="grid grid-cols-1 gap-4">
+<button class="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container-low rounded-xl hover:bg-purple-500 hover:text-white transition-all text-base font-bold">
+<span class="material-symbols-outlined text-2xl">desktop_windows</span> Windows Client
+                            </button>
+<button class="flex items-center justify-center gap-3 px-6 py-3 bg-surface-container-low rounded-xl hover:bg-purple-500 hover:text-white transition-all text-base font-bold">
+<span class="material-symbols-outlined text-2xl">laptop_mac</span> macOS Client
+                            </button>
+</div>
+</div>
+</section>
+<!-- Footer Banner Section -->
+<section class="bg-inverse-surface rounded-2xl p-16 flex flex-col md:flex-row items-center justify-between gap-12 mt-16 mb-24">
+<div class="max-w-3xl">
+<h2 class="text-white text-4xl font-extrabold headline-font mb-4">需要定制课程体系？</h2>
+<p class="text-inverse-on-surface text-xl leading-relaxed">我们的教育专家团队可以为您提供全套的数字化教学解决方案，包括硬件适配与课程开发。</p>
+</div>
+<div class="flex gap-6 shrink-0">
+<button class="bg-white text-on-background px-10 py-5 rounded-xl text-xl font-bold hover:bg-primary-container transition-all">
+                            在线咨询
+                        </button>
+<button class="border border-outline-variant text-white px-10 py-5 rounded-xl text-xl font-bold hover:bg-white/10 transition-all">
+                            获取案例
+                        </button>
+</div>
+</section>
+</main>
+</div>
+</div>
+</body></html>

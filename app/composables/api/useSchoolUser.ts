@@ -1,7 +1,7 @@
 /**
  * 学校用户（教师）管理 API
  */
-import { useHttp } from "./useHttp";
+import { getCurrentContentLanguage, useHttp } from "./useHttp";
 import { ElMessage } from '~/components/ui'
 
 export interface Teacher {
@@ -249,10 +249,14 @@ export const useSchoolUser = () => {
   };
 
   //导出教师信息（文件流下载）
-  const exportTeacherInfo = async (filename: string = "教师账号信息.xlsx") => {
+  const exportTeacherInfo = async (
+    filename: string = "教师账号信息.xlsx",
+    orgId?: string,
+  ) => {
     try {
       const config = useRuntimeConfig();
       const token = http.getToken();
+      const requestBody = orgId ? JSON.stringify({ orgId }) : undefined;
 
       const response = await fetch(
         `${config.public.apiBaseUrl}/system/user/export`,
@@ -261,7 +265,9 @@ export const useSchoolUser = () => {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
+            "Content-Language": getCurrentContentLanguage(),
           },
+          body: requestBody,
         }
       );
 
@@ -302,6 +308,7 @@ export const useSchoolUser = () => {
           method: "POST",
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
+            "Content-Language": getCurrentContentLanguage(),
           },
           body: formData,
         }
@@ -337,6 +344,7 @@ export const useSchoolUser = () => {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
+            "Content-Language": getCurrentContentLanguage(),
           },
         }
       );

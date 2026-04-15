@@ -1,7 +1,7 @@
 /**
  * 教师相关 API
  */
-import { useHttp } from "./useHttp";
+import { getCurrentContentLanguage, useHttp } from "./useHttp";
 import { ElMessage } from "~/components/ui";
 
 export const useTeacher = () => {
@@ -277,6 +277,7 @@ export const useTeacher = () => {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
+            "Content-Language": getCurrentContentLanguage(),
           },
         },
       );
@@ -315,6 +316,7 @@ export const useTeacher = () => {
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
             "Content-Type": "application/json",
+            "Content-Language": getCurrentContentLanguage(),
           },
         },
       );
@@ -357,6 +359,7 @@ export const useTeacher = () => {
           method: "POST",
           headers: {
             Authorization: token ? `Bearer ${token}` : "",
+            "Content-Language": getCurrentContentLanguage(),
           },
           body: formData,
         },
@@ -615,7 +618,7 @@ export const useTeacher = () => {
     try {
       const response = await http.post("/system/teach/courseware/send", {
         ...data,
-        peerId: Number(data.peerId),
+        peerId: String(data.peerId),
       });
       return response.data;
     } catch (error: any) {
@@ -636,7 +639,7 @@ export const useTeacher = () => {
     try {
       const response = await http.post("/system/teach/courseware/revoke", {
         ...data,
-        peerId: Number(data.peerId),
+        peerId: String(data.peerId),
       });
       return response.data;
     } catch (error: any) {

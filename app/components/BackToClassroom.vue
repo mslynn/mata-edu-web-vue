@@ -32,14 +32,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTeacher } from '~/composables/api/useTeacher'
+import { useAuth } from '~/composables/api/useAuth'
 
 const { t } = useI18n()
 const router = useRouter()
 const route = useRoute()
 const { getTeacherStatus } = useTeacher()
+const { user } = useAuth()
 
 // 正在进行的课堂信息
 const ongoingClass = ref<{
@@ -48,13 +50,32 @@ const ongoingClass = ref<{
   chapterId: string
 } | null>(null)
 
-// 用户角色
-const userRole = ref<string | null>(null)
-
 // 课堂已结束弹窗
 const showExpiredModal = ref(false)
 
+const getStoredUserRole = () => {
+  try {
+    const userStr = localStorage.getItem('user_info')
+    if (!userStr) return null
+
+    const storedUser = JSON.parse(userStr)
+    return storedUser?.role_key || storedUser?.roleKey || null
+  } catch {
+    return null
+  }
+}
+
+const userRole = computed(() => {
+  return (
+    user.value?.role_key ||
+    user.value?.roleKey ||
+    getStoredUserRole() ||
+    null
+  )
+})
+
 const canShowBackToClass = computed(() => {
+  if (ongoingClass.value) return true
   return userRole.value === 'teacher' || userRole.value === 'school_admin'
 })
 
@@ -89,7 +110,11 @@ const closeExpiredModal = () => {
 
 // 从接口获取开课中的课堂
 const fetchOngoingClass = async () => {
-  if (!canShowBackToClass.value) {
+  if (
+    userRole.value &&
+    userRole.value !== 'teacher' &&
+    userRole.value !== 'school_admin'
+  ) {
     ongoingClass.value = null
     return
   }
@@ -126,38 +151,40 @@ const fetchOngoingClass = async () => {
   }
 }
 
-// 获取用户角色
-const getUserRole = () => {
-  try {
-    const userStr = localStorage.getItem('user_info')
-    if (userStr) {
-      const user = JSON.parse(userStr)
-      userRole.value = user?.role_key || user?.roleKey || null
-    }
-  } catch (error) {
-    userRole.value = null
+const handleStorageChange = (e: StorageEvent) => {
+  if (e.key === 'ongoing_classroom' || e.key === 'user_info') {
+    void fetchOngoingClass()
+  }
+}
+
+const handleWindowFocus = () => {
+  void fetchOngoingClass()
+}
+
+const handleVisibilityChange = () => {
+  if (document.visibilityState === 'visible') {
+    void fetchOngoingClass()
   }
 }
 
 // 监听路由变化，刷新状态
 watch(() => route.fullPath, () => {
-  getUserRole()
-  fetchOngoingClass()
+  void fetchOngoingClass()
 })
 
 onMounted(() => {
-  getUserRole()
-  fetchOngoingClass()
-  
+  void fetchOngoingClass()
+
   // 监听 storage 事件，其他标签页更新时同步
-  window.addEventListener('storage', (e) => {
-    if (e.key === 'ongoing_classroom') {
-      fetchOngoingClass()
-    }
-    if (e.key === 'user_info') {
-      getUserRole()
-    }
-  })
+  window.addEventListener('storage', handleStorageChange)
+  window.addEventListener('focus', handleWindowFocus)
+  document.addEventListener('visibilitychange', handleVisibilityChange)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('storage', handleStorageChange)
+  window.removeEventListener('focus', handleWindowFocus)
+  document.removeEventListener('visibilitychange', handleVisibilityChange)
 })
 
 // 暴露刷新方法，供外部调用

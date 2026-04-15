@@ -296,7 +296,7 @@
                 <polyline points="15 18 9 12 15 6" />
               </svg>
 
-                       <svg
+              <svg
                 width="20"
                 height="20"
                 viewBox="0 0 24 24"
@@ -671,6 +671,7 @@ interface AICardItem {
   label: string;
   desc?: string;
   cover?: string;
+  routePath?: string;
 }
 
 interface SavedAIModelRecord {
@@ -718,7 +719,11 @@ const visionItems = ref<AICardItem[]>([
     desc: "ai.imageClassModelDesc",
     cover: aigcCover1,
   },
-  { key: "faceRecognition", label: "ai.faceRecognition" },
+  {
+    key: "faceRecognition",
+    label: "ai.faceRecognition",
+   routePath: "/system/ai/face"
+  },
   { key: "imageRecognition", label: "ai.imageRecognition" },
 
   { key: "handwrittenDigit", label: "ai.handwrittenDigit" },
@@ -875,13 +880,16 @@ const pendingIframeMessage = ref<{
   transfer?: Transferable[];
 } | null>(null);
 
+const AVAILABLE_AI_CARD_KEYS = new Set([
+  "imageClassModel",
+  "gestureClassModel",
+  "voiceClassModel",
+  "poseClassModel",
+  "faceRecognition",
+]);
+
 const isComingSoon = (item: AICardItem) => {
-  return ![
-    "imageClassModel",
-    "gestureClassModel",
-    "voiceClassModel",
-    "poseClassModel",
-  ].includes(item.key);
+  return !AVAILABLE_AI_CARD_KEYS.has(item.key);
 };
 
 const notifyEmbeddedHostToClose = () => {
@@ -1543,6 +1551,11 @@ const handleIframeMessage = async (event: MessageEvent) => {
 
 const handleCardClick = async (item: AICardItem) => {
   if (isComingSoon(item)) return;
+
+  if (item.routePath) {
+    await router.push(item.routePath);
+    return;
+  }
 
   currentModel.value = item;
   modelName.value = "";

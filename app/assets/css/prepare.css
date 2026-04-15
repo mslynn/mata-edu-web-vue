@@ -61,7 +61,7 @@
   transform: scaleY(1) translateY(0);
 }
 
-.status-tag { font-size: 14px; letter-spacing: 1px; color: #FF9900; font-weight: 500; }
+.prepare-status-tag { font-size: 14px; letter-spacing: 1px; color: #FF9900; font-weight: 500; }
 .header-right { display: flex; gap: 12px; }
 .btn-outline {
   padding: 8px 16px;

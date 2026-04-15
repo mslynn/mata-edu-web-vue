@@ -29,7 +29,7 @@
           </Transition>
         </div>
       </div>
-      <div class="header-center"><span class="status-tag">{{ t('prepare.preparing') }}</span></div>
+      <div class="header-center"><span class="prepare-status-tag">{{ t('prepare.preparing') }}</span></div>
       <div class="header-right">
         <button class="btn-outline" @click="showStudentVisibleModal = true">{{ t('prepare.setStudentVisibleResource') }}</button>
         <button class="btn-white" @click="handleFinish">{{ t('prepare.exitPrepare') }}</button>

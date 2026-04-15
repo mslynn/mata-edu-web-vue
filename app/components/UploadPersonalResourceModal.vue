@@ -56,11 +56,58 @@
           
           <!-- 表格内容区域 - 固定高度 -->
           <div class="table-content">
-            <!-- 有数据时显示列表 -->
-            <template v-if="resourceList.length > 0">
-              <div v-for="(item, index) in resourceList" :key="item.resourceId" class="table-row">
+            <template v-if="uploadFiles.length > 0 || resourceList.length > 0">
+              <div v-for="(item, index) in uploadFiles" :key="`upload-${item.id}`" class="table-row">
                 <div class="col-index">{{ index + 1 }}</div>
-                <div class="col-name">{{ item.fileName }}</div>
+                <div class="col-name" :title="item.name">{{ item.name }}</div>
+                <div class="col-progress">
+                  <div class="progress-bar">
+                    <div
+                      class="progress-fill"
+                      :class="{
+                        'progress-fill--error': item.status === 'error',
+                        'progress-fill--canceling': item.status === 'cancelling',
+                      }"
+                      :style="{ width: `${item.progress}%` }"
+                    ></div>
+                  </div>
+                  <span
+                    class="progress-text"
+                    :class="{
+                      complete: item.status === 'success',
+                      error: item.status === 'error',
+                      pending: item.status === 'pending' || item.status === 'cancelling',
+                    }"
+                  >
+                    {{ getUploadProgressText(item) }}
+                  </span>
+                </div>
+                <div class="col-type">
+                  <span class="type-text">{{ item.fileTypeName || '-' }}</span>
+                </div>
+                <div class="col-action">
+                  <button
+                    v-if="item.status === 'uploading'"
+                    class="action-btn cancel-upload-btn"
+                    @click="cancelUpload(item)"
+                  >
+                    取消上传
+                  </button>
+                  <span v-else-if="item.status === 'cancelling'" class="action-status-text">取消中...</span>
+                  <button
+                    v-else-if="item.status === 'error'"
+                    class="action-btn delete-btn"
+                    @click="removeUploadFileById(item.id)"
+                  >
+                    {{ $t('common.delete') }}
+                  </button>
+                  <span v-else class="action-status-text">处理中...</span>
+                </div>
+              </div>
+
+              <div v-for="(item, index) in resourceList" :key="`resource-${item.resourceId}`" class="table-row">
+                <div class="col-index">{{ uploadFiles.length + index + 1 }}</div>
+                <div class="col-name" :title="item.fileName">{{ item.fileName }}</div>
                 <div class="col-progress">
                   <div class="progress-bar">
                     <div class="progress-fill" style="width: 100%"></div>
@@ -169,12 +216,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { reactive, ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import LiteracyConfigModal from '~/components/taskmanagement/LiteracyConfigModal.vue'
 import { cursorAdmin } from '~/composables/api/curosr'
-import { useHttp } from '~/composables/api/useHttp'
+import { useChunkUpload } from '~/composables/useChunkUpload'
 
 interface UploadFile {
   id: number
@@ -182,11 +229,15 @@ interface UploadFile {
   file: File
   progress: number
   resourceType: string
-  status: 'pending' | 'uploading' | 'success' | 'error'
+  status: 'pending' | 'uploading' | 'success' | 'error' | 'cancelling'
   ossId?: string
   url?: string
   fileType?: string
   fileTypeName?: string
+  errorMessage?: string
+  cancelRequested?: boolean
+  cancelUploadTask?: () => Promise<boolean>
+  cleanupTask?: () => void
 }
 
 interface DictItem {
@@ -212,7 +263,6 @@ const {
   saveLiteracyConfig,
   getResourceeDictEvalconfig
 } = cursorAdmin()
-const http = useHttp()
 const { t } = useI18n()
 
 const fileInputRef = ref<HTMLInputElement | null>(null)
@@ -355,68 +405,18 @@ onMounted(() => {
     loadResourceList()
   }
 })
+onBeforeUnmount(() => {
+  uploadFiles.value.forEach((file) => {
+    file.cleanupTask?.()
+  })
+})
 let fileIdCounter = 0
 
-// 使用 XMLHttpRequest 上传文件（支持真实进度）
-const uploadWithProgress = (
-  file: File,
-  onProgress: (percent: number) => void
-): Promise<{ ossId: string; url: string; fileName: string }> => {
-  return new Promise((resolve, reject) => {
-    if (!import.meta.client) {
-      reject(new Error('仅支持客户端上传'))
-      return
-    }
-
-    const config = useRuntimeConfig()
-    const token = http.getToken()
-
-    const xhr = new XMLHttpRequest()
-    const formData = new FormData()
-    formData.append('file', file)
-
-    // 监听上传进度
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const percent = Math.round((e.loaded / e.total) * 100)
-        onProgress(percent)
-      }
-    }
-
-    xhr.onload = () => {
-      if (xhr.status === 200) {
-        try {
-          const response = JSON.parse(xhr.responseText)
-          if (response.code === 200) {
-            resolve(response.data)
-          } else {
-            reject(new Error(response.msg || '上传失败'))
-          }
-        } catch {
-          reject(new Error('解析响应失败'))
-        }
-      } else {
-        reject(new Error(`上传失败: ${xhr.status}`))
-      }
-    }
-
-    xhr.onerror = () => reject(new Error('网络错误'))
-    xhr.onabort = () => reject(new Error('上传已取消'))
-
-    xhr.open('POST', `${config.public.apiBaseUrl}/resource/oss/upload`)
-    if (token) {
-      xhr.setRequestHeader('Authorization', `Bearer ${token}`)
-    }
-    xhr.send(formData)
-  })
-}
-
-const getResourceTypeName = (type: string) => {
-  const item = resourceTypeList.value.find(d => d.dictValue === type)
-  return item?.dictLabel || type
-}
-
 const handleClose = () => {
+  if (uploadFiles.value.some((item) => item.status === 'uploading' || item.status === 'cancelling')) {
+    ElMessage.warning('文件上传中，请先取消上传')
+    return
+  }
   emit('update:visible', false)
 }
 
@@ -431,6 +431,81 @@ const isMcFile = (fileName: string) => {
 
 // 文件大小限制 200MB
 const MAX_FILE_SIZE = 200 * 1024 * 1024
+
+const clearUploadTask = (uploadFile: UploadFile) => {
+  uploadFile.cleanupTask?.()
+  uploadFile.cleanupTask = undefined
+  uploadFile.cancelUploadTask = undefined
+}
+
+const removeUploadFileById = (id: number) => {
+  const index = uploadFiles.value.findIndex((item) => item.id === id)
+  if (index === -1) return
+
+  clearUploadTask(uploadFiles.value[index])
+  uploadFiles.value.splice(index, 1)
+}
+
+const getUploadProgressText = (uploadFile: UploadFile) => {
+  if (uploadFile.status === 'error') {
+    return '上传失败'
+  }
+  if (uploadFile.status === 'cancelling') {
+    return '取消中'
+  }
+  return `${uploadFile.progress}%`
+}
+
+const createChunkUploader = (uploadFile: UploadFile) => {
+  const uploader = useChunkUpload({
+    chunkSize: 5 * 1024 * 1024,
+    defaultErrorMessage: '资源分片上传失败，请重试'
+  })
+
+  const stopProgressWatch = watch(
+    uploader.progressPercent,
+    (value) => {
+      uploadFile.progress = value
+    },
+    { immediate: true }
+  )
+
+  const stopErrorWatch = watch(
+    uploader.errorMessage,
+    (value) => {
+      uploadFile.errorMessage = value || ''
+    },
+    { immediate: true }
+  )
+
+  const stopStatusWatch = watch(
+    uploader.status,
+    (value) => {
+      if (value === 'uploading' && uploadFile.status !== 'cancelling') {
+        uploadFile.status = 'uploading'
+        return
+      }
+      if (value === 'success') {
+        uploadFile.status = 'success'
+        return
+      }
+      if (value === 'error') {
+        uploadFile.status = 'error'
+      }
+    },
+    { immediate: true }
+  )
+
+  uploadFile.cancelUploadTask = () => uploader.cancel()
+  uploadFile.cleanupTask = () => {
+    stopProgressWatch()
+    stopErrorWatch()
+    stopStatusWatch()
+    uploader.reset()
+  }
+
+  return uploader
+}
 
 const handleFileSelect = (e: Event) => {
   const input = e.target as HTMLInputElement
@@ -456,14 +531,14 @@ const handleFileSelect = (e: Event) => {
   
   // 非 mc 文件直接上传
   otherFiles.forEach(file => {
-    const uploadFile: UploadFile = {
+    const uploadFile = reactive<UploadFile>({
       id: ++fileIdCounter,
       name: file.name,
       file: file,
       progress: 0,
       resourceType: '',
       status: 'pending'
-    }
+    })
     uploadFiles.value.push(uploadFile)
     doUpload(uploadFile)
   })
@@ -489,7 +564,7 @@ const confirmMcUpload = () => {
   const fileTypeName = selectedItem?.dictLabel || ''
   
   pendingMcFiles.value.forEach(file => {
-    const uploadFile: UploadFile = {
+    const uploadFile = reactive<UploadFile>({
       id: ++fileIdCounter,
       name: file.name,
       file: file,
@@ -498,7 +573,7 @@ const confirmMcUpload = () => {
       status: 'pending',
       fileType: selectedResourceType.value,
       fileTypeName: fileTypeName
-    }
+    })
     uploadFiles.value.push(uploadFile)
     doUpload(uploadFile)
   })
@@ -508,17 +583,28 @@ const confirmMcUpload = () => {
   showUploadDialog.value = false
 }
 
-// 真实上传（使用 XMLHttpRequest 获取真实进度）
+// 分片上传文件并在成功后创建章节资源
 const doUpload = async (uploadFile: UploadFile) => {
   uploadFile.status = 'uploading'
+  uploadFile.progress = 0
+  uploadFile.errorMessage = ''
+  uploadFile.cancelRequested = false
+  const uploader = createChunkUploader(uploadFile)
   
   try {
-    // 1. 上传到 OSS（带真实进度）
-    const result = await uploadWithProgress(uploadFile.file, (percent) => {
-      uploadFile.progress = percent
-    })
+    // 1. 分片上传到 OSS（带真实进度）
+    const result = await uploader.start(uploadFile.file)
+    if (!result) {
+      if (uploadFile.cancelRequested) {
+        removeUploadFileById(uploadFile.id)
+      } else {
+        clearUploadTask(uploadFile)
+      }
+      return
+    }
     
     uploadFile.status = 'success'
+    uploadFile.progress = 100
     uploadFile.ossId = result.ossId
     uploadFile.url = result.url
     
@@ -539,16 +625,37 @@ const doUpload = async (uploadFile: UploadFile) => {
       // 刷新资源列表
       await loadResourceList()
       // 通知父组件刷新资源列表
-      emit('uploaded', uploadFiles.value.filter(f => f.status === 'success'))
+      emit('uploaded', [uploadFile])
+      removeUploadFileById(uploadFile.id)
     }
   } catch (error) {
     uploadFile.status = 'error'
+    uploadFile.errorMessage = error instanceof Error ? error.message : '上传失败'
+    clearUploadTask(uploadFile)
     console.error('上传失败:', error)
   }
 }
 
-const removeFile = (index: number) => {
-  uploadFiles.value.splice(index, 1)
+const cancelUpload = async (uploadFile: UploadFile) => {
+  if (!uploadFile.cancelUploadTask || uploadFile.status !== 'uploading') return
+
+  uploadFile.status = 'cancelling'
+  uploadFile.cancelRequested = true
+
+  try {
+    const cancelled = await uploadFile.cancelUploadTask()
+    if (!cancelled) {
+      uploadFile.status = 'uploading'
+      uploadFile.cancelRequested = false
+      return
+    }
+
+    ElMessage.success('取消上传成功')
+  } catch (error: any) {
+    uploadFile.status = 'uploading'
+    uploadFile.cancelRequested = false
+    ElMessage.error(error?.message || '取消上传失败')
+  }
 }
 </script>
 
@@ -781,6 +888,14 @@ const removeFile = (index: number) => {
   transition: width 0.3s;
 }
 
+.progress-fill--error {
+  background: linear-gradient(90deg, #ff7875, #ff4d4f);
+}
+
+.progress-fill--canceling {
+  background: linear-gradient(90deg, #faad14, #ffcc66);
+}
+
 .progress-text {
   font-size: 12px;
   color: #999;
@@ -790,6 +905,14 @@ const removeFile = (index: number) => {
 
 .progress-text.complete {
   color: #52c41a;
+}
+
+.progress-text.error {
+  color: #ff4d4f;
+}
+
+.progress-text.pending {
+  color: #fa8c16;
 }
 
 .type-text {
@@ -852,6 +975,12 @@ const removeFile = (index: number) => {
 
 .config-btn:hover {
   background: #fff7e6;
+}
+
+.action-status-text {
+  font-size: 12px;
+  color: #999;
+  white-space: nowrap;
 }
 
 .progress-complete {

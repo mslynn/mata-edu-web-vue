@@ -1,0 +1,58 @@
+html.study-page-use-outer-scroll,
+body.study-page-use-outer-scroll {
+  overflow-y: auto !important;
+}
+
+html.study-page-use-outer-scroll .sidebar-shell,
+body.study-page-use-outer-scroll .sidebar-shell {
+  height: auto !important;
+  min-height: 100vh;
+  overflow: visible !important;
+}
+
+html.study-page-use-outer-scroll .sidebar-shell-body,
+body.study-page-use-outer-scroll .sidebar-shell-body {
+  display: block !important;
+  height: auto !important;
+  min-height: 100vh;
+}
+
+html.study-page-use-outer-scroll .sidebar-shell-main,
+body.study-page-use-outer-scroll .sidebar-shell-main,
+html.study-page-use-outer-scroll .sidebar-shell-content,
+body.study-page-use-outer-scroll .sidebar-shell-content {
+  overflow: visible !important;
+  scrollbar-gutter: auto !important;
+}
+
+html.study-page-use-outer-scroll .app-sidebar,
+body.study-page-use-outer-scroll .app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  z-index: 20;
+}
+
+html.study-page-use-outer-scroll .sidebar-shell-main,
+body.study-page-use-outer-scroll .sidebar-shell-main {
+  width: auto !important;
+  margin-left: 264px;
+  margin-right: 24px;
+}
+
+@media (min-width: 1280px) {
+  html.study-page-use-outer-scroll .sidebar-shell-main,
+  body.study-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 328px;
+    margin-right: 40px;
+  }
+}
+
+@media (min-width: 1536px) {
+  html.study-page-use-outer-scroll .sidebar-shell-main,
+  body.study-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 416px;
+    margin-right: 68px;
+  }
+}

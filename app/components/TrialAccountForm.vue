@@ -56,7 +56,7 @@
           type="button"
           class="send-code-btn trial-send-code-btn"
           :class="{ 'is-counting': countdown > 0 }"
-          :disabled="countdown > 0"
+          :disabled="countdown > 0 || isSendingCode"
           @click="handleSendCode"
         >
           {{ countdown > 0 ? `${countdown}s` : t("auth.sendCode") }}
@@ -130,6 +130,12 @@
       </div>
       <p v-if="errors.products" class="error-msg">{{ errors.products }}</p>
     </div>
+
+    <CloudflareTurnstileDialog
+      v-model="showTurnstileDialog"
+      :site-key="turnstileSiteKey"
+      @success="handleTurnstileSuccess"
+    />
   </div>
 </template>
 
@@ -142,6 +148,7 @@ const { $i18n } = useNuxtApp();
 const t = (key: string) => $i18n.t(key);
 
 const { getSmsCode } = useAuth();
+const turnstileSiteKey = String(useRuntimeConfig().public.turnstileSiteKey || "");
 
 const emit = defineEmits<{
   submit: [data: typeof formData];
@@ -150,6 +157,9 @@ const emit = defineEmits<{
 const countryCode = ref("86");
 const countdown = ref(0);
 const phoneMaxLength = computed(() => (countryCode.value === "852" ? 8 : 11));
+const showTurnstileDialog = ref(false);
+const isSendingCode = ref(false);
+const pendingSmsPhone = ref("");
 
 const formData = reactive({
   name: "",
@@ -229,8 +239,18 @@ const validatePhone = (phonenumber: string): boolean => {
   return false;
 };
 
+const startCountdown = () => {
+  countdown.value = 60;
+  const timer = setInterval(() => {
+    countdown.value--;
+    if (countdown.value <= 0) {
+      clearInterval(timer);
+    }
+  }, 1000);
+};
+
 const handleSendCode = async () => {
-  if (countdown.value > 0) return;
+  if (countdown.value > 0 || isSendingCode.value) return;
 
   const phonenumber = formData.phonenumber.trim();
 
@@ -250,24 +270,42 @@ const handleSendCode = async () => {
 
   errors.phonenumber = "";
 
-  try {
-    // 调用获取验证码接口
-    console.log("📤 申请体验账号-发送验证码:", phonenumber);
-    await getSmsCode(phonenumber);
-    console.log("✅ 验证码发送成功");
-    ElMessage.success(t("auth.codeSendSuccess"));
+  if (!turnstileSiteKey) {
+    ElMessage.warning(t("auth.turnstileSiteKeyMissing"));
+    return;
+  }
 
-    // 开始倒计时
-    countdown.value = 60;
-    const timer = setInterval(() => {
-      countdown.value--;
-      if (countdown.value <= 0) {
-        clearInterval(timer);
-      }
-    }, 1000);
+  pendingSmsPhone.value = phonenumber;
+  showTurnstileDialog.value = true;
+};
+
+const handleTurnstileSuccess = async (turnstileToken: string) => {
+  const phonenumber = pendingSmsPhone.value || formData.phonenumber.trim();
+
+  if (!phonenumber || isSendingCode.value) {
+    showTurnstileDialog.value = false;
+    return;
+  }
+
+  showTurnstileDialog.value = false;
+  isSendingCode.value = true;
+
+  try {
+    const response = await getSmsCode(phonenumber, turnstileToken);
+
+    if (response?.code !== 200) {
+      errors.phonenumber = response?.msg || t("auth.codeSendFailed");
+      return;
+    }
+
+    ElMessage.success(t("auth.codeSendSuccess"));
+    startCountdown();
   } catch (error: any) {
-    console.error("❌ 验证码发送失败:", error);
-    errors.phonenumber = error?.data?.msg || error?.message || t("auth.codeSendFailed");
+    errors.phonenumber =
+      error?.data?.msg || error?.message || t("auth.codeSendFailed");
+  } finally {
+    isSendingCode.value = false;
+    pendingSmsPhone.value = "";
   }
 };
 

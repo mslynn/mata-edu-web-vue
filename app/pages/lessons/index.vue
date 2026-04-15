@@ -131,11 +131,11 @@
               <div 
                 v-for="chapter in chapterList" 
                 :key="chapter.chapterId"
-                class="chapter-item px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors"
+                class="lessons-chapter-item px-6 py-4 flex items-center justify-between hover:bg-gray-50 cursor-pointer transition-colors"
               >
                 <span class="text-sm text-gray-700">{{ chapter.chapterName }}</span>
-                <div class="chapter-actions">
-                  <button class="prepare-btn" @click.stop="handlePrepare(chapter)">
+                <div class="lessons-chapter-actions">
+                  <button class="lessons-prepare-btn" @click.stop="handlePrepare(chapter)">
                     {{ chapter.isPrepare === 1 ? $t('course.continuePrepare') : $t('course.startPrepare') }}
                   </button>
                 </div>
@@ -599,20 +599,20 @@ onMounted(() => {
   height: calc(100vh - 70px);
 }
 
-.chapter-item {
+.lessons-chapter-item {
   position: relative;
 }
 
-.chapter-actions {
+.lessons-chapter-actions {
   opacity: 0;
   transition: opacity 0.2s;
 }
 
-.chapter-item:hover .chapter-actions {
+.lessons-chapter-item:hover .lessons-chapter-actions {
   opacity: 1;
 }
 
-.prepare-btn {
+.lessons-prepare-btn {
   padding: 4px 12px;
   font-size: 12px;
   border-radius: 4px;
@@ -624,7 +624,7 @@ onMounted(() => {
   color: #FF9900;
 }
 
-.prepare-btn:hover {
+.lessons-prepare-btn:hover {
   background: #FFF7E6;
 }
 

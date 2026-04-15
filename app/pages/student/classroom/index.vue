@@ -22,7 +22,7 @@
         <!-- 等待状态（连接中/等待上课/等待屏幕分享） -->
         <div v-if="!hasRemoteStream" class="waiting-screen">
           <!-- 提示条 -->
-          <div v-if="classStarted" class="notice-bar">
+          <div v-if="showClassStartedNotice" class="notice-bar">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <path d="M12 8v4M12 16h.01"/>
@@ -260,11 +260,16 @@ definePageMeta({ layout: 'blank' })
 
 const config = useRuntimeConfig()
 const route = useRoute()
-const { getStudentTaskList } = student()
+const { getStudentTaskList, getLessonEnter } = student()
 const STUDENT_ONGOING_CLASSROOM_KEY = 'student_ongoing_classroom'
 const STUDENT_PAUSE_AUTO_ENTER_KEY = 'student_pause_auto_enter_classroom'
 const STUDENT_CLASS_TIMER_STATE_KEY = 'student_classroom_timer_state'
 const STUDENT_COURSEWARE_STORAGE_PREFIX = 'student_classroom_courseware'
+const STUDENT_LESSON_ENTER_STATE_KEY = 'student_classroom_lesson_enter'
+const STUDENT_NOTIFY_HEARTBEAT_INTERVAL = 30000
+const STUDENT_NOTIFY_RECONNECT_INTERVAL = 3000
+const STUDENT_NOTIFY_MAX_RECONNECT_ATTEMPTS = 10
+const STUDENT_CLASSROOM_CONFIRM_TIMEOUT = 8000
 
 const readQueryText = (value: unknown) => {
   if (Array.isArray(value)) return String(value[0] || '')
@@ -298,6 +303,8 @@ const className = ref(readQueryText(route.query.className))
 const studentName = ref('学生')
 const wsConnected = ref(false)
 const classStarted = ref(false)
+const showClassStartedNotice = ref(false)
+const notifyServiceInterrupted = ref(false)
 const showClassEndModal = ref(false) // 下课弹窗
 const showFullscreenModal = ref(false) // 全屏管控弹窗
 const showResourceModal = ref(false) // 课程资源弹窗
@@ -305,6 +312,8 @@ const showKickoutModal = ref(false) // 被踢出弹窗
 const showTaskModal = ref(false) // 课堂任务弹窗
 const isResourceSidebarCollapsed = ref(false)
 const isDocumentFullscreen = ref(false)
+const lessonEnterRequesting = ref(false)
+const lessonEnterRecordedKey = ref('')
 
 type ClassroomTaskStatus = 0 | 1
 
@@ -402,6 +411,72 @@ const saveOngoingClassroom = () => {
 const clearOngoingClassroom = () => {
   if (typeof window === 'undefined') return
   localStorage.removeItem(STUDENT_ONGOING_CLASSROOM_KEY)
+}
+
+const getStoredLessonEnterState = () => {
+  if (typeof window === 'undefined') return null
+  const stored = sessionStorage.getItem(STUDENT_LESSON_ENTER_STATE_KEY)
+  if (!stored) return null
+
+  try {
+    const parsed = JSON.parse(stored)
+    const key = String(parsed?.key || '')
+    const expireAt = Number(parsed?.expireAt || 0)
+    if (!key || (expireAt && expireAt < Date.now())) {
+      sessionStorage.removeItem(STUDENT_LESSON_ENTER_STATE_KEY)
+      return null
+    }
+    return { key, expireAt }
+  } catch {
+    sessionStorage.removeItem(STUDENT_LESSON_ENTER_STATE_KEY)
+    return null
+  }
+}
+
+const saveLessonEnterState = (key: string) => {
+  if (typeof window === 'undefined' || !key) return
+  sessionStorage.setItem(
+    STUDENT_LESSON_ENTER_STATE_KEY,
+    JSON.stringify({
+      key,
+      expireAt: Date.now() + 2 * 60 * 60 * 1000
+    })
+  )
+}
+
+const clearLessonEnterState = () => {
+  if (typeof window === 'undefined') return
+  sessionStorage.removeItem(STUDENT_LESSON_ENTER_STATE_KEY)
+  lessonEnterRecordedKey.value = ''
+}
+
+const ensureLessonEnterRecorded = async () => {
+  const lessonKey = firstNonEmptyString(currentClassId.value)
+  if (!lessonKey || lessonEnterRequesting.value) return
+
+  if (lessonEnterRecordedKey.value === lessonKey) {
+    return
+  }
+
+  const storedState = getStoredLessonEnterState()
+  if (storedState?.key === lessonKey) {
+    lessonEnterRecordedKey.value = lessonKey
+    return
+  }
+
+  lessonEnterRequesting.value = true
+  try {
+    await getLessonEnter({
+      peerId: lessonKey
+    })
+    lessonEnterRecordedKey.value = lessonKey
+    saveLessonEnterState(lessonKey)
+    console.log('[学生课堂] 已记录进入课堂:', lessonKey)
+  } catch (error) {
+    console.error('[学生课堂] 记录进入课堂失败:', error)
+  } finally {
+    lessonEnterRequesting.value = false
+  }
 }
 
 const setPauseAutoEnterClassroom = (paused: boolean) => {
@@ -817,6 +892,53 @@ const stopClassTimer = (removeState = false) => {
     classTime.value = 0
   }
 }
+
+const handleClassEnded = (reason = '收到下课通知') => {
+  console.log(`[学生课堂] ${reason}`)
+  clearClassroomConfirmTimer()
+  clearClassStartedNoticeTimer()
+  hasReceivedClassroomConfirmation = true
+  classStarted.value = false
+  showClassStartedNotice.value = false
+  clearOngoingClassroom()
+  clearLessonEnterState()
+  clearStoredCourseware()
+  setPauseAutoEnterClassroom(false)
+  stopClassTimer(true)
+  peerJS.destroy()
+  latestTaskNotice.value = ''
+  classroomTaskGroups.value = []
+  showTaskModal.value = false
+  receivedCoursewareList.value = []
+  selectedResourceIndex.value = -1
+  previewLoading.value = false
+  showResourceModal.value = false
+  showClassEndModal.value = true
+}
+
+const markClassroomConfirmed = () => {
+  hasReceivedClassroomConfirmation = true
+  clearClassroomConfirmTimer()
+}
+
+const scheduleClassroomConfirmCheck = () => {
+  clearClassroomConfirmTimer()
+  if (!firstNonEmptyString(currentClassId.value)) {
+    return
+  }
+  hasReceivedClassroomConfirmation = false
+  classroomConfirmTimer = setTimeout(() => {
+    if (
+      hasReceivedClassroomConfirmation ||
+      isUnmounted ||
+      showClassEndModal.value ||
+      showKickoutModal.value
+    ) {
+      return
+    }
+    handleClassEnded('重连后未收到课堂确认，按下课处理')
+  }, STUDENT_CLASSROOM_CONFIRM_TIMEOUT)
+}
 // 组件是否已卸载
 let isUnmounted = false
 
@@ -853,6 +975,13 @@ const connectToTeacherWithRetry = async (teacherPeerId: string) => {
 
 // WebSocket 实例（用于监听 CLASS_BEGIN）
 let notifyWs: WebSocket | null = null
+let notifyHeartbeatTimer: ReturnType<typeof setInterval> | null = null
+let notifyReconnectTimer: ReturnType<typeof setTimeout> | null = null
+let classroomConfirmTimer: ReturnType<typeof setTimeout> | null = null
+let classStartedNoticeTimer: ReturnType<typeof setTimeout> | null = null
+let hasReceivedClassroomConfirmation = false
+let notifyReconnectAttempts = 0
+let shouldReconnectNotifyWs = true
 
 // PeerJS
 const peerJS = usePeerJS()
@@ -868,11 +997,112 @@ const syncDocumentFullscreenState = () => {
   isDocumentFullscreen.value = !!document.fullscreenElement
 }
 
+const clearNotifyHeartbeatTimer = () => {
+  if (notifyHeartbeatTimer) {
+    clearInterval(notifyHeartbeatTimer)
+    notifyHeartbeatTimer = null
+  }
+}
+
+const clearNotifyReconnectTimer = () => {
+  if (notifyReconnectTimer) {
+    clearTimeout(notifyReconnectTimer)
+    notifyReconnectTimer = null
+  }
+}
+
+const clearClassStartedNoticeTimer = () => {
+  if (classStartedNoticeTimer) {
+    clearTimeout(classStartedNoticeTimer)
+    classStartedNoticeTimer = null
+  }
+}
+
+const showClassStartedNoticeTemporarily = () => {
+  showClassStartedNotice.value = true
+  clearClassStartedNoticeTimer()
+  classStartedNoticeTimer = setTimeout(() => {
+    showClassStartedNotice.value = false
+    classStartedNoticeTimer = null
+  }, 3000)
+}
+
+const closeNotifyWebSocket = () => {
+  shouldReconnectNotifyWs = false
+  clearNotifyHeartbeatTimer()
+  clearNotifyReconnectTimer()
+  clearClassroomConfirmTimer()
+  if (notifyWs) {
+    notifyWs.onclose = null
+    notifyWs.close()
+    notifyWs = null
+  }
+}
+
+const scheduleNotifyReconnect = () => {
+  if (isUnmounted || !shouldReconnectNotifyWs) {
+    return
+  }
+
+  if (notifyReconnectAttempts >= STUDENT_NOTIFY_MAX_RECONNECT_ATTEMPTS) {
+    shouldReconnectNotifyWs = false
+    if (!notifyServiceInterrupted.value) {
+      notifyServiceInterrupted.value = true
+      ElMessage({
+        type: 'error',
+        message: '课堂服务中断，请检查网络后重新进入课堂',
+        duration: 0,
+        showClose: true
+      })
+    }
+    console.error('[学生课堂] 通知 WebSocket 重连失败，已达到最大次数')
+    return
+  }
+
+  notifyReconnectAttempts += 1
+  const currentAttempt = notifyReconnectAttempts
+  clearNotifyReconnectTimer()
+  console.warn(
+    `[学生课堂] 通知 WebSocket 第 ${currentAttempt}/${STUDENT_NOTIFY_MAX_RECONNECT_ATTEMPTS} 次重连中...`
+  )
+  notifyReconnectTimer = setTimeout(() => {
+    if (isUnmounted || !shouldReconnectNotifyWs) {
+      return
+    }
+    connectNotifyWebSocket()
+  }, STUDENT_NOTIFY_RECONNECT_INTERVAL)
+}
+
+const clearClassroomConfirmTimer = () => {
+  if (classroomConfirmTimer) {
+    clearTimeout(classroomConfirmTimer)
+    classroomConfirmTimer = null
+  }
+}
+
+const startNotifyHeartbeat = () => {
+  clearNotifyHeartbeatTimer()
+  notifyHeartbeatTimer = setInterval(() => {
+    if (!notifyWs || notifyWs.readyState !== WebSocket.OPEN) {
+      return
+    }
+
+    const heartbeatMsg = JSON.stringify({ type: 'HEARTBEAT' })
+    notifyWs.send(heartbeatMsg)
+    console.log(
+      `[学生课堂] 心跳发送（每${STUDENT_NOTIFY_HEARTBEAT_INTERVAL / 1000}秒）:`,
+      heartbeatMsg,
+      new Date().toLocaleTimeString('zh-CN', { hour12: false })
+    )
+  }, STUDENT_NOTIFY_HEARTBEAT_INTERVAL)
+}
+
 // 连接状态
 const isConnected = computed(() => wsConnected.value || classStarted.value)
 
 // 连接状态文本
 const connectionStatusText = computed(() => {
+  if (notifyServiceInterrupted.value) return '服务中断'
   if (!wsConnected.value && !classStarted.value) return '连接中...'
   if (!classStarted.value) return '等待上课'
   if (hasRemoteStream.value) return '上课中'
@@ -934,6 +1164,14 @@ watch(
 
 // 连接通知 WebSocket（监听 CLASS_BEGIN）
 const connectNotifyWebSocket = () => {
+  shouldReconnectNotifyWs = true
+  clearNotifyHeartbeatTimer()
+  clearNotifyReconnectTimer()
+  if (notifyWs) {
+    notifyWs.onclose = null
+    notifyWs.close()
+    notifyWs = null
+  }
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null
   let wsUrl = signalingUrl
   if (token) {
@@ -942,25 +1180,34 @@ const connectNotifyWebSocket = () => {
   }
 
   console.log('[学生课堂] 连接通知 WebSocket')
-  notifyWs = new WebSocket(wsUrl)
+  const ws = new WebSocket(wsUrl)
+  notifyWs = ws
 
-  notifyWs.onopen = () => {
+  ws.onopen = () => {
     console.log('[学生课堂] 通知 WebSocket 已连接')
     wsConnected.value = true
+    notifyReconnectAttempts = 0
+    notifyServiceInterrupted.value = false
+    clearNotifyReconnectTimer()
     
     // 发送学生在线状态，后台会推送当前课堂信息
     const statusMsg = JSON.stringify({ type: 'STUDENT_STATUS', status: 'online' })
-    notifyWs?.send(statusMsg)
+    ws.send(statusMsg)
     console.log('[学生课堂] 发送:', statusMsg)
+    startNotifyHeartbeat()
+    scheduleClassroomConfirmCheck()
   }
 
-  notifyWs.onmessage = async (event) => {
+  ws.onmessage = async (event) => {
     console.log('[学生课堂] 收到消息:', event.data)
     try {
       const message = JSON.parse(event.data)
 
       // 处理 CLASS_BEGIN 消息
       if (isClassBeginMessage(message)) {
+        const wasClassStarted = classStarted.value
+        markClassroomConfirmed()
+        showClassEndModal.value = false
         syncClassroomContext(message)
         const teacherPeerId = message.peerId || message.teacherPeerId // 老师的 PeerId
         // 从老师的 peerId 中提取 classId（格式：teacher_{classId}）
@@ -968,6 +1215,9 @@ const connectNotifyWebSocket = () => {
         console.log('[学生课堂] 收到上课通知! classId:', classId, 'teacherPeerId:', teacherPeerId)
         currentClassId.value = classId
         classStarted.value = true
+        if (!wasClassStarted) {
+          showClassStartedNoticeTemporarily()
+        }
         
         // 开始计时（基于开课时间戳回算，返回首页再进来也不会重置）
         startClassTimer(classId)
@@ -976,6 +1226,7 @@ const connectNotifyWebSocket = () => {
           currentTeacherPeerId.value = teacherPeerId
         }
         saveOngoingClassroom()
+        await ensureLessonEnterRecorded()
 
         // 如果 PeerJS 还没初始化或没连接，现在初始化
         if (!peerJS.isConnected.value || !peerJS.peer.value) {
@@ -996,22 +1247,7 @@ const connectNotifyWebSocket = () => {
 
       // 处理 CLASS_END 消息
       if (message.type === 'CLASS_END') {
-        console.log('[学生课堂] 收到下课通知!')
-        classStarted.value = false
-        clearOngoingClassroom()
-        clearStoredCourseware()
-        setPauseAutoEnterClassroom(false)
-        stopClassTimer(true)
-        peerJS.destroy()
-        latestTaskNotice.value = ''
-        classroomTaskGroups.value = []
-        showTaskModal.value = false
-        receivedCoursewareList.value = []
-        selectedResourceIndex.value = -1
-        previewLoading.value = false
-        showResourceModal.value = false
-        // 显示下课弹窗
-        showClassEndModal.value = true
+        handleClassEnded()
       }
 
       // 处理 SCREEN_SHARE_START 消息 - 老师开始屏幕分享
@@ -1181,6 +1417,8 @@ const connectNotifyWebSocket = () => {
       // 处理 KICKOUT 消息 - 被老师踢出课堂
       if (message.type === 'KICKOUT') {
         console.log('[学生课堂] 被老师踢出课堂!')
+        clearClassroomConfirmTimer()
+        hasReceivedClassroomConfirmation = true
         // 清理资源
         if (classTimer) {
           clearInterval(classTimer)
@@ -1203,20 +1441,18 @@ const connectNotifyWebSocket = () => {
     }
   }
 
-  notifyWs.onclose = () => {
+  ws.onclose = () => {
+    if (notifyWs === ws) {
+      notifyWs = null
+    }
+    clearNotifyHeartbeatTimer()
+    clearClassroomConfirmTimer()
     console.log('[学生课堂] 通知 WebSocket 已断开')
     wsConnected.value = false
-    
-    // 自动重连（3秒后），但如果组件已卸载则不重连
-    setTimeout(() => {
-      if (!wsConnected.value && !isUnmounted) {
-        console.log('[学生课堂] 尝试重新连接 WebSocket...')
-        connectNotifyWebSocket()
-      }
-    }, 3000)
+    scheduleNotifyReconnect()
   }
 
-  notifyWs.onerror = (error) => {
+  ws.onerror = (error) => {
     console.error('[学生课堂] 通知 WebSocket 错误:', error)
   }
 }
@@ -1245,13 +1481,11 @@ const handleBack = () => {
     setPauseAutoEnterClassroom(true)
   } else {
     clearOngoingClassroom()
+    clearLessonEnterState()
     clearStoredCourseware()
     setPauseAutoEnterClassroom(false)
   }
-  if (notifyWs) {
-    notifyWs.close()
-    notifyWs = null
-  }
+  closeNotifyWebSocket()
   peerJS.destroy()
   navigateTo('/student')
 }
@@ -1260,6 +1494,7 @@ const handleBack = () => {
 const handleClassEndConfirm = () => {
   showClassEndModal.value = false
   clearOngoingClassroom()
+  clearLessonEnterState()
   clearStoredCourseware()
   setPauseAutoEnterClassroom(false)
   stopClassTimer(true)
@@ -1269,10 +1504,7 @@ const handleClassEndConfirm = () => {
   selectedResourceIndex.value = -1
   previewLoading.value = false
   showResourceModal.value = false
-  if (notifyWs) {
-    notifyWs.close()
-    notifyWs = null
-  }
+  closeNotifyWebSocket()
   peerJS.destroy()
   navigateTo('/student')
 }
@@ -1281,6 +1513,7 @@ const handleClassEndConfirm = () => {
 const handleKickoutConfirm = () => {
   showKickoutModal.value = false
   clearOngoingClassroom()
+  clearLessonEnterState()
   clearStoredCourseware()
   setPauseAutoEnterClassroom(false)
   stopClassTimer(true)
@@ -1290,10 +1523,7 @@ const handleKickoutConfirm = () => {
   selectedResourceIndex.value = -1
   previewLoading.value = false
   showResourceModal.value = false
-  if (notifyWs) {
-    notifyWs.close()
-    notifyWs = null
-  }
+  closeNotifyWebSocket()
   peerJS.destroy()
   // 清除 token
   localStorage.removeItem('token')
@@ -1320,6 +1550,10 @@ onMounted(async () => {
 
   restoreStoredClassroomContext()
   restoreStoredCourseware()
+  const storedLessonEnterState = getStoredLessonEnterState()
+  if (storedLessonEnterState?.key) {
+    lessonEnterRecordedKey.value = storedLessonEnterState.key
+  }
 
   console.log('========================================')
   console.log('[学生课堂] 页面加载!')
@@ -1345,6 +1579,7 @@ onMounted(async () => {
   connectNotifyWebSocket()
   // 已在课堂内，恢复自动进课堂能力
   setPauseAutoEnterClassroom(false)
+  await ensureLessonEnterRecorded()
 
   if (currentChapterId.value) {
     await loadClassroomTasks()
@@ -1354,7 +1589,11 @@ onMounted(async () => {
   if (currentClassId.value) {
     const success = await initializePeerJS(currentClassId.value)
     if (success) {
+      const wasClassStarted = classStarted.value
       classStarted.value = true
+      if (!wasClassStarted) {
+        showClassStartedNoticeTemporarily()
+      }
       saveOngoingClassroom()
       // 开始计时（若之前返回过首页，会沿用已有起始时间）
       startClassTimer(currentClassId.value)
@@ -1372,12 +1611,11 @@ onMounted(async () => {
 
 onUnmounted(() => {
   isUnmounted = true
+  closeNotifyWebSocket()
+  clearClassroomConfirmTimer()
+  clearClassStartedNoticeTimer()
   if (typeof document !== 'undefined') {
     document.removeEventListener('fullscreenchange', syncDocumentFullscreenState)
-  }
-  if (notifyWs) {
-    notifyWs.close()
-    notifyWs = null
   }
   stopClassTimer(false)
   peerJS.destroy()
@@ -1709,6 +1947,10 @@ onUnmounted(() => {
 }
 
 .modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
   margin-bottom: 16px;
 }
 

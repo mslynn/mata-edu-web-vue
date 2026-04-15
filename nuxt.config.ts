@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.55:8001'
+  : 'https://test-gateway.matatastudio.com'
 
 // 预览服务地址
 
@@ -17,7 +17,7 @@ const previewBaseUrl = process.env.NODE_ENV === 'production'
 //websocket通信
 const signalingUrl = process.env.NODE_ENV === 'production'
   ? 'wss://test-gateway.matatastudio.com/resource/websocket'
-  : 'ws://192.168.0.55:8001/resource/websocket'
+  : 'ws://192.168.0.60:8001/resource/websocket'
 
 
 
@@ -25,7 +25,7 @@ const signalingUrl = process.env.NODE_ENV === 'production'
 
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
-  devtools: { enabled: true },
+  devtools: { enabled: process.env.NODE_ENV !== 'production' },
   app: {
     head: {
       title: 'AI智学云-教育平台',
@@ -41,7 +41,8 @@ export default defineNuxtConfig({
     }
   },
   devServer: {
-    host: '0.0.0.0',
+    // host:'0.0.0.0',
+    host: '127.0.0.1',
     port: 3001,
   },
 //localhost
@@ -59,6 +60,8 @@ export default defineNuxtConfig({
       nousCreateUrl: process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/',
       // WebRTC 信令服务器地址
       signalingUrl: signalingUrl || 'ws://192.168.0.60:8001/resource/websocket',
+      // Cloudflare Turnstile 站点公钥
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '',
     }
   },
 
@@ -83,7 +86,7 @@ export default defineNuxtConfig({
   ],
   tailwindcss: {
     exposeConfig: true,
-    viewer: true,
+    viewer: process.env.NODE_ENV !== 'production',
   },
 
   // 修改构建产物输出目录为 dist (默认是隐藏的 .output)

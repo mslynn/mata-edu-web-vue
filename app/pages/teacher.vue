@@ -613,6 +613,8 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from "vue";
+import '~/assets/css/teacher.css'
+import '~/assets/css/teacher-global.css'
 import { useTeacher } from "~/composables/api/useTeacher";
 import { aiAdmin } from "~/composables/api/ai";
 import { personalcenterApi } from "~/composables/api/personalcenter";
@@ -662,7 +664,6 @@ const {
   getTeachList,
   getQuickLoginInfo,
   getTeacherStats,
-  getTeacherStatus,
 } = useTeacher();
 const { getAiList, createAi, updateAi, deleteAi, deleteOss, ssoLogin } = aiAdmin();
 const { addOpus, uploadOSS } = personalcenterApi();
@@ -905,8 +906,15 @@ const verifyOngoingClassroom = async () => {
   if (!stored) return null;
 
   try {
-    const status = await getTeacherStatus();
-    if (status?.isTeach) {
+    const data = await getTeachChapterList(stored.courseId, stored.classId);
+    const chapters = Array.isArray(data) ? data : [];
+    const matched = chapters.find(
+      (item: any) =>
+        String(item?.chapterId || "") === stored.chapterId &&
+        Number(item?.teachStatus ?? -1) === 1
+    );
+
+    if (matched) {
       return stored;
     }
 
@@ -1049,6 +1057,7 @@ onMounted(() => {
 onBeforeUnmount(() => {
   toggleTeacherOuterScroll(false);
 });
+
 const pageLoading = computed(
   () => !minLoadingDone.value || teachListPending.value || teacherStatsPending.value
 );
@@ -2525,6 +2534,3 @@ const handleStartClassConfirm = async (data: {
   }
 };
 </script>
-
-<style scoped src="~/assets/css/teacher.css"></style>
-<style src="~/assets/css/teacher-global.css"></style>

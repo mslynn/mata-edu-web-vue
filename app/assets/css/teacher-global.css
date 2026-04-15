@@ -1,19 +1,19 @@
 html.teacher-page-use-outer-scroll,
 body.teacher-page-use-outer-scroll {
-  overflow-y: auto;
+  overflow-y: auto !important;
 }
 
 html.teacher-page-use-outer-scroll .sidebar-shell,
 body.teacher-page-use-outer-scroll .sidebar-shell {
-  height: auto;
+  height: auto !important;
   min-height: 100vh;
-  overflow: visible;
+  overflow: visible !important;
 }
 
 html.teacher-page-use-outer-scroll .sidebar-shell-body,
 body.teacher-page-use-outer-scroll .sidebar-shell-body {
-  display: block;
-  height: auto;
+  display: block !important;
+  height: auto !important;
   min-height: 100vh;
 }
 
@@ -21,7 +21,8 @@ html.teacher-page-use-outer-scroll .sidebar-shell-main,
 body.teacher-page-use-outer-scroll .sidebar-shell-main,
 html.teacher-page-use-outer-scroll .sidebar-shell-content,
 body.teacher-page-use-outer-scroll .sidebar-shell-content {
-  overflow: visible;
+  overflow: visible !important;
+  scrollbar-gutter: auto !important;
 }
 
 html.teacher-page-use-outer-scroll .app-sidebar,
@@ -35,7 +36,7 @@ body.teacher-page-use-outer-scroll .app-sidebar {
 
 html.teacher-page-use-outer-scroll .sidebar-shell-main,
 body.teacher-page-use-outer-scroll .sidebar-shell-main {
-  width: auto;
+  width: auto !important;
   margin-left: 264px;
   margin-right: 24px;
 }

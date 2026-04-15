@@ -246,9 +246,23 @@ export const useAuth = () => {
   }
 
   //获取手机验证码
-  const getSmsCode = async (phonenumber: string) => {
+  const getSmsCode = async (phonenumber: string, turnstileToken?: string) => {
     try {
-      const response = await http.get(`/resource/sms/code?phonenumber=${phonenumber}`)
+      const query = new URLSearchParams({
+        phonenumber
+      })
+      const headers: Record<string, string> = {
+        ignoreAuthError: 'true'
+      }
+
+      if (turnstileToken) {
+        query.set('turnstileToken', turnstileToken)
+      }
+
+      const response = await http.request(`/resource/sms/code?${query.toString()}`, {
+        method: 'GET',
+        headers
+      })
       return response
     } catch (error: any) {
       throw error

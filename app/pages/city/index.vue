@@ -7,7 +7,7 @@
           {{ $t("city.districtManage") }}
         </h1>
         <div class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap">
-          {{ $t("city.adminCount") }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>个</span>
+          {{ $t("city.adminCount") }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>人</span>
         </div>
       </div>
 
@@ -133,7 +133,7 @@
               $t("city.manageArea")
             }}</span>
             <span class="text-[#4D4D4D]">{{
-              currentAdmin?.areaName || currentAdmin?.deptName || "-"
+              currentAdmin?.orgName  || "-"
             }}</span>
           </div>
           <div class="flex">
@@ -297,7 +297,7 @@ const loading = ref(false);
 // 表格列配置
 const columns = computed(() => [
   {
-    key: "areaName",
+    key: "orgName",
     title: t("city.belongArea"),
     minWidth: "120px",
     align: "center" as const,
@@ -363,7 +363,7 @@ const fetchList = async () => {
     const list = (res?.list || []) as any[];
     tableData.value = list.map((item, index) => ({
       id: item.userId || index + 1,
-      areaName: item.areaName || item.deptName || "-",
+      orgName: item.orgName || "-",
       adminName: item.nickName || "-",
       account: item.userName || "-",
       phone: item.phonenumber || "-",

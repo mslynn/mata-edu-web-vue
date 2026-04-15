@@ -450,6 +450,7 @@ watch(() => props.courseList, (list) => {
 
 // 监听章节列表变化，默认选中第一个
 watch(chapterList, (list) => {
+  console.log(list,'*******')
   if (props.visible && list.length > 0 && !selectedChapter.value) {
     selectedChapter.value = list[0] || null
   }

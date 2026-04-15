@@ -212,6 +212,11 @@ export const useHttp = () => {
 
 ## 各角色测试账号示例
 
+- **优必选账号**
+
+账号：`42857765`
+密码：`Matatalab2025`
+
 - **市级管理员**  
   账号：`adm0001`  
   密码：`123456`
@@ -230,8 +235,8 @@ export const useHttp = () => {
   手机号：`18488888888`
 
 - **学生**  
-  账号：`4285lynn01`  
-  密码：`mZ7x9SgR`
+  账号：`xiaohong518103`  
+  密码：`JU6PDYJo`
 
 **  编程平台线上地址**
   <https://nous.matatastudio.com/>
