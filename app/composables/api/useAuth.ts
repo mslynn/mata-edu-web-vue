@@ -30,6 +30,27 @@ export const useAuth = () => {
   const http = useHttp()
   const { t } = useI18n()
 
+  const getSmsErrorMessage = (message?: string) => {
+    const rawMessage = String(message || '').trim()
+
+    if (!rawMessage) {
+      return t('auth.codeSendFailedAfterVerify')
+    }
+
+    if (
+      rawMessage.includes('InvalidAccessKeyId')
+      || rawMessage.includes('Specified access key is not found or invalid')
+    ) {
+      return t('auth.smsServiceConfigInvalid')
+    }
+
+    if (rawMessage.startsWith('{') || rawMessage.length > 160) {
+      return t('auth.codeSendFailedAfterVerify')
+    }
+
+    return rawMessage
+  }
+
   const normalizeUserInfo = (rawUser: any) => {
     if (!rawUser || typeof rawUser !== 'object') return null
 
@@ -252,19 +273,53 @@ export const useAuth = () => {
         phonenumber
       })
       const headers: Record<string, string> = {
-        ignoreAuthError: 'true'
+        ignoreAuthError: 'true',
+        showErrorMsg: 'false'
       }
 
       if (turnstileToken) {
         query.set('turnstileToken', turnstileToken)
       }
 
+      console.groupCollapsed('[sms] send code request')
+      console.log('apiBaseUrl:', useRuntimeConfig().public.apiBaseUrl)
+      console.log('path:', '/resource/sms/code')
+      console.log('phonenumber:', phonenumber)
+      console.log('hasTurnstileToken:', Boolean(turnstileToken))
+      console.log(
+        'turnstileTokenPreview:',
+        turnstileToken ? `${turnstileToken.slice(0, 12)}...(${turnstileToken.length})` : '',
+      )
+      console.log('query:', query.toString())
+      console.groupEnd()
+
       const response = await http.request(`/resource/sms/code?${query.toString()}`, {
         method: 'GET',
         headers
       })
+
+      console.groupCollapsed('[sms] send code response')
+      console.log('phonenumber:', phonenumber)
+      console.log('response:', response)
+      console.groupEnd()
+
+      if (response && typeof response === 'object') {
+        return {
+          ...response,
+          msg: getSmsErrorMessage((response as any).msg)
+        }
+      }
       return response
     } catch (error: any) {
+      console.groupCollapsed('[sms] send code error')
+      console.log('phonenumber:', phonenumber)
+      console.log('error:', error)
+      console.log('error.data:', error?.data)
+      console.groupEnd()
+
+      if (error?.data) {
+        error.data.msg = getSmsErrorMessage(error.data.msg || error.message)
+      }
       throw error
     }
   }
@@ -346,6 +401,7 @@ export const useAuth = () => {
     classCodeLogin,
     getRedirectPathByRole,
     getSmsCode,
+    getSmsErrorMessage,
     applyTrialAccount,
     resetPassword,
     getClassCodeLoginList,

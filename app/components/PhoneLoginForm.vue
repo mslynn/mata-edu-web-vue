@@ -78,7 +78,7 @@ import { useAuth } from '~/composables/api/useAuth'
 
 const { $i18n } = useNuxtApp()
 const t = (key: string) => $i18n.t(key)
-const { getSmsCode } = useAuth();
+const { getSmsCode, getSmsErrorMessage } = useAuth();
 const turnstileSiteKey = String(useRuntimeConfig().public.turnstileSiteKey || '')
 
 interface Props {
@@ -110,8 +110,16 @@ const countryCodeSelectorRef = ref<InstanceType<typeof import('./CountryCodeSele
 const showTurnstileDialog = ref(false)
 const isSendingCode = ref(false)
 const pendingSmsPhone = ref('')
+const verifiedTurnstileToken = ref('')
+const verifiedSmsPhone = ref('')
+
+const clearVerifiedTurnstile = () => {
+  verifiedTurnstileToken.value = ''
+  verifiedSmsPhone.value = ''
+}
 
 const handleCountryChange = (country: Country) => {
+  clearVerifiedTurnstile()
   phoneMaxLength.value = country.maxLength
   // 区号切换后，同步截断已输入手机号
   const trimmedPhone = (props.modelValue.phone || '').replace(/\D/g, '').slice(0, phoneMaxLength.value)
@@ -129,6 +137,11 @@ const handleInput = (field: 'phone' | 'code', event: Event) => {
   const value = field === 'phone'
     ? rawValue.replace(/\D/g, '').slice(0, phoneMaxLength.value)
     : rawValue.replace(/\D/g, '').slice(0, 6)
+
+  if (field === 'phone') {
+    clearVerifiedTurnstile()
+  }
+
   emit('update:modelValue', {
     ...props.modelValue,
     [field]: value
@@ -164,6 +177,31 @@ const startCountdown = () => {
   }, 1000)
 }
 
+const sendSmsCode = async (phone: string, turnstileToken: string) => {
+  isSendingCode.value = true
+
+  try {
+    const response = await getSmsCode(phone, turnstileToken)
+
+    if (response?.code !== 200) {
+      phoneErrorMsg.value = getSmsErrorMessage(response?.msg)
+      emit('update:errors', { ...props.errors, phone: true })
+      return
+    }
+
+    ElMessage.success(t('auth.codeSendSuccess'))
+    emit('send-code')
+    startCountdown()
+  } catch (error: any) {
+    phoneErrorMsg.value = getSmsErrorMessage(error?.data?.msg || error?.message)
+    emit('update:errors', { ...props.errors, phone: true })
+  } finally {
+    isSendingCode.value = false
+    pendingSmsPhone.value = ''
+    clearVerifiedTurnstile()
+  }
+}
+
 const handleSendCode = async () => {
   if (countdown.value > 0 || isSendingCode.value) return
   
@@ -185,6 +223,11 @@ const handleSendCode = async () => {
     return
   }
 
+  if (verifiedTurnstileToken.value && verifiedSmsPhone.value === phone) {
+    await sendSmsCode(phone, verifiedTurnstileToken.value)
+    return
+  }
+
   pendingSmsPhone.value = phone
   showTurnstileDialog.value = true
 }
@@ -192,34 +235,18 @@ const handleSendCode = async () => {
 const handleTurnstileSuccess = async (turnstileToken: string) => {
   const phone = pendingSmsPhone.value || props.modelValue.phone.trim()
 
-  if (!phone || isSendingCode.value) {
+  if (!phone) {
     showTurnstileDialog.value = false
     return
   }
 
+  verifiedTurnstileToken.value = turnstileToken
+  verifiedSmsPhone.value = phone
   showTurnstileDialog.value = false
-  isSendingCode.value = true
-
-  try {
-    const response = await getSmsCode(phone, turnstileToken)
-
-    if (response?.code !== 200) {
-      phoneErrorMsg.value = response?.msg || t('auth.codeSendFailed')
-      emit('update:errors', { ...props.errors, phone: true })
-      return
-    }
-
-    ElMessage.success(t('auth.codeSendSuccess'))
-
-    emit('send-code')
-    startCountdown()
-  } catch (error: any) {
-    phoneErrorMsg.value = error?.data?.msg || error?.message || t('auth.codeSendFailed')
-    emit('update:errors', { ...props.errors, phone: true })
-  } finally {
-    isSendingCode.value = false
-    pendingSmsPhone.value = ''
-  }
+  pendingSmsPhone.value = ''
+  phoneErrorMsg.value = ''
+  emit('update:errors', { ...props.errors, phone: false })
+  ElMessage.success(t('auth.turnstileReadyToSend'))
 }
 
 const handleTogglePasswordLogin = () => {

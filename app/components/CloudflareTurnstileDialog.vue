@@ -32,10 +32,27 @@
             >
               {{ t("common.loading") }}
             </div>
-            <div
+          <div
               ref="widgetRef"
               class="turnstile-dialog__widget"
             />
+          </div>
+          <div class="turnstile-dialog__actions">
+            <button
+              type="button"
+              class="turnstile-dialog__action turnstile-dialog__action--secondary"
+              @click="handleClose"
+            >
+              {{ t("common.cancel") }}
+            </button>
+            <button
+              type="button"
+              class="turnstile-dialog__action turnstile-dialog__action--primary"
+              :disabled="!canConfirm"
+              @click="handleConfirm"
+            >
+              {{ t("auth.turnstileConfirm") }}
+            </button>
           </div>
         </div>
       </div>
@@ -44,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 
 type TurnstileStatus = "info" | "success" | "error";
 
@@ -143,6 +160,8 @@ const widgetId = ref<string | null>(null);
 const isWidgetLoading = ref(false);
 const statusType = ref<TurnstileStatus>("info");
 const statusMessage = ref(t("auth.turnstileVerifyPrompt"));
+const verifiedToken = ref("");
+const canConfirm = computed(() => Boolean(verifiedToken.value));
 
 const setStatus = (key: string, type: TurnstileStatus = "info") => {
   statusType.value = type;
@@ -163,6 +182,7 @@ const clearWidget = () => {
   }
 
   widgetId.value = null;
+  verifiedToken.value = "";
 
   if (widgetRef.value) {
     widgetRef.value.innerHTML = "";
@@ -201,20 +221,29 @@ const renderTurnstile = async () => {
       theme: "light",
       language: "auto",
       callback: (token: string) => {
+        console.groupCollapsed("[turnstile] verify success");
+        console.log("siteKey:", props.siteKey);
+        console.log("tokenPreview:", token ? `${token.slice(0, 12)}...(${token.length})` : "");
+        console.groupEnd();
+        verifiedToken.value = token;
         setStatus("auth.turnstileVerifySuccess", "success");
-        emit("success", token);
       },
       "expired-callback": () => {
+        console.warn("[turnstile] token expired");
+        verifiedToken.value = "";
         setStatus("auth.turnstileExpired", "error");
         if (widgetId.value && window.turnstile) {
           window.turnstile.reset(widgetId.value);
         }
       },
       "error-callback": () => {
+        console.error("[turnstile] verify failed");
+        verifiedToken.value = "";
         setStatus("auth.turnstileVerifyFailed", "error");
       },
     });
   } catch {
+    console.error("[turnstile] script load failed");
     setStatus("auth.turnstileLoadFailed", "error");
   } finally {
     isWidgetLoading.value = false;
@@ -222,6 +251,15 @@ const renderTurnstile = async () => {
 };
 
 const handleClose = () => {
+  emit("update:modelValue", false);
+};
+
+const handleConfirm = () => {
+  if (!verifiedToken.value) {
+    return;
+  }
+
+  emit("success", verifiedToken.value);
   emit("update:modelValue", false);
 };
 
@@ -375,6 +413,51 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: center;
   width: 100%;
+}
+
+.turnstile-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.turnstile-dialog__action {
+  min-width: 92px;
+  height: 42px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.turnstile-dialog__action--secondary {
+  color: #6b7280;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px #d1d5db;
+}
+
+.turnstile-dialog__action--secondary:hover {
+  color: #374151;
+  box-shadow: inset 0 0 0 1px #9ca3af;
+}
+
+.turnstile-dialog__action--primary {
+  color: #ffffff;
+  background: linear-gradient(135deg, #89e7b5 0%, #5ed79f 100%);
+  box-shadow: 0 10px 18px rgba(94, 215, 159, 0.26);
+}
+
+.turnstile-dialog__action--primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.turnstile-dialog__action--primary:not(:disabled):hover {
+  transform: translateY(-1px);
 }
 
 .turnstile-dialog-enter-active,

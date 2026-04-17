@@ -158,7 +158,7 @@ import { useAuth } from '~/composables/api/useAuth'
 const { $i18n } = useNuxtApp()
 const t = (key: string) => $i18n.t(key)
 
-const { getSmsCode } = useAuth()
+const { getSmsCode, getSmsErrorMessage } = useAuth()
 const turnstileSiteKey = String(useRuntimeConfig().public.turnstileSiteKey || '')
 
 const emit = defineEmits<{
@@ -174,6 +174,13 @@ const phoneMaxLength = computed(() => (countryCode.value === '852' ? 8 : 11))
 const showTurnstileDialog = ref(false)
 const isSendingCode = ref(false)
 const pendingSmsPhone = ref('')
+const verifiedTurnstileToken = ref('')
+const verifiedSmsPhone = ref('')
+
+const clearVerifiedTurnstile = () => {
+  verifiedTurnstileToken.value = ''
+  verifiedSmsPhone.value = ''
+}
 
 const formData = reactive({
   phone: '',
@@ -195,6 +202,7 @@ const clearError = (field: keyof typeof errors) => {
 
 const handlePhoneInput = () => {
   formData.phone = formData.phone.replace(/\D/g, '').slice(0, phoneMaxLength.value)
+  clearVerifiedTurnstile()
   clearError('phone')
 }
 
@@ -223,6 +231,28 @@ const startCountdown = () => {
   }, 1000)
 }
 
+const sendSmsCode = async (phone: string, turnstileToken: string) => {
+  isSendingCode.value = true
+
+  try {
+    const response = await getSmsCode(phone, turnstileToken)
+
+    if (response?.code !== 200) {
+      errors.phone = getSmsErrorMessage(response?.msg)
+      return
+    }
+
+    ElMessage.success(t('auth.codeSendSuccess'))
+    startCountdown()
+  } catch (error: any) {
+    errors.phone = getSmsErrorMessage(error?.data?.msg || error?.message)
+  } finally {
+    isSendingCode.value = false
+    pendingSmsPhone.value = ''
+    clearVerifiedTurnstile()
+  }
+}
+
 const handleSendCode = async () => {
   if (countdown.value > 0 || isSendingCode.value) return
   
@@ -249,6 +279,11 @@ const handleSendCode = async () => {
     return
   }
 
+  if (verifiedTurnstileToken.value && verifiedSmsPhone.value === phone) {
+    await sendSmsCode(phone, verifiedTurnstileToken.value)
+    return
+  }
+
   pendingSmsPhone.value = phone
   showTurnstileDialog.value = true
 }
@@ -256,30 +291,17 @@ const handleSendCode = async () => {
 const handleTurnstileSuccess = async (turnstileToken: string) => {
   const phone = pendingSmsPhone.value || formData.phone.trim()
 
-  if (!phone || isSendingCode.value) {
+  if (!phone) {
     showTurnstileDialog.value = false
     return
   }
 
+  verifiedTurnstileToken.value = turnstileToken
+  verifiedSmsPhone.value = phone
   showTurnstileDialog.value = false
-  isSendingCode.value = true
-
-  try {
-    const response = await getSmsCode(phone, turnstileToken)
-
-    if (response?.code !== 200) {
-      errors.phone = response?.msg || t('auth.codeSendFailed')
-      return
-    }
-
-    ElMessage.success(t('auth.codeSendSuccess'))
-    startCountdown()
-  } catch (error: any) {
-    errors.phone = error?.data?.msg || error?.message || t('auth.codeSendFailed')
-  } finally {
-    isSendingCode.value = false
-    pendingSmsPhone.value = ''
-  }
+  pendingSmsPhone.value = ''
+  errors.phone = ''
+  ElMessage.success(t('auth.turnstileReadyToSend'))
 }
 
 const handleSubmit = () => {

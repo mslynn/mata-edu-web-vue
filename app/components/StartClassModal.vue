@@ -2,8 +2,13 @@
   <Teleport to="body">
     <!-- 开课设置弹窗 -->
     <Transition name="modal-fade">
-      <div v-if="visible && !showTip" class="modal-overlay" @click.self="handleClose">
-        <div class="modal-container">
+      <div
+        v-if="visible && !showTip"
+        class="modal-overlay"
+        :class="{ 'modal-overlay--teacher2': isTeacher2Theme }"
+        @click.self="handleClose"
+      >
+        <div class="modal-container" :class="{ 'modal-container--teacher2': isTeacher2Theme }">
           <!-- 关闭按钮 -->
           <button class="close-btn" @click="handleClose">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -133,8 +138,8 @@
 
     <!-- 提示弹窗 -->
     <Transition name="modal-fade">
-      <div v-if="showTip" class="modal-overlay">
-        <div class="tip-container">
+      <div v-if="showTip" class="modal-overlay" :class="{ 'modal-overlay--teacher2': isTeacher2Theme }">
+        <div class="tip-container" :class="{ 'tip-container--teacher2': isTeacher2Theme }">
           <!-- 关闭按钮 -->
           <button class="close-btn" @click="handleTipClose">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -217,12 +222,14 @@ interface Props {
   courseTree?: MenuGroup[]
   initialCourseId?: string
   initialChapterId?: string
+  theme?: 'default' | 'teacher2'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   classList: () => [],
   courseList: () => [],
-  courseTree: () => []
+  courseTree: () => [],
+  theme: 'default'
 })
 
 const emit = defineEmits<{
@@ -241,6 +248,7 @@ const chapterList = ref<ChapterItem[]>([])
 const confirmData = ref<{ classId: string; courseId: string; chapterId: string } | null>(null)
 const expandedMenus = ref<Set<string>>(new Set())
 const courseListRef = ref<HTMLElement | null>(null)
+const isTeacher2Theme = computed(() => props.theme === 'teacher2')
 
 // 扁平化树形结构
 const flattenedTree = computed(() => {
@@ -784,6 +792,232 @@ defineExpose({ setChapterList })
 .btn-confirm:hover {
   background: #E68A00;
   transform: translateY(-1px);
+}
+
+.modal-overlay--teacher2 {
+  background: rgba(12, 15, 16, 0.34);
+  backdrop-filter: blur(4px);
+}
+
+.modal-container--teacher2 {
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  border: 1px solid rgba(174, 179, 181, 0.2);
+  border-radius: 28px;
+  box-shadow: 0 28px 72px rgba(0, 91, 194, 0.14);
+}
+
+.modal-container--teacher2 .close-btn:hover {
+  background: #f2f7ff;
+}
+
+.modal-container--teacher2 .close-btn:hover svg path,
+.tip-container--teacher2 .close-btn:hover svg path {
+  stroke: #005bc2;
+}
+
+.modal-container--teacher2 .modal-title {
+  color: #2e3335;
+}
+
+.modal-container--teacher2 .class-select {
+  min-height: 58px;
+  background: #ffffff;
+  border: 1px solid rgba(164, 193, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 8px 20px rgba(0, 91, 194, 0.06);
+}
+
+.modal-container--teacher2 .class-select:hover {
+  border-color: #4b8eff;
+  box-shadow: 0 12px 24px rgba(0, 91, 194, 0.1);
+}
+
+.modal-container--teacher2 .class-icon,
+.modal-container--teacher2 .arrow-icon {
+  stroke: #7a879b;
+}
+
+.modal-container--teacher2 .select-text {
+  color: #2e3335;
+  font-weight: 600;
+}
+
+.modal-container--teacher2 .dropdown-menu {
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 18px 36px rgba(46, 51, 53, 0.12);
+}
+
+.modal-container--teacher2 .dropdown-item {
+  color: #2e3335;
+  font-weight: 600;
+}
+
+.modal-container--teacher2 .dropdown-item:hover {
+  background: #f4f8ff;
+}
+
+.modal-container--teacher2 .dropdown-item.active {
+  color: #ffffff;
+  background: #005bc2;
+}
+
+.modal-container--teacher2 .selection-column {
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 20px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+  box-shadow: 0 10px 22px rgba(46, 51, 53, 0.05);
+}
+
+.modal-container--teacher2 .column-header {
+  color: #5a6062;
+  font-weight: 700;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 248, 255, 0.98) 100%);
+  border-bottom: 1px solid rgba(174, 179, 181, 0.16);
+}
+
+.modal-container--teacher2 .column-list {
+  padding: 10px;
+}
+
+.modal-container--teacher2 .list-item,
+.modal-container--teacher2 .menu-header {
+  color: #2e3335;
+}
+
+.modal-container--teacher2 .list-item:hover,
+.modal-container--teacher2 .menu-header:hover {
+  background: #f4f8ff;
+}
+
+.modal-container--teacher2 .list-item.active {
+  color: #005bc2;
+  background: #edf5ff;
+  font-weight: 700;
+}
+
+.modal-container--teacher2 .expand-icon {
+  color: #8a93a5;
+}
+
+.modal-container--teacher2 .course-item.active {
+  color: #005bc2;
+  background: linear-gradient(180deg, #f4f9ff 0%, #ebf4ff 100%);
+  box-shadow: inset 0 0 0 1px rgba(75, 142, 255, 0.14);
+}
+
+.modal-container--teacher2 .course-item.active::before {
+  background: linear-gradient(180deg, #4b8eff 0%, #005bc2 100%);
+}
+
+.modal-container--teacher2 .last-class-tag {
+  color: #005bc2;
+  border: 1px solid rgba(75, 142, 255, 0.22);
+  background: rgba(75, 142, 255, 0.08);
+  border-radius: 999px;
+}
+
+.modal-container--teacher2 .btn-cancel {
+  border: 1px solid rgba(0, 91, 194, 0.18);
+  color: #005bc2;
+  background: #ffffff;
+}
+
+.modal-container--teacher2 .btn-cancel:hover {
+  border-color: rgba(0, 91, 194, 0.3);
+  color: #005bc2;
+  background: #f4f8ff;
+}
+
+.modal-container--teacher2 .btn-confirm {
+  background: linear-gradient(180deg, #1d6ed8 0%, #005bc2 100%);
+  box-shadow: 0 14px 30px rgba(0, 91, 194, 0.2);
+}
+
+.modal-container--teacher2 .btn-confirm:hover {
+  background: linear-gradient(180deg, #2277e6 0%, #0054b3 100%);
+  box-shadow: 0 18px 34px rgba(0, 91, 194, 0.24);
+}
+
+.tip-container--teacher2 {
+  background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  box-shadow: 0 28px 72px rgba(0, 91, 194, 0.14);
+}
+
+.tip-container--teacher2 .tip-title {
+  color: #2e3335;
+}
+
+.tip-container--teacher2 .tip-illustration {
+  background:
+    radial-gradient(circle at 50% 22%, rgba(164, 193, 255, 0.85), rgba(164, 193, 255, 0) 34%),
+    linear-gradient(180deg, #f4f9ff 0%, #dbe9ff 58%, #f8fbff 100%);
+  box-shadow: inset 0 0 0 1px rgba(75, 142, 255, 0.2);
+}
+
+.tip-container--teacher2 .tip-aurora--one {
+  background: rgba(75, 142, 255, 0.22);
+}
+
+.tip-container--teacher2 .tip-aurora--two {
+  background: rgba(89, 72, 211, 0.18);
+}
+
+.tip-container--teacher2 .tip-screen {
+  background: linear-gradient(180deg, #4b8eff 0%, #005bc2 100%);
+  box-shadow: 0 14px 24px rgba(0, 91, 194, 0.22);
+}
+
+.tip-container--teacher2 .tip-screen::before {
+  background: linear-gradient(180deg, #f7fbff 0%, #edf5ff 100%);
+}
+
+.tip-container--teacher2 .tip-screen__badge {
+  background: rgba(0, 91, 194, 0.1);
+  color: #005bc2;
+}
+
+.tip-container--teacher2 .tip-screen__play {
+  background: linear-gradient(180deg, #4b8eff 0%, #005bc2 100%);
+  box-shadow: 0 8px 14px rgba(0, 91, 194, 0.28);
+}
+
+.tip-container--teacher2 .tip-screen__line {
+  background: rgba(0, 91, 194, 0.12);
+}
+
+.tip-container--teacher2 .tip-screen__line::after {
+  background: linear-gradient(90deg, rgba(75, 142, 255, 0) 0%, rgba(75, 142, 255, 0.95) 55%, rgba(75, 142, 255, 0) 100%);
+}
+
+.tip-container--teacher2 .tip-book__page {
+  background: linear-gradient(180deg, #5948d3 0%, #3f30b4 100%);
+  box-shadow: 0 10px 16px rgba(63, 48, 180, 0.22);
+}
+
+.tip-container--teacher2 .tip-wave {
+  border-color: rgba(75, 142, 255, 0.22);
+}
+
+.tip-container--teacher2 .tip-spark {
+  background: #4b8eff;
+  box-shadow: 0 0 0 4px rgba(75, 142, 255, 0.14);
+}
+
+.tip-container--teacher2 .tip-text {
+  color: #5a6062;
+}
+
+.tip-container--teacher2 .btn-tip-confirm {
+  background: linear-gradient(180deg, #1d6ed8 0%, #005bc2 100%);
+  box-shadow: 0 14px 24px rgba(0, 91, 194, 0.22);
+}
+
+.tip-container--teacher2 .btn-tip-confirm:hover {
+  background: linear-gradient(180deg, #2277e6 0%, #0054b3 100%);
+  box-shadow: 0 18px 28px rgba(0, 91, 194, 0.26);
 }
 
 /* 动画 */

@@ -410,7 +410,7 @@ import { student } from "~/composables/api/student";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import { ElMessage } from "~/components/ui";
 import defaultAvatar from "~/assets/newimages/user.png";
-import studentLogo from "~/assets/newimages/logo.png";
+import studentLogo from "~/assets/newimages/logo.svg";
 import tool2Icon from "~/assets/images/tool2.png";
 import tool1Icon from "~/assets/images/tool1.png";
 import tool4Icon from "~/assets/images/too4.png";

@@ -18,7 +18,7 @@
     <div v-if="showExpiredModal" class="modal-overlay" @click="closeExpiredModal">
       <div class="modal-content" @click.stop>
         <div class="modal-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#FF9900" stroke-width="2">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#005bc2" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <path d="M12 6v6l4 2"/>
           </svg>
@@ -202,13 +202,13 @@ defineExpose({
   align-items: center;
   gap: 12px;
   padding: 14px 24px;
-  background: #FF9900;
+  background: #005bc2;
   border-radius: 50px;
   color: white;
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  box-shadow: 0 4px 16px rgba(255, 153, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 91, 194, 0.4);
   transition: all 0.3s ease;
   z-index: 9999;
 }
@@ -227,7 +227,7 @@ defineExpose({
 
 .back-to-classroom-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(255, 153, 0, 0.5);
+  box-shadow: 0 6px 20px rgba(0, 91, 194, 0.5);
 }
 
 .btn-text {
@@ -308,7 +308,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #FFF7E6;
+  background: #F0F7FF;
 }
 
 .modal-title {
@@ -329,7 +329,7 @@ defineExpose({
   min-width: 136px;
   height: 44px;
   padding: 0 28px;
-  background: #FF9900;
+  background: #005bc2;
   border: none;
   border-radius: 999px;
   color: white;
@@ -340,6 +340,6 @@ defineExpose({
 }
 
 .modal-btn:hover {
-  background: #E68A00;
+  background: #004696;
 }
 </style>

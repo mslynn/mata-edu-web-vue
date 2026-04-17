@@ -177,7 +177,7 @@ import { useTeacherNav } from "~/composables/api/useTeacherNav";
 import { useAuth } from "~/composables/api/useAuth";
 import { useTeacher } from "~/composables/api/useTeacher";
 import { ElMessage } from "~/components/ui";
-import sidebarLogo from "~/assets/newimages/logo.png";
+import sidebarLogo from "~/assets/newimages/logo.svg";
 import defaultAvatar from "~/assets/newimages/user.png";
 
 const router = useRouter();

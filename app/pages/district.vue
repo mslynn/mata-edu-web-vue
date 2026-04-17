@@ -8,7 +8,11 @@
         <!-- <LanguageSwitcher />
         <img src="~/assets/images/infor.png" alt="消息通知" class="district-nav__notice" /> -->
         <div class="district-nav__account" ref="dropdownRef">
-          <button type="button" class="district-nav__account-trigger" @click="toggleDropdown">
+          <button
+            type="button"
+            class="district-nav__account-trigger"
+            @click="toggleDropdown"
+          >
             <span class="district-nav__avatar">
               <img :src="resolvedAvatar" alt="用户头像" @error="handleAvatarError" />
             </span>
@@ -56,7 +60,7 @@
               <div class="district-card__art">
                 <div class="district-card__placeholder">
                   <!-- <span>图片待补</span> -->
-                   <img src="../assets/newimages/datacenter.svg" alt="">
+                  <img src="../assets/newimages/datacenter.svg" alt="" />
                 </div>
               </div>
               <div class="district-card__title">{{ $t("city.datacenter") }}</div>
@@ -65,7 +69,7 @@
             <button type="button" class="district-card" @click="goToSchoolManage">
               <div class="district-card__art">
                 <div class="district-card__placeholder">
-                  <img src="../assets/newimages/guanli.svg" alt="">
+                  <img src="../assets/newimages/guanli.svg" alt="" />
                 </div>
               </div>
               <div class="district-card__title">{{ manageTitle }}</div>
@@ -81,7 +85,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useI18n } from "vue-i18n";
 import { useAuth } from "~/composables/api/useAuth";
-import districtLogo from "~/assets/newimages/logo.png";
+import districtLogo from "~/assets/newimages/logo.svg";
 import defaultAvatar from "~/assets/newimages/user.png";
 
 definePageMeta({
@@ -108,7 +112,10 @@ const updateViewportSize = () => {
 
 const scale = computed(() =>
   Number(
-    Math.min(viewportWidth.value / DESIGN_WIDTH, viewportHeight.value / DESIGN_HEIGHT).toFixed(4)
+    Math.min(
+      viewportWidth.value / DESIGN_WIDTH,
+      viewportHeight.value / DESIGN_HEIGHT
+    ).toFixed(4)
   )
 );
 

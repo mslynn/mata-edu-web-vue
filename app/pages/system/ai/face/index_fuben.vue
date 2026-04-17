@@ -1,3 +1,11 @@
+<!--
+ * @Author: your name
+ * @Date: 2026-04-16 10:32:36
+ * @LastEditTime: 2026-04-16 10:32:36
+ * @LastEditors: lynn
+ * @Description: In User Settings Edit
+ * @FilePath: \mata-edu-web\app\pages\system\ai\face\index_fuben.vue
+-->
 <template>
   <div class="face-intro-page">
     <div class="face-intro-shell">
@@ -11,12 +19,19 @@
         <section class="face-intro-hero">
           <div class="face-intro-copy">
             <div class="face-intro-copy__stack">
+              <span class="face-intro-copy__eyebrow">视觉智能系统</span>
               <div class="face-intro-copy__card">
                 <h1>
-                  <span class="face-intro-copy__title-line face-intro-copy__title-line--accent">人脸识别</span>
+                  <span class="face-intro-copy__title-line">开启智慧校园的</span>
+                  <span
+                    class="face-intro-copy__title-line face-intro-copy__title-line--accent"
+                  >
+                    非感官视觉门户
+                  </span>
                 </h1>
                 <p>
-                  人脸识别是一种基于人工智能和计算机视觉的生物识别技术，通过采集人脸图像并进行检测、特征提取与匹配，实现身份识别或验证。系统可从人脸中提取关键特征并转化为数据，与数据库进行比对完成识别。随着深度学习的发展，其在不同光照、角度等复杂环境下的识别准确率不断提升。
+                  基于最先进的深度学习算法，实现毫秒级响应的学生识别与管理。为您打造无感考勤、
+                  安全门禁、课堂参与度分析等全场景智能闭环。
                 </p>
               </div>
 
@@ -197,20 +212,19 @@ const handleStartExperience = async () => {
 }
 
 .face-intro-hero {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: clamp(40px, 6vw, 100px);
-  margin: 0 auto;
-  width: 100%;
+  /* width: 100%; */
   max-width: 1480px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(480px, 1fr) minmax(360px, 520px);
+  gap: clamp(16px, 1.8vw, 28px);
+  align-items: center;
   min-height: 0;
 }
 
 .face-intro-copy {
   display: flex;
   justify-content: center;
-  flex: 0 1 520px;
 }
 
 .face-intro-copy__stack {
@@ -323,8 +337,8 @@ const handleStartExperience = async () => {
 .face-intro-visual {
   position: relative;
   width: 100%;
-  flex: 0 0 520px;
   max-width: 520px;
+  justify-self: end;
 }
 
 .face-intro-visual__glow {
@@ -387,7 +401,7 @@ const handleStartExperience = async () => {
   position: absolute;
   left: 0;
   right: 0;
-  top: 0;
+  top: 35%;
   height: 3px;
   background: linear-gradient(
     90deg,
@@ -397,7 +411,6 @@ const handleStartExperience = async () => {
   );
   box-shadow: 0 0 20px #4f75ff;
   z-index: 2;
-  animation: face-intro-scan 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .face-intro-visual-card__point {
@@ -557,7 +570,6 @@ const handleStartExperience = async () => {
   height: 100%;
   background: linear-gradient(90deg, #4f73ff 0%, #7bd5ff 100%);
   box-shadow: 0 0 18px rgba(123, 213, 255, 0.4);
-  animation: face-intro-progress 2s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
 .face-intro-visual-card__panel-tags {
@@ -640,52 +652,18 @@ const handleStartExperience = async () => {
   }
 }
 
-@keyframes face-intro-scan {
-  0% {
-    top: 5%;
-    opacity: 0;
-  }
-  15% {
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  100% {
-    top: 95%;
-    opacity: 0;
-  }
-}
-
-@keyframes face-intro-progress {
-  0% {
-    width: 0%;
-  }
-  100% {
-    width: 99.8%;
-  }
-}
-
 @media (max-width: 1500px) {
   .face-intro-shell {
     padding: 22px 20px 20px;
   }
 
   .face-intro-hero {
-    gap: 40px;
-  }
-
-  .face-intro-copy {
-    flex: 0 1 420px;
-  }
-
-  .face-intro-visual {
-    flex: 0 0 460px;
-    max-width: 460px;
+    grid-template-columns: minmax(360px, 1fr) minmax(320px, 460px);
+    gap: 16px;
   }
 
   .face-intro-copy__stack {
-    max-width: 500px;
+    max-width: 560px;
   }
 
   .face-intro-copy__card p {
@@ -714,19 +692,8 @@ const handleStartExperience = async () => {
   }
 
   .face-intro-hero {
-    flex-direction: column;
-    gap: 40px;
-    text-align: center;
-  }
-  
-  .face-intro-copy {
-    flex: none;
-    max-width: 100%;
-  }
-
-  .face-intro-visual {
-    flex: none;
-    max-width: 400px;
+    grid-template-columns: minmax(300px, 1fr) minmax(280px, 400px);
+    gap: 14px;
   }
 
   .face-intro-copy__card h1 {

@@ -99,6 +99,8 @@ export const useHttp = () => {
     
     // 检查是否需要显示成功提示（默认：GET 不显示，其他方法显示）
     const showSuccessMsg = headers['showSuccessMsg'] !== 'false'
+    // 检查是否需要显示全局错误提示（默认显示）
+    const showErrorMsg = headers['showErrorMsg'] !== 'false'
     // 忽略全局鉴权错误处理（用于登录/验证码等公共接口）
     const ignoreAuthError = headers['ignoreAuthError'] === 'true'
     
@@ -127,6 +129,7 @@ export const useHttp = () => {
     // 移除前端控制用的 headers（不需要发送给后端）
     delete headers['isEncrypt']
     delete headers['showSuccessMsg']
+    delete headers['showErrorMsg']
     delete headers['ignoreAuthError']
     
     // 保存是否显示成功提示的标志（用于响应拦截）
@@ -154,7 +157,7 @@ export const useHttp = () => {
             if (msg && shouldShowSuccess) {
               // ElMessage.success(msg)
             }
-          } else if (code) {
+          } else if (code && showErrorMsg) {
             // 业务错误
             ElMessage.error(msg || '操作失败')
           }
@@ -165,7 +168,9 @@ export const useHttp = () => {
           if (!ignoreAuthError && handleAuthError(response.status)) return
           
           const errorMsg = response._data?.msg || '请求失败'
-          ElMessage.error(errorMsg)
+          if (showErrorMsg) {
+            ElMessage.error(errorMsg)
+          }
         }
       })
 

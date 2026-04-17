@@ -18,7 +18,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import logo from '~/assets/newimages/logo.png'
+import logo from '~/assets/newimages/logo.svg'
 
 const currentLogo = computed(() => {
   return logo

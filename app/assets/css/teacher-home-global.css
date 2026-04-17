@@ -1,0 +1,211 @@
+html.teacher-page-use-outer-scroll,
+body.teacher-page-use-outer-scroll {
+  overflow-y: auto !important;
+  background: #f8f9fa !important;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell,
+body.teacher-page-use-outer-scroll .sidebar-shell {
+  height: auto !important;
+  min-height: 100vh;
+  overflow: visible !important;
+  background: #f8f9fa !important;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell-body,
+body.teacher-page-use-outer-scroll .sidebar-shell-body {
+  display: block !important;
+  height: auto !important;
+  min-height: 100vh;
+  background: #f8f9fa !important;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell-main,
+body.teacher-page-use-outer-scroll .sidebar-shell-main,
+html.teacher-page-use-outer-scroll .sidebar-shell-content,
+body.teacher-page-use-outer-scroll .sidebar-shell-content {
+  overflow: visible !important;
+  scrollbar-gutter: auto !important;
+}
+
+html.teacher-page-use-outer-scroll .app-sidebar,
+body.teacher-page-use-outer-scroll .app-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 20;
+  width: 248px !important;
+  height: 100vh;
+  padding: 22px 16px 18px;
+  background: #f2f4f5 !important;
+  border-right: 1px solid rgba(174, 179, 181, 0.12);
+  box-shadow: none;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-shell-main,
+body.teacher-page-use-outer-scroll .sidebar-shell-main {
+  width: auto !important;
+  margin-left: 280px;
+  margin-right: 28px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-brand,
+body.teacher-page-use-outer-scroll .sidebar-brand {
+  min-height: 92px;
+  padding: 12px 16px 20px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-brand-logo,
+body.teacher-page-use-outer-scroll .sidebar-brand-logo {
+  width: 176px;
+  height: 30px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-nav,
+body.teacher-page-use-outer-scroll .sidebar-nav {
+  padding-top: 8px;
+  padding-bottom: 20px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-skeleton,
+body.teacher-page-use-outer-scroll .sidebar-menu-skeleton,
+html.teacher-page-use-outer-scroll .sidebar-menu-item,
+body.teacher-page-use-outer-scroll .sidebar-menu-item {
+  position: relative;
+  width: 100%;
+  height: 52px;
+  margin: 0 0 6px;
+  padding: 0 16px;
+  gap: 12px;
+  border-radius: 16px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-item,
+body.teacher-page-use-outer-scroll .sidebar-menu-item {
+  background: transparent;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-item:hover,
+body.teacher-page-use-outer-scroll .sidebar-menu-item:hover {
+  background: rgba(222, 227, 229, 0.9);
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-item--active,
+body.teacher-page-use-outer-scroll .sidebar-menu-item--active {
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 10px 20px rgba(46, 51, 53, 0.05);
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-item--active::after,
+body.teacher-page-use-outer-scroll .sidebar-menu-item--active::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 12px;
+  bottom: 12px;
+  width: 4px;
+  border-radius: 999px;
+  background: #005bc2;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-icon,
+body.teacher-page-use-outer-scroll .sidebar-menu-icon {
+  width: 36px;
+  height: 36px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-icon-image,
+body.teacher-page-use-outer-scroll .sidebar-menu-icon-image {
+  width: 32px;
+  height: 32px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-label,
+body.teacher-page-use-outer-scroll .sidebar-menu-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2e3335;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-menu-item--active .sidebar-menu-label,
+body.teacher-page-use-outer-scroll .sidebar-menu-item--active .sidebar-menu-label {
+  color: #005bc2;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-account,
+body.teacher-page-use-outer-scroll .sidebar-account {
+  margin-top: auto;
+  padding: 18px 0 0;
+  border-top: 1px solid rgba(174, 179, 181, 0.16);
+}
+
+html.teacher-page-use-outer-scroll .sidebar-account-entry,
+body.teacher-page-use-outer-scroll .sidebar-account-entry {
+  width: 100%;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-account-trigger,
+body.teacher-page-use-outer-scroll .sidebar-account-trigger {
+  min-height: 64px;
+  padding: 10px 14px;
+  gap: 10px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 10px 24px rgba(46, 51, 53, 0.06);
+}
+
+html.teacher-page-use-outer-scroll .sidebar-account-trigger:hover,
+body.teacher-page-use-outer-scroll .sidebar-account-trigger:hover {
+  background: #ffffff;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-account-avatar-shell,
+body.teacher-page-use-outer-scroll .sidebar-account-avatar-shell,
+html.teacher-page-use-outer-scroll .sidebar-account-avatar,
+body.teacher-page-use-outer-scroll .sidebar-account-avatar {
+  width: 42px;
+  height: 42px;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-account-label,
+body.teacher-page-use-outer-scroll .sidebar-account-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #20262d;
+}
+
+html.teacher-page-use-outer-scroll .sidebar-user-dropdown,
+body.teacher-page-use-outer-scroll .sidebar-user-dropdown {
+  width: 220px;
+  border-radius: 20px;
+  border-color: rgba(174, 179, 181, 0.16);
+  box-shadow: 0 18px 34px rgba(46, 51, 53, 0.1);
+}
+
+@media (min-width: 1280px) {
+  html.teacher-page-use-outer-scroll .app-sidebar,
+  body.teacher-page-use-outer-scroll .app-sidebar {
+    width: 264px !important;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  html.teacher-page-use-outer-scroll .sidebar-shell-main,
+  body.teacher-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 298px;
+    margin-right: 32px;
+  }
+}
+
+@media (min-width: 1536px) {
+  html.teacher-page-use-outer-scroll .app-sidebar,
+  body.teacher-page-use-outer-scroll .app-sidebar {
+    width: 272px !important;
+  }
+
+  html.teacher-page-use-outer-scroll .sidebar-shell-main,
+  body.teacher-page-use-outer-scroll .sidebar-shell-main {
+    margin-left: 308px;
+    margin-right: 40px;
+  }
+}

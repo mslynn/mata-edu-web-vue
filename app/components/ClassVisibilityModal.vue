@@ -16,20 +16,24 @@
         </div>
         
         <div class="class-visibility-list">
-          <label v-for="cls in classList" :key="cls.id" class="class-visibility-item">
-            <input 
-              type="checkbox" 
-              :checked="selectedClasses.includes(cls.id)"
-              :disabled="cls.isClassed"
-              @change="toggleClass(cls.id)"
-              class="class-checkbox"
-              :class="{ disabled: cls.isClassed }"
-            />
-            <span class="class-visibility-name">
-              {{ cls.name }}
-              <span v-if="cls.isClassed" class="taken-hint">{{ $t('course.classTakenCourse') }}</span>
-            </span>
-          </label>
+          <div v-if="listLoading" class="class-visibility-empty">加载中...</div>
+          <template v-else-if="classList.length > 0">
+            <label v-for="cls in classList" :key="cls.id" class="class-visibility-item">
+              <input 
+                type="checkbox" 
+                :checked="selectedClasses.includes(cls.id)"
+                :disabled="cls.isClassed"
+                @change="toggleClass(cls.id)"
+                class="class-checkbox"
+                :class="{ disabled: cls.isClassed }"
+              />
+              <span class="class-visibility-name">
+                {{ cls.name }}
+                <span v-if="cls.isClassed" class="taken-hint">{{ $t('course.classTakenCourse') }}</span>
+              </span>
+            </label>
+          </template>
+          <div v-else class="class-visibility-empty">暂无可见班级</div>
         </div>
         
         <div class="class-visibility-footer">
@@ -59,9 +63,18 @@ const { setChapterResourceVisibleClass, GetChapterCourse } = cursorAdmin()
 const classList = ref<{ id: string; name: string; isClassed: boolean }[]>([])
 const selectedClasses = ref<string[]>([])
 const loading = ref(false)
+const listLoading = ref(false)
+
+const resetModalState = () => {
+  classList.value = []
+  selectedClasses.value = []
+}
 
 // 加载班级列表
 const loadClassList = async () => {
+  listLoading.value = true
+  resetModalState()
+
   try {
     const res = await GetChapterCourse(String(props.courseId))
     const data = res.data
@@ -78,6 +91,8 @@ const loadClassList = async () => {
     }
   } catch (error) {
     console.error('加载班级列表失败:', error)
+  } finally {
+    listLoading.value = false
   }
 }
 
@@ -85,6 +100,9 @@ const loadClassList = async () => {
 watch(() => props.visible, (val) => {
   if (val) {
     loadClassList()
+  } else {
+    resetModalState()
+    listLoading.value = false
   }
 })
 
@@ -130,11 +148,11 @@ const handleConfirm = async () => {
 <style scoped>
 .class-visibility-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  inset: 0;
+  padding: 24px;
+  background: rgba(12, 15, 16, 0.42);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -142,102 +160,149 @@ const handleConfirm = async () => {
 }
 
 .modal-container {
-  background: white;
-  border-radius: 14px;
-  width: 665px;
+  position: relative;
+  width: min(680px, calc(100vw - 48px));
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  position: relative;
-  padding: 30px 40px;
-  box-shadow: 0 0 19px 1px rgba(145, 145, 145, 0.2);
+  padding: 30px 34px 28px;
+  background: #ffffff;
+  border: 1px solid rgba(222, 227, 229, 0.96);
+  border-radius: 24px;
+  box-shadow: 0 18px 48px rgba(46, 51, 53, 0.12);
 }
 
 .class-visibility-close-btn {
   position: absolute;
   top: 20px;
   right: 20px;
-  background: none;
-  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 999px;
   cursor: pointer;
-  color: #999;
-  padding: 4px;
+  color: #8d9496;
+  transition: all 0.2s ease;
 }
-.class-visibility-close-btn:hover { color: #666; }
+
+.class-visibility-close-btn:hover {
+  border-color: rgba(0, 91, 194, 0.18);
+  background: #f8fbff;
+  color: #005bc2;
+}
 
 .class-visibility-title {
-  font-size: 20px;
-  font-weight: 500;
-  color: #333;
-  text-align: center;
   margin: 0 0 24px;
+  text-align: center;
+  color: #2e3335;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .tab-section {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 0;
 }
 
 .tab-label {
+  padding: 10px 18px;
+  color: #5a6062;
   font-size: 14px;
-  color: #333;
-  padding: 10px 20px;
-  background: #f5f5f5;
-  border-radius: 8px 8px 0 0;
-  border: 1px solid #eee;
+  font-weight: 700;
+  background: #f4f8ff;
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 14px 14px 0 0;
   border-bottom: none;
 }
+
 .tab-label.active {
-  background: white;
-  color: #333;
-  border: 1px solid #ddd;
-  border-bottom: 1px solid white;
+  background: #ffffff;
+  color: #005bc2;
+  border-color: rgba(0, 91, 194, 0.18);
   margin-bottom: -1px;
   position: relative;
   z-index: 1;
 }
 
 .tab-hint {
+  color: #8d9496;
   font-size: 13px;
-  color: #999;
+  line-height: 1.6;
 }
 
 .class-visibility-list {
-  background: white;
-  border: 1px solid #ddd;
-  border-radius: 0 8px 8px 8px;
-  padding: 16px 20px;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 0 18px 18px 18px;
   min-height: 280px;
   max-height: 400px;
   overflow-y: auto;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68);
+}
+
+.class-visibility-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
+  color: #8d9496;
+  font-size: 14px;
+}
+
+.class-visibility-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.class-visibility-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.class-visibility-list::-webkit-scrollbar-thumb {
+  background: rgba(174, 179, 181, 0.32);
+  border-radius: 999px;
 }
 
 .class-visibility-item {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
   gap: 12px;
-  padding: 10px 0;
+  padding: 12px 14px;
+  border-radius: 14px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.class-visibility-item:hover {
+  background: #f8fbff;
 }
 
 .class-checkbox {
   width: 20px;
   height: 20px;
-  border: 2px solid #ddd;
-  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(174, 179, 181, 0.9);
+  border-radius: 6px;
   cursor: pointer;
   appearance: none;
   -webkit-appearance: none;
-  background: white;
+  background: #ffffff;
   position: relative;
+  transition: all 0.2s ease;
 }
 
 .class-checkbox:checked {
-  background: #FF9900;
-  border-color: #FF9900;
+  background: #005bc2;
+  border-color: #005bc2;
 }
 
 .class-checkbox:checked::after {
@@ -245,22 +310,27 @@ const handleConfirm = async () => {
   position: absolute;
   left: 6px;
   top: 2px;
-  width: 5px;
-  height: 10px;
+  width: 4px;
+  height: 9px;
   border: solid white;
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
+.class-checkbox:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.12);
+}
+
 .class-checkbox.disabled {
-  background: #ddd;
-  border-color: #ddd;
+  background: #f2f4f5;
+  border-color: rgba(174, 179, 181, 0.5);
   cursor: not-allowed;
 }
 
 .class-checkbox.disabled:checked {
-  background: #ddd;
-  border-color: #ddd;
+  background: rgba(0, 91, 194, 0.32);
+  border-color: rgba(0, 91, 194, 0.32);
 }
 
 .class-checkbox.disabled:checked::after {
@@ -268,50 +338,71 @@ const handleConfirm = async () => {
 }
 
 .class-visibility-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
-  color: #333;
+  font-weight: 600;
+  color: #2e3335;
 }
 
 .taken-hint {
-  color: #999;
-  font-size: 13px;
+  color: #8d9496;
+  font-size: 12px;
+  font-weight: 500;
 }
 
 .class-visibility-footer {
   display: flex;
   justify-content: center;
-  gap: 20px;
-  margin-top: 30px;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(174, 179, 181, 0.14);
 }
 
-.class-visibility-btn-cancel, .class-visibility-btn-confirm {
+.class-visibility-btn-cancel,
+.class-visibility-btn-confirm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-width: 120px;
-  padding: 12px 40px;
-  border-radius: 8px;
-  font-size: 16px;
+  min-height: 42px;
+  padding: 0 22px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  appearance: none;
+  font-family: inherit;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .class-visibility-btn-cancel {
-  background: white;
-  border: 1px solid #ddd;
-  color: #666;
+  background: #ffffff;
+  border: 1px solid rgba(0, 91, 194, 0.18);
+  color: #005bc2;
 }
+
 .class-visibility-btn-cancel:hover {
-  background: #f5f5f5;
+  border-color: rgba(0, 91, 194, 0.28);
+  background: rgba(0, 91, 194, 0.05);
 }
 
 .class-visibility-btn-confirm {
-  background: #FF9900;
-  border: 1px solid #FF9900;
-  color: white;
+  background: #005bc2;
+  border: 1px solid #005bc2;
+  color: #ffffff;
 }
+
 .class-visibility-btn-confirm:hover {
-  background: #E68A00;
+  background: #004fa8;
+  border-color: #004fa8;
 }
+
 .class-visibility-btn-confirm:disabled {
-  background: #ccc;
-  border-color: #ccc;
+  background: #aeb3b5;
+  border-color: #aeb3b5;
   cursor: not-allowed;
 }
 
@@ -320,17 +411,53 @@ const handleConfirm = async () => {
 .modal-leave-active {
   transition: opacity 0.3s ease;
 }
+
 .modal-enter-active .modal-container,
 .modal-leave-active .modal-container {
   transition: transform 0.3s ease, opacity 0.3s ease;
 }
+
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
 }
+
 .modal-enter-from .modal-container,
 .modal-leave-to .modal-container {
   transform: scale(0.9);
   opacity: 0;
+}
+
+@media (max-width: 760px) {
+  .class-visibility-overlay {
+    padding: 16px;
+  }
+
+  .modal-container {
+    width: 100%;
+    padding: 24px 18px 20px;
+    border-radius: 20px;
+  }
+
+  .tab-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .class-visibility-list {
+    min-height: 220px;
+    max-height: 320px;
+    border-radius: 16px;
+  }
+
+  .class-visibility-footer {
+    flex-direction: column;
+  }
+
+  .class-visibility-btn-cancel,
+  .class-visibility-btn-confirm {
+    width: 100%;
+  }
 }
 </style>

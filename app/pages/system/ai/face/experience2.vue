@@ -1,15 +1,43 @@
-﻿<template>
+<template>
   <div class="stitch-face-page">
     <canvas ref="captureCanvasRef" class="hidden"></canvas>
+    <input
+      ref="uploadInputRef"
+      class="hidden"
+      type="file"
+      accept="image/png,image/jpeg,image/jpg"
+      @change="handleUploadChange"
+    />
 
     <header class="stitch-face-page__header">
-      <div class="stitch-face-page__crumbs">
-        <span>AI 实践中心</span>
-        <span class="stitch-face-page__crumb-sep">/</span>
-        <span>人脸识别</span>
+      <div class="stitch-face-page__header-top">
+        <button
+          type="button"
+          class="page-back-button"
+          aria-label="返回上一页"
+          @click="handleGoBack"
+        >
+          <svg viewBox="0 0 24 24" class="page-back-button__icon" aria-hidden="true">
+            <path
+              d="M15 18l-6-6 6-6"
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.9"
+            />
+          </svg>
+        </button>
+        <div class="stitch-face-page__header-copy">
+          <div class="stitch-face-page__crumbs">
+            <span>AI 实践中心</span>
+            <span class="stitch-face-page__crumb-sep">/</span>
+            <span>人脸识别</span>
+          </div>
+          <h1 class="stitch-face-page__title">人脸数据采集及录入</h1>
+          <p class="stitch-face-page__subtitle">{{ pageSubtitle }}</p>
+        </div>
       </div>
-      <h1 class="stitch-face-page__title">人脸数据采集及录入</h1>
-      <p class="stitch-face-page__subtitle">{{ pageSubtitle }}</p>
     </header>
 
     <div class="stitch-face-page__grid">
@@ -17,7 +45,11 @@
         <div class="workbench-panel__surface">
           <template v-if="currentStep === 'name'">
             <div class="mode-grid">
-              <article class="mode-card mode-card--muted">
+              <article
+                class="mode-card mode-card--muted mode-card--clickable"
+                :class="{ 'mode-card--disabled': !draftName.trim() }"
+                @click="handleSelectUpload"
+              >
                 <div class="mode-card__icon mode-card__icon--upload" aria-hidden="true">
                   <svg viewBox="0 0 24 24" class="stitch-icon">
                     <path
@@ -39,10 +71,14 @@
                   </svg>
                 </div>
                 <h3 class="mode-card__title">上传本地图片</h3>
-                <p class="mode-card__desc">支持 JPG, PNG 格式<br>可批量选择多张照片</p>
+                <p class="mode-card__desc">支持 JPG, PNG 格式<br />可批量选择多张照片</p>
               </article>
 
-              <article class="mode-card mode-card--active">
+              <article
+                class="mode-card mode-card--active mode-card--clickable"
+                :class="{ 'mode-card--disabled': !draftName.trim() }"
+                @click="handleSelectCamera"
+              >
                 <div class="mode-card__icon mode-card__icon--camera" aria-hidden="true">
                   <svg viewBox="0 0 24 24" class="stitch-icon">
                     <path
@@ -53,11 +89,18 @@
                       stroke-linejoin="round"
                       stroke-width="1.8"
                     />
-                    <circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="1.8" />
+                    <circle
+                      cx="12"
+                      cy="13"
+                      r="3.5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                    />
                   </svg>
                 </div>
                 <h3 class="mode-card__title">开启摄像头</h3>
-                <p class="mode-card__desc">实时视频捕获<br>AI 自动提取面部特征</p>
+                <p class="mode-card__desc">实时视频捕获<br />AI 自动提取面部特征</p>
               </article>
             </div>
           </template>
@@ -65,13 +108,23 @@
           <template v-else-if="currentStep === 'capture'">
             <div class="stage-view">
               <div class="stage-view__meta">
-                <span class="stage-view__tag">摄像头采集</span>
-                <p class="stage-view__note">请将面部对准框内，保持光线充足</p>
+                <span class="stage-view__tag">{{
+                  captureMode === "upload" ? "图片采集" : "摄像头采集"
+                }}</span>
+                <p class="stage-view__note">
+                  {{
+                    captureMode === "upload"
+                      ? "请上传一张清晰正脸照片，系统会自动提取面部特征"
+                      : "请将面部对准框内，保持光线充足"
+                  }}
+                </p>
               </div>
 
               <div class="media-shell">
                 <video
-                  v-show="captureVideoReady && !capturePreview"
+                  v-show="
+                    captureMode === 'camera' && captureVideoReady && !capturePreview
+                  "
                   ref="captureVideoRef"
                   class="media-shell__media media-shell__media--mirrored"
                   autoplay
@@ -84,11 +137,24 @@
                   class="media-shell__media"
                   :src="capturePreview"
                   alt="人脸采集预览"
-                >
+                />
 
-                <div v-if="!captureVideoReady && !capturePreview" class="media-shell__placeholder">
-                  <strong>{{ loadingModels ? '模型加载中...' : '正在打开摄像头' }}</strong>
-                  <span>{{ runtimeNotice }}</span>
+                <div
+                  v-if="!captureVideoReady && !capturePreview"
+                  class="media-shell__placeholder"
+                >
+                  <strong>{{
+                    captureMode === "upload"
+                      ? "请先选择图片"
+                      : loadingModels
+                      ? "模型加载中..."
+                      : "正在打开摄像头"
+                  }}</strong>
+                  <span>{{
+                    captureMode === "upload"
+                      ? "支持 JPG、PNG 格式，建议上传单人正脸照片"
+                      : runtimeNotice
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -108,7 +174,7 @@
                   class="media-shell__media"
                   :src="lastEnrolledPreview"
                   alt="录入成功预览"
-                >
+                />
               </div>
             </div>
           </template>
@@ -118,10 +184,15 @@
               <div class="stage-view__meta">
                 <span class="stage-view__tag stage-view__tag--recognize">实时识别</span>
                 <p class="stage-view__headline">{{ assistantBubbleTitle }}</p>
-                <p class="stage-view__note">{{ assistantBubbleDesc || recognitionNotice }}</p>
+                <p class="stage-view__note">
+                  {{ assistantBubbleDesc || recognitionNotice }}
+                </p>
               </div>
 
-              <div class="media-shell media-shell--recognize" :style="recognitionVideoShellStyle">
+              <div
+                class="media-shell media-shell--recognize"
+                :style="recognitionVideoShellStyle"
+              >
                 <video
                   ref="recognitionVideoRef"
                   class="media-shell__media media-shell__media--mirrored"
@@ -132,7 +203,9 @@
                 <canvas ref="recognitionCanvasRef" class="media-shell__canvas"></canvas>
 
                 <div v-if="!recognitionVideoReady" class="media-shell__placeholder">
-                  <strong>{{ loadingModels ? '模型加载中...' : '正在打开识别摄像头' }}</strong>
+                  <strong>{{
+                    loadingModels ? "模型加载中..." : "正在打开识别摄像头"
+                  }}</strong>
                   <span>{{ recognitionNotice }}</span>
                 </div>
               </div>
@@ -142,13 +215,15 @@
 
         <div
           class="workbench-panel__actions"
-          :class="{ 'workbench-panel__actions--dual': currentStep === 'capture' || currentStep === 'success' }"
+          :class="{
+            'workbench-panel__actions--dual':
+              currentStep === 'capture' || currentStep === 'success',
+          }"
         >
           <template v-if="currentStep === 'name'">
             <button
               type="button"
               class="primary-button primary-button--wide"
-              :disabled="!draftName.trim()"
               @click="handleConfirmName"
             >
               录入人脸信息
@@ -157,12 +232,18 @@
 
           <template v-else-if="currentStep === 'capture'">
             <button
-              v-if="capturePreview"
+              v-if="captureMode === 'upload' || capturePreview"
               type="button"
               class="secondary-button"
               @click="handleRetryCapture"
             >
-              重新拍摄
+              {{
+                captureMode === "upload"
+                  ? capturePreview
+                    ? "重新上传"
+                    : "选择图片"
+                  : "重新拍摄"
+              }}
             </button>
             <button
               type="button"
@@ -170,12 +251,16 @@
               :disabled="captureActionDisabled"
               @click="handleEnrollFace"
             >
-              {{ savingProfile ? '录入中...' : '开始录入' }}
+              {{ savingProfile ? "录入中..." : "开始录入" }}
             </button>
           </template>
 
           <template v-else-if="currentStep === 'success'">
-            <button type="button" class="secondary-button" @click="handleContinueEnrollment">
+            <button
+              type="button"
+              class="secondary-button"
+              @click="handleContinueEnrollment"
+            >
               继续录入
             </button>
             <button type="button" class="primary-button" @click="handleEnterRecognition">
@@ -184,7 +269,11 @@
           </template>
 
           <template v-else>
-            <button type="button" class="primary-button primary-button--wide" @click="handleStopRecognition">
+            <button
+              type="button"
+              class="primary-button primary-button--wide"
+              @click="handleStopRecognition"
+            >
               结束识别
             </button>
           </template>
@@ -224,7 +313,7 @@
             maxlength="20"
             placeholder="请输入您的姓名"
             @keydown.enter="handleConfirmName"
-          >
+          />
           <input
             v-else
             id="face-name-input"
@@ -232,7 +321,7 @@
             type="text"
             :value="activeIdentityName"
             readonly
-          >
+          />
         </section>
 
         <section class="side-card side-card--list">
@@ -250,18 +339,42 @@
                   v-if="!isPlaceholderAvatar(profile.avatarDataUrl)"
                   :src="profile.avatarDataUrl"
                   :alt="profile.name"
-                >
+                />
                 <span v-else>{{ getProfileInitial(profile.name) }}</span>
               </div>
 
               <div class="profile-row__content">
                 <p class="profile-row__name">{{ profile.name }}</p>
                 <p class="profile-row__desc">
-                  {{ profile.id === latestProfileId ? '最近录入的人脸样本' : '本地识别特征已就绪' }}
+                  {{
+                    profile.id === latestProfileId
+                      ? "最近录入的人脸样本"
+                      : "本地识别特征已就绪"
+                  }}
                 </p>
+                <div class="profile-row__actions">
+                  <button
+                    type="button"
+                    class="profile-row__action"
+                    :disabled="savingProfile"
+                    @click="handleRenameProfile(profile)"
+                  >
+                    修改名称
+                  </button>
+                  <button
+                    type="button"
+                    class="profile-row__action profile-row__action--primary"
+                    :disabled="savingProfile"
+                    @click="handleReEnrollProfile(profile)"
+                  >
+                    重新录入
+                  </button>
+                </div>
               </div>
 
-              <span class="profile-row__badge">{{ profile.id === latestProfileId ? 'NEW' : 'OK' }}</span>
+              <span class="profile-row__badge">{{
+                profile.id === latestProfileId ? "NEW" : "OK"
+              }}</span>
             </article>
           </div>
 
@@ -278,8 +391,12 @@
                 />
               </svg>
             </div>
-            <strong class="profile-empty__title">{{ activeIdentityName || '未录入人脸信息' }}</strong>
-            <span class="profile-empty__desc">完成录入后，这里会显示可用于识别的人脸样本</span>
+            <strong class="profile-empty__title">{{
+              activeIdentityName || "未录入人脸信息"
+            }}</strong>
+            <span class="profile-empty__desc"
+              >完成录入后，这里会显示可用于识别的人脸样本</span
+            >
           </div>
         </section>
       </aside>
@@ -300,15 +417,41 @@
       </div>
       <div>
         <h4 class="tips-card__title">采集提示</h4>
-        <p class="tips-card__desc">建议在光线柔和的环境下采集，人脸正对镜头可获得更精准的特征提取。系统将自动过滤模糊影像。</p>
+        <p class="tips-card__desc">
+          建议在光线柔和的环境下采集，人脸正对镜头可获得更精准的特征提取。系统将自动过滤模糊影像。
+        </p>
       </div>
     </section>
+
+    <div v-if="showRecognitionCompleteDialog" class="completion-dialog">
+      <div class="completion-dialog__mask"></div>
+      <div class="completion-dialog__card">
+        <div class="completion-dialog__art">
+          <img
+            :src="finishMascotImage"
+            alt="体验完成机器人"
+            class="completion-dialog__art-image"
+          />
+        </div>
+        <p class="completion-dialog__message">
+          恭喜你完成人脸识别机器人体验，快去探索其他内容吧～
+        </p>
+        <button
+          type="button"
+          class="completion-dialog__button"
+          @click="handleRecognitionCompleteConfirm"
+        >
+          确定
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
+import finishMascotImage from "~/assets/images/shizi.png";
 import {
   FACE_DEMO_DESCRIPTOR_VERSION,
   useFaceApiDemo,
@@ -328,15 +471,23 @@ useHead({
 });
 
 type FlowStep = "name" | "capture" | "success" | "recognize";
+type CaptureMode = "camera" | "upload";
 type CameraScene = "capture" | "recognize";
 type RecognitionDetectionWithMatch = FaceDemoDetection & {
   match: FaceDemoMatchResult;
 };
 
-const { listProfiles } = useFaceDemoStorage();
-const { ensureReady, detectSingleFace, detectSingleFaceFast, matchDescriptor } = useFaceApiDemo();
+const { listProfiles, saveProfile, clearProfiles } = useFaceDemoStorage();
+const {
+  ensureReady,
+  detectSingleFace,
+  detectSingleFaceFast,
+  detectAllFaces,
+  matchDescriptor,
+} = useFaceApiDemo();
 
 const currentStep = ref<FlowStep>("name");
+const captureMode = ref<CaptureMode>("camera");
 const draftName = ref("");
 const playerName = ref("");
 const lastEnrolledPreview = ref("");
@@ -354,9 +505,12 @@ const recognitionVideoReady = ref(false);
 const recognitionRunning = ref(false);
 const recognitionDetections = ref<RecognitionDetectionWithMatch[]>([]);
 const recognitionVideoAspectRatio = ref("16 / 9");
+const showRecognitionCompleteDialog = ref(false);
+const reEnrollTargetId = ref("");
 
 const captureVideoRef = ref<HTMLVideoElement | null>(null);
 const captureCanvasRef = ref<HTMLCanvasElement | null>(null);
+const uploadInputRef = ref<HTMLInputElement | null>(null);
 const recognitionVideoRef = ref<HTMLVideoElement | null>(null);
 const recognitionCanvasRef = ref<HTMLCanvasElement | null>(null);
 const FACE_PROFILE_PLACEHOLDER =
@@ -484,7 +638,10 @@ const writeFallbackProfiles = (nextProfiles: FaceDemoProfile[]) => {
   window.localStorage.setItem(FACE_FALLBACK_STORAGE_KEY, JSON.stringify(nextProfiles));
 };
 
-const mergeProfiles = (primaryProfiles: FaceDemoProfile[], fallbackProfiles: FaceDemoProfile[]) => {
+const mergeProfiles = (
+  primaryProfiles: FaceDemoProfile[],
+  fallbackProfiles: FaceDemoProfile[]
+) => {
   const mergedMap = new Map<string, FaceDemoProfile>();
 
   for (const profile of primaryProfiles) {
@@ -501,10 +658,36 @@ const mergeProfiles = (primaryProfiles: FaceDemoProfile[], fallbackProfiles: Fac
 };
 
 const persistFallbackProfile = (profile: FaceDemoProfile) => {
-  const fallbackProfiles = readFallbackProfiles().filter((item) => item.id !== profile.id);
+  const fallbackProfiles = readFallbackProfiles().filter(
+    (item) => item.id !== profile.id
+  );
   fallbackProfiles.unshift(profile);
   writeFallbackProfiles(fallbackProfiles);
   profiles.value = mergeProfiles(profiles.value, [profile]);
+};
+
+const persistProfile = async (profile: FaceDemoProfile) => {
+  try {
+    await saveProfile(profile);
+  } catch (error) {
+    console.warn("写入 IndexedDB 人脸库失败，已使用页面兜底存储:", error);
+  }
+
+  persistFallbackProfile(profile);
+};
+
+const clearExperienceProfiles = async () => {
+  try {
+    await clearProfiles();
+  } catch (error) {
+    console.error("清空本地人脸库失败:", error);
+  }
+
+  if (import.meta.client) {
+    window.localStorage.removeItem(FACE_FALLBACK_STORAGE_KEY);
+  }
+
+  profiles.value = [];
 };
 
 const loadProfiles = async () => {
@@ -567,6 +750,27 @@ const createImageElement = (dataUrl: string) => {
   });
 };
 
+const readFileAsDataUrl = (file: File) => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onerror = () => {
+      reject(reader.error || new Error("读取图片失败"));
+    };
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("读取图片失败"));
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
+
 const resolveErrorMessage = (error: unknown, fallback: string) => {
   if (error instanceof Error && error.message) {
     return error.message;
@@ -589,43 +793,29 @@ const resolveErrorMessage = (error: unknown, fallback: string) => {
   return fallback;
 };
 
-const runWithTimeout = async <T>(promise: Promise<T>, timeoutMs: number, timeoutMessage: string) => {
-  return await new Promise<T>((resolve, reject) => {
-    const timer = window.setTimeout(() => {
-      reject(new Error(timeoutMessage));
-    }, timeoutMs);
-
-    promise
-      .then((value) => {
-        window.clearTimeout(timer);
-        resolve(value);
-      })
-      .catch((error) => {
-        window.clearTimeout(timer);
-        reject(error);
-      });
-  });
-};
-
 const getCanvas2DContext = (canvas: HTMLCanvasElement, willReadFrequently = false) => {
   return (
-    canvas.getContext("2d", willReadFrequently ? { willReadFrequently: true } : undefined) ||
-    canvas.getContext("2d")
+    canvas.getContext(
+      "2d",
+      willReadFrequently ? { willReadFrequently: true } : undefined
+    ) || canvas.getContext("2d")
   );
 };
 
 const createDetectionCanvas = (
   source: HTMLVideoElement | HTMLCanvasElement | HTMLImageElement,
-  maxEdge = 320,
+  maxEdge = 320
 ) => {
-  const sourceWidth = source instanceof HTMLVideoElement
-    ? source.videoWidth
-    : source instanceof HTMLImageElement
+  const sourceWidth =
+    source instanceof HTMLVideoElement
+      ? source.videoWidth
+      : source instanceof HTMLImageElement
       ? source.naturalWidth || source.width
       : source.width;
-  const sourceHeight = source instanceof HTMLVideoElement
-    ? source.videoHeight
-    : source instanceof HTMLImageElement
+  const sourceHeight =
+    source instanceof HTMLVideoElement
+      ? source.videoHeight
+      : source instanceof HTMLImageElement
       ? source.naturalHeight || source.height
       : source.height;
 
@@ -647,45 +837,45 @@ const createDetectionCanvas = (
   return canvas;
 };
 
-const resolveEnrollmentFace = async (previewDataUrl: string) => {
-  let source: HTMLVideoElement | HTMLCanvasElement | HTMLImageElement;
-
-  if (captureCanvasRef.value?.width && captureCanvasRef.value?.height) {
-    source = captureCanvasRef.value;
-  } else if (captureVideoRef.value && captureVideoReady.value) {
-    source = captureVideoRef.value;
-  } else {
-    source = await createImageElement(previewDataUrl);
-  }
-
-  const detectionCanvas = createDetectionCanvas(source, 320);
-  const fastFace = await runWithTimeout(
-    detectSingleFaceFast(detectionCanvas),
-    4500,
-    "录入超时，请重新拍摄后重试",
-  );
+const detectEnrollmentFaceFromSource = async (
+  source: HTMLVideoElement | HTMLCanvasElement | HTMLImageElement
+) => {
+  const fastCanvas = createDetectionCanvas(source, 256);
+  const fastFace = await detectSingleFaceFast(fastCanvas);
 
   if (fastFace) {
     return fastFace;
   }
 
-  return await runWithTimeout(
-    detectSingleFace(detectionCanvas, "capture"),
-    5500,
-    "录入超时，请重新拍摄后重试",
-  );
+  const preciseCanvas = createDetectionCanvas(source, 320);
+  return await detectSingleFace(preciseCanvas, "capture");
+};
+
+const resolveEnrollmentFace = async (previewDataUrl: string) => {
+  const previewImage = await createImageElement(previewDataUrl);
+  const previewFace = await detectEnrollmentFaceFromSource(previewImage);
+
+  if (previewFace) {
+    return previewFace;
+  }
+
+  if (captureVideoRef.value && captureVideoReady.value) {
+    return await detectEnrollmentFaceFromSource(captureVideoRef.value);
+  }
+
+  return null;
 };
 
 const persistEnrollmentProfile = async (
   profile: Omit<FaceDemoProfile, "avatarDataUrl">,
-  _previewDataUrl: string,
+  _previewDataUrl: string
 ) => {
   const compactProfile: FaceDemoProfile = {
     ...profile,
     avatarDataUrl: FACE_PROFILE_PLACEHOLDER,
   };
 
-  persistFallbackProfile(compactProfile);
+  await persistProfile(compactProfile);
 };
 
 const getProfileInitial = (name: string) => {
@@ -780,7 +970,10 @@ const refreshCameraDevices = async () => {
     return;
   }
 
-  if (!selectedDeviceId.value || !videos.some((device) => device.deviceId === selectedDeviceId.value)) {
+  if (
+    !selectedDeviceId.value ||
+    !videos.some((device) => device.deviceId === selectedDeviceId.value)
+  ) {
     selectedDeviceId.value = videos[0]?.deviceId ?? "";
   }
 };
@@ -941,6 +1134,8 @@ const handleConfirmName = async () => {
     return;
   }
 
+  captureMode.value = "camera";
+  reEnrollTargetId.value = "";
   playerName.value = name;
   captureError.value = "";
   capturePreview.value = "";
@@ -957,9 +1152,70 @@ const handleConfirmName = async () => {
   }
 };
 
+const triggerUploadPicker = () => {
+  uploadInputRef.value?.click();
+};
+
+const handleSelectUpload = () => {
+  if (!draftName.value.trim()) {
+    ElMessage.warning("请先输入名字");
+    return;
+  }
+
+  captureMode.value = "upload";
+  captureError.value = "";
+  triggerUploadPicker();
+};
+
+const handleSelectCamera = async () => {
+  if (!draftName.value.trim()) {
+    ElMessage.warning("请先输入名字");
+    return;
+  }
+
+  await handleConfirmName();
+};
+
+const handleUploadChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+
+  if (!file) {
+    return;
+  }
+
+  if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
+    ElMessage.warning("仅支持 png、jpg、jpeg 格式");
+    input.value = "";
+    return;
+  }
+
+  try {
+    stopActiveStream();
+    await ensureRuntimeReady();
+    captureMode.value = "upload";
+    playerName.value = draftName.value.trim() || playerName.value;
+    capturePreview.value = await readFileAsDataUrl(file);
+    captureError.value = "";
+    currentStep.value = "capture";
+    runtimeNotice.value = "图片已加载，请确认照片清晰后开始录入。";
+  } catch (error) {
+    console.error("读取上传图片失败:", error);
+    captureError.value = "读取上传图片失败";
+    ElMessage.error(captureError.value);
+  } finally {
+    input.value = "";
+  }
+};
+
 const handleRetryCapture = async () => {
   capturePreview.value = "";
   captureError.value = "";
+
+  if (captureMode.value === "upload") {
+    triggerUploadPicker();
+    return;
+  }
 
   try {
     await ensureRuntimeReady();
@@ -973,6 +1229,7 @@ const handleRetryCapture = async () => {
 };
 
 const handleEnrollFace = async () => {
+  const isReEnroll = Boolean(reEnrollTargetId.value);
   let enrollmentPreview = capturePreview.value;
 
   if (!enrollmentPreview) {
@@ -982,7 +1239,10 @@ const handleEnrollFace = async () => {
     }
 
     try {
-      enrollmentPreview = takeSnapshotFromVideo(captureVideoRef.value, captureCanvasRef.value);
+      enrollmentPreview = takeSnapshotFromVideo(
+        captureVideoRef.value,
+        captureCanvasRef.value
+      );
       capturePreview.value = enrollmentPreview;
     } catch (error: any) {
       captureError.value = error?.message || "拍照失败";
@@ -1008,21 +1268,26 @@ const handleEnrollFace = async () => {
 
     await persistEnrollmentProfile(
       {
-      id: crypto.randomUUID(),
-      name: playerName.value,
-      descriptor: enrolledFace.descriptor,
-      descriptorVersion: FACE_DEMO_DESCRIPTOR_VERSION,
-      createdAt: Date.now(),
+        id: reEnrollTargetId.value || crypto.randomUUID(),
+        name: playerName.value,
+        descriptor: enrolledFace.descriptor,
+        descriptorVersion: FACE_DEMO_DESCRIPTOR_VERSION,
+        createdAt: Date.now(),
       },
-      enrollmentPreview,
+      enrollmentPreview
     );
 
     await loadProfiles();
+    reEnrollTargetId.value = "";
     stopActiveStream();
     lastEnrolledPreview.value = enrollmentPreview;
     capturePreview.value = enrollmentPreview;
     currentStep.value = "success";
-    ElMessage.success("录入成功，已写入当前浏览器本地人脸库");
+    ElMessage.success(
+      isReEnroll
+        ? "重新录入成功，已覆盖本地人脸样本"
+        : "录入成功，已写入当前浏览器本地人脸库"
+    );
   } catch (error: any) {
     console.error("录入人脸失败:", error);
     captureError.value = resolveErrorMessage(error, "录入人脸失败");
@@ -1032,13 +1297,95 @@ const handleEnrollFace = async () => {
   }
 };
 
-const handleContinueEnrollment = () => {
+const resetToNameStep = (clearName = false) => {
   stopActiveStream();
-  draftName.value = "";
-  playerName.value = "";
+  showRecognitionCompleteDialog.value = false;
+  recognitionDetections.value = [];
+  recognitionNotice.value = "请把面部放进识别区域，我来帮你识别。";
+  captureMode.value = "camera";
+  reEnrollTargetId.value = "";
   capturePreview.value = "";
   captureError.value = "";
+  lastEnrolledPreview.value = "";
   currentStep.value = "name";
+
+  if (clearName) {
+    draftName.value = "";
+    playerName.value = "";
+    return;
+  }
+
+  if (!draftName.value.trim() && playerName.value.trim()) {
+    draftName.value = playerName.value;
+  }
+};
+
+const handleContinueEnrollment = () => {
+  resetToNameStep(true);
+};
+
+const handleRenameProfile = async (profile: FaceDemoProfile) => {
+  try {
+    const { value } = await ElMessageBox.prompt("请输入新的姓名", "修改名称", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      inputValue: profile.name,
+      inputPattern: /\S+/,
+      inputErrorMessage: "姓名不能为空",
+    });
+    const nextName = value.trim();
+
+    if (!nextName || nextName === profile.name) {
+      return;
+    }
+
+    await persistProfile({
+      ...profile,
+      name: nextName,
+    });
+
+    if (playerName.value === profile.name) {
+      playerName.value = nextName;
+    }
+
+    if (draftName.value === profile.name) {
+      draftName.value = nextName;
+    }
+
+    await loadProfiles();
+    ElMessage.success("名称已更新");
+  } catch (error) {
+    if (error === "cancel" || error === "close") {
+      return;
+    }
+
+    console.error("修改名称失败:", error);
+    ElMessage.error(resolveErrorMessage(error, "修改名称失败"));
+  }
+};
+
+const handleReEnrollProfile = async (profile: FaceDemoProfile) => {
+  stopActiveStream();
+  recognitionDetections.value = [];
+  recognitionNotice.value = "请把面部放进识别区域，我来帮你识别。";
+  showRecognitionCompleteDialog.value = false;
+  captureMode.value = "camera";
+  reEnrollTargetId.value = profile.id;
+  draftName.value = profile.name;
+  playerName.value = profile.name;
+  capturePreview.value = "";
+  captureError.value = "";
+  currentStep.value = "capture";
+
+  try {
+    await ensureRuntimeReady();
+    await startCamera("capture");
+    runtimeNotice.value = `请重新录入 ${profile.name} 的人脸信息。`;
+  } catch (error: any) {
+    console.error("重新打开录入摄像头失败:", error);
+    captureError.value = error?.message || "重新打开录入摄像头失败";
+    ElMessage.error(captureError.value);
+  }
 };
 
 const handleEnterRecognition = async () => {
@@ -1073,7 +1420,37 @@ const handleStopRecognition = () => {
   stopActiveStream();
   recognitionDetections.value = [];
   recognitionNotice.value = "请把面部放进识别区域，我来帮你识别。";
-  currentStep.value = lastEnrolledPreview.value ? "success" : "name";
+  showRecognitionCompleteDialog.value = true;
+};
+
+const handleRecognitionCompleteConfirm = async () => {
+  showRecognitionCompleteDialog.value = false;
+  await clearExperienceProfiles();
+  captureMode.value = "camera";
+  reEnrollTargetId.value = "";
+  draftName.value = "";
+  playerName.value = "";
+  lastEnrolledPreview.value = "";
+  capturePreview.value = "";
+  captureError.value = "";
+  currentStep.value = "name";
+  await navigateTo("/system/ai/face", { replace: true });
+};
+
+const handleGoBack = async () => {
+  if (currentStep.value !== "name") {
+    resetToNameStep();
+    return;
+  }
+
+  stopActiveStream();
+
+  if (import.meta.client && window.history.length > 1) {
+    window.history.back();
+    return;
+  }
+
+  await navigateTo("/system/ai/face");
 };
 
 onMounted(async () => {
@@ -1105,23 +1482,69 @@ onBeforeUnmount(() => {
 }
 
 .stitch-face-page {
-  min-height: calc(100vh - 64px);
-  padding: 28px 32px 24px;
+  height: calc(100vh - 64px);
+  padding: 28px 32px 20px;
   background: #f7f9fc;
   color: #2c3338;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-back-button {
+  /* display: inline-flex;
+  align-items: center;
+  justify-content: center; */
+  width: 30px;
+  /* height: 30px; */
+  padding: 0;
+  margin-top: -2px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: #5f6b76;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.page-back-button__icon {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.page-back-button:hover {
+  color: #2451dc;
+  /* background: rgba(36, 81, 220, 0.08); */
 }
 
 .stitch-face-page__header {
+  width: 100%;
   max-width: 1560px;
-  margin: 0 auto 24px;
+  margin: 0 auto 20px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.stitch-face-page__header-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.stitch-face-page__header-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
 .stitch-face-page__crumbs {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #7d8790;
   font-size: 14px;
   line-height: 1;
@@ -1147,22 +1570,26 @@ onBeforeUnmount(() => {
 }
 
 .stitch-face-page__grid {
+  width: 100%;
   max-width: 1560px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 24px;
-  min-height: calc(100vh - 64px - 190px);
+  flex: 1;
+  min-height: 0;
 }
 
 .workbench-panel {
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
 .workbench-panel__surface {
-  min-height: 520px;
+  flex: 1;
+  min-height: clamp(360px, 50vh, 520px);
   padding: 32px;
   border-radius: 32px;
   background: #f0f4f8;
@@ -1196,6 +1623,25 @@ onBeforeUnmount(() => {
 
 .mode-card--active {
   border-color: rgba(0, 107, 96, 0.22);
+}
+
+.mode-card--clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.mode-card--clickable:hover {
+  transform: translateY(-1px);
+  border-color: rgba(36, 81, 220, 0.2);
+  box-shadow: 0 14px 28px rgba(36, 81, 220, 0.08);
+}
+
+.mode-card--disabled,
+.mode-card--disabled:hover {
+  opacity: 0.56;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .mode-card__icon {
@@ -1422,6 +1868,7 @@ onBeforeUnmount(() => {
 
 .side-column {
   min-width: 0;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -1430,8 +1877,8 @@ onBeforeUnmount(() => {
 .side-card {
   border-radius: 24px;
   background: #ffffff;
-  border: 1px solid rgba(171, 179, 185, 0.14);
-  box-shadow: 0 12px 28px rgba(44, 51, 56, 0.04);
+  border: 2px solid #4f75ff;
+  box-shadow: 0 12px 28px rgba(79, 117, 255, 0.08);
   padding: 24px;
 }
 
@@ -1440,6 +1887,7 @@ onBeforeUnmount(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .side-card__head {
@@ -1516,7 +1964,14 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
+  scrollbar-width: none;
+}
+
+.profile-list::-webkit-scrollbar {
+  display: none;
 }
 
 .profile-row {
@@ -1558,6 +2013,8 @@ onBeforeUnmount(() => {
 .profile-row__content {
   min-width: 0;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .profile-row__name {
@@ -1574,6 +2031,42 @@ onBeforeUnmount(() => {
   line-height: 1.5;
 }
 
+.profile-row__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.profile-row__action {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid rgba(36, 81, 220, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #5f6871;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-row__action--primary {
+  border-color: rgba(36, 81, 220, 0.18);
+  color: #2451dc;
+}
+
+.profile-row__action:hover {
+  border-color: rgba(36, 81, 220, 0.26);
+  color: #2451dc;
+}
+
+.profile-row__action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .profile-row__badge {
   height: 24px;
   padding: 0 10px;
@@ -1586,7 +2079,8 @@ onBeforeUnmount(() => {
 }
 
 .profile-empty {
-  min-height: 220px;
+  min-height: 0;
+  flex: 1;
   border-radius: 22px;
   background: #f7f9fc;
   border: 1px dashed rgba(171, 179, 185, 0.3);
@@ -1623,8 +2117,10 @@ onBeforeUnmount(() => {
 }
 
 .tips-card {
+  width: 100%;
   max-width: 1560px;
-  margin: 20px auto 0;
+  margin: 16px auto 0;
+  flex-shrink: 0;
   padding: 18px 22px;
   border-radius: 24px;
   background: rgba(36, 81, 220, 0.05);
@@ -1662,9 +2158,184 @@ onBeforeUnmount(() => {
   line-height: 1.7;
 }
 
-@media (max-width: 1480px) {
+.completion-dialog {
+  position: fixed;
+  inset: 0;
+  z-index: 2600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.completion-dialog__mask {
+  position: absolute;
+  inset: 0;
+  background: rgba(25, 41, 72, 0.28);
+  backdrop-filter: blur(6px);
+}
+
+.completion-dialog__card {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 560px);
+  min-height: 420px;
+  padding: 32px 40px 30px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 28px 70px rgba(24, 39, 75, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.completion-dialog__art {
+  width: 168px;
+  height: 168px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.completion-dialog__art-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.completion-dialog__message {
+  margin: 18px 0 34px;
+  color: #2f3a4c;
+  font-size: 18px;
+  line-height: 1.8;
+  text-align: center;
+}
+
+.completion-dialog__button {
+  min-width: 140px;
+  height: 44px;
+  padding: 0 28px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7a45 0%, #ff5c36 100%);
+  color: #ffffff;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 14px 24px rgba(255, 108, 62, 0.24);
+}
+
+.completion-dialog__button:hover {
+  transform: translateY(-1px);
+}
+
+@media (max-width: 1600px) {
   .stitch-face-page {
-    padding: 24px 24px 20px;
+    padding: 24px 24px 16px;
+  }
+
+  .stitch-face-page__header {
+    margin: 0 auto 16px;
+  }
+
+  .stitch-face-page__title {
+    font-size: 34px;
+  }
+
+  .stitch-face-page__subtitle {
+    margin-top: 6px;
+  }
+
+  .stitch-face-page__grid {
+    grid-template-columns: minmax(0, 1fr) 308px;
+    gap: 18px;
+  }
+
+  .workbench-panel__surface {
+    min-height: clamp(300px, 42vh, 420px);
+    padding: 24px;
+    border-radius: 28px;
+  }
+
+  .mode-grid {
+    max-width: 640px;
+    gap: 18px;
+  }
+
+  .mode-card {
+    min-height: 160px;
+    padding: 20px;
+    border-radius: 24px;
+  }
+
+  .mode-card__icon {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 12px;
+  }
+
+  .mode-card__title {
+    font-size: 18px;
+  }
+
+  .mode-card__desc {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .workbench-panel__actions {
+    margin-top: 16px;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  .primary-button,
+  .secondary-button {
+    min-width: 160px;
+    height: 46px;
+  }
+
+  .side-column {
+    gap: 16px;
+  }
+
+  .side-card {
+    padding: 20px;
+    border-radius: 20px;
+  }
+
+  .side-card__head {
+    margin-bottom: 16px;
+  }
+
+  .side-card__title {
+    font-size: 18px;
+  }
+
+  .field-label {
+    margin-bottom: 8px;
+  }
+
+  .field-input {
+    height: 46px;
+  }
+
+  .profile-empty {
+    padding: 16px;
+  }
+
+  .tips-card {
+    margin-top: 12px;
+    padding: 14px 18px;
+    border-radius: 20px;
+  }
+}
+
+@media (max-width: 1500px) {
+  .stitch-face-page {
+    padding: 24px 24px 18px;
   }
 
   .stitch-face-page__grid {
@@ -1673,14 +2344,50 @@ onBeforeUnmount(() => {
   }
 
   .workbench-panel__surface {
-    min-height: 480px;
+    min-height: clamp(340px, 48vh, 480px);
     padding: 26px;
+  }
+
+  .side-card {
+    padding: 22px;
+    border-radius: 22px;
+    border-width: 2px;
+  }
+}
+
+@media (max-width: 1300px) {
+  .stitch-face-page__grid {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 16px;
+  }
+
+  .side-column {
+    gap: 14px;
+  }
+
+  .side-card {
+    padding: 18px;
+    border-radius: 18px;
+    border-width: 2px;
+  }
+
+  .side-card__icon {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .side-card__title {
+    font-size: 16px;
   }
 }
 
 @media (max-width: 1280px) {
   .stitch-face-page {
+    height: auto;
+    min-height: calc(100vh - 64px);
     padding: 20px;
+    overflow: visible;
   }
 
   .stitch-face-page__grid {
@@ -1725,6 +2432,15 @@ onBeforeUnmount(() => {
 
   .tips-card {
     align-items: flex-start;
+  }
+
+  .completion-dialog__card {
+    min-height: 380px;
+    padding: 28px 24px 26px;
+  }
+
+  .completion-dialog__message {
+    font-size: 16px;
   }
 }
 </style>
