@@ -27,3 +27,5 @@ output/
 .cursor/
 package-lock.json
 yarn.lock
+.ace-tool/
+env.sh
