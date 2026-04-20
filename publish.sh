@@ -22,11 +22,6 @@ if [ -z "${REMOTE_HOST}" ] || [ -z "${REMOTE_USER}" ] || [ -z "${REMOTE_SCRIPT}"
     exit 1
 fi
 
-if [ ! -f "${ROOT_DIR}/${REMOTE_SCRIPT}" ]; then
-    echo "远程脚本不存在: ${ROOT_DIR}/${REMOTE_SCRIPT}"
-    exit 1
-fi
-
 echo "Deploying to test environment: ${REMOTE_USER}@${REMOTE_HOST}"
 
 cd "${ROOT_DIR}"
@@ -45,10 +40,10 @@ REMOTE_TARGET="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_DIR}/"
 REMOTE_COMMAND="cd ${REMOTE_DIR} && chmod +x ${REMOTE_SCRIPT} && ./${REMOTE_SCRIPT}"
 
 if [ -n "${PASSWORD}" ]; then
-    sshpass -p "${PASSWORD}" scp "${LOCAL_FILE}" "${REMOTE_SCRIPT}" "${REMOTE_TARGET}"
+    sshpass -p "${PASSWORD}" scp "${LOCAL_FILE}" "${REMOTE_TARGET}"
     sshpass -p "${PASSWORD}" ssh "${REMOTE_USER}@${REMOTE_HOST}" "${REMOTE_COMMAND}"
 else
-    scp "${LOCAL_FILE}" "${REMOTE_SCRIPT}" "${REMOTE_TARGET}"
+    scp "${LOCAL_FILE}" "${REMOTE_TARGET}"
     ssh "${REMOTE_USER}@${REMOTE_HOST}" "${REMOTE_COMMAND}"
 fi
 
