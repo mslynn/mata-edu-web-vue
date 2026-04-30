@@ -1,126 +1,135 @@
 <template>
-    <div class="growth-page flex-1 flex flex-col">
-        <div class="flex-1 flex overflow-hidden">
-            <!-- 左侧子菜单容器 -->
-            <div class="sidebar-container flex-shrink-0 relative">
-                <aside
-                    class="growth-sidebarflex flex-col w-[310px]">
-                    <!-- 类别标题 -->
-                    <div class="pt-[56px] pl-[26px] ">
-                        <span class="inline-flex items-center justify-center w-[140px] h-[45px] bg-[#FF9900] text-white text-sm rounded-t-[10px]">{{
-                            $t('growth.category') }}</span>
-                    </div>
-                    <!-- 菜单列表 -->
-                    <nav class="flex-1 pt-[54px] pl-[18px]  bg-white rounded-[20px] h-[584px]">
-                        <button v-for="item in sideMenuItems" :key="item.value" type="button" :class="[ 
-                            ' flex w-[273px] h-[50px] leading-[50px] mb-[10px] whitespace-nowrap text-[18px] font-normal text-[#4D4D4D] rounded-lg transition-all text-left pl-[50px]',
-                            activeMenu === item.value
-                                ? 'bg-[#FAFAFA] border-1 border-[#D9D9D9]'
-                                : 'border-1 border-transparent hover:bg-[#FAFAFA] hover:border-[#D9D9D9]'
-                        ]" @click="handleMenuClick(item.value)">
-                            <span>{{ item.label }}</span>
-                        </button>
-                    </nav>
-                </aside>
+    <div class="growth-page">
+        <div class="growth-shell">
+            <div class="growth-top-nav">
+                <button
+                    v-for="item in growthNavItems"
+                    :key="item.value"
+                    type="button"
+                    class="growth-top-nav__button"
+                    :class="{ 'is-active': activeMenu === item.value }"
+                    @click="handleMenuClick(item.value)"
+                >
+                    <component :is="item.icon" class="growth-top-nav__icon" />
+                    <span>{{ item.label }}</span>
+                </button>
             </div>
 
             <!-- 右侧内容区 - 教师培训课程 -->
-            <div v-if="activeMenu === 'training'" class="flex-1 flex flex-col min-h-0 overflow-hidden px-4">
-                <!-- 顶部一级分类标签 + 筛选 -->
-                <div class="flex items-center justify-between mb-0 flex-shrink-0 pt-[56px]">
-                    <div class="flex items-center gap-[20px] flex-wrap">
-                        <button v-for="cat in trainingTabs" :key="cat.value" :class="[
-                            'min-w-[130px] h-[45px] px-4 rounded-t-[10px] text-sm transition-colors',
-                            activeTrainingTab === cat.value
-                                ? 'bg-[#FF9900] text-white'
-                                : 'bg-white border border-gray-200 border-b-0 text-gray-600 hover:border-[#FF9900]'
-                        ]" @click="activeTrainingTab = cat.value">
-                            {{ cat.label }}
-                        </button>
+            <div v-if="activeMenu === 'training'" class="growth-mode growth-mode--training">
+                <div class="growth-toolbar">
+                    <div class="growth-toolbar__filters">
+                        <label class="growth-filter-field">
+                            <span class="growth-filter-field__label">{{ $t('growth.category') }}</span>
+                            <el-select
+                                v-model="trainingTabSelectValue"
+                                class="growth-filter-field__control growth-filter-select"
+                                popper-class="growth-filter-select-popper"
+                            >
+                                <el-option
+                                    v-for="cat in trainingTabs"
+                                    :key="cat.value"
+                                    :label="cat.label"
+                                    :value="String(cat.value)"
+                                />
+                            </el-select>
+                        </label>
+
+                        <label v-if="level2Tabs.length > 0" class="growth-filter-field">
+                            <span class="growth-filter-field__label">二级分类</span>
+                            <el-select
+                                v-model="level1SelectValue"
+                                class="growth-filter-field__control growth-filter-select"
+                                popper-class="growth-filter-select-popper"
+                            >
+                                <el-option
+                                    v-for="tab in level2Tabs"
+                                    :key="tab.value"
+                                    :label="tab.label"
+                                    :value="String(tab.value)"
+                                />
+                            </el-select>
+                        </label>
+
+                        <label v-if="level3Tabs.length > 0" class="growth-filter-field">
+                            <span class="growth-filter-field__label">三级分类</span>
+                            <el-select
+                                v-model="level2SelectValue"
+                                class="growth-filter-field__control growth-filter-select"
+                                popper-class="growth-filter-select-popper"
+                            >
+                                <el-option
+                                    v-for="tab in level3Tabs"
+                                    :key="tab.value"
+                                    :label="tab.label"
+                                    :value="String(tab.value)"
+                                />
+                            </el-select>
+                        </label>
+
+                        <label v-if="level4Tabs.length > 0" class="growth-filter-field">
+                            <span class="growth-filter-field__label">四级分类</span>
+                            <el-select
+                                v-model="level3SelectValue"
+                                class="growth-filter-field__control growth-filter-select"
+                                popper-class="growth-filter-select-popper"
+                            >
+                                <el-option
+                                    v-for="tab in level4Tabs"
+                                    :key="tab.value"
+                                    :label="tab.label"
+                                    :value="String(tab.value)"
+                                />
+                            </el-select>
+                        </label>
+
+                        <label class="growth-filter-field">
+                            <span class="growth-filter-field__label">{{ $t('common.openStatus') }}</span>
+                            <el-select
+                                v-model="openStatusSelectValue"
+                                class="growth-filter-field__control growth-filter-select"
+                                popper-class="growth-filter-select-popper"
+                            >
+                                <el-option
+                                    v-for="option in statusOptions"
+                                    :key="`status-${String(option.value)}`"
+                                    :label="option.label"
+                                    :value="option.value === undefined ? 'all' : String(option.value)"
+                                />
+                            </el-select>
+                        </label>
                     </div>
-                    <!-- 开通状态筛选 -->
-                    <div class="flex items-center gap-2">
-                        <span class="text-sm text-gray-500">{{ $t('common.openStatus') }}：</span>
-                        <div class="relative">
-                            <button type="button"
-                                class="flex items-center gap-2 px-3 py-1.5 bg-white border border-gray-200 rounded-lg text-sm text-gray-600 hover:border-[#FF9900] transition-colors min-w-[90px]"
-                                @click="showStatusDropdown = !showStatusDropdown">
-                                <span>{{statusOptions.find(o => o.value === openStatus)?.label || $t('common.all')
-                                    }}</span>
-                                <svg class="w-4 h-4 text-gray-400 transition-transform"
-                                    :class="{ 'rotate-180': showStatusDropdown }" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <Transition name="dropdown">
-                                <div v-if="showStatusDropdown"
-                                    class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50">
-                                    <div v-for="option in statusOptions" :key="String(option.value)"
-                                        class="px-3 py-2 text-sm cursor-pointer transition-colors" :class="[
-                                            openStatus === option.value
-                                                ? 'bg-[#FFF7E6] text-[#FF9900]'
-                                                : 'text-gray-600 hover:bg-gray-50'
-                                        ]" @click="selectStatus(option.value)">
-                                        {{ option.label }}
-                                    </div>
-                                </div>
-                            </Transition>
-                        </div>
+
+                    <div class="growth-toolbar__summary">
+                        共 <strong>{{ courseList.length }}</strong> 门相关课程
                     </div>
                 </div>
-                <!-- 二级分类标签 -->
-                <div v-if="level2Tabs.length > 0" class="flex items-center gap-[20px] mb-0 flex-shrink-0 flex-wrap">
-                    <button v-for="tab in level2Tabs" :key="tab.value" :class="[
-                        'min-w-[130px] h-[45px] px-4 rounded-t-[10px] text-sm transition-colors',
-                        getActiveLevelTab(1) === tab.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 border-b-0 text-gray-600 hover:border-[#FF9900]'
-                    ]" @click="setActiveLevelTab(1, tab.value)">
-                        {{ tab.label }}
-                    </button>
-                </div>
-                <!-- 三级分类标签 -->
-                <div v-if="level3Tabs.length > 0" class="flex items-center gap-[20px] mb-0 flex-shrink-0 flex-wrap">
-                    <button v-for="tab in level3Tabs" :key="tab.value" :class="[
-                        'min-w-[130px] h-[45px] px-4 rounded-t-[10px] text-sm transition-colors',
-                        getActiveLevelTab(2) === tab.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 border-b-0 text-gray-600 hover:border-[#FF9900]'
-                    ]" @click="setActiveLevelTab(2, tab.value)">
-                        {{ tab.label }}
-                    </button>
-                </div>
-                <!-- 四级分类标签 -->
-                <div v-if="level4Tabs.length > 0" class="flex items-center gap-[20px] mb-0 flex-shrink-0 flex-wrap">
-                    <button v-for="tab in level4Tabs" :key="tab.value" :class="[
-                        'min-w-[130px] h-[45px] px-4 rounded-t-[10px] text-sm transition-colors',
-                        getActiveLevelTab(3) === tab.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 border-b-0 text-gray-600 hover:border-[#FF9900]'
-                    ]" @click="setActiveLevelTab(3, tab.value)">
-                        {{ tab.label }}
-                    </button>
-                </div>
-                <!-- 课程列表 -->
-                <div class="flex-1 bg-white rounded-[20px] p-6 overflow-auto">
-                    <!-- 加载中 -->
-                    <div v-if="courseLoading" class="flex items-center justify-center h-full">
+
+                <div class="growth-training-scroll">
+                    <div v-if="courseLoading" class="growth-empty-state">
                         <div class="text-gray-400">{{ $t('common.loading') }}...</div>
                     </div>
                     <template v-else>
-                        <div class="course-grid">
-                            <div v-for="course in courseList" :key="course.id" class="course-card cursor-pointer group"
-                                @click="handleCourseClick(course)">
-                                <div
-                                    class="course-cover bg-gray-200 rounded-lg  flex items-center justify-center relative overflow-hidden">
-                                    <span class="absolute top-2 right-2 px-2 py-0.5 rounded text-xs z-10"
-                                        :class="[statusConfig[course.status]?.bg, statusConfig[course.status]?.color]">
+                        <div v-if="courseList.length" class="course-grid">
+                            <div
+                                v-for="course in courseList"
+                                :key="course.id"
+                                class="course-card cursor-pointer group"
+                                @click="handleCourseClick(course)"
+                            >
+                                <div class="course-cover bg-gray-200 flex items-center justify-center relative overflow-hidden">
+                                    <span
+                                        class="growth-course-status"
+                                        :class="getCourseStatusClass(course.status)"
+                                    >
                                         {{ statusConfig[course.status]?.label }}
                                     </span>
-                                    <img v-if="course.cover" :src="course.cover" :alt="course.name"
-                                        class="absolute inset-0 w-full h-full object-cover" />
+                                    <img
+                                        v-if="course.cover"
+                                        :src="course.cover"
+                                        :alt="course.name"
+                                        class="absolute inset-0 w-full h-full object-cover"
+                                    />
                                     <template v-else>
                                         <div class="absolute inset-0 flex items-center justify-center">
                                             <span class="text-gray-400 text-sm">{{ $t('common.courseCover') }}</span>
@@ -131,11 +140,10 @@
                                         </svg>
                                     </template>
                                 </div>
-                                <div class="text-center course-name">{{ course.name }}</div>
+                                <div class="course-name">{{ course.name }}</div>
                             </div>
                         </div>
-                        <div v-if="!courseList.length"
-                            class="flex flex-col items-center justify-center h-full text-gray-400">
+                        <div v-else class="growth-empty-state">
                             <p>{{ $t('growth.noCourse') }}</p>
                         </div>
                     </template>
@@ -143,37 +151,37 @@
             </div>
 
             <!-- 右侧内容区 - 教师社区 -->
-            <div v-else-if="activeMenu === 'community'" class="flex-1 flex flex-col min-h-0 overflow-hidden px-4 pt-[56px]">
+            <div v-else-if="activeMenu === 'community'" class="growth-mode growth-mode--community">
                 <!-- 顶部标签 -->
-                <div class="flex items-center gap-[16px] mb-[10px] flex-shrink-0 flex-wrap">
+                <div class="flex items-center gap-[16px] mb-[16px] flex-shrink-0 flex-wrap">
                     <!-- 左侧：话题广场、官方发布、精品推荐 -->
                     <button v-for="tab in communityTabs" :key="tab.value" :class="[
                         'min-w-[120px] h-[45px] px-4 rounded-[10px] text-sm transition-colors',
                         activeCommunityTab === tab.value && !activeCommunityAction
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
+                            ? 'bg-[#005BC2] text-white'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#005BC2] hover:text-[#005BC2]'
                     ]" @click="handleCommunityTabClick(tab.value)">
                         {{ tab.label }}
                     </button>
                     <!-- 分隔 -->
                     <div class="w-[1px] h-[30px] bg-gray-200 mx-2"></div>
                     <!-- 右侧：发布话题、我的话题、我评论的 -->
-                    <button class="min-w-[120px] h-[45px] px-4 rounded-[10px] text-sm transition-colors flex items-center justify-center gap-1 bg-[#E68A00] text-white hover:bg-[#D67A00]" @click="goPublishTopic">
+                    <button class="min-w-[120px] h-[45px] px-4 rounded-[10px] text-sm transition-colors flex items-center justify-center gap-1 bg-[#005BC2] text-white hover:bg-[#0A4A96]" @click="goPublishTopic">
                         <span>+</span>
                         <span>{{ $t('growth.publishTopic') }}</span>
                     </button>
                     <button v-for="tab in communityActionTabs" :key="tab.value" :class="[
                         'min-w-[120px] h-[45px] px-4 rounded-[10px] text-sm transition-colors',
                         activeCommunityAction === tab.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
+                            ? 'bg-[#005BC2] text-white'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#005BC2] hover:text-[#005BC2]'
                     ]" @click="handleCommunityActionClick(tab.value)">
                         {{ tab.label }}
                     </button>
                 </div>
                 
                 <!-- 话题列表区域 -->
-                <div class="flex-1 bg-white rounded-lg border border-gray-200 overflow-hidden flex flex-col">
+                <div class="flex-1 bg-white rounded-[24px] border border-gray-200 overflow-hidden flex flex-col shadow-[0_16px_34px_rgba(46,51,53,0.06)]">
                     <!-- 搜索 + 排序 -->
                     <div class="flex items-center justify-between px-4 py-3 border-b border-gray-100 flex-shrink-0">
                         <div class="relative">
@@ -183,7 +191,7 @@
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                             <input v-model="topicSearch" type="text" :placeholder="$t('growth.searchTopic')"
-                                class="pl-9 pr-4 py-1.5 border border-gray-200 rounded text-sm w-[200px] outline-none focus:border-[#FF9900]"
+                                class="pl-9 pr-4 py-1.5 border border-gray-200 rounded text-sm w-[200px] outline-none focus:border-[#005BC2]"
                                 @keyup.enter="handleTopicSearch" />
                         </div>
                         <div class="flex items-center gap-2">
@@ -204,7 +212,7 @@
                                         class="absolute top-full right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg overflow-hidden z-10">
                                         <div v-for="option in sortOptions" :key="option.value"
                                             class="px-3 py-2 text-sm cursor-pointer whitespace-nowrap"
-                                            :class="topicSort === option.value ? 'bg-[#FFF7E6] text-[#FF9900]' : 'text-gray-600 hover:bg-gray-50'"
+                                            :class="topicSort === option.value ? 'bg-[#F0F6FF] text-[#005BC2]' : 'text-gray-600 hover:bg-gray-50'"
                                             @click="topicSort = option.value; showSortDropdown = false">
                                             {{ option.label }}
                                         </div>
@@ -280,7 +288,7 @@
                     </button>
                     <button v-for="p in topicVisiblePages" :key="p" :class="[
                         'w-8 h-8 flex items-center justify-center text-sm rounded',
-                        topicPageNum === p ? 'bg-[#FF9900] text-white' : 'text-gray-600 hover:bg-gray-100'
+                        topicPageNum === p ? 'bg-[#005BC2] text-white' : 'text-gray-600 hover:bg-gray-100'
                     ]" @click="topicPageNum = p; loadTopicList()">
                         {{ p }}
                     </button>
@@ -302,21 +310,21 @@
             </div>
 
             <!-- 右侧内容区 - 图书馆 -->
-            <div v-else-if="activeMenu === 'library'" class="flex-1 flex flex-col overflow-hidden px-4 pt-[56px]">
+            <div v-else-if="activeMenu === 'library'" class="growth-mode growth-mode--library">
                 <!-- 顶部分类标签 -->
-                <div class="flex items-center gap-[20px] mb-0 flex-shrink-0">
+                <div class="flex items-center gap-[20px] mb-[16px] flex-shrink-0 flex-wrap">
                     <button v-for="tab in libraryTabs" :key="tab.value" :class="[
                         'min-w-[130px] h-[45px] px-4 rounded-t-[10px] text-sm transition-colors',
                         activeLibraryTab === tab.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 border-b-0 text-gray-600 hover:border-[#FF9900]'
+                            ? 'bg-[#005BC2] text-white'
+                            : 'bg-white border border-gray-200 border-b-0 text-gray-600 hover:border-[#005BC2] hover:text-[#005BC2]'
                     ]" @click="activeLibraryTab = tab.value">
                         {{ tab.label }}
                     </button>
                 </div>
 
                 <!-- 内容区 -->
-                <div class="flex-1 bg-white rounded-[20px] overflow-hidden flex flex-col">
+                <div class="flex-1 bg-white rounded-[24px] overflow-hidden flex flex-col border border-gray-200 shadow-[0_16px_34px_rgba(46,51,53,0.06)]">
                     <!-- 标题 -->
                     <h2 class="text-center text-lg font-medium text-gray-800 py-4">{{ $t('growth.libraryResources') }}</h2>
 
@@ -361,7 +369,7 @@
                     </button>
                     <button v-for="p in visiblePages" :key="p" :class="[
                         'w-8 h-8 flex items-center justify-center text-sm rounded',
-                        libraryPage === p ? 'bg-[#FF9900] text-white' : 'text-gray-600 hover:bg-gray-100'
+                        libraryPage === p ? 'bg-[#005BC2] text-white' : 'text-gray-600 hover:bg-gray-100'
                     ]" @click="libraryPage = p; loadLibraryList()">
                         {{ p }}
                     </button>
@@ -383,17 +391,17 @@
             </div>
 
             <!-- 右侧内容区 - 教师认证 -->
-            <div v-else-if="activeMenu === 'certification'" class="flex-1 flex flex-col overflow-hidden">
+            <div v-else-if="activeMenu === 'certification'" class="growth-mode growth-mode--certification">
                 <iframe 
                     src="https://matatalab.com/en/self-guided-course" 
-                    class="w-full h-full border-0"
+                    class="w-full h-full border-0 rounded-[24px] bg-white shadow-[0_16px_34px_rgba(46,51,53,0.06)]"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                     allowfullscreen
                 ></iframe>
             </div>
 
             <!-- 右侧内容区 - 其他（占位） -->
-            <div v-else class="flex-1 flex flex-col items-center justify-center p-4 text-gray-400">
+            <div v-else class="growth-mode flex flex-col items-center justify-center p-4 text-gray-400">
                 <p>{{ $t('growth.comingSoon') }}</p>
             </div>
         </div>
@@ -401,8 +409,8 @@
 </template>
 
 <script setup lang="ts">
-import { content } from '#tailwind-config'
-import { ref, computed, onMounted, onUnmounted, h, watch, nextTick } from 'vue'
+import { ChatDotRound, Collection, Medal, Reading } from '@element-plus/icons-vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { growthAdmin } from '~/composables/api/growth'
 
@@ -415,9 +423,6 @@ const { getTeacherCourseMenuTree, getTeacherCourseList, getTeacherCourseTopicLis
 
 // 使用共享状态
 const { activeMenu } = useGrowthState()
-
-// 侧边栏折叠状态
-const sidebarCollapsed = ref(false)
 
 // 菜单树数据
 interface MenuTreeItem {
@@ -432,35 +437,27 @@ interface MenuTreeItem {
 const menuTree = ref<MenuTreeItem[]>([])
 const menuLoading = ref(false)
 
-// 左侧菜单项
-const sideMenuItems = computed(() => [
+// 顶部导航项
+const growthNavItems = computed(() => [
     {
         label: t('growth.teacherTraining'),
         value: 'training',
-        icon: h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-            h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z' })
-        ])
+        icon: Reading
     },
     {
         label: t('growth.teacherCommunity'),
         value: 'community',
-        icon: h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-            h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' })
-        ])
+        icon: ChatDotRound
     },
     {
         label: t('growth.library'),
         value: 'library',
-        icon: h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-            h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253' })
-        ])
+        icon: Collection
     },
     {
         label: t('growth.teacherCertification'),
         value: 'certification',
-        icon: h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
-            h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z' })
-        ])
+        icon: Medal
     }
 ])
 
@@ -538,6 +535,16 @@ const level2Tabs = computed(() => getLevelTabs(1))
 const level3Tabs = computed(() => getLevelTabs(2))
 const level4Tabs = computed(() => getLevelTabs(3))
 
+const trainingTabSelectValue = computed({
+    get: () => activeTrainingTab.value ? String(activeTrainingTab.value) : '',
+    set: (value: string) => {
+        const nextValue = Number(value)
+        if (!Number.isNaN(nextValue)) {
+            activeTrainingTab.value = nextValue
+        }
+    }
+})
+
 // 获取当前级别选中值
 const getActiveLevelTab = (level: number) => activeLevelTabs.value[level - 1] ?? null
 
@@ -565,7 +572,52 @@ const setActiveLevelTab = (level: number, value: number) => {
 }
 
 const openStatus = ref<number | undefined>(undefined)
-const showStatusDropdown = ref(false)
+
+const level1SelectValue = computed({
+    get: () => {
+        const value = getActiveLevelTab(1)
+        return value === null ? '' : String(value)
+    },
+    set: (value: string) => {
+        const nextValue = Number(value)
+        if (!Number.isNaN(nextValue)) {
+            setActiveLevelTab(1, nextValue)
+        }
+    }
+})
+
+const level2SelectValue = computed({
+    get: () => {
+        const value = getActiveLevelTab(2)
+        return value === null ? '' : String(value)
+    },
+    set: (value: string) => {
+        const nextValue = Number(value)
+        if (!Number.isNaN(nextValue)) {
+            setActiveLevelTab(2, nextValue)
+        }
+    }
+})
+
+const level3SelectValue = computed({
+    get: () => {
+        const value = getActiveLevelTab(3)
+        return value === null ? '' : String(value)
+    },
+    set: (value: string) => {
+        const nextValue = Number(value)
+        if (!Number.isNaN(nextValue)) {
+            setActiveLevelTab(3, nextValue)
+        }
+    }
+})
+
+const openStatusSelectValue = computed({
+    get: () => openStatus.value === undefined ? 'all' : String(openStatus.value),
+    set: (value: string) => {
+        openStatus.value = value === 'all' ? undefined : Number(value)
+    }
+})
 
 const statusOptions = computed(() => [
     { label: t('common.all'), value: undefined },
@@ -574,11 +626,6 @@ const statusOptions = computed(() => [
     { label: t('common.expired'), value: 2 },
     { label: t('common.trial'), value: 3 }
 ])
-
-const selectStatus = (value: number | undefined) => {
-    openStatus.value = value
-    showStatusDropdown.value = false
-}
 
 const statusConfig = computed(() => ({
     1: { label: t('common.opened'), color: 'text-green-600', bg: 'bg-green-50' },
@@ -673,6 +720,19 @@ watch(openStatus, () => {
 
 const handleCourseClick = (course: Course) => {
     navigateTo(`/system/growth/${course.id}`)
+}
+
+const getCourseStatusClass = (status: number) => {
+    switch (status) {
+    case 1:
+        return 'is-opened'
+    case 2:
+        return 'is-expired'
+    case 3:
+        return 'is-trial'
+    default:
+        return 'is-default'
+    }
 }
 
 // 处理菜单点击
@@ -945,7 +1005,6 @@ const handleLibraryClick = (item: LibraryItem) => {
 const closeDropdown = (e: MouseEvent) => {
     const target = e.target as HTMLElement
     if (!target.closest('.relative')) {
-        showStatusDropdown.value = false
         showSortDropdown.value = false
     }
 }
@@ -982,73 +1041,343 @@ onUnmounted(() => {
 .growth-page {
     height: calc(100vh - 70px);
     overflow: hidden;
+    background: linear-gradient(180deg, #f4f8ff 0%, #f8fbff 45%, #eef4fb 100%);
 }
 
-.growth-page {
+.growth-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    gap: 20px;
+    padding: 20px 24px 24px;
+    overflow: hidden;
+}
+
+.growth-top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.growth-top-nav__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-width: 0;
+    height: 48px;
+    padding: 0 28px;
+    border: 1px solid #d8e3f1;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #617388;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 4px 14px rgba(20, 70, 130, 0.06);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, color 0.2s ease, background-color 0.2s ease;
+}
+
+.growth-top-nav__button:hover {
+    color: #005bc2;
+    border-color: #b7d0f4;
+    transform: translateY(-1px);
+}
+
+.growth-top-nav__button.is-active {
+    border-color: #005bc2;
+    background: linear-gradient(135deg, #005bc2 0%, #2f7ce0 100%);
+    color: #ffffff;
+    box-shadow: 0 10px 22px rgba(0, 91, 194, 0.18);
+}
+
+.growth-top-nav__icon {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+}
+
+.growth-mode {
+    flex: 1;
+    min-height: 0;
+}
+
+.growth-mode--training {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.growth-mode--community,
+.growth-mode--library {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: auto;
+}
+
+.growth-mode--certification {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.growth-toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: min(100%, 1360px);
+    gap: 18px;
+    padding: 18px 0 0;
+    flex-shrink: 0;
+}
+
+.growth-toolbar__filters {
+    display: flex;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 32px;
+}
+
+.growth-toolbar__summary {
+    flex-shrink: 0;
+    color: #6c7f95;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+.growth-toolbar__summary strong {
+    color: #005bc2;
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 4px;
+}
+
+.growth-filter-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 140px;
+}
+
+.growth-filter-field__label {
+    color: #6f8297;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.growth-filter-field__control {
+    width: 140px;
+}
+
+.growth-training-scroll {
+    flex: 1;
+    min-height: 0;
+    width: min(100%, 1360px);
     overflow-x: hidden;
+    overflow-y: auto;
+    padding: 16px 0 24px;
+    scrollbar-gutter: stable;
 }
 
-.sidebar-container {
-    position: relative;
+.growth-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 320px;
+    border: 1px dashed #d4dfef;
+    border-radius: 28px;
+    background: rgba(255, 255, 255, 0.78);
+    color: #7b8da3;
 }
 
 .course-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 24px;
-    justify-items: center;
+    align-items: start;
 }
 
 .course-card {
+    display: flex;
+    flex-direction: column;
     width: 100%;
-    max-width: 237px;
-    height: 280px;
-    transition: transform 0.3s ease;
+    min-width: 0;
+    border: 1px solid #e7edf5;
+    border-radius: 24px;
+    overflow: hidden;
+    background: #ffffff;
+    box-shadow: 0 4px 14px rgba(41, 77, 122, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .course-cover {
     width: 100%;
-    height: 220px;
-    border-radius: 8px 8px 0 0;
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    aspect-ratio: 1.58 / 1;
+    height: auto;
+    min-height: 0;
+    background: linear-gradient(180deg, #f8fbff 0%, #eef4fb 100%);
 }
 
 .course-name {
-    height: 60px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #FAFAFA;
-    font-weight: 400;
-    font-size: 18px;
-    color: #4D4D4D;
+    min-height: 62px;
+    padding: 16px;
+    background: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #243549;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-align: center;
 }
 
 .course-card:hover {
-    transform: scale(1.05);
+    transform: translateY(-1px);
+    border-color: #d8e4f3;
+    box-shadow: 0 14px 28px rgba(0, 91, 194, 0.08);
+}
+
+.growth-course-status {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 62px;
+    height: 24px;
+    padding: 0 12px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    backdrop-filter: blur(6px);
+}
+
+.growth-training-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+
+.growth-training-scroll::-webkit-scrollbar-thumb {
+    border-radius: 999px;
+    background: rgba(111, 130, 151, 0.45);
+}
+
+.growth-training-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.growth-course-status.is-opened {
+    color: #ffffff;
+    background: #005bc2;
+    border: 1px solid rgba(0, 91, 194, 0.18);
+}
+
+.growth-course-status.is-default {
+    color: #63758a;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(200, 212, 226, 0.9);
+}
+
+.growth-course-status.is-expired {
+    color: #d4485e;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(226, 177, 186, 0.9);
+}
+
+.growth-course-status.is-trial {
+    color: #005bc2;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(173, 203, 243, 0.92);
+}
+
+:deep(.growth-filter-select .el-select__wrapper) {
+    min-height: 40px;
+    padding: 0 12px;
+    border-radius: 12px;
+    box-shadow: 0 0 0 1px #d8e4f3 inset;
+    background: #ffffff;
+    transition: box-shadow 0.2s ease;
+}
+
+:deep(.growth-filter-select .el-select__wrapper:hover) {
+    box-shadow: 0 0 0 1px #bdd2ef inset;
+}
+
+:deep(.growth-filter-select.is-focus .el-select__wrapper),
+:deep(.growth-filter-select .el-select__wrapper.is-focused) {
+    box-shadow: 0 0 0 1px #005bc2 inset, 0 0 0 3px rgba(0, 91, 194, 0.12);
+}
+
+:deep(.growth-filter-select .el-select__selected-item),
+:deep(.growth-filter-select .el-select__placeholder) {
+    color: #22354a;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+:deep(.growth-filter-select .el-select__caret) {
+    color: #005bc2;
+    font-size: 14px;
+}
+
+:deep(.growth-filter-select-popper.el-popper) {
+    border-radius: 12px;
+    border: 1px solid #d8e4f3;
+    box-shadow: 0 16px 32px rgba(27, 67, 114, 0.12);
+}
+
+:deep(.growth-filter-select-popper .el-select-dropdown__item) {
+    min-height: 34px;
+    padding: 0 12px;
+    color: #35485d;
+    font-size: 13px;
+}
+
+:deep(.growth-filter-select-popper .el-select-dropdown__item.is-selected) {
+    color: #005bc2;
+    font-weight: 600;
+}
+
+:deep(.growth-filter-select-popper .el-select-dropdown__item.hover),
+:deep(.growth-filter-select-popper .el-select-dropdown__item:hover) {
+    background: #f4f8ff;
 }
 
 .library-card {
     width: 100%;
     height: 140px;
-    border-radius: 10px;
-    border: 1px solid #E8E8E8;
-    background: white;
+    border-radius: 20px;
+    border: 1px solid #dbe6f3;
+    background: #ffffff;
     padding: 16px;
     cursor: pointer;
-    transition: box-shadow 0.2s;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     flex-direction: column;
     justify-content: center;
 }
 
 .library-card:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: #bfd5f3;
+    box-shadow: 0 18px 30px rgba(0, 91, 194, 0.12);
 }
 
 .library-card-desc {
     font-size: 14px;
-    color: #666;
+    color: #66788e;
     line-height: 1.5;
     overflow: hidden;
     display: -webkit-box;
@@ -1066,5 +1395,55 @@ onUnmounted(() => {
 .dropdown-leave-to {
     opacity: 0;
     transform: translateY(-8px);
+}
+
+@media (max-width: 1680px) {
+    .growth-toolbar,
+    .growth-training-scroll {
+        width: min(100%, 1360px);
+    }
+}
+
+@media (max-width: 1280px) {
+    .growth-shell {
+        padding: 16px 18px 20px;
+    }
+
+    .growth-toolbar {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .growth-toolbar__summary {
+        align-self: flex-start;
+    }
+
+    .growth-toolbar,
+    .growth-training-scroll {
+        width: min(100%, 1080px);
+    }
+
+    .course-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 960px) {
+    .growth-top-nav__button {
+        min-width: calc(50% - 7px);
+    }
+
+    .growth-filter-field {
+        min-width: 100%;
+    }
+
+    .growth-toolbar,
+    .growth-training-scroll {
+        width: min(100%, 720px);
+    }
+
+    .course-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 </style>

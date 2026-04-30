@@ -1,17 +1,18 @@
 <template>
-  <div class="tree">
+  <div class="m-tree tree">
     <template v-for="node in data" :key="node[nodeKey]">
-      <div class="tree-node group">
+      <div class="m-tree__node tree-node group">
         <!-- 节点内容 -->
         <div 
           :class="[
-            'flex items-center justify-between py-2 px-2 cursor-pointer rounded transition-colors',
-            selectedKey === node[nodeKey] ? 'bg-[#FFF3DD]' : 'hover:bg-[#FFF3DD]'
+            'm-tree__content flex items-center justify-between py-2 px-2 cursor-pointer rounded transition-colors',
+            selectedKey === node[nodeKey] ? 'is-selected bg-[#FFF3DD]' : 'hover:bg-[#FFF3DD]',
+            node[childrenKey] !== undefined ? 'is-parent' : 'is-leaf'
           ]"
           :style="{ paddingLeft: `${level * 16 + 8}px` }"
           @click="handleNodeClick(node)"
         >
-          <div class="flex items-center gap-2 flex-1 min-w-0">
+          <div class="m-tree__content-main flex items-center gap-2 flex-1 min-w-0">
             <!-- 展开/折叠图标 -->
             <span 
               v-if="node[childrenKey] !== undefined"
@@ -35,11 +36,14 @@
             </slot>
             
             <!-- 标签 -->
-            <span class="truncate text-[16px] text-[#4D4D4D]">{{ node[labelKey] }}</span>
+            <span
+              class="truncate text-[16px] text-[#4D4D4D]"
+              :title="getNodeLabel(node)"
+            >{{ getNodeLabel(node) }}</span>
           </div>
           
           <!-- 操作按钮 -->
-          <div class="flex items-center gap-1 flex-shrink-0" @click.stop>
+          <div class="m-tree__actions flex items-center gap-1 flex-shrink-0" @click.stop>
             <slot name="actions" :node="node" />
           </div>
         </div>
@@ -121,6 +125,10 @@ const handleNodeClick = (node: TreeNode) => {
 const toggleExpand = (node: TreeNode) => {
   const key = node[props.nodeKey]
   emit('expand', key, !isExpanded(node))
+}
+
+const getNodeLabel = (node: TreeNode) => {
+  return String(node?.[props.labelKey] ?? '')
 }
 
 // 子组件事件转发

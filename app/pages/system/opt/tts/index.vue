@@ -1,0 +1,398 @@
+﻿<template>
+  <div class="tts-intro-page">
+    <div class="tts-intro-shell">
+      <nav class="tts-intro-breadcrumb" aria-label="面包屑">
+        <button
+          type="button"
+          class="tts-intro-breadcrumb__link"
+          @click="handleBackToAiCenter"
+        >
+          AI 实践中心
+        </button>
+        <span class="tts-intro-breadcrumb__separator">/</span>
+        <span class="tts-intro-breadcrumb__current">语音合成</span>
+      </nav>
+
+      <main class="tts-intro-main">
+        <section class="tts-intro-hero">
+          <h1>
+            语音合成<span>(TTS)</span>
+          </h1>
+
+          <p>
+            语音合成（TTS）是一种将文字自动转换为语音的人工智能技术，是语音交互与智能教育中的重要基础能力。
+            在教育场景中，TTS 不仅可以帮助学生“听见知识”，还能够通过多语种朗读、情感化表达和个性化语速调节，提升学习体验与理解效率。
+          </p>
+
+          <NuxtLink class="tts-intro-primary" to="/system/opt/tts/experience">
+            <span>立即体验</span>
+            <span class="tts-intro-primary__arrow">→</span>
+          </NuxtLink>
+        </section>
+
+        <section id="tts-workflow" class="tts-intro-workflow">
+          <div class="tts-intro-steps">
+            <article
+              v-for="step in workflowSteps"
+              :key="step.title"
+              class="tts-intro-step"
+              :class="`tts-intro-step--${step.theme}`"
+            >
+              <div class="tts-intro-step__icon">
+                <span>{{ step.icon }}</span>
+              </div>
+              <h3>{{ step.title }}</h3>
+              <p>{{ step.description }}</p>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <div class="tts-intro-ring" aria-hidden="true"></div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+definePageMeta({
+  layout: "sidebar",
+});
+
+useHead({
+  title: "语音合成",
+  htmlAttrs: {
+    lang: "zh-CN",
+  },
+});
+
+type WorkflowStep = {
+  title: string;
+  description: string;
+  icon: string;
+  theme: "primary" | "secondary" | "tertiary";
+};
+
+const workflowSteps: WorkflowStep[] = [
+  {
+    title: "文本预处理",
+    description: "对输入文本进行归一化处理，识别特殊符号、数字及缩写，并进行准确的分词处理。",
+    icon: "≡",
+    theme: "primary",
+  },
+  {
+    title: "特征提取",
+    description: "分析文本的深层语义信息与上下文关系，提取用于语音生成的关键语言学描述特征。",
+    icon: "Y",
+    theme: "primary",
+  },
+  {
+    title: "音素转换",
+    description: "利用发音字典或神经网络模型，将处理后的文本序列精准转换为对应的音素发音符号。",
+    icon: "◎",
+    theme: "primary",
+  },
+  {
+    title: "韵律建模",
+    description: "预测语音的停顿、重音、语调起伏及语速，赋予合成语音自然的人类情感表达。",
+    icon: "≋",
+    theme: "secondary",
+  },
+  {
+    title: "声学建模",
+    description: "通过神经网络将语言特征映射为声学参数，如梅尔频谱，构建语音信号的基础骨架。",
+    icon: "♬",
+    theme: "tertiary",
+  },
+  {
+    title: "声码器合成",
+    description: "采用高性能神经声码器将声学参数还原为高质量音频流，输出自然清晰的语音。",
+    icon: "≈",
+    theme: "tertiary",
+  },
+];
+
+const handleBackToAiCenter = async () => {
+  await navigateTo("/system/opt");
+};
+</script>
+
+<style scoped>
+.tts-intro-page {
+  height: calc(100% - 28px);
+  min-height: 0;
+  overflow: hidden;
+  color: #2d3337;
+  background: #f7f9fb;
+  font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.tts-intro-shell {
+  position: relative;
+  width: 100%;
+  height: calc(100% - 28px);
+  min-height: 0;
+  overflow: hidden;
+  padding: 28px 42px 26px;
+  box-sizing: border-box;
+  background:
+    radial-gradient(circle at 91% 17%, rgba(165, 193, 255, 0.28), transparent 25%),
+    radial-gradient(circle at 0 82%, rgba(105, 246, 184, 0.18), transparent 26%),
+    #f7f9fb;
+}
+
+
+.tts-intro-breadcrumb {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 1280px;
+  margin: 0 auto 8px;
+  color: #97a3b8;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tts-intro-breadcrumb__separator {
+  color: #b5bfd0;
+}
+
+.tts-intro-breadcrumb__link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #005bc2;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.tts-intro-breadcrumb__link:hover,
+.tts-intro-breadcrumb__current {
+  color: #2d3337;
+}
+
+.tts-intro-main {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  height: calc(100% - 28px);
+  min-height: 0;
+  margin: 0 auto;
+}
+
+.tts-intro-hero {
+  display: flex;
+  min-height: 210px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px 14px;
+  text-align: center;
+}
+
+.tts-intro-hero h1 {
+  margin: 0 0 14px;
+  color: #2d3337;
+  font-size: clamp(52px, 4.2vw, 72px);
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.075em;
+}
+
+.tts-intro-hero h1 span {
+  margin-left: 8px;
+  color: #005bc2;
+}
+
+.tts-intro-hero p {
+  max-width: 420px;
+  margin: 10px 0 22px;
+  color: rgba(89, 96, 99, 0.9);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tts-intro-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-width: 136px;
+  height: 42px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: #005bc2;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 900;
+  text-decoration: none;
+  box-shadow: 0 18px 38px rgba(0, 91, 194, 0.26);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tts-intro-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 22px 44px rgba(0, 91, 194, 0.3);
+}
+
+.tts-intro-primary__arrow {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.tts-intro-workflow {
+  position: relative;
+  z-index: 1;
+  padding-top: 0;
+}
+
+.tts-intro-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.tts-intro-step {
+  min-height: 122px;
+  padding: 22px 26px;
+  border: 1px solid transparent;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.045);
+  transition:
+    transform 0.24s ease,
+    border-color 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.tts-intro-step:hover {
+  transform: translateY(-3px);
+  border-color: rgba(0, 91, 194, 0.1);
+  box-shadow: 0 24px 56px rgba(15, 23, 42, 0.07);
+}
+
+.tts-intro-step__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 48px;
+  margin-bottom: 22px;
+  border-radius: 12px;
+}
+
+.tts-intro-step__icon span {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.tts-intro-step--primary .tts-intro-step__icon {
+  background: rgba(165, 193, 255, 0.35);
+  color: #005bc2;
+}
+
+.tts-intro-step--secondary .tts-intro-step__icon {
+  background: rgba(255, 216, 231, 0.62);
+  color: #a53173;
+}
+
+.tts-intro-step--tertiary .tts-intro-step__icon {
+  background: rgba(105, 246, 184, 0.36);
+  color: #006d4a;
+}
+
+.tts-intro-step h3 {
+  margin: 0 0 12px;
+  color: #2d3337;
+  font-size: 18px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.tts-intro-step p {
+  margin: 0;
+  color: #596063;
+  font-size: 12px;
+  line-height: 1.58;
+}
+
+.tts-intro-ring {
+  position: absolute;
+  right: 42px;
+  bottom: -190px;
+  z-index: 0;
+  width: 330px;
+  height: 330px;
+  border: 64px solid rgba(45, 51, 55, 0.032);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+@media (max-width: 1400px) {
+  .tts-intro-shell {
+    padding: 26px 30px 22px;
+  }
+
+  
+.tts-intro-breadcrumb {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 1280px;
+  margin: 0 auto 8px;
+  color: #97a3b8;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.tts-intro-breadcrumb__separator {
+  color: #b5bfd0;
+}
+
+.tts-intro-breadcrumb__link {
+  border: none;
+  background: transparent;
+  padding: 0;
+  color: #005bc2;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.tts-intro-breadcrumb__link:hover,
+.tts-intro-breadcrumb__current {
+  color: #2d3337;
+}
+
+.tts-intro-main {
+    max-width: 1180px;
+  }
+
+  .tts-intro-hero {
+    min-height: 194px;
+    padding-bottom: 12px;
+  }
+
+  .tts-intro-hero h1 {
+    font-size: 56px;
+  }
+
+  .tts-intro-hero p {
+    font-size: 13px;
+  }
+
+  .tts-intro-step {
+    min-height: 108px;
+    padding: 16px 20px;
+  }
+}
+</style>

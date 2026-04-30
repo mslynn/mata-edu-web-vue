@@ -697,6 +697,7 @@
     "doodleRecognition": "Doodle Recognition",
     "voiceClassification": "Voice Classification Training",
     "speechSynthesis": "Speech Synthesis",
+    "atQA": "AT Q&A",
     "smartQA": "Smart Q&A",
     "speechTranscription": "Speech Transcription Experience",
     "speechTranscriptionPrinciple": "Speech Transcription Principle",

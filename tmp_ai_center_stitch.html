@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=1920, initial-scale=1.0" name="viewport"/>
+<title>AI 实践中心 - 智慧教育平台</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#ebeef0",
+                        "primary-fixed-dim": "#8eb3ff",
+                        "on-primary-fixed-variant": "#004291",
+                        "tertiary": "#904e00",
+                        "inverse-on-surface": "#9b9d9e",
+                        "surface-bright": "#f8f9fa",
+                        "tertiary-dim": "#7f4400",
+                        "on-error-container": "#65000b",
+                        "surface-container-high": "#e5e9eb",
+                        "inverse-surface": "#0c0f10",
+                        "on-primary-container": "#003a80",
+                        "secondary-fixed-dim": "#d5cfff",
+                        "on-background": "#2e3335",
+                        "outline": "#767c7e",
+                        "on-tertiary": "#fff7f4",
+                        "on-tertiary-fixed": "#351900",
+                        "primary-dim": "#0050ab",
+                        "on-secondary-container": "#4b38c5",
+                        "error-container": "#f56965",
+                        "tertiary-fixed": "#ffa44f",
+                        "secondary": "#5948d3",
+                        "error-dim": "#70030f",
+                        "primary-container": "#a4c1ff",
+                        "surface-container-highest": "#dee3e5",
+                        "on-primary-fixed": "#002658",
+                        "tertiary-container": "#ffa44f",
+                        "error": "#ac3434",
+                        "on-surface-variant": "#5a6062",
+                        "background": "#f8f9fa",
+                        "on-surface": "#2e3335",
+                        "on-secondary": "#fcf7ff",
+                        "secondary-dim": "#4d39c7",
+                        "on-secondary-fixed-variant": "#5543cf",
+                        "on-tertiary-fixed-variant": "#623400",
+                        "surface-container-low": "#f2f4f5",
+                        "surface-tint": "#005bc2",
+                        "on-tertiary-container": "#552c00",
+                        "inverse-primary": "#4b8eff",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#381eb3",
+                        "on-error": "#fff7f6",
+                        "tertiary-fixed-dim": "#f3953a",
+                        "surface": "#f8f9fa",
+                        "secondary-container": "#e4dfff",
+                        "surface-variant": "#dee3e5",
+                        "secondary-fixed": "#e4dfff",
+                        "outline-variant": "#aeb3b5",
+                        "on-primary": "#f9f8ff",
+                        "primary-fixed": "#a4c1ff",
+                        "surface-dim": "#d5dbdd",
+                        "primary": "#005bc2"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "2xl": "1rem",
+                        "3xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans", "PingFang SC", "sans-serif"],
+                        "body": ["Manrope", "PingFang SC", "sans-serif"],
+                        "label": ["Manrope", "PingFang SC", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Manrope', 'PingFang SC', sans-serif;
+            color: #2e3335;
+            margin: 0;
+            padding: 0;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .page-container {
+            width: 100%;
+            min-width: 1440px;
+            margin: 0;
+            position: relative;
+            min-height: 100vh;
+            background: #f8f9fa;
+        }
+    </style>
+</head>
+<body class="bg-background antialiased">
+<div class="page-container flex">
+<!-- Sidebar: Exact style from SCREEN_46, but pinned to absolute left -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg" style=""/>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">home</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">group</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">construction</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">工具中心</span>
+</a>
+<!-- Active State -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#" style="">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>psychology</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm" style="">AI 实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">insights</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">trending_up</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">emoji_events</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">赛事中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">AI 助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-outline-variant/10">
+<div class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl">
+<img alt="教师头像" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR0EHEsckca4JuG6FYiQ5PMDfHBVDZCzHIRbaUwtyiOTN-KXkBuU4-ne0P6Ct_N8IL_RrT8CyubYvaMXeLnhBLqvtkZiKprSMdhH241SiuA3cvJi65m-fJ8pFqRd4BZa6BLYvOWH9Ma7Ee-FYvnhDlRSkGxFtA6a52xYV7huqoEX6gpvKdInDXIG3T7fGQr1R-Sqtmuil9tqbvrNfS16EAfOmD4SG7_CC-p2ckuO8pChG4Twa4HS0q5ajVnuDYfWxqnv9Xgesh" style=""/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate" style="">王明老师</p>
+<p class="text-[10px] text-on-surface-variant" style="">高级讲师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1">
+<!-- Content Canvas -->
+<div class="p-10 mx-auto max-w-[1800px]">
+<!-- Hero Header -->
+<section class="mb-12 pt-4">
+<h1 class="text-4xl font-extrabold text-on-surface mb-4 tracking-tight headline-font" style="">探索人工智能的无限可能</h1>
+<p class="text-lg text-on-surface-variant leading-relaxed whitespace-nowrap" style="">通过沉浸式的 AI 实践项目，从生成式 AI 到机器学习，全方位构建您的数字化创新能力。</p>
+</section>
+<!-- 1. AIGC Section -->
+<section class="mb-16">
+<div class="flex items-center gap-4 mb-8">
+<div class="p-3 bg-primary/10 rounded-2xl">
+<span class="material-symbols-outlined text-primary text-3xl" style='font-variation-settings: "FILL" 1;'>auto_awesome</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold headline-font" style="">AIGC</h2>
+<p class="text-on-surface-variant text-sm mt-1" style="">利用人工智能模型自动生成文本、图像、音频和视频等内容，激发创意的内容生产方式。</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Project Cards - Updated height from h-48 to h-64 (approx 33% increase) -->
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBKK2Dh6x1lo76XcWrPOpOeNFxjDKlFn1b_rqCqX40jBSK77xQ18eOAvR_9mMAA3d1-sy7QEomQGgaz8NLZXYcNvN_0gBjARQdO4hMWEjwY4U9OZPcBt96sD3W6LrOZ4hcMd-PrZn9H7UKlwP1S24Wpku-Kow-Y4ypNgt5UMPy10ANPUDaPoeBy8RlG3HSbi8AMvGmls4FcGJu7PAX9FIvDW12uOAljkq3j1RsDbuvUm0CNbybglsyBRX-SYdgBGWhg2Glf8Zt" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">AI画图</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqlS877Nmbc1vujDRzIWII6OSwAuBc7InaCNIC90jzBbq-hA8UQbq-QSy8XElgQiBYl1kkN4lxNLNmizDiFdRDEi-p_Jc239NSD1uxwn6LyK2jwyyiQIXxDZONxXqrqCtjiJOYCgfmT57SXmXcPeMFs8bSOvhCZ-1OEuX6K6NckkfeKr-_HYTCWlJQUqZvgiHQClbi2uYy0YEDNjVPvob0U7ZnxT2PkBaQCTOcZvLNqQt5e9DFw2Tj4xEu3DicOb90J5Jez-TO" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">AI讲故事</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAE8DSVHP0oLDUPlD7D722y2BnUDRP-rlRZdWEtyq26uo6CjQfFYRGox6HtI3LG9jyrbA5HTcOvCTY38sFZVreO5pLrDrWtQUl1tF4-20XM2iSmSjlsvXMDJS7el5cV3clS9495EF4KmKE_9yI4RGlfBfxjR--jGQNpKoXK21MJO5uSVuAH9Fzz8uZfRFfYRQb0oCb2uApovPXjkiMz2QRSp5z90W_tj-Bn5qGj25UPO7_OS-0cD1Li-ISIYarpHGnDtqSeKha5" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">AI歌曲创作</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden relative">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBaxTYz6R-CvofZXz77ZNjn4ZHTxXDF1t59zANfg_ZsgJy8cygXJtXrobla7QyNofYOggPbo_PBnlfFE-5kRzauhihXs2L-8gA5OQskTYsleAqerz8uiqY7k8d7KxgPOqsC5ohhQITECVSsCiNYG_hK0cBRzTJLfmZl-KVekvMAf_sk9l-8xBXLBBORqci0vMod2t8EdqLimQnTT3xGLG0cOoEXE82sWqYL3L_P6QGiPDafhRdFs1SmRgNWVuGpzuYxnr_-SpGx" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">AI动画视频</h3>
+</div>
+</div>
+</div>
+</section>
+<!-- 2. 视觉智能 Section -->
+<section class="mb-16">
+<div class="flex items-center gap-4 mb-8">
+<div class="p-3 bg-secondary-container/20 rounded-2xl">
+<span class="material-symbols-outlined text-secondary text-3xl" style='font-variation-settings: "FILL" 1;'>visibility</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold headline-font" style="">视觉智能</h2>
+<p class="text-on-surface-variant text-sm mt-1" style="">通过图像识别、目标检测、场景分析等技术，让计算机具备「看懂世界」的能力。</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCidAjw4R_028GjjvnaJ6_QOCtq1Se_UAQ1jauzRXjEcWrXdmVM5V_t-UTA8GnNcjMlwrWqD7TYa6-isHHwSkvA279ks9GeganbruzCFa9rod9HRZVrBPIr3t5xpoAKrVqPHgPe6989D0xSii5JqpkYIhGj8p3jhMHFFN_8JK-AU4Inh6aTfqEr_VMJLXcrSYf0s4HYbtYxRQiD_V2nDFJLU6xOi3F4hyZU4T_fVrOq84L3ioHpO_aurr8p47EmIIuGZsIz3vQH" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">图像分类训练</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCNSWVQ7J_lGNfot6AZTDv-N-qV1bbVJyqzFnJfe9PPZlrtkOz1IWzq7QzQb8kJ6qMJ8cAroBn_gEJFqnac8gtPcnzUNFS4e4VDZaP1mEhUF_BVgQyTU62P11LXWk2M41vjmRM_0btlLWtTPDoLgId0zQ9AvguXJxZvfmV8YsgSlyJGsjPQWYrqUlpgEM3b6k8o5NWLk0jI9bn08u0h1uICxYm8K2b558D10wAkroCyteEqjXzg_JDnhTGaAbFxOByUMAikIas" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">人脸识别</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRINlCUN4qSbY0ZMKBxDJS08u4a--e5N0B3pPZpNOTXyzEXwy13xTdxxKK8vTH8ZXzIrVRQYhkEAkBCD6Q3AZRtnrV8mLg9Tmeor9pefF1XXcjvg7RUxziqsTOM9zgWkR9wSlPGE3lR1wr2mrQAV-FHWWRIbgl3eZgunHBNlIjqhypbq2u2v9whJPF7XMtZE9vG5_nRUrp-l-9CFpLmo_udcjAaRvwvCGZkp_sQTpqq_tS2_41EpLhJq_wwIq861EnAGq9IhvL" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">图像识别</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAevLuudEQUTnrc7905rEn0o0enMhCYFnGxek8Fk0m0ttKhgiDYiZe3A7DqsbBzzBcUM5RFzuymbJ24VQQirknDQrrUkRiLP2t1ay0cRqqpDaCLoQBMNadxFHHneWEnoDBDCscjPclp0KYrhy3KKtLzjJ8PZ9q6fKeRSRywOLkpzrfvj3bTvjoSaJdEuPCqxM2t_kcqgnbbrc0-DmUtayqwr5-X7gQgawBGXUFETYccM8pjba0cTb37zaz2ULDK28JN4JIffev1" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">手写数字识别</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6ls3F7eKkznIyTadrjL7V33fNzSWMy1mkn3sRbklCi3wmhhzURhWIuUv3b2HRvQlJxVtC4P5ObZLe8PEkI-wlGP-sdcHAytg-Vp7j1S0OljDONZwl4u3kOL8MKowAG6q493-9C9getyf54wUfdbXpJnosPUJ16epc1RLrCMNnfTPWoINFZE4jVxHBVkCMCEVGW3azq4X-4M1NZwNt5jX9F9TA2R4pAB1qe8SKVMJMZIntbR3BFA6ai0sj55Sc0PTer1mp9wQ_" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">涂鸦识别</h3>
+</div>
+</div>
+</div>
+</section>
+<!-- 3. 语言智能 Section -->
+<section class="mb-16">
+<div class="flex items-center gap-4 mb-8">
+<div class="p-3 bg-tertiary/10 rounded-2xl">
+<span class="material-symbols-outlined text-tertiary text-3xl" style="">translate</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold headline-font" style="">语言智能</h2>
+<p class="text-on-surface-variant text-sm mt-1" style="">通过语音识别、文本理解与生成等技术，让机器能够「听得懂、说得出、读得会」。</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQ7Xg2kWMn7q1E8xVtOiop-Qb7TjYQ2BZQIiEPgccbulr9kkurGfWTVCbjKtKA8fFc29QOXuC-coh_hQa5ybTTf9DA5_zFBUbFY3hkUpzWYhyymzThs74yiGPnNRIBCbZRITdhVVbdeTM1KHan9mqGe5fVdJ6_zZRZpx3Bjojrlq4vm3-WR7bmSP0mmv4yniNxjqjQKe-BJI762vQJt2W7kP2W_bSaynDk9SVaHifSDm_aG_R7OQqEMGzvU1W2310MZGKqowrY" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">语言分类训练</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAroVGCohLBHc8KzTRJbzhAjIGUD3-6phmrDJnS7dUevfGyzY80X7w1_YTTEjIzHGUVknruQ9RiQoCLgtjeUgYGQg9GMA09fhjoPl664EJh09EOWNjihKC2fX--9H-LKx5krR5C7DQuJm3iKKkUsEPnqMIng1hRH5VY0ScjP0KAZgWYVKUtibdaa1j99h97ifGs3nqKL51f3iE7tskBIJg49PlwKzb9lYefgtNCkBFOKbDGn6NPcTkSGgjpWyFzi3j1DuR3sB8q" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">语音合成</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6v67rnqsi6TOYVveauDNg4CXkvIqZtRhuF0aOHKCS-Td4qyrqWvFRu78k2gL9xdhf8ZYYilBBCXOoNGpwFUPDPneCAJXo2xsg5TTJyEGGVrrubFUx9AO_RaKtheNE76qIIp2fZmX8FP053zXsgFEFfK3A-nbKNaAx87uT4MaXiG5yjUlye-D0t31Su727VfbiJax7rAlapnWSidyFxrDiupwbVom839bVzEsS6QHgaJE381qybgha2GZ1JXm3UpAciETxjAUa" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">智能问答</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXjThx-ukOd64Lvw-ISOB1wkvdIkdZ69Ws8_mFS5zfsHSu3D3DHxVgJXh4yeLzbvGHFrIpHkQu9HLMsL9hkvdK2hQXhGA_peSRqGklgrC7WF1bl98Q3LnrlK1zF6I9lMzDx5ZufyRhDTyfLp70FVujkvsJRSwwt-9rR67hZWlPZ7L9hAvL6tf7q9q8i-N51LvWCgI5EGSpmzzLnVKh3qfxFzaZJaoSLWIMQYSj3VlS1IWyCvTvg1HHaPEW9nGmR2fRYAbC-9tJ" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">语音转写体验</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxthTRRmh6GW4YgRQeei_aiZaHdKMTH7J4oHOnTj-kIZi40RLe_ByyO5hib_0gat1HEMm2kVsykTfdISsNrldbkxEpaUCQaPYgSPm_viP0NiDARaXCdxnshOqAomAfLS7dS9A16VIytNlDSCvHNxXrzA9VXZWisp5fvtsFL78W5iSkbRsiHWmXBkFk0g55_sfQ1vk3V4ca1h9H3XzcCi0-SegMrhTgG2fGkkcqZ6-SbSvxHcfw6iGAN9A8NVelZYg8IBPru98F" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">语音转写原理</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCP_NIL2MIiXSXLUYTgF4L_7_rSQsvOejlCXbEwwlR3yAzwVxOcAMrlqOWRaCffPib4cibxnqGPNnRVigT9z8mmCZ2gZZ69BPcm-lb_8cqvVZcjxipaT05mrSGXduKWQ4CMroXANhfcJyofHMZj5RskkKWH4AsYHWUYA3oZQCWzLHxvaCq1ieCYzVpwZqH1tmXyt_unLfjHxEExZ8dZD3A3O4ttnxnYl7h05gFvyBHH8R71ymtNafD2XO1sbYJf7aon5y1spm77" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">图灵测试</h3>
+</div>
+</div>
+</div>
+</section>
+<!-- 4. 行为与动作识别 Section -->
+<section class="mb-16">
+<div class="flex items-center gap-4 mb-8">
+<div class="p-3 bg-secondary/10 rounded-2xl">
+<span class="material-symbols-outlined text-secondary text-3xl" style="">accessibility_new</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold headline-font" style="">行为与动作识别</h2>
+<p class="text-on-surface-variant text-sm mt-1" style="">通过分析身体姿态、运动轨迹和动作序列，让AI「看懂人类的行为」。</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXQOJkO4dYSwJXBeHOxPHZ0Q-1q2VrYOh0jyayQqb4VdlI-F13z0WZollia2sudLPOxJpDDXcnjslPBGvA0L7yQ0VIh6JKrNjP4AB-NmvZZSxCOsPT1xgib6goEIhHo-DoBzclqPOJBKn1DE2ANwPKCJoaNc3p7FRmMzzQhcgyQd4YyiXolrL61RcUCro9eWlDtA-B7ubn6Qtlwc78uXYnaG32buJ73p2UOfgQYoyYMmEQIwpexf_2ZXXKF33a4Iivcm93pvBX" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">姿态分类训练</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2lEZEc3NvO35xg-5PYk6OJ-znpS5v50Fyd7DFMh1CH8-TPx5e5DTGJBJtUMJSNrQZTTM5Nh4nl7qRHu2j8ao7dyZwsvl5SLur-owS6oKb2a_v1VqUmTK2ohuJt275SLg5zKjEQUqHq6WZo7AVv4389KG2OoKaa2YF3KFM8QUdohwyU0NHGfpv-aByvSd5DIBT_NkeUQDt-AMwGt6Y-c6OpA71qRCmlNYP4TnGJ83wY_musbmg1hFkyzq-a2OgNL7VKUGcSuhv" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">手势分类训练</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMKB7IguKhZlWki8wts7tibCpeJGwz32GznHd3qiFSf4Xbwrc0rQG3wke_xx_Vsk9O6IwdbPgZavJfqqCe-A1A53wxpDq0OiyAniBj3fJiPRc-qgTpYeWaZ82q0cLJqO3T721NO4MN-G4Xn9ZrWc6Pvg5SpttNvxtGZZJ_Ys-KOLz0X4aREMNApw2OG6ACP-fWGFIajuZ8ovjTagFxJo6FpwOOFPrM5eOMZq0AF430Yzj1J-aPRYIfcdeUpUsxaWYN6uJrNwoo" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">姿态识别</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqyBaWRuOAgJFLxhO-y-Y1-bHJA0VEoQsGliBAxHUdLpuVxDadABitE9CF58Frql0n0zYziXQJNaZZLy_X6P2t8nFCCG6WuddCDL548yHDd8oF7e-bDM5PJBK33jtmGqvO8K89wyxZ-eP5cyOyRgoyhH_CJQRmpuQmQV6CHmJJO71ALZLMAQ354pud0sVyMB3r8bwKU79kNWcTKtssxgaUxtrxzcTGuc83QeTxefD-B0REBBMRyT6C1_K-8oS01Iv-ut_iRtre" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">手势识别</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAboc6NvQDXORVHScN7KlggORWWPljcQ5h9FrCgFF2Nvx7SbLtxPEpGo3en7YBZXQ7inL9Be7sYHwgy2gvh7-oLpvRBTiutMCM84JzSwIMP_w8cNEKphdCyD_1TKWjW0S0KIL41EZ63FmOLks786hmjw316oSPOqOjsJgdVCIMEkByTYWPMcif7bO2rZiUTVM7IhFV807Eg1VnySV7Hhmx9VCne4mZxrznVERQXYIl5vnOGREebU_WuHlAaiUFaL-UpZgx9g3pL" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">情绪识别与反馈</h3>
+</div>
+</div>
+</div>
+</section>
+<!-- 5. 机器学习 Section -->
+<section class="mb-16">
+<div class="flex items-center gap-4 mb-8">
+<div class="p-3 bg-primary/10 rounded-2xl">
+<span class="material-symbols-outlined text-primary text-3xl" style="">model_training</span>
+</div>
+<div>
+<h2 class="text-2xl font-bold headline-font" style="">机器学习</h2>
+<p class="text-on-surface-variant text-sm mt-1" style="">让AI通过学习数据不断变聪明的核心技术。</p>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBIHjM90EorYilPm6Il4nrH5vPZD4dEJF0MvoYmC3OF9HLK2N_mEQta1ti8BprOma8omnmezohxELbgjX-gQ_e4P0RiSh6CGrcUpi7_KK2iCGP_GBXctzu4s1DKnk0GECEhtn6fQ9a4YFK7TdFaiBlUzvF9kLck-e_1LvWXrV2z6hFw8YBeOMsiFEEu0UPeHZyJ85sX8ld-o7eACJfqF5PFmUzh8cSuYXK6_Z-XLZceVteZ8VRvqA3RiNlV9t1rHEtdksWinhcl" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">机器学习流程</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtDHTKuCgu4fqUvH3G2fhGYRI44XJcyJpSiCA2Kt3bIu4vhBNLVPF14Ep5giE59hUVVXlxt3Clb3UzoJLpIyXS32fUFw5wv55dcUTl1zFMe_lJY4We5lyO6DaUy-Z8faex79IzypbkuGTRYCvdednWPF9UaFA1jDqW1YEaoCBX_Fzzb7IPYaBqZm-7NAyI8bFE02bhQxhZxHLnGG8bknbqzjq5egUoBpV3oDGT-vOtMJAvSUY2po8fMPRq--EQovTEcyBCD6H2" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">决策树</h3>
+</div>
+</div>
+<div class="bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300 group border border-outline-variant/10">
+<div class="h-64 overflow-hidden">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAj63OF0SBz1HTpY4Ehx5QPzTpXGJuRuv9bRYvO4fRJlYLL_bizbNKh_AK4-UM-Dzp8QcmIiEq9MVCIFiGM3bHO1iufjhcWhftpfEQjXAT10H31NDUYew28L_y4l0Xt5InnmQY6jSbRz68lddonqXMaXjUqw4zg9yVh_YEm7JM7y2fptehGq6_5-EWwR0IBW-xgsnNizMC8_Ph7MtECKFBTI8z5YhlyFAx2QHbl-qcccN7FWlhCgXGteTvTxep04_ajxfnQWBjR" style=""/>
+</div>
+<div class="p-5">
+<h3 class="font-bold text-lg text-center" style="">大数据</h3>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

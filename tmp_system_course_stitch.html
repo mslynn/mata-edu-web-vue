@@ -1,0 +1,259 @@
+<!DOCTYPE html><html lang="zh-CN"><head>
+<meta charset="utf-8">
+<meta content="width=1920, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-container": "#ecedf9",
+                    "inverse-surface": "#2d3039",
+                    "primary-container": "#096ef3",
+                    "on-secondary-container": "#334d85",
+                    "outline": "#727786",
+                    "primary": "#0056c4",
+                    "on-tertiary": "#ffffff",
+                    "secondary-fixed-dim": "#b0c6ff",
+                    "on-primary-fixed": "#001944",
+                    "inverse-on-surface": "#eff0fb",
+                    "error-container": "#ffdad6",
+                    "on-error-container": "#93000a",
+                    "on-tertiary-fixed": "#341100",
+                    "tertiary-fixed": "#ffdbcb",
+                    "secondary": "#445d95",
+                    "primary-fixed-dim": "#b0c6ff",
+                    "on-primary-container": "#fefcff",
+                    "on-primary": "#ffffff",
+                    "error": "#ba1a1a",
+                    "tertiary": "#9b4000",
+                    "on-surface-variant": "#424655",
+                    "outline-variant": "#c2c6d7",
+                    "surface-bright": "#faf8ff",
+                    "on-surface": "#191b23",
+                    "surface-container-high": "#e6e7f3",
+                    "on-tertiary-container": "#fffbff",
+                    "on-secondary": "#ffffff",
+                    "secondary-fixed": "#d9e2ff",
+                    "surface-dim": "#d8d9e5",
+                    "surface-variant": "#e1e2ed",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed": "#d9e2ff",
+                    "surface-container-highest": "#e1e2ed",
+                    "on-tertiary-fixed-variant": "#793000",
+                    "on-secondary-fixed": "#001944",
+                    "on-primary-fixed-variant": "#00429a",
+                    "surface-tint": "#0058c9",
+                    "on-secondary-fixed-variant": "#2b457c",
+                    "tertiary-fixed-dim": "#ffb692",
+                    "on-background": "#191b23",
+                    "inverse-primary": "#b0c6ff",
+                    "surface-container-low": "#f2f4f5",
+                    "secondary-container": "#a7c0ff",
+                    "surface": "#f8f9fa",
+                    "on-error": "#ffffff",
+                    "tertiary-container": "#c35200",
+                    "background": "#f8f9fa"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "display": ["Plus Jakarta Sans"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Manrope', 'PingFang SC', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 1.5rem;
+        }
+        .page-container {
+            width: 1920px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+    </style>
+</head>
+<body class="text-on-surface bg-[#f8f9fa] flex flex-col items-center antialiased">
+<div class="page-container flex">
+<!-- SideNavBar Implementation -->
+<aside class="h-screen w-64 fixed left-auto top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg" style="">
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">home</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">group</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#" style="">
+<span class="material-symbols-outlined" data-weight="fill" style="">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm" style="">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">construction</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">psychology</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">AI 实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">insights</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">trending_up</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">emoji_events</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">赛事中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">AI 助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-outline-variant/10">
+<div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm">
+<img alt="教师头像" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR0EHEsckca4JuG6FYiQ5PMDfHBVDZCzHIRbaUwtyiOTN-KXkBuU4-ne0P6Ct_N8IL_RrT8CyubYvaMXeLnhBLqvtkZiKprSMdhH241SiuA3cvJi65m-fJ8pFqRd4BZa6BLYvOWH9Ma7Ee-FYvnhDlRSkGxFtA6a52xYV7huqoEX6gpvKdInDXIG3T7fGQr1R-Sqtmuil9tqbvrNfS16EAfOmD4SG7_CC-p2ckuO8pChG4Twa4HS0q5ajVnuDYfWxqnv9Xgesh" style="">
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate" style="">王明老师</p>
+<p class="text-[10px] text-on-surface-variant" style="">高级讲师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 flex-1 p-10 bg-[#f8f9fa]">
+<!-- Directory / Filters Section -->
+<div class="flex flex-col gap-6 mb-12">
+<!-- Primary Directory -->
+<div class="flex items-center justify-between">
+<div class="flex flex-wrap gap-3">
+<button class="px-6 py-2.5 rounded-full bg-primary-container text-on-primary-container font-semibold shadow-md" style="">常规课程</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors" style="">赛事课程</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors" style="">显微镜课程</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors" style="">AI通识课程</button><div class="w-px h-6 bg-outline-variant/30 self-center mx-1"></div>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors" style="">自定义课程</button>
+<button class="px-6 py-2.5 rounded-full bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high transition-colors" style="">共享课程</button>
+</div>
+<button class="px-6 py-2.5 rounded-xl bg-primary text-white font-bold flex items-center gap-2 shadow-lg shadow-primary/20" style="">
+<span class="material-symbols-outlined text-sm" style="">add</span> 新建课程
+  </button>
+</div>
+<!-- Secondary Directory -->
+<div class="flex items-center gap-4">
+<div class="relative w-96">
+<input class="w-full bg-surface-container-low border-none rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-primary/20 text-sm" placeholder="输入关键字搜索课程" type="text">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline" style="">search</span>
+</div>
+<div class="flex items-center gap-3 bg-surface-container-low px-4 py-2.5 rounded-xl">
+<span class="text-sm font-medium text-on-surface-variant" style="">开通状态:</span>
+<select class="bg-transparent border-none text-sm font-bold text-primary focus:ring-0 p-0">
+<option>全部</option>
+<option>已开通</option>
+<option>未开通</option>
+<option>已过期</option>
+</select>
+</div>
+</div><div class="flex flex-wrap gap-4 items-center bg-surface-container-low p-2 rounded-2xl">
+<span class="pl-4 pr-2 text-sm font-bold text-outline uppercase tracking-widest" style="">分类:</span>
+<button class="px-5 py-2 rounded-xl bg-white text-primary font-bold shadow-sm" style="">全部</button>
+<button class="px-5 py-2 rounded-xl text-on-surface-variant hover:bg-white/60 transition-all" style="">故事版系列课程</button>
+<button class="px-5 py-2 rounded-xl text-on-surface-variant hover:bg-white/60 transition-all" style="">教育版系列课程</button>
+<button class="px-5 py-2 rounded-xl text-on-surface-variant hover:bg-white/60 transition-all" style="">万奇机器人系列课程</button>
+<button class="px-5 py-2 rounded-xl text-on-surface-variant hover:bg-white/60 transition-all" style="">悟思AI系列课程</button>
+</div>
+</div>
+<!-- Course Grid (1920px Optimized) -->
+<div class="bento-grid">
+<!-- Course Card 1 - Updated border-radius to 6px (4px * 1.5) and Title Area Height increased by 2/3 (p-4.5 to p-7.5) -->
+<div class="group bg-surface-container-lowest rounded-[6px] overflow-hidden shadow-[0px_9px_24px_rgba(46,51,53,0.06)] hover:translate-y-[-3px] transition-all duration-300">
+<div class="aspect-[3/4] relative overflow-hidden"><img alt="AI Foundation" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUG5-VPTrmmc3DLmSlKYotHi6LbNrQQFABBxtHIkfgwcNy--SGBudzLmU6HMfVGE_wKEzNndi_6rBBv3bFQkntUnK730z4DmTITPEfJSyZuPcRvadso4rk93EN4l2ljRMAwACsG0ETUBTnbsWi8-Rt0hxla7vU8Q4mbIb_OUgqAcDtxOPKGakadD5uYeVR0dTZHW6VqlTh0S2lMHXz7JpO-6liX7H7FXOFOBwi-3yhGoLnFQ8NKQ89qOu5AGkW4dURmSwQ_HUX" style="">
+<div class="absolute top-3 left-3">
+<span class="bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md" style="">已开通</span>
+</div></div>
+<div class="flex items-center justify-center p-[15px] min-h-[52.5px]">
+<h3 class="text-base font-bold group-hover:text-primary transition-colors text-center leading-tight" style="">AI人工智能入门导论</h3>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="group bg-surface-container-lowest rounded-[6px] overflow-hidden shadow-[0px_9px_24px_rgba(46,51,53,0.06)] hover:translate-y-[-3px] transition-all duration-300">
+<div class="aspect-[3/4] relative overflow-hidden"><img alt="AI Foundation" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2lOLg920joDk01ZlqiYxKIAKi8ckcUmHGAJK_gKhmDgTW6WtmXCrA2oCeCH4zK80ZQ2Vyhf-iZNaL1dJlXWvOCwjiEDoTRjUY-TScAMLFfLdfSGuUsK3r3S6K5-nB-D0elvMIILxgNWuMZpP1cn22BC3BqR0Yf36Fl31Pi1ViTd-P6fL4MMzn4PZoW3pyFTezlv1TYOIm5r7dBprsYOtGQ1hLxXfE73Fa59Q5TpDsTYtAiRFI_eRadgjb7sfeZR6tsCgn6rqE" style="">
+<div class="absolute top-3 left-3">
+<span class="bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md" style="">已开通</span>
+</div></div>
+<div class="flex items-center justify-center p-[15px] min-h-[52.5px]">
+<h3 class="text-base font-bold group-hover:text-primary transition-colors text-center leading-tight" style="">基础机器人结构设计</h3>
+</div>
+</div>
+<!-- Course Card 3 -->
+<div class="group bg-surface-container-lowest rounded-[6px] overflow-hidden shadow-[0px_9px_24px_rgba(46,51,53,0.06)] hover:translate-y-[-3px] transition-all duration-300">
+<div class="aspect-[3/4] relative overflow-hidden"><img alt="AI Foundation" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1KV0tzghYOF_NU7Krw4Q7AwqKFQR0iCviycyLQw3P3dtREWfZd966Gf6Vqt-QBQcr0Rb6xSrhPclgz_xvg43OP6Grd3i0J1nF2PLEhHAV5Ny4rDORHDOz9L2N9WffFbPkjhuiUDmLpwLxcRrQfnbyhkU1GioAYd6GqqoCiOlrECKpFzLLamk-Gyyn8dvhOU4a2Cz7UdN-8lyAOIk1q-zzJeCsfTM_CX_9iIZ94r9yq1V1WWIkwkZC3R-ezQp9L_D5dxZB-Gqc" style="">
+<div class="absolute top-3 left-3">
+<span class="bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md" style="">已开通</span>
+</div></div>
+<div class="flex items-center justify-center p-[15px] min-h-[52.5px]">
+<h3 class="text-base font-bold group-hover:text-primary transition-colors text-center leading-tight" style="">微观世界的奥秘探究</h3>
+</div>
+</div>
+<!-- Course Card 4 -->
+<div class="group bg-surface-container-lowest rounded-[6px] overflow-hidden shadow-[0px_9px_24px_rgba(46,51,53,0.06)] hover:translate-y-[-3px] transition-all duration-300">
+<div class="aspect-[3/4] relative overflow-hidden"><img alt="AI Foundation" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBPTCQZIaJdlUwsXJO11ZgC9aJsoLz8bMu9JnfuL62PFiIgom4-vRv-PzkPLxMBeXWLoVjFnrpBnVT53hLM-e-xRfC-ZlCq5V_2YaOwKVEQfuQrM5aOqpBTUn4PMw-VfcSFHF1pJgawivD1XJ-1UAGHcsKnPBPk1yMz1YjgNu-eAn_yZQI1owv9FxzU1uBkYnSN41L0GHSDpPCOwerC7-jhKm1mCdeq-6oXstraWyoJeO-WAk7CnVIYN3HRJnQib10J73mr9O3g" style="">
+<div class="absolute top-3 left-3">
+<span class="bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md" style="">已开通</span>
+</div></div>
+<div class="flex items-center justify-center p-[15px] min-h-[52.5px]">
+<h3 class="text-base font-bold group-hover:text-primary transition-colors text-center leading-tight" style="">数字媒体叙事与创作</h3>
+</div>
+</div>
+<!-- Card 5 -->
+<div class="group bg-surface-container-lowest rounded-[6px] overflow-hidden shadow-[0px_9px_24px_rgba(46,51,53,0.06)] hover:translate-y-[-3px] transition-all duration-300">
+<div class="aspect-[3/4] relative overflow-hidden"><img alt="AI Foundation" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAeSFiQzNrsE6gBFpONuAx69CXi37LL3V1goFVNwQFh6D8EZx1RJFZ666lrESetyeKimj-xHHWP4Xn0oT5mrtDO_uQ9aHQUSsV5maq058uJxMS-S5sHoGdI6PI7nQYom4hHSRVMWHbi3gCiGdogfcI4kNtKxjWArq7MrZedFIRQKuitcdQZh1NBxxdxGSVc7xGoQnPHw6TwXC4a2OrcDBTC76mk_8zar5LN0dladc3Fpo-zyYWZkDbkwSWR0y0pmpa1xLd_aDDs" style="">
+<div class="absolute top-3 left-3">
+<span class="bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md" style="">已开通</span>
+</div></div>
+<div class="flex items-center justify-center p-[15px] min-h-[52.5px]">
+<h3 class="text-base font-bold group-hover:text-primary transition-colors text-center leading-tight" style="">逻辑数学思维建模</h3>
+</div>
+</div>
+<!-- Course Card 6 -->
+<div class="group bg-surface-container-lowest rounded-[6px] overflow-hidden shadow-[0px_9px_24px_rgba(46,51,53,0.06)] hover:translate-y-[-3px] transition-all duration-300">
+<div class="aspect-[3/4] relative overflow-hidden"><img alt="AI Foundation" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBUG5-VPTrmmc3DLmSlKYotHi6LbNrQQFABBxtHIkfgwcNy--SGBudzLmU6HMfVGE_wKEzNndi_6rBBv3bFQkntUnK730z4DmTITPEfJSyZuPcRvadso4rk93EN4l2ljRMAwACsG0ETUBTnbsWi8-Rt0hxla7vU8Q4mbIb_OUgqAcDtxOPKGakadD5uYeVR0dTZHW6VqlTh0S2lMHXz7JpO-6liX7H7FXOFOBwi-3yhGoLnFQ8NKQ89qOu5AGkW4dURmSwQ_HUX" style="">
+<div class="absolute top-3 left-3">
+<span class="bg-primary/90 text-white text-[10px] font-bold px-2 py-0.5 rounded-full backdrop-blur-md" style="">已开通</span>
+</div></div>
+<div class="flex items-center justify-center p-[15px] min-h-[52.5px]">
+<h3 class="text-base font-bold group-hover:text-primary transition-colors text-center leading-tight" style="">智能系统集成应用</h3>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

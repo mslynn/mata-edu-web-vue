@@ -150,7 +150,7 @@ const emit = defineEmits<{
   (e: 'confirm', resourceIds: string[]): void
 }>()
 
-const { getChapterResourceList, setChapterResourceVisibleStudent, getResourceeVisible } = cursorAdmin()
+const { getVisibleResourceList, setChapterResourceVisibleStudent } = cursorAdmin()
 
 const searchKeyword = ref('')
 const loading = ref(false)
@@ -286,22 +286,28 @@ const isSelected = (resourceId: string) => {
   return selectedResourceIds.value.includes(resourceId)
 }
 
+const getDefaultVisibleIds = (groups: ResourceGroup[]) => {
+  const ids: string[] = []
+  groups.forEach(group => {
+    group.resourceList?.forEach(item => {
+      if (Number(item.isVisible) === 1 && item.resourceId) {
+        ids.push(item.resourceId)
+      }
+    })
+  })
+  return ids
+}
+
 // 加载资源数据
 const loadResources = async () => {
   if (!props.chapterId) return
   
   loading.value = true
   try {
-    // 获取已设置为可见的资源列表（用于默认勾选）
-    const visibleData = await getResourceeVisible({ chapterId: props.chapterId })
-    let visibleIds: string[] = []
-    if (visibleData && visibleData.visibleResourceIds && Array.isArray(visibleData.visibleResourceIds)) {
-      visibleIds = visibleData.visibleResourceIds
-    }
-
-    // 不传 resourceType，获取所有类型的资源
-    const data = await getChapterResourceList(props.chapterId)
+    // 不传 resourceType，获取所有类型的资源，并直接使用返回项里的 isVisible 初始化默认勾选
+    const data = await getVisibleResourceList(props.chapterId)
     resourceGroups.value = data || []
+    const visibleIds = getDefaultVisibleIds(resourceGroups.value)
     
     // 默认展开所有分组
     resourceGroups.value.forEach(group => {

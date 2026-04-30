@@ -1,22 +1,35 @@
 <template>
-  <div class="user-page flex-1 flex min-w-0 overflow-hidden">
+  <div
+    :class="[
+      'user-page flex-1 flex min-w-0 overflow-hidden',
+      {
+        'user-page--class-theme': activeNav === 'class',
+        'user-page--teacher-theme': activeNav === 'teacher'
+      }
+    ]"
+  >
     <!-- 中间内容：左侧面板 + 主内容 -->
-    <div class="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0 min-w-0 overflow-hidden">
+    <div class="user-layout-shell flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0 min-w-0 overflow-hidden">
       <!-- 左侧面板：Tab切换 + 内容 -->
       <section
-        class="left-panel w-full lg:w-[180px] xl:w-[200px] 2xl:w-[260px] 3xl:w-[309px] flex-shrink-0 p-3 flex flex-col">
+        class="left-panel user-side-panel w-full lg:w-[260px] flex-shrink-0 p-3 flex flex-col">
         <!-- Tab 切换 -->
-        <MTabs v-model="activeNav" :tabs="navTabs" class="mb-3 flex-shrink-0" @change="handleNavChange" />
+        <MTabs
+          v-model="activeNav"
+          :tabs="navTabs"
+          class="user-nav-tabs mb-3 flex-shrink-0"
+          @change="handleNavChange"
+        />
 
         <!-- 教师管理时显示学校名称 -->
         <template v-if="activeNav === 'teacher'">
-          <div class="bg-white rounded-lg shadow-md flex-1 flex flex-col min-h-0">
+          <div class="user-teacher-side-card bg-white rounded-lg shadow-md flex-1 flex flex-col min-h-0">
             <div 
-              class="p-4 cursor-pointer rounded-lg transition-colors hover:bg-[#FFF8F0]" 
+              class="user-teacher-school-item p-4 cursor-pointer rounded-lg transition-colors hover:bg-[#FFF8F0]" 
               v-for="item in schoolList" 
               :key="item.id"
             >
-              <div class="text-[16px] text-[#4D4D4D] font-medium">{{ item.label }}</div>
+              <div class="user-teacher-school-name text-[16px] text-[#4D4D4D] font-medium">{{ item.label }}</div>
             </div>
           </div>
         </template>
@@ -24,20 +37,94 @@
         <!-- 班级管理时显示班级树 -->
         <template v-else-if="activeNav === 'class'">
        
-          <div class="bg-[#FFFFFF] shadow-sm flex-1 flex flex-col min-h-0">
-            <div v-if="myTreeData.length || otherTreeData.length" class="flex-1 overflow-y-auto p-2">
+          <div class="user-class-side-card bg-[#FFFFFF] shadow-sm flex-1 flex flex-col min-h-0">
+            <div v-if="myTreeData.length || otherTreeData.length" class="user-class-tree-wrap flex-1 overflow-y-auto p-2">
               <!-- 我的班级 -->
-              <div class="text-[15px] font-bold text-[#333] px-2 py-2">{{ $t('class.myClass') }}</div>
+              <div class="user-class-tree-title text-[15px] font-bold text-[#333] px-2 py-2">{{ $t('class.myClass') }}</div>
               <template v-if="myTreeData.length">
                 <MTree :data="myTreeData" :selected-key="selectedClass?.id" :expanded-keys="expandedKeys" label-key="name"
                   :children-key="'children'" @select="handleTreeSelect" @expand="handleTreeExpand">
+                  <template #icon="{ node, expanded }">
+                    <span v-if="node.children" class="user-class-tree-folder-icon">
+                      <svg
+                        v-if="expanded"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M3 7.5C3 6.67157 3.67157 6 4.5 6H9.2C9.59782 6 9.97936 6.15804 10.2607 6.43934L11.5607 7.73934C11.842 8.02064 12.2235 8.17868 12.6213 8.17868H19.5C20.3284 8.17868 21 8.85025 21 9.67868V10.2H3V7.5Z"
+                          fill="#0D5BC4"
+                          fill-opacity="0.15"
+                        />
+                        <path
+                          d="M4.5 7.25H9.1L10.85 9H19.5C19.9142 9 20.25 9.33579 20.25 9.75V16.5C20.25 17.3284 19.5784 18 18.75 18H5.25C4.42157 18 3.75 17.3284 3.75 16.5V8C3.75 7.58579 4.08579 7.25 4.5 7.25Z"
+                          stroke="#0D5BC4"
+                          stroke-width="1.6"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      <svg
+                        v-else
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M3.75 8C3.75 7.58579 4.08579 7.25 4.5 7.25H8.9236C9.32142 7.25 9.70296 7.40804 9.98426 7.68934L11.2893 8.99439C11.5706 9.27569 11.9522 9.43373 12.35 9.43373H19.5C19.9142 9.43373 20.25 9.76952 20.25 10.1837V16.5C20.25 17.3284 19.5784 18 18.75 18H5.25C4.42157 18 3.75 17.3284 3.75 16.5V8Z"
+                          stroke="#94A3B8"
+                          stroke-width="1.6"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </span>
+                    <span
+                      v-else
+                      class="user-class-tree-leaf-icon"
+                      :class="{ 'is-selected': String(selectedClass?.id || '') === String(node.id || '') }"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M12 4L3 8.5L12 13L21 8.5L12 4Z"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M7 10.6V14.2L12 16.8L17 14.2V10.6"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M18.8 9.6V14.1"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                        />
+                        <path
+                          d="M18.8 14.1C18.8 14.7075 18.3075 15.2 17.7 15.2C17.0925 15.2 16.6 14.7075 16.6 14.1C16.6 13.4925 17.0925 13 17.7 13C18.3075 13 18.8 13.4925 18.8 14.1Z"
+                          stroke="currentColor"
+                          stroke-linejoin="round"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </span>
+                  </template>
                   <template #actions="{ node }">
                     <template v-if="node.children"></template>
                     <template v-else>
-                      <div class="flex items-center gap-2">
+                      <div class="user-class-tree-node-actions flex items-center gap-2">
                         <img src="~/assets/images/edit.png" :alt="$t('common.edit')" class="w-5 h-5 cursor-pointer"
                           @click.stop="handleEditClass(node)" />
-                        <img src="~/assets/images/del.png" :alt="$t('common.delete')" class="w-5 h-5 cursor-pointer"
+                        <img src="~/assets/images/del.png" :alt="$t('common.delete')" class="user-class-tree-delete-icon w-5 h-5 cursor-pointer"
                           @click.stop="handleDeleteClass(node)" />
                       </div>
                     </template>
@@ -47,17 +134,91 @@
               <p v-else class="px-2 pb-2 text-sm text-gray-400">{{ $t('teacher.noClass') }}</p>
               <!-- 其他教师班级 -->
               <template v-if="otherTreeData.length">
-                <div class="border-t border-gray-200 my-2"></div>
-                <div class="text-[15px] font-bold text-[#333] px-2 py-2">{{ $t('class.otherClass') }}</div>
+                <div class="user-class-tree-divider border-t border-gray-200 my-2"></div>
+                <div class="user-class-tree-title text-[15px] font-bold text-[#333] px-2 py-2">{{ $t('class.otherClass') }}</div>
                 <MTree :data="otherTreeData" :selected-key="selectedClass?.id" :expanded-keys="expandedKeys" label-key="name"
                   :children-key="'children'" @select="handleTreeSelect" @expand="handleTreeExpand">
+                  <template #icon="{ node, expanded }">
+                    <span v-if="node.children" class="user-class-tree-folder-icon">
+                      <svg
+                        v-if="expanded"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M3 7.5C3 6.67157 3.67157 6 4.5 6H9.2C9.59782 6 9.97936 6.15804 10.2607 6.43934L11.5607 7.73934C11.842 8.02064 12.2235 8.17868 12.6213 8.17868H19.5C20.3284 8.17868 21 8.85025 21 9.67868V10.2H3V7.5Z"
+                          fill="#0D5BC4"
+                          fill-opacity="0.15"
+                        />
+                        <path
+                          d="M4.5 7.25H9.1L10.85 9H19.5C19.9142 9 20.25 9.33579 20.25 9.75V16.5C20.25 17.3284 19.5784 18 18.75 18H5.25C4.42157 18 3.75 17.3284 3.75 16.5V8C3.75 7.58579 4.08579 7.25 4.5 7.25Z"
+                          stroke="#0D5BC4"
+                          stroke-width="1.6"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                      <svg
+                        v-else
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M3.75 8C3.75 7.58579 4.08579 7.25 4.5 7.25H8.9236C9.32142 7.25 9.70296 7.40804 9.98426 7.68934L11.2893 8.99439C11.5706 9.27569 11.9522 9.43373 12.35 9.43373H19.5C19.9142 9.43373 20.25 9.76952 20.25 10.1837V16.5C20.25 17.3284 19.5784 18 18.75 18H5.25C4.42157 18 3.75 17.3284 3.75 16.5V8Z"
+                          stroke="#94A3B8"
+                          stroke-width="1.6"
+                          stroke-linejoin="round"
+                        />
+                      </svg>
+                    </span>
+                    <span
+                      v-else
+                      class="user-class-tree-leaf-icon"
+                      :class="{ 'is-selected': String(selectedClass?.id || '') === String(node.id || '') }"
+                    >
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M12 4L3 8.5L12 13L21 8.5L12 4Z"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M7 10.6V14.2L12 16.8L17 14.2V10.6"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linejoin="round"
+                        />
+                        <path
+                          d="M18.8 9.6V14.1"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                        />
+                        <path
+                          d="M18.8 14.1C18.8 14.7075 18.3075 15.2 17.7 15.2C17.0925 15.2 16.6 14.7075 16.6 14.1C16.6 13.4925 17.0925 13 17.7 13C18.3075 13 18.8 13.4925 18.8 14.1Z"
+                          stroke="currentColor"
+                          stroke-linejoin="round"
+                          fill="currentColor"
+                        />
+                      </svg>
+                    </span>
+                  </template>
                   <template #actions="{ node }">
                     <template v-if="node.children"></template>
                     <template v-else>
-                      <div class="flex items-center gap-2">
+                      <div class="user-class-tree-node-actions flex items-center gap-2">
                         <img src="~/assets/images/edit.png" :alt="$t('common.edit')" class="w-5 h-5 cursor-pointer"
                           @click.stop="handleEditClass(node)" />
-                        <img src="~/assets/images/del.png" :alt="$t('common.delete')" class="w-5 h-5 cursor-pointer"
+                        <img src="~/assets/images/del.png" :alt="$t('common.delete')" class="user-class-tree-delete-icon w-5 h-5 cursor-pointer"
                           @click.stop="handleDeleteClass(node)" />
                       </div>
                     </template>
@@ -70,9 +231,9 @@
               <p class="text-gray-400 text-sm">{{ $t('class.noClassRecord') }}</p>
             </div>
             <!-- 创建班级按钮始终固定在底部 -->
-            <div class="flex-shrink-0 p-3 border-t border-gray-100 flex justify-center">
+            <div class="user-class-create-wrap flex-shrink-0 p-3 border-t border-gray-100 flex justify-center">
               <button
-                class="w-[142px] h-[50px] flex items-center justify-center gap-2 bg-[#FF9900] text-white rounded-[20px] text-[16px]"
+                class="user-class-create-btn w-[142px] h-[50px] flex items-center justify-center gap-2 bg-[#FF9900] text-white rounded-[20px] text-[16px]"
                 @click="handleCreateNewClass(null)">
                 <span class="text-xl">+</span>
                 <span>{{ $t('class.createClass') }}</span>
@@ -83,26 +244,16 @@
       </section>
 
       <!-- 右侧主内容 -->
-      <section class="main-panel flex-1 min-w-0 p-4 flex flex-col overflow-hidden">
+      <section class="main-panel user-main-panel flex-1 min-w-0 p-4 flex flex-col overflow-hidden">
         <!-- 教师管理 Tab -->
         <template v-if="activeNav === 'teacher'">
-          <!-- 顶部区域：Tab标题 + 人数 -->
-          <div class="flex items-center justify-between gap-4 mb-4 flex-shrink-0 min-w-0">
-            <MTabs v-model="teacherActiveTab" :tabs="teacherTabList" class="flex-shrink-0" />
-            <span class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap flex-shrink-0">{{
-              $t('user.teacherCount') }}<span class="text-[#FF9900] font-medium ml-1">{{ teacherPagination.total
-                }}</span> <span>{{ $t('schoolAdmin.person') }}</span></span>
-          </div>
-
           <!-- 主内容区 -->
-          <div class="bg-white rounded-lg p-4 flex-1 flex flex-col min-h-0 shadow-sm">
-            <!-- 搜索 + 统一密码 + 操作按钮 -->
-            <div
-              class="flex flex-col lg:flex-row lg:flex-wrap items-start lg:items-center justify-between gap-3 mb-4 flex-shrink-0 min-w-0">
-              <!-- 左侧：搜索框 + 密码提示 -->
-              <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full lg:w-auto min-w-0 flex-shrink">
+          <div class="user-teacher-card bg-white rounded-lg p-4 flex-1 flex flex-col min-h-0 shadow-sm">
+            <div class="user-teacher-panel-head flex-shrink-0 min-w-0">
+              <div class="user-teacher-toolbar user-teacher-toolbar--main flex flex-col lg:flex-row lg:flex-wrap items-start lg:items-center justify-between gap-3 flex-shrink-0 min-w-0">
+                <div class="user-teacher-toolbar__left flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 w-full lg:w-auto min-w-0 flex-shrink">
                 <MInput v-model="teacherSearchKeyword" :placeholder="$t('user.searchAccountOrName')" clearable
-                  class="w-full sm:w-[160px] lg:w-[180px] xl:w-[220px] 2xl:w-[240px] flex-shrink-0"
+                  class="user-teacher-search w-full sm:w-[160px] lg:w-[180px] xl:w-[220px] 2xl:w-[240px] flex-shrink-0"
                   @enter="handleTeacherSearch" @clear="handleTeacherSearch">
                   <template #prefix>
                     <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,43 +262,75 @@
                     </svg>
                   </template>
                 </MInput>
-                <span class="hidden xl:inline-block text-sm text-[#999] whitespace-nowrap">
+                <span class="user-teacher-password hidden xl:inline-block text-sm text-[#999] whitespace-nowrap">
                   {{ $t('user.teacherDefaultPassword') }}<span class="text-[#4D4D4D]">{{ teacherDefaultPasswordDisplay
                     }}</span>
                 </span>
               </div>
 
-              <!-- 右侧：按钮组 -->
-              <div class="flex flex-wrap items-center gap-2 w-full lg:w-auto flex-shrink-0">
+              <div class="user-teacher-actions flex flex-wrap items-center gap-2 w-full lg:w-auto flex-shrink-0">
                 <button :class="[
-                  'h-[36px] px-4 flex items-center justify-center gap-1 rounded-[10px] text-sm whitespace-nowrap transition-colors',
-                  teacherActiveAction === 'batch' ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'bg-[#FF9900] text-white hover:bg-[#E68A00]'
+                  'user-teacher-action-btn user-teacher-action-btn--primary',
+                  teacherActiveAction === 'batch' ? 'is-disabled' : ''
                 ]" :disabled="teacherActiveAction === 'batch'" @click="handleCreateTeacher">
-                  <span>+</span>
+                  <span class="user-teacher-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M15.5 18.5V17C15.5 15.6193 14.3807 14.5 13 14.5H8C6.61929 14.5 5.5 15.6193 5.5 17V18.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                      <circle cx="10.5" cy="9" r="3" stroke="currentColor" stroke-width="1.8" />
+                      <path d="M18.5 8V14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <path d="M15.5 11H21.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
                   <span>{{ $t('user.createTeacher') }}</span>
                 </button>
                 <button :class="[
-                  'h-[36px] px-4 flex items-center justify-center rounded-[10px] text-sm whitespace-nowrap transition-colors border',
-                  teacherActiveAction === 'batch' ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-[#E5E5E5]' : 'bg-[#FAFAFA] text-[#4D4D4D] hover:bg-[#FAFAFA] border-[#E5E5E5]'
-                ]" :disabled="teacherActiveAction === 'batch'" @click="handleExportTeacher">
-                  {{ $t('user.export') }}
-                </button>
-                <button :class="[
-                  'h-[36px] px-4 flex items-center justify-center rounded-[10px] text-sm whitespace-nowrap transition-colors',
-                  teacherActiveAction === 'batch' ? 'bg-[#FF9900] text-white' : 'bg-[#FAFAFA] text-[#4D4D4D] hover:bg-[#FAFAFA] border-[#E5E5E5]'
+                  'user-teacher-action-btn user-teacher-action-btn--ghost',
+                  teacherActiveAction === 'batch' ? 'is-active' : ''
                 ]" @click="handleTeacherBatchAction">
+                  <span class="user-teacher-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M7 6H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <path d="M7 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <path d="M7 18H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <circle cx="5" cy="6" r="1" fill="currentColor" />
+                      <circle cx="5" cy="12" r="1" fill="currentColor" />
+                      <circle cx="5" cy="18" r="1" fill="currentColor" />
+                    </svg>
+                  </span>
                   {{ teacherActiveAction === 'batch' ? $t('user.cancelBatch') : $t('user.batchOperation') }}
                 </button>
+                <button :class="[
+                  'user-teacher-action-btn user-teacher-action-btn--ghost',
+                  teacherActiveAction === 'batch' ? 'is-disabled' : ''
+                ]" :disabled="teacherActiveAction === 'batch'" @click="handleExportTeacher">
+                  <span class="user-teacher-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path d="M12 4V14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      <path d="M8.5 10.5L12 14L15.5 10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                      <path d="M5 18H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                    </svg>
+                  </span>
+                  {{ $t('user.export') }}
+                </button>
+                <span class="user-teacher-count inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap flex-shrink-0">{{
+                  $t('user.teacherCount') }}<span class="user-teacher-count__num text-[#FF9900] font-medium ml-1">{{ teacherPagination.total
+                    }}</span> <span>{{ $t('schoolAdmin.person') }}</span></span>
               </div>
+            </div>
             </div>
 
             <!-- 表格 -->
-            <div class="flex-1 overflow-x-auto overflow-y-auto min-h-0">
+            <div class="user-teacher-table-wrap flex-1 overflow-x-auto overflow-y-auto min-h-0">
               <MTable :columns="teacherTableColumns" :data="teacherList" :loading="teacherLoading"
                 :selected-keys="selectedTeacherIds" :selectable="teacherActiveAction === 'batch'" row-key="userId"
-                show-index class="teacher-table min-w-[640px]" @select="handleTeacherSelect" @select-all="handleTeacherSelectAll">
+                show-index class="teacher-table user-teacher-table min-w-[640px]" @select="handleTeacherSelect" @select-all="handleTeacherSelectAll">
                 <template #nickName="{ row }">
-                  <span class="teacher-table-name truncate block">{{ row.nickName || '-' }}</span>
+                  <div class="user-teacher-name-cell">
+                    <span class="user-teacher-avatar" :style="{ backgroundColor: getTeacherAvatarColor(row) }">
+                      {{ (row.nickName || '-').slice(0, 1) }}
+                    </span>
+                    <span class="teacher-table-name user-teacher-name truncate block">{{ row.nickName || '-' }}</span>
+                  </div>
                 </template>
                 <template #userName="{ row }">
                   <span class="teacher-table-account truncate block">{{ row.userName || '-' }}</span>
@@ -159,28 +342,28 @@
                   <span>{{ row.createTime || '-' }}</span>
                 </template>
                 <template #action="{ row }">
-                  <div class="teacher-table-actions flex items-center justify-center gap-1 xl:gap-2 flex-nowrap">
+                  <div class="teacher-table-actions user-teacher-row-actions flex items-center justify-center gap-1 xl:gap-2 flex-nowrap">
                     <button :class="[
-                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
-                      teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900] hover:text-[#FF9900]'
+                      'teacher-table-action-btn user-teacher-row-action px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      teacherActiveAction === 'batch' ? 'is-disabled' : ''
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleTransferTeacherClass(row)">
                       {{ $t('user.transfer') }}
                     </button>
                     <button :class="[
-                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
-                      teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900] hover:text-[#FF9900]'
+                      'teacher-table-action-btn user-teacher-row-action px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      teacherActiveAction === 'batch' ? 'is-disabled' : ''
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleResetTeacherPassword(row)">
                       {{ $t('user.reset') }}
                     </button>
                     <button :class="[
-                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
-                      teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900] hover:text-[#FF9900]'
+                      'teacher-table-action-btn user-teacher-row-action px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      teacherActiveAction === 'batch' ? 'is-disabled' : ''
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleEditTeacher(row)">
                       {{ $t('common.edit') }}
                     </button>
                     <button :class="[
-                      'teacher-table-action-btn px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
-                      teacherActiveAction === 'batch' ? 'text-gray-400 border-gray-200 cursor-not-allowed' : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]'
+                      'teacher-table-action-btn user-teacher-row-action is-danger px-1.5 xl:px-2 2xl:px-3 py-1 text-xs xl:text-sm border rounded-[7px] transition-colors whitespace-nowrap',
+                      teacherActiveAction === 'batch' ? 'is-disabled' : ''
                     ]" :disabled="teacherActiveAction === 'batch'" @click="handleDeleteTeacher(row)">
                       {{ $t('common.delete') }}
                     </button>
@@ -191,34 +374,34 @@
 
             <!-- 批量操作栏 -->
             <div v-if="teacherActiveAction === 'batch'"
-              class="flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] rounded-lg">
+              class="user-teacher-batch-bar flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] rounded-lg">
               <div class="flex items-center gap-4">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
                   <input type="checkbox" :checked="isAllTeacherSelected" class="sr-only"
                     @change="handleTeacherSelectAllToggle" />
                   <span
-                    class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
-                    :class="isAllTeacherSelected ? 'bg-[#FF9900] border-[#FF9900]' : 'bg-white border-gray-300'"
+                    class="user-teacher-batch-checkbox w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                    :class="{ 'is-checked': isAllTeacherSelected }"
                   >
                     <svg v-if="isAllTeacherSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
                       <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </span>
-                  <span class="text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
+                  <span class="user-teacher-batch-summary text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
                 </label>
-                <span class="text-sm text-[#4D4D4D]">
-                  {{ $t('class.selected') }} <span class="text-[#FF9900]">{{ selectedTeacherIds.length }}</span> {{
+                <span class="user-teacher-batch-summary text-sm text-[#4D4D4D]">
+                  {{ $t('class.selected') }} <span class="user-teacher-batch-count text-[#FF9900]">{{ selectedTeacherIds.length }}</span> {{
                     $t('class.items') }}
                 </span>
               </div>
-              <div class="flex items-center gap-4">
-                <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchResetTeacherPassword">
+              <div class="user-teacher-batch-actions flex items-center gap-4">
+                <button class="user-teacher-batch-action text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchResetTeacherPassword">
                   {{ $t('user.batchResetPassword') }}
                 </button>
-                <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDeleteTeacher">
+                <button class="user-teacher-batch-action user-teacher-batch-action--danger text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDeleteTeacher">
                   {{ $t('user.batchDelete') }}
                 </button>
-                <button class="text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleTeacherBatchAction">
+                <button class="user-teacher-batch-action text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleTeacherBatchAction">
                   {{ $t('user.cancelBatchOperation') }}
                 </button>
               </div>
@@ -227,6 +410,7 @@
             <!-- 分页 -->
             <div class="mt-4 flex-shrink-0">
               <MPagination v-model:current-page="teacherPagination.page" v-model:page-size="teacherPagination.pageSize"
+                class="user-teacher-pagination"
                 :total="teacherPagination.total" :show-size-changer="true" :show-total="true"
                 @change="handleTeacherPageChange" />
             </div>
@@ -235,92 +419,133 @@
 
         <!-- 班级管理 Tab -->
         <template v-else-if="activeNav === 'class'">
-          <!-- Tab 切换 - 固定 -->
-          <div class="mb-4 flex-shrink-0 flex items-center justify-between gap-4 min-w-0">
-            <MTabs v-model="activeTab" :tabs="tabList" class="flex-shrink-0" @change="handleTabChange" />
-            <span class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap flex-shrink-0">
-              {{ activeTab === 'student' ? $t('class.studentCount') : $t('class.groupCount') }}
-              <span class="text-[#FF9900] font-medium ml-1">
-                {{ activeTab === 'student' ? studentList.length : groupList.length }}
-              </span>
-              <span>{{ activeTab === 'student' ? $t('class.person') : $t('class.groupUnit') }}</span>
-            </span>
-          </div>
-
           <!-- 学生管理 Tab -->
-          <div v-if="activeTab === 'student'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0 min-w-0 overflow-visible">
-            <!-- 搜索 + 统一密码 + 操作按钮 - 固定 -->
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0">
-              <!-- 左侧：搜索框 + 提示 -->
-              <div class="flex items-center gap-3">
-                <MInput v-model="searchKeyword" :placeholder="$t('class.searchStudentPlaceholder')" clearable
-                  class="w-[200px] xl:w-[270px]"
-                  @enter="handleSearch" @clear="handleSearch">
-                  <template #prefix>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </template>
-                </MInput>
-                <span class="hidden lg:inline-block w-[180px] xl:w-[200px] text-sm text-[#CBCBCB]">
-                  {{ $t('class.studentDefaultPassword') }}{{ studentPassword || '-' }}
-                </span>
-              </div>
-              <!-- 右侧：按钮组 -->
-              <div class="flex items-center gap-1.5 xl:gap-3">
-                <button :class="[
-                  'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  activeAction === 'batch' || isCurrentClassQuickLogin
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#FF9900] text-white',
-                ]" :disabled="activeAction === 'batch' || isCurrentClassQuickLogin" @click="handleCreateAction()">
-                  + {{ $t('class.createStudent') }}
-                </button>
-                <div class="relative group">
-                  <button :class="[
-                    'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                    activeAction === 'batch' || isOtherClassQuickLogin
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : isCurrentClassQuickLogin
-                        ? 'bg-[#FF9900] text-white'
-                        : 'bg-[#E5E5E5] text-[#4D4D4D]',
-                  ]" :disabled="activeAction === 'batch' || isOtherClassQuickLogin" @click="handleQuickLogin">
-                    {{ isCurrentClassQuickLogin ? $t('class.disableQuickLogin') : $t('class.enableQuickLogin') }}
-                  </button>
-                  <!-- 自定义tooltip -->
-                  <div v-if="isOtherClassQuickLogin"
-                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                    {{ $t('class.quickLoginTip') }}
-                    <div
-                      class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800">
+          <div v-if="activeTab === 'student'" class="user-class-card user-class-card--student bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0 min-w-0 overflow-visible">
+            <div class="user-class-panel-head flex-shrink-0">
+              <div class="user-class-panel-topline">
+                <div class="user-class-tabs-shell">
+                  <MTabs v-model="activeTab" :tabs="tabList" class="user-class-tabs flex-shrink-0" @change="handleTabChange" />
+                </div>
+                <div class="user-class-actions user-class-actions--top flex items-center gap-1.5 xl:gap-3">
+                  <div class="relative group">
+                    <button :class="[
+                      'user-class-action-btn user-class-action-btn--ghost',
+                      activeAction === 'batch' || isOtherClassQuickLogin
+                        ? 'is-disabled'
+                        : isCurrentClassQuickLogin
+                          ? 'is-active'
+                          : '',
+                    ]" :disabled="activeAction === 'batch' || isOtherClassQuickLogin" @click="handleQuickLogin">
+                      <span class="user-class-action-btn__icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none">
+                          <path
+                            d="M4 12.5C5.8 8.83333 8.46667 7 12 7C15.5333 7 18.2 8.83333 20 12.5C18.2 16.1667 15.5333 18 12 18C8.46667 18 5.8 16.1667 4 12.5Z"
+                            stroke="currentColor"
+                            stroke-width="1.8"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          />
+                          <circle cx="12" cy="12.5" r="2.5" stroke="currentColor" stroke-width="1.8" />
+                        </svg>
+                      </span>
+                      {{ isCurrentClassQuickLogin ? $t('class.disableQuickLogin') : $t('class.enableQuickLogin') }}
+                    </button>
+                    <div v-if="isOtherClassQuickLogin"
+                      class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                      {{ $t('class.quickLoginTip') }}
+                      <div
+                        class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800">
+                      </div>
                     </div>
                   </div>
+                  <button :class="[
+                    'user-class-action-btn user-class-action-btn--ghost',
+                    isCurrentClassQuickLogin
+                      ? 'is-disabled'
+                      : activeAction === 'batch'
+                        ? 'is-active'
+                        : '',
+                  ]" :disabled="isCurrentClassQuickLogin" @click="handleBatchAction">
+                    <span class="user-class-action-btn__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 6H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M7 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M7 18H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <circle cx="5" cy="6" r="1" fill="currentColor" />
+                        <circle cx="5" cy="12" r="1" fill="currentColor" />
+                        <circle cx="5" cy="18" r="1" fill="currentColor" />
+                      </svg>
+                    </span>
+                    {{ activeAction === "batch" ? $t('class.cancelBatch') : $t('class.batchOperation') }}
+                  </button>
+                  <button :class="[
+                    'user-class-action-btn user-class-action-btn--primary',
+                    activeAction === 'batch' || isCurrentClassQuickLogin
+                      ? 'is-disabled'
+                      : '',
+                  ]" :disabled="activeAction === 'batch' || isCurrentClassQuickLogin" @click="handleCreateAction()">
+                    <span class="user-class-action-btn__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M15.5 18.5V17C15.5 15.6193 14.3807 14.5 13 14.5H8C6.61929 14.5 5.5 15.6193 5.5 17V18.5"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <circle cx="10.5" cy="9" r="3" stroke="currentColor" stroke-width="1.8" />
+                        <path d="M18.5 8V14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M15.5 11H21.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    {{ $t('class.createStudent') }}
+                  </button>
+                  <button :class="[
+                    'user-class-action-btn user-class-action-btn--ghost',
+                    activeAction === 'batch'
+                      ? 'is-disabled'
+                      : '',
+                  ]" :disabled="activeAction === 'batch'" @click="handleExport">
+                    <span class="user-class-action-btn__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 4V14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M8.5 10.5L12 14L15.5 10.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                        <path d="M5 18H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    {{ $t('class.exportStudentInfo') }}
+                  </button>
                 </div>
-                <button :class="[
-                  'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  activeAction === 'batch'
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#E5E5E5] text-[#4D4D4D]',
-                ]" :disabled="activeAction === 'batch'" @click="handleExport">
-                  {{ $t('class.exportStudentInfo') }}
-                </button>
-                <button :class="[
-                  'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  isCurrentClassQuickLogin
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : activeAction === 'batch'
-                      ? 'bg-[#FF9900] text-white'
-                      : 'bg-[#E5E5E5] text-[#4D4D4D]',
-                ]" :disabled="isCurrentClassQuickLogin" @click="handleBatchAction">
-                  {{ activeAction === "batch" ? $t('class.cancelBatch') : $t('class.batchOperation') }}
-                </button>
+              </div>
+              <div class="user-class-panel-subline">
+                <div class="user-class-toolbar__left user-class-toolbar__left--subline flex items-center gap-3">
+                  <MInput v-model="searchKeyword" :placeholder="$t('class.searchStudentPlaceholder')" clearable
+                    class="user-class-search w-[200px] xl:w-[270px]"
+                    @enter="handleSearch" @clear="handleSearch">
+                    <template #prefix>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </template>
+                  </MInput>
+                  <span class="user-class-password hidden lg:inline-block w-[180px] xl:w-[200px] text-sm text-[#CBCBCB]">
+                    {{ $t('class.studentDefaultPassword') }}{{ studentPassword || '-' }}
+                  </span>
+                </div>
+                <span class="user-class-count inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap flex-shrink-0">
+                  {{ $t('class.studentCount') }}
+                  <span class="user-class-count__num text-[#FF9900] font-medium ml-1">
+                    {{ studentList.length }}
+                  </span>
+                  <span>{{ $t('class.person') }}</span>
+                </span>
               </div>
             </div>
 
             <!-- 快捷登录信息栏 -->
             <div v-if="isCurrentClassQuickLogin"
-              class="flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2 sm:py-3 mb-3 bg-[#FF9900] rounded-lg text-white text-xs sm:text-sm">
+              class="user-class-quick-banner flex flex-wrap items-center gap-2 sm:gap-4 px-3 sm:px-4 py-2 sm:py-3 mb-3 bg-[#FF9900] rounded-lg text-white text-xs sm:text-sm">
               <span class="bg-red-500 text-white text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded">NEW</span>
 
               <span class="border-l border-white/30 pl-2 sm:pl-4">{{ $t('user.classCode') }}{{ quickLoginData.classCode
@@ -350,13 +575,17 @@
             </div>
 
             <!-- 表格 - 可滚动区域 -->
-            <div class="flex-1 overflow-auto min-h-0 min-w-0">
+            <div class="user-class-table-wrap flex-1 overflow-auto min-h-0 min-w-0">
               <MTable :columns="tableColumns" :data="studentList" :loading="loading" :selected-keys="selectedStudentIds"
+                class="user-class-table"
                 show-index :selectable="activeAction === 'batch'" stripe @select="handleStudentSelect"
                 @select-all="handleStudentSelectAll">
                 <template #studentName="{ row }">
-                  <div class="tooltip-wrapper group relative">
-                    <span class="truncate block max-w-[120px]">{{ row.studentName || '-' }}</span>
+                  <div class="user-class-student-cell tooltip-wrapper group relative">
+                    <span class="user-class-student-avatar" :style="{ backgroundColor: getStudentAvatarColor(row) }">
+                      {{ (row.studentName || '-').slice(0, 1) }}
+                    </span>
+                    <span class="user-class-student-name truncate block max-w-[120px]">{{ row.studentName || '-' }}</span>
                     <div v-if="row.studentName" class="tooltip-content">
                       {{ row.studentName }}
                       <span class="tooltip-arrow"></span>
@@ -387,29 +616,29 @@
                   </span>
                 </template>
                 <template #action="{ row }">
-                  <div class="flex items-center justify-center gap-1 lg:gap-2 whitespace-nowrap">
+                  <div class="user-class-row-actions flex items-center justify-center gap-1 lg:gap-2 whitespace-nowrap">
                     <button :class="[
-                      'px-1.5 lg:px-2 xl:px-3 py-1 text-xs lg:text-sm border rounded-[7px] transition-colors',
+                      'user-class-row-action',
                       activeAction === 'batch' || isCurrentClassQuickLogin
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]'
+                        ? 'is-disabled'
+                        : ''
                     ]" :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                       @click="handleResetPassword(row)">
                       {{ $t('user.reset') }}
                     </button>
                     <button :class="[
-                      'px-1.5 lg:px-2 xl:px-3 py-1 text-xs lg:text-sm border rounded-[7px] transition-colors',
+                      'user-class-row-action',
                       activeAction === 'batch' || isCurrentClassQuickLogin
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]'
+                        ? 'is-disabled'
+                        : ''
                     ]" :disabled="activeAction === 'batch' || isCurrentClassQuickLogin" @click="handleTransfer(row)">
                       {{ $t('user.transferStudent') }}
                     </button>
                     <button :class="[
-                      'px-1.5 lg:px-2 xl:px-3 py-1 text-xs lg:text-sm border rounded-[7px] transition-colors',
+                      'user-class-row-action is-danger',
                       activeAction === 'batch' || isCurrentClassQuickLogin
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]'
+                        ? 'is-disabled'
+                        : ''
                     ]" :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                       @click="handleDeleteStudent(row)">
                       {{ $t('common.delete') }}
@@ -421,39 +650,39 @@
 
             <!-- 批量操作栏 - 表格底部 -->
             <div v-if="activeAction === 'batch'"
-              class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mt-3 p-2 sm:p-3 bg-[#FFF2DD] border-t border-gray-200 rounded-b-lg">
+              class="user-class-batch-bar flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0 mt-3 p-2 sm:p-3 bg-[#FFF2DD] border-t border-gray-200 rounded-b-lg">
               <div class="flex items-center gap-3 sm:gap-4">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
                   <input type="checkbox" :checked="isAllSelected" class="sr-only"
                     @change="handleSelectAllToggle" />
                   <span
-                    class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
-                    :class="isAllSelected ? 'bg-[#FF9900] border-[#FF9900]' : 'bg-white border-gray-300'"
+                    class="user-class-batch-checkbox w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                    :class="{ 'is-checked': isAllSelected }"
                   >
                     <svg v-if="isAllSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
                       <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </span>
-                  <span class="text-xs sm:text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
+                  <span class="user-class-batch-summary text-xs sm:text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
                 </label>
-                <span class="text-xs sm:text-sm text-[#4D4D4D]">{{ $t('class.selected') }}
-                  <span class="text-[#FF9900]">{{
+                <span class="user-class-batch-summary text-xs sm:text-sm text-[#4D4D4D]">{{ $t('class.selected') }}
+                  <span class="user-class-batch-count text-[#FF9900]">{{
                     selectedStudentIds.length
                   }}</span>
                   {{ $t('class.items') }}</span>
               </div>
-              <div class="flex flex-wrap items-center gap-2 sm:gap-4">
-                <button class="text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+              <div class="user-class-batch-actions flex flex-wrap items-center gap-2 sm:gap-4">
+                <button class="user-class-batch-action text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]"
                   @click="handleBatchResetPassword">
                   {{ $t('class.batchResetPassword') }}
                 </button>
-                <button class="text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchTransfer">
+                <button class="user-class-batch-action text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchTransfer">
                   {{ $t('class.batchTransfer') }}
                 </button>
-                <button class="text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDelete">
+                <button class="user-class-batch-action user-class-batch-action--danger text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDelete">
                   {{ $t('class.batchDelete') }}
                 </button>
-                <button class="text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchAction">
+                <button class="user-class-batch-action text-xs sm:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchAction">
                   {{ $t('common.cancel') }}
                 </button>
               </div>
@@ -461,48 +690,76 @@
           </div>
 
           <!-- 小组管理 Tab -->
-          <div v-else-if="activeTab === 'group'" class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
-            <!-- 搜索 + 操作按钮 -->
-            <div
-              class="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 mb-3 flex-shrink-0">
-              <!-- 左侧：搜索框 -->
-              <div class="flex items-center gap-3 w-full sm:w-auto">
-                <MInput v-model="groupSearchKeyword" :placeholder="$t('user.searchGroupPlaceholder')" clearable
-                  class="w-full sm:w-[220px] lg:w-[240px] xl:w-[280px] 2xl:w-[300px]"
-                  @enter="handleGroupSearch" @clear="handleGroupSearch">
-                  <template #prefix>
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                  </template>
-                </MInput>
+          <div v-else-if="activeTab === 'group'" class="user-class-card user-class-card--group bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0">
+            <div class="user-class-panel-head flex-shrink-0">
+              <div class="user-class-panel-topline">
+                <div class="user-class-tabs-shell">
+                  <MTabs v-model="activeTab" :tabs="tabList" class="user-class-tabs flex-shrink-0" @change="handleTabChange" />
+                </div>
+                <div class="user-class-actions user-class-actions--top flex flex-wrap items-center gap-1 lg:gap-2 w-full sm:w-auto">
+                  <button :class="[
+                    'user-class-action-btn user-class-action-btn--primary',
+                    groupActiveAction === 'batch'
+                      ? 'is-disabled'
+                      : '',
+                  ]" :disabled="groupActiveAction === 'batch'" @click="handleCreateGroup">
+                    <span class="user-class-action-btn__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M12 5V19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M5 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                      </svg>
+                    </span>
+                    <span class="hidden xl:inline">{{ $t('user.createGroup') }}</span><span class="xl:hidden">{{
+                      $t('class.create') }}</span>
+                  </button>
+                  <button :class="[
+                    'user-class-action-btn user-class-action-btn--ghost',
+                    groupActiveAction === 'batch'
+                      ? 'is-active'
+                      : '',
+                  ]" @click="handleGroupBatchAction">
+                    <span class="user-class-action-btn__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path d="M7 6H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M7 12H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <path d="M7 18H19" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        <circle cx="5" cy="6" r="1" fill="currentColor" />
+                        <circle cx="5" cy="12" r="1" fill="currentColor" />
+                        <circle cx="5" cy="18" r="1" fill="currentColor" />
+                      </svg>
+                    </span>
+                    {{ groupActiveAction === 'batch' ? $t('user.cancelBatch') : $t('user.batch') }}
+                  </button>
+                </div>
               </div>
-              <!-- 右侧：按钮组 -->
-              <div class="flex flex-wrap items-center gap-1 lg:gap-2 w-full sm:w-auto">
-                <button :class="[
-                  'h-[32px] lg:h-[34px] xl:h-[40px] px-2 lg:px-3 xl:px-4 flex items-center justify-center rounded-[20px] text-[11px] lg:text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  groupActiveAction === 'batch'
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#FF9900] text-white',
-                ]" :disabled="groupActiveAction === 'batch'" @click="handleCreateGroup">
-                  + <span class="hidden xl:inline">{{ $t('user.createGroup') }}</span><span class="xl:hidden">{{
-                    $t('class.create') }}</span>
-                </button>
-                <button :class="[
-                  'h-[32px] lg:h-[34px] xl:h-[40px] px-2 lg:px-3 xl:px-4 flex items-center justify-center rounded-[20px] text-[11px] lg:text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  groupActiveAction === 'batch'
-                    ? 'bg-[#FF9900] text-white'
-                    : 'bg-[#FFF1DD] text-[#4D4D4D]',
-                ]" @click="handleGroupBatchAction">
-                  {{ groupActiveAction === 'batch' ? $t('user.cancelBatch') : $t('user.batch') }}
-                </button>
+              <div
+                class="user-class-panel-subline user-class-panel-subline--group">
+                <div class="user-class-toolbar__left user-class-toolbar__left--subline flex items-center gap-3 w-full sm:w-auto">
+                  <MInput v-model="groupSearchKeyword" :placeholder="$t('user.searchGroupPlaceholder')" clearable
+                    class="user-class-search user-class-search--group w-full sm:w-[220px] lg:w-[240px] xl:w-[280px] 2xl:w-[300px]"
+                    @enter="handleGroupSearch" @clear="handleGroupSearch">
+                    <template #prefix>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                    </template>
+                  </MInput>
+                </div>
+                <span class="user-class-count inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap flex-shrink-0">
+                  {{ $t('class.groupCount') }}
+                  <span class="user-class-count__num text-[#FF9900] font-medium ml-1">
+                    {{ groupList.length }}
+                  </span>
+                  <span>{{ $t('class.groupUnit') }}</span>
+                </span>
               </div>
             </div>
 
             <!-- 表格 -->
-            <div class="flex-1 overflow-auto min-h-0">
+            <div class="user-class-table-wrap flex-1 overflow-auto min-h-0">
               <MTable :columns="groupTableColumns" :data="groupList" :loading="groupLoading"
+                class="user-class-table user-class-table--group"
                 :selected-keys="selectedGroupIds" show-index :selectable="groupActiveAction === 'batch'" stripe
                 @select="handleGroupSelect" @select-all="handleGroupSelectAll">
                 <template #teamName="{ row }">
@@ -551,20 +808,20 @@
                   </div>
                 </template>
                 <template #action="{ row }">
-                  <div class="flex items-center justify-center gap-1 lg:gap-2 whitespace-nowrap">
+                  <div class="user-class-row-actions user-class-row-actions--group flex items-center justify-center gap-1 lg:gap-2 whitespace-nowrap">
                     <button :class="[
-                      'px-1.5 lg:px-2 xl:px-3 py-1 text-xs lg:text-sm border rounded-[7px] transition-colors',
+                      'user-class-row-action',
                       groupActiveAction === 'batch'
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]'
+                        ? 'is-disabled'
+                        : ''
                     ]" :disabled="groupActiveAction === 'batch'" @click="handleEditGroup(row)">
                       {{ $t('common.edit') }}
                     </button>
                     <button :class="[
-                      'px-1.5 lg:px-2 xl:px-3 py-1 text-xs lg:text-sm border rounded-[7px] transition-colors',
+                      'user-class-row-action is-danger',
                       groupActiveAction === 'batch'
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]'
+                        ? 'is-disabled'
+                        : ''
                     ]" :disabled="groupActiveAction === 'batch'" @click="handleDeleteGroup(row)">
                       {{ $t('common.delete') }}
                     </button>
@@ -575,30 +832,30 @@
 
             <!-- 批量操作栏 -->
             <div v-if="groupActiveAction === 'batch'"
-              class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-3 p-2 lg:p-3 bg-[#FFF2DD] border-t border-gray-200 rounded-b-lg">
+              class="user-class-batch-bar flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mt-3 p-2 lg:p-3 bg-[#FFF2DD] border-t border-gray-200 rounded-b-lg">
               <div class="flex items-center gap-2 lg:gap-4">
                 <label class="flex items-center gap-2 cursor-pointer select-none">
                   <input type="checkbox" :checked="isAllGroupSelected" class="sr-only"
                     @change="handleGroupSelectAllToggle" />
                   <span
-                    class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
-                    :class="isAllGroupSelected ? 'bg-[#FF9900] border-[#FF9900]' : 'bg-white border-gray-300'"
+                    class="user-class-batch-checkbox w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                    :class="{ 'is-checked': isAllGroupSelected }"
                   >
                     <svg v-if="isAllGroupSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
                       <path d="M1 4L3.5 6.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                     </svg>
                   </span>
-                  <span class="text-xs lg:text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
+                  <span class="user-class-batch-summary text-xs lg:text-sm text-[#4D4D4D]">{{ $t('class.selectAll') }}</span>
                 </label>
-                <span class="text-xs lg:text-sm text-[#4D4D4D]">
-                  {{ $t('class.selected') }} <span class="text-[#FF9900]">{{ selectedGroupIds.length }}</span> {{ $t('class.items') }}
+                <span class="user-class-batch-summary text-xs lg:text-sm text-[#4D4D4D]">
+                  {{ $t('class.selected') }} <span class="user-class-batch-count text-[#FF9900]">{{ selectedGroupIds.length }}</span> {{ $t('class.items') }}
                 </span>
               </div>
-              <div class="flex items-center gap-2 lg:gap-4">
-                <button class="text-xs lg:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDeleteGroup">
+              <div class="user-class-batch-actions flex items-center gap-2 lg:gap-4">
+                <button class="user-class-batch-action user-class-batch-action--danger text-xs lg:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleBatchDeleteGroup">
                   {{ $t('common.delete') }}
                 </button>
-                <button class="text-xs lg:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleGroupBatchAction">
+                <button class="user-class-batch-action text-xs lg:text-sm text-[#4D4D4D] hover:text-[#FF9900]" @click="handleGroupBatchAction">
                   {{ $t('common.cancel') }}
                 </button>
               </div>
@@ -612,16 +869,16 @@
     <!-- 添加/编辑教师弹窗 -->
     <MModal v-model="showTeacherModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative m-3 rounded-lg bg-white ">
+      <div class="user-teacher-modal user-teacher-modal--compact p-6 relative m-3 rounded-lg bg-white ">
         <!-- 关闭按钮 -->
-        <button class="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-[#999] hover:text-[#666] transition-colors" @click="showTeacherModal = false">
+        <button class="user-teacher-modal__close absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-[#999] hover:text-[#666] transition-colors" @click="showTeacherModal = false">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-[18px] font-medium text-[#333] mb-6">
+        <h3 class="user-teacher-modal__title text-center text-[18px] font-medium text-[#333] mb-6">
           {{ isEditTeacher ? $t('user.editTeacher') : $t('user.addTeacher') }}
         </h3>
 
@@ -704,7 +961,7 @@
         </p>
 
         <!-- 底部按钮 -->
-        <div class="flex items-center justify-center gap-4 mt-8">
+        <div class="user-teacher-modal__actions flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[50px] bg-white border border-[#E5E5E5] rounded-[8px] text-[#333] hover:border-[#999] text-[15px] transition-all"
             @click="showTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[50px] bg-[#FF9900] text-white rounded-[8px] hover:bg-[#E68A00] text-[15px] transition-all"
@@ -720,16 +977,16 @@
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-8 relative">
+      <div class="user-teacher-modal user-teacher-modal--compact p-8 relative">
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="user-teacher-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showTeacherLimitModal = false"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-[18px] font-medium text-[#4D4D4D] mb-8">提示</h3>
+        <h3 class="user-teacher-modal__title text-center text-[18px] font-medium text-[#4D4D4D] mb-8">提示</h3>
         <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed px-4">
           可创建教师账号已达最大限制，请联系管理员人员申请开通更多账号。
         </p>
@@ -747,14 +1004,14 @@
     <!-- 删除教师确认弹窗 -->
     <MModal v-model="showDeleteTeacherModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="user-teacher-modal user-teacher-modal--compact p-6 relative flex flex-col">
+        <button class="user-teacher-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showDeleteTeacherModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-teacher-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-[15px] text-[#4D4D4D] leading-relaxed" :class="isBatchDeleteTeacher ? 'mb-5 text-left' : 'mb-6 text-center'">{{ deleteTeacherConfirmText }}</p>
         <div v-if="isBatchDeleteTeacher" class="relative mb-6">
           <input
@@ -786,7 +1043,7 @@
             </svg>
           </button>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-teacher-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -798,13 +1055,13 @@
     <!-- 重置教师密码确认弹窗 -->
     <MModal v-model="showResetTeacherModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showResetTeacherModal = false">
+      <div class="user-teacher-modal user-teacher-modal--compact p-6 relative flex flex-col">
+        <button class="user-teacher-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showResetTeacherModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-teacher-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-[15px] text-[#4D4D4D] leading-relaxed text-center" :class="isBatchResetTeacher ? 'mb-5 text-left' : 'mb-6'">{{ resetTeacherConfirmText }}</p>
         <div v-if="isBatchResetTeacher" class="relative mb-6">
           <input
@@ -835,7 +1092,7 @@
             </svg>
           </button>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-teacher-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showResetTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -847,14 +1104,14 @@
     <!-- 导入教师弹窗 -->
     <MModal v-model="showImportTeacherModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[300px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="user-teacher-modal user-teacher-modal--compact h-[300px] p-6 relative flex flex-col">
+        <button class="user-teacher-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showImportTeacherModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.importTeacherInfo') }}</h3>
+        <h3 class="user-teacher-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.importTeacherInfo') }}</h3>
         <div class="flex justify-center gap-3 mb-6">
           <button class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500 hover:bg-gray-300"
             @click="handleSelectTeacherFile">{{ $t('user.selectFileImport') }}</button>
@@ -864,7 +1121,7 @@
         <p v-if="importTeacherFileName" class="text-sm text-[#4CB9CF] text-center mb-4">{{ $t('user.selectedFile', { name: importTeacherFileName }) }}
         </p>
         <p class="text-sm text-gray-400 flex-1">{{ $t('user.batchImportTeacherTip') }}{{ teacherDefaultPasswordDisplay }}</p>
-        <div class="flex items-center justify-center gap-4 mt-auto pt-4">
+        <div class="user-teacher-modal__actions flex items-center justify-center gap-4 mt-auto pt-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showImportTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -879,14 +1136,14 @@
     <!-- 班级转让弹窗 -->
     <MModal v-model="showTransferTeacherModal" custom-width="500px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="user-teacher-modal user-teacher-modal--wide p-6 relative">
+        <button class="user-teacher-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showTransferTeacherModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.classTransfer') }}</h3>
+        <h3 class="user-teacher-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.classTransfer') }}</h3>
 
         <!-- 搜索框 -->
         <div class="mb-4">
@@ -937,7 +1194,7 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-center gap-4 mt-6">
+        <div class="user-teacher-modal__actions flex items-center justify-center gap-4 mt-6">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showTransferTeacherModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -950,13 +1207,13 @@
     <!-- 添加学生弹窗 -->
     <MModal v-model="showCreateModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[428px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="createForm.name = ''; showCreateModal = false">
+      <div class="user-class-modal user-class-modal--compact h-[428px] p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="createForm.name = ''; showCreateModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.addStudent') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.addStudent') }}</h3>
         <div class="flex justify-center gap-3 mb-6">
           <button
             :class="['w-[136px] h-[40px] rounded-lg text-[14px] font-medium transition-colors', addStudentMode === 'batch' ? 'bg-[#FF9900] text-white' : 'border border-gray-300 text-[#FF9900]']"
@@ -980,7 +1237,7 @@
             <p class="text-sm text-gray-400">{{ $t('user.studentDefaultPasswordIs') }}{{ studentPassword }}</p>
           </div>
         </template>
-        <div class="flex items-center justify-center gap-4 mt-auto pt-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4 mt-auto pt-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="createForm.name = ''; showCreateModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -992,19 +1249,19 @@
     <!-- 创建班级弹窗 -->
     <MModal v-model="showCreateClassModal" custom-width="380px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showCreateClassModal = false">
+      <div class="user-class-modal user-class-modal--compact p-6 relative">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showCreateClassModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditClass ? t('class.editClass') : t('class.createClass') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditClass ? t('class.editClass') : t('class.createClass') }}</h3>
         <div class="space-y-4 px-2">
           <MSelect v-model="createClassForm.gradeId" :options="gradeOptions" :placeholder="t('class.grade')" />
           <MInput v-model="createClassForm.className" :placeholder="t('class.className')" />
           <MInput v-model="createClassForm.teacherName" :placeholder="t('class.teacher')" disabled />
         </div>
-        <div class="flex items-center justify-center gap-4 mt-8">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4 mt-8">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showCreateClassModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1015,15 +1272,15 @@
 
     <!-- 创建班级成功提示弹窗 -->
     <MModal v-model="showClassCreatedTip" custom-width="381px" :show-footer="false" :show-close="false" content-class="!p-0">
-      <div class="p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showClassCreatedTip = false">
+      <div class="user-class-modal user-class-modal--compact p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showClassCreatedTip = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-center text-[#4D4D4D] mb-6">{{ $t('class.classCreatedTip') }}</p>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[120px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showClassCreatedTip = false">{{ $t('common.cancel') }}</button>
           <button class="w-[120px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1035,17 +1292,17 @@
     <!-- 删除班级确认弹窗 -->
     <MModal v-model="showDeleteClassModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showDeleteClassModal = false">
+      <div class="user-class-modal user-class-modal--compact h-[249px] p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showDeleteClassModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center px-4">
           <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('user.confirmDeleteClass') }}</p>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteClassModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1057,18 +1314,18 @@
     <!-- 重置密码确认弹窗 -->
     <MModal v-model="showResetPasswordModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="user-class-modal user-class-modal--compact h-[249px] p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showResetPasswordModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center px-4">
           <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmResetPassword', { name: resettingStudent?.studentName }) }}</p>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showResetPasswordModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1080,20 +1337,20 @@
     <!-- 移班弹窗 -->
     <MModal v-model="showTransferModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showTransferModal = false">
+      <div class="user-class-modal user-class-modal--compact p-6 relative">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showTransferModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.transferStudent') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.transferStudent') }}</h3>
         <div class="space-y-4 px-2">
           <MSelect v-model="transferForm.gradeId" :options="studentTransferGradeOptions" :placeholder="t('class.selectGrade')"
             @update:model-value="handleStudentTransferGradeChange" />
           <MSelect v-model="transferForm.classId" :options="studentTransferClassOptions" :placeholder="t('class.selectClass')"
             :disabled="!transferForm.gradeId" @change="handleTransferClassChange" />
         </div>
-        <div class="flex items-center justify-center gap-4 mt-8">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showTransferModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1106,18 +1363,18 @@
     <!-- 删除学生确认弹窗 -->
     <MModal v-model="showDeleteStudentModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="user-class-modal user-class-modal--compact h-[249px] p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showDeleteStudentModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center px-4">
           <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ $t('class.confirmDeleteStudent', { name: deletingStudent?.studentName || deletingStudent?.name || '-' }) }}</p>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteStudentModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1129,14 +1386,14 @@
     <!-- 批量重置密码确认弹窗 -->
     <MModal v-model="showBatchResetPasswordModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="user-class-modal user-class-modal--compact p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="closeBatchResetPasswordModal">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-[15px] text-[#4D4D4D] text-center leading-relaxed mb-5">{{ $t('class.confirmBatchResetPassword', { names: selectedStudentNames }) }}</p>
         <div class="relative mb-6">
           <input
@@ -1167,7 +1424,7 @@
             </svg>
           </button>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="closeBatchResetPasswordModal">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1179,13 +1436,13 @@
     <!-- 批量删除确认弹窗 -->
     <MModal v-model="showBatchDeleteModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="closeBatchDeleteModal">
+      <div class="user-class-modal user-class-modal--compact p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="closeBatchDeleteModal">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <p class="text-[15px] text-[#4D4D4D] text-center leading-relaxed mb-5">{{ $t('class.confirmBatchDelete', { count: selectedStudentIds.length }) }}</p>
         <div class="relative mb-6">
           <input
@@ -1217,7 +1474,7 @@
             </svg>
           </button>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="closeBatchDeleteModal">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1229,14 +1486,14 @@
     <!-- 批量移班弹窗 -->
     <MModal v-model="showBatchTransferModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="user-class-modal user-class-modal--compact p-6 relative">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showBatchTransferModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('class.batchTransfer') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('class.batchTransfer') }}</h3>
         <p class="text-sm text-gray-500 text-center mb-4">{{ $t('user.batchTransferTip', { count: selectedStudentIds.length }) }}</p>
         <div class="space-y-4 px-2">
           <MSelect v-model="batchTransferForm.gradeId" :options="studentTransferGradeOptions" :placeholder="t('class.selectGrade')"
@@ -1244,7 +1501,7 @@
           <MSelect v-model="batchTransferForm.classId" :options="batchTransferClassOptions" :placeholder="t('class.selectClass')"
             :disabled="!batchTransferForm.gradeId" />
         </div>
-        <div class="flex items-center justify-center gap-4 mt-8">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4 mt-8">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showBatchTransferModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1256,18 +1513,18 @@
     <!-- 新密码展示弹窗 -->
     <MModal v-model="showNewPasswordModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showNewPasswordModal = false">
+      <div class="user-class-modal user-class-modal--compact h-[249px] p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showNewPasswordModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex flex-col items-center justify-center">
           <p class="text-[16px] text-[#4D4D4D] mb-2">{{ $t('class.passwordResetSuccess') }}</p>
           <p class="text-[18px] text-[#FF9900] font-medium">{{ $t('class.newPassword') }}{{ newPassword }}</p>
         </div>
-        <div class="flex items-center justify-center">
+        <div class="user-class-modal__actions flex items-center justify-center">
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
             @click="showNewPasswordModal = false">{{ $t('common.confirm') }}</button>
         </div>
@@ -1277,13 +1534,13 @@
     <!-- 快捷登录弹窗 -->
     <MModal v-model="showQuickLoginModal" custom-width="420px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showQuickLoginModal = false">
+      <div class="user-class-modal user-class-modal--compact p-6 relative">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showQuickLoginModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#E5E5E5D] mb-6">{{ $t('class.enableQuickLogin') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#E5E5E5D] mb-6">{{ $t('class.enableQuickLogin') }}</h3>
         <p class="text-center text-[#4D4D4D] mb-6">{{ $t('class.quickLoginDesc') }}</p>
         <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1292,7 +1549,7 @@
           </svg>
           <span>{{ $t('class.quickLoginWarning') }}</span>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showQuickLoginModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1313,13 +1570,13 @@
 
     <!-- 创建/编辑小组弹窗 -->
     <MModal v-model="showGroupModal" custom-width="620px" :show-footer="false" :show-close="false" content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showGroupModal = false">
+      <div class="user-class-modal user-class-modal--wide p-6 relative">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showGroupModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditGroupMode ? t('class.editGroup') : t('class.createGroup') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ isEditGroupMode ? t('class.editGroup') : t('class.createGroup') }}</h3>
         <div class="mb-6">
           <p class="text-[#4D4D4D] font-medium mb-4">{{ $t('user.stepOneGroupInfo') }}</p>
           <div class="space-y-4 pl-4">
@@ -1362,7 +1619,7 @@
             </MTable>
           </div>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showGroupModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1374,13 +1631,13 @@
     <!-- 添加成员弹窗 -->
     <MModal v-model="showAddMemberModal" custom-width="620px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-6 relative">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showAddMemberModal = false">
+      <div class="user-class-modal user-class-modal--wide p-6 relative">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showAddMemberModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.selectMembers') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-6">{{ $t('user.selectMembers') }}</h3>
         <div class="mb-2">
           <MInput v-model="memberSearchKeyword" :placeholder="t('class.searchStudentPlaceholder')" clearable class="w-full"
             @enter="handleMemberSearch" @clear="handleMemberSearch">
@@ -1421,7 +1678,7 @@
             </div>
           </div>
         </div>
-        <div class="flex items-center justify-center gap-4 mt-6">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4 mt-6">
           <button class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showAddMemberModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1433,18 +1690,18 @@
     <!-- 删除小组确认弹窗 -->
     <MModal v-model="showDeleteGroupModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showDeleteGroupModal = false">
+      <div class="user-class-modal user-class-modal--compact h-[249px] p-6 relative flex flex-col">
+        <button class="user-class-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showDeleteGroupModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="user-class-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center px-4">
           <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ isBatchDeleteGroup ? $t('class.confirmBatchDeleteGroup', { count: selectedGroupIds.length }) :
             $t('class.confirmDeleteGroup', { name: deletingGroup?.teamName }) }}</p>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="user-class-modal__actions flex items-center justify-center gap-4">
           <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
             @click="showDeleteGroupModal = false">{{ $t('common.cancel') }}</button>
           <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
@@ -1565,10 +1822,17 @@ const teacherList = ref<Teacher[]>([])
 const schoolList = ref<any>([])
 const selectedTeacherIds = ref<string[]>([])
 const teacherPagination = reactive({ page: 1, pageSize: 10, total: 0 })
+const teacherAvatarPalette = ["#dbeafe", "#f3e8ff", "#fde7c3", "#d1fae5", "#fee2e2", "#e0f2fe"];
 
 const exitTeacherBatchMode = () => {
   teacherActiveAction.value = 'normal'
   selectedTeacherIds.value = []
+}
+
+const getTeacherAvatarColor = (row: any) => {
+  const source = String(row?.userId ?? row?.userName ?? row?.nickName ?? "");
+  const hash = source.split("").reduce((total: number, char: string) => total + char.charCodeAt(0), 0);
+  return teacherAvatarPalette[hash % teacherAvatarPalette.length];
 }
 
 
@@ -2121,6 +2385,13 @@ const treeData = ref<any[]>([]);
 const myTreeData = ref<any[]>([]);
 const otherTreeData = ref<any[]>([]);
 
+const studentAvatarPalette = ["#dbeafe", "#f3e8ff", "#fde7c3", "#d1fae5", "#fee2e2", "#ede9fe"];
+const getStudentAvatarColor = (row: any) => {
+  const source = String(row?.id ?? row?.studentNumber ?? row?.studentName ?? "");
+  const hash = source.split("").reduce((total: number, char: string) => total + char.charCodeAt(0), 0);
+  return studentAvatarPalette[hash % studentAvatarPalette.length];
+};
+
 // 表格列配置
 const tableColumns = computed(() => [
   { key: "studentName", title: t('class.studentName'), minWidth: "120px" },
@@ -2136,7 +2407,7 @@ const tableColumns = computed(() => [
         },
       ]
     : []),
-  { key: "action", title: t('common.operation'), width: "220px", align: "center" as const },
+  { key: "action", title: t('common.operation'), width: "180px", align: "center" as const },
 ]);
 
 // 学生列表
@@ -3277,6 +3548,783 @@ onMounted(async () => {
   overflow: hidden;
 }
 
+.user-page--class-theme {
+  --user-class-bg: #f8f9fa;
+  --user-class-surface-low: #f2f4f5;
+  --user-class-surface-lowest: #ffffff;
+  --user-class-border: rgba(174, 179, 181, 0.18);
+  --user-class-border-soft: rgba(174, 179, 181, 0.12);
+  --user-class-shadow: 0 12px 32px rgba(46, 51, 53, 0.06);
+  --user-class-primary: #005bc2;
+  --user-class-primary-dim: #004ea8;
+  --user-class-primary-soft: rgba(0, 91, 194, 0.08);
+  --user-class-text-main: #2e3335;
+  --user-class-text-sub: #5a6062;
+  background: var(--user-class-bg);
+}
+
+.user-page--class-theme .user-layout-shell {
+  gap: 18px;
+  padding: 24px 10px;
+}
+
+.user-page--class-theme .user-side-panel,
+.user-page--class-theme .user-main-panel {
+  padding: 0 !important;
+}
+
+.user-page--class-theme .user-main-panel {
+  overflow: hidden;
+}
+
+.user-page--class-theme .user-nav-tabs :deep(.flex),
+.user-page--class-theme .user-class-tabs :deep(.flex) {
+  gap: 4px !important;
+}
+
+.user-page--class-theme .user-nav-tabs :deep(button),
+.user-page--class-theme .user-class-tabs :deep(button) {
+  min-width: 112px;
+  height: 38px;
+  border-radius: 12px !important;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  box-shadow: none;
+}
+
+.user-page--class-theme .user-nav-tabs :deep(button[class*="bg-[#FF9900]"]),
+.user-page--class-theme .user-class-tabs :deep(button[class*="bg-[#FF9900]"]) {
+  background: #ffffff !important;
+  color: var(--user-class-primary) !important;
+  border: none !important;
+  box-shadow: 0 6px 16px rgba(46, 51, 53, 0.08) !important;
+}
+
+.user-page--class-theme .user-nav-tabs :deep(button[class*="bg-[#FAFAFA]"]),
+.user-page--class-theme .user-class-tabs :deep(button[class*="bg-[#FAFAFA]"]) {
+  background: transparent !important;
+  color: #7b838e !important;
+  border: none !important;
+}
+
+.user-page--class-theme .user-nav-tabs {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  width: 100%;
+  padding: 4px;
+  background: var(--user-class-surface-low);
+  border-radius: 16px;
+}
+
+.user-page--class-theme .user-nav-tabs :deep(.flex) {
+  width: 100%;
+}
+
+.user-page--class-theme .user-nav-tabs :deep(button) {
+  flex: 1 1 0;
+  width: auto !important;
+  min-width: 0;
+  outline: none !important;
+}
+
+.user-page--class-theme .user-class-tabs-shell {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: var(--user-class-surface-low);
+  border-radius: 16px;
+}
+
+.user-page--class-theme .user-class-side-card {
+  border: 1px solid var(--user-class-border);
+  border-radius: 24px;
+  background: var(--user-class-surface-lowest);
+  box-shadow: var(--user-class-shadow);
+  overflow: hidden;
+}
+
+.user-page--class-theme .user-class-tree-wrap {
+  padding: 4px 14px 12px;
+}
+
+.user-page--class-theme .user-class-tree-title {
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--user-class-text-main);
+}
+
+.user-page--class-theme .user-class-tree-divider {
+  margin: 10px 8px !important;
+  border-color: var(--user-class-border-soft) !important;
+}
+
+.user-page--class-theme .user-class-create-wrap {
+  margin-top: auto;
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--user-class-border-soft) !important;
+}
+
+.user-page--class-theme .user-class-create-btn {
+  width: 100% !important;
+  height: 50px !important;
+  border-radius: 16px !important;
+  font-size: 14px !important;
+  font-weight: 700;
+  background: var(--user-class-primary) !important;
+  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.22);
+}
+
+.user-page--class-theme .user-class-count {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64707c !important;
+}
+
+.user-page--class-theme .user-class-count__num {
+  color: var(--user-class-primary) !important;
+}
+
+.user-page--class-theme .user-class-card {
+  border: 1px solid var(--user-class-border);
+  border-radius: 24px !important;
+  background: var(--user-class-surface-lowest) !important;
+  box-shadow: var(--user-class-shadow);
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.user-page--class-theme .user-class-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px 16px;
+}
+
+.user-page--class-theme .user-class-panel-topline,
+.user-page--class-theme .user-class-panel-subline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-width: 0;
+}
+
+.user-page--class-theme .user-class-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.user-page--class-theme .user-class-toolbar__left--subline {
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.user-page--class-theme .user-class-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.user-page--class-theme .user-class-actions--top {
+  flex-shrink: 0;
+}
+
+.user-page--class-theme .user-class-action-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.user-page--class-theme .user-class-action-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.user-page--class-theme .user-class-action-btn__icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.user-page--class-theme .user-class-action-btn--ghost {
+  background: var(--user-class-surface-low);
+  color: var(--user-class-text-main);
+}
+
+.user-page--class-theme .user-class-action-btn--ghost:hover {
+  background: #dee3e5;
+}
+
+.user-page--class-theme .user-class-action-btn--primary {
+  background: var(--user-class-primary);
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.2);
+}
+
+.user-page--class-theme .user-class-action-btn--primary:hover {
+  background: var(--user-class-primary-dim);
+}
+
+.user-page--class-theme .user-class-action-btn.is-active {
+  background: rgba(0, 91, 194, 0.1);
+  color: var(--user-class-primary);
+}
+
+.user-page--class-theme .user-class-action-btn.is-disabled {
+  background: #eceff1;
+  color: #a6adb5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.user-page--class-theme .user-class-password {
+  font-size: 13px !important;
+  font-weight: 700;
+  color: #a3acb7 !important;
+  white-space: nowrap;
+}
+
+.user-page--class-theme .user-class-search {
+  flex: 0 0 272px;
+  max-width: 272px;
+}
+
+.user-page--class-theme .user-class-search--group {
+  flex: 0 0 300px;
+  max-width: 300px;
+}
+
+.user-page--class-theme .user-class-search :deep(.relative) {
+  width: 100%;
+}
+
+.user-page--class-theme .user-class-search :deep(input) {
+  height: 44px;
+  border: none !important;
+  border-radius: 16px !important;
+  background: var(--user-class-surface-low) !important;
+  padding-left: 48px !important;
+  padding-right: 42px !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  color: #475569;
+}
+
+.user-page--class-theme .user-class-search :deep(input:focus) {
+  box-shadow: inset 0 0 0 2px rgba(0, 91, 194, 0.16);
+}
+
+.user-page--class-theme .user-class-search :deep(.absolute.left-3) {
+  left: 16px;
+  color: #94a3b8;
+}
+
+.user-page--class-theme .user-class-search--group :deep(input) {
+  height: 38px;
+  border-radius: 14px !important;
+  padding-left: 42px !important;
+}
+
+.user-page--class-theme .user-class-table-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px;
+}
+
+.user-page--class-theme :deep(.m-table) {
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: none;
+  border: 1px solid rgba(174, 179, 181, 0.12);
+}
+
+.user-page--class-theme :deep(.m-table__table) {
+  width: 100%;
+}
+
+.user-page--class-theme :deep(.m-table__head-row) {
+  background: rgba(242, 244, 245, 0.7);
+}
+
+.user-page--class-theme :deep(.m-table__head-cell) {
+  padding: 14px 16px !important;
+  background: transparent !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #9aa4af !important;
+  letter-spacing: 0.08em;
+}
+
+.user-page--class-theme :deep(.m-table__row) {
+  background: #ffffff !important;
+}
+
+.user-page--class-theme :deep(.m-table__row:hover .m-table__cell) {
+  background: #fbfdff;
+}
+
+.user-page--class-theme :deep(.m-table__cell) {
+  padding: 14px 16px !important;
+  font-size: 12px !important;
+  color: var(--user-class-text-main) !important;
+  border-top: 1px solid #f0f3f6;
+  background: #ffffff;
+}
+
+.user-page--class-theme .user-class-student-cell,
+.user-page--class-theme .user-class-student-cell.tooltip-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.user-page--class-theme .user-class-student-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0d5bc4;
+  flex-shrink: 0;
+}
+
+.user-page--class-theme .user-class-student-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.user-page--class-theme .user-class-row-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin: 0 auto;
+  gap: 16px;
+  white-space: nowrap;
+}
+
+.user-page--class-theme .user-class-row-actions--group {
+  gap: 16px;
+}
+
+.user-page--class-theme .user-class-row-action {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--user-class-primary);
+  transition: color 0.2s ease;
+}
+
+.user-page--class-theme .user-class-row-action:hover {
+  color: var(--user-class-primary-dim);
+}
+
+.user-page--class-theme .user-class-row-action.is-danger {
+  color: #ac3434;
+}
+
+.user-page--class-theme .user-class-row-action.is-danger:hover {
+  color: #70030f;
+}
+
+.user-page--class-theme .user-class-row-action.is-disabled {
+  color: #c2c9d1;
+  cursor: not-allowed;
+}
+
+.user-page--class-theme .user-class-quick-banner {
+  margin: 0 24px 16px;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #1f7df0 0%, #005bc2 60%, #004da4 100%) !important;
+}
+
+.user-page--class-theme :deep(.m-table__select-box.is-checked),
+.user-page--class-theme :deep(.m-table__select-box.is-indeterminate) {
+  background: var(--user-class-primary) !important;
+  border-color: var(--user-class-primary) !important;
+}
+
+.user-page--class-theme :deep(.m-table__select-box:not(.is-disabled):hover) {
+  border-color: var(--user-class-primary) !important;
+}
+
+.user-page--class-theme .user-class-batch-bar {
+  margin: 14px 24px 20px !important;
+  padding: 14px 18px !important;
+  border: 1px solid rgba(164, 193, 255, 0.3) !important;
+  border-radius: 16px;
+  background: #f7fbff !important;
+}
+
+.user-page--class-theme .user-class-batch-checkbox {
+  border-color: rgba(174, 179, 181, 0.32);
+  background: #ffffff;
+}
+
+.user-page--class-theme .user-class-batch-checkbox.is-checked {
+  background: var(--user-class-primary);
+  border-color: var(--user-class-primary);
+}
+
+.user-page--class-theme .user-class-batch-summary {
+  color: var(--user-class-text-main);
+}
+
+.user-page--class-theme .user-class-batch-count {
+  color: var(--user-class-primary) !important;
+  font-weight: 700;
+}
+
+.user-page--class-theme .user-class-batch-actions {
+  gap: 18px;
+}
+
+.user-page--class-theme .user-class-batch-action {
+  color: var(--user-class-text-sub);
+  transition: color 0.2s ease;
+}
+
+.user-page--class-theme .user-class-batch-action:hover {
+  color: var(--user-class-primary);
+}
+
+.user-page--class-theme .user-class-batch-action--danger:hover {
+  color: #ac3434;
+}
+
+.user-page--class-theme .user-class-tree-node-actions {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.user-page--class-theme .user-class-tree-delete-icon {
+  filter: invert(31%) sepia(92%) saturate(2671%) hue-rotate(343deg) brightness(102%) contrast(93%);
+}
+
+.user-page--class-theme .user-class-tree-folder-icon,
+.user-page--class-theme .user-class-tree-leaf-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.user-page--class-theme .user-class-tree-folder-icon svg,
+.user-page--class-theme .user-class-tree-leaf-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.user-page--class-theme .user-class-tree-leaf-icon {
+  color: #96a1b2;
+}
+
+.user-page--class-theme .user-class-tree-leaf-icon.is-selected {
+  color: #0d5bc4;
+}
+
+.user-page--class-theme :deep(.m-tree) {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.user-page--class-theme :deep(.m-tree__node) {
+  margin: 0;
+}
+
+.user-page--class-theme :deep(.m-tree__content) {
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  transition: all 0.2s ease;
+}
+
+.user-page--class-theme :deep(.m-tree__content:hover) {
+  background: var(--user-class-surface-low) !important;
+}
+
+.user-page--class-theme :deep(.m-tree__content .truncate) {
+  font-size: 13px !important;
+  color: var(--user-class-text-main) !important;
+}
+
+.user-page--class-theme :deep(.m-tree__content.is-parent .truncate) {
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-weight: 500;
+  font-size: 12px !important;
+}
+
+.user-page--class-theme :deep(.m-tree__content.is-leaf .truncate) {
+  font-weight: 600;
+  font-size: 13px !important;
+  color: #52606d !important;
+}
+
+.user-page--class-theme :deep(.m-tree__content.is-leaf.is-selected) {
+  background: #f7fbff !important;
+  border-color: rgba(0, 91, 194, 0.28);
+}
+
+.user-page--class-theme :deep(.m-tree__content.is-leaf.is-selected .truncate) {
+  color: var(--user-class-primary) !important;
+  font-weight: 700;
+}
+
+.user-page--class-theme :deep(.m-tree__content.is-leaf:hover .m-tree__actions),
+.user-page--class-theme :deep(.m-tree__content.is-leaf.is-selected .m-tree__actions),
+.user-page--class-theme :deep(.m-tree__content.is-leaf:hover .user-class-tree-node-actions),
+.user-page--class-theme :deep(.m-tree__content.is-leaf.is-selected .user-class-tree-node-actions) {
+  opacity: 1;
+}
+
+.user-page--class-theme :deep(.m-tree__content .w-4.h-4) {
+  color: #94a3b8;
+}
+
+.user-page--class-theme :deep(.m-tree__content.is-leaf .m-tree__actions) {
+  gap: 6px;
+}
+
+.user-page--class-theme :deep(.m-tree__content.is-leaf .m-tree__actions img) {
+  width: 12px;
+  height: 12px;
+}
+
+.user-page--class-theme :deep(.m-pagination) {
+  border-top: 1px solid #eef2f6;
+  padding-top: 16px;
+}
+
+@media (min-width: 1024px) {
+  .user-page--class-theme .user-side-panel {
+    width: 228px !important;
+    max-width: 228px;
+  }
+}
+
+@media (min-width: 1400px) and (max-width: 1600px) {
+  .user-page--class-theme .user-side-panel {
+    width: 216px !important;
+    max-width: 216px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .user-page--class-theme .user-layout-shell {
+    padding: 18px 16px 20px 10px;
+    gap: 14px;
+  }
+
+  .user-page--class-theme .user-class-card {
+    padding: 0 !important;
+  }
+
+  .user-page--class-theme .user-class-panel-head {
+    padding: 18px 18px 14px;
+    gap: 14px;
+  }
+
+  .user-page--class-theme .user-class-panel-topline,
+  .user-page--class-theme .user-class-panel-subline {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .user-page--class-theme .user-class-actions,
+  .user-page--class-theme .user-class-actions--top {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .user-page--class-theme .user-class-count {
+    margin-left: 0;
+  }
+
+  .user-page--class-theme .user-class-table-wrap {
+    padding: 0 18px;
+  }
+
+  .user-page--class-theme .user-class-quick-banner {
+    margin: 0 18px 14px;
+  }
+
+  .user-page--class-theme .user-class-batch-bar {
+    margin: 14px 18px 18px !important;
+  }
+}
+
+.user-class-modal {
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(244, 248, 255, 0.88) 0%, rgba(255, 255, 255, 0.98) 28%, #ffffff 100%);
+  box-shadow: 0 24px 60px rgba(46, 51, 53, 0.14);
+  color: #2e3335;
+}
+
+.user-class-modal--compact {
+  min-height: 249px;
+}
+
+.user-class-modal--wide {
+  padding-top: 30px;
+}
+
+.user-class-modal__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(242, 244, 245, 0.92);
+  color: #7b838e !important;
+  transition: all 0.2s ease;
+}
+
+.user-class-modal__close:hover {
+  background: rgba(0, 91, 194, 0.1);
+  color: #005bc2 !important;
+}
+
+.user-class-modal__title {
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #2e3335 !important;
+}
+
+.user-class-modal :deep(input[type="text"]),
+.user-class-modal :deep(input[type="password"]),
+.user-class-modal :deep(input[type="tel"]),
+.user-class-modal :deep(input[type="number"]),
+.user-class-modal :deep(input:not([type])) {
+  min-height: 44px;
+  border-color: rgba(174, 179, 181, 0.32) !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  color: #2e3335 !important;
+  box-shadow: none !important;
+}
+
+.user-class-modal :deep(input:focus) {
+  border-color: rgba(0, 91, 194, 0.42) !important;
+  box-shadow: 0 0 0 4px rgba(0, 91, 194, 0.08) !important;
+}
+
+.user-class-modal :deep(.relative > div.cursor-pointer) {
+  min-height: 44px;
+  border-color: rgba(174, 179, 181, 0.32) !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+.user-class-modal :deep(.relative > div.cursor-pointer:hover),
+.user-class-modal :deep(.relative > div.cursor-pointer[class*="ring-2"]) {
+  border-color: rgba(0, 91, 194, 0.42) !important;
+}
+
+.user-class-modal :deep(.m-table) {
+  border-radius: 18px;
+  border: 1px solid rgba(174, 179, 181, 0.16);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.user-class-modal :deep(.m-table__head-row) {
+  background: rgba(242, 244, 245, 0.72);
+}
+
+.user-class-modal :deep(.m-table__head-cell) {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #8e99a5 !important;
+}
+
+.user-class-modal :deep(.m-table__cell) {
+  color: #2e3335 !important;
+  border-top: 1px solid #eef2f6;
+}
+
+.user-class-modal button[class*="bg-[#FF9900]"] {
+  background: #005bc2 !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 24px rgba(0, 91, 194, 0.18);
+}
+
+.user-class-modal button[class*="bg-[#FF9900]"]:hover {
+  background: #004ea8 !important;
+}
+
+.user-class-modal button[class*="border-gray-300"],
+.user-class-modal button[class*="bg-gray-200"] {
+  border-color: rgba(174, 179, 181, 0.28) !important;
+  background: #f8fafc !important;
+  color: #4b5563 !important;
+}
+
+.user-class-modal button[class*="border-gray-300"]:hover,
+.user-class-modal button[class*="bg-gray-200"]:hover {
+  border-color: rgba(0, 91, 194, 0.2) !important;
+  background: #f1f6ff !important;
+  color: #005bc2 !important;
+}
+
+.user-class-modal__actions {
+  margin-top: 28px;
+}
+
+.user-class-modal__actions button {
+  min-width: 120px;
+  min-height: 42px;
+  border-radius: 14px !important;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
 /* 自定义 Tooltip 样式 */
 .tooltip-wrapper {
   display: inline-block;
@@ -3351,69 +4399,652 @@ onMounted(async () => {
   height: 12px;
 }
 
-/* 教师表格样式 - 斑马纹 */
-.teacher-table :deep(thead) {
-  background-color: #FAFAFA !important;
+.user-page--teacher-theme {
+  --user-teacher-bg: #f8f9fa;
+  --user-teacher-surface-low: #f2f4f5;
+  --user-teacher-surface-lowest: #ffffff;
+  --user-teacher-border: rgba(174, 179, 181, 0.18);
+  --user-teacher-border-soft: rgba(174, 179, 181, 0.12);
+  --user-teacher-shadow: 0 12px 32px rgba(46, 51, 53, 0.06);
+  --user-teacher-primary: #005bc2;
+  --user-teacher-primary-dim: #004ea8;
+  --user-teacher-text-main: #2e3335;
+  --user-teacher-text-sub: #5a6062;
+  background: var(--user-teacher-bg);
 }
 
-.teacher-table :deep(thead th) {
-  background-color: transparent !important;
+.user-page--teacher-theme .user-layout-shell {
+  gap: 18px;
+  padding: 24px 10px;
 }
 
-.teacher-table {
-  box-shadow: none !important;
-  border-radius: 8px;
+.user-page--teacher-theme .user-side-panel,
+.user-page--teacher-theme .user-main-panel {
+  padding: 0 !important;
+}
+
+.user-page--teacher-theme .user-main-panel {
   overflow: hidden;
 }
 
-.teacher-table :deep(tbody tr:nth-child(odd)) {
-  background-color: #FFFFFF;
+.user-page--teacher-theme .user-nav-tabs :deep(.flex) {
+  gap: 4px !important;
 }
 
-.teacher-table :deep(tbody tr:nth-child(even)) {
-  background-color: #F9F9F9;
+.user-page--teacher-theme .user-nav-tabs :deep(button) {
+  min-width: 112px;
+  height: 38px;
+  border-radius: 12px !important;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  box-shadow: none;
 }
 
-.teacher-table :deep(tbody tr:hover) {
-  background-color: #FFF8F0 !important;
+.user-page--teacher-theme .user-nav-tabs :deep(button[class*="bg-[#FF9900]"]) {
+  background: #ffffff !important;
+  color: var(--user-teacher-primary) !important;
+  border: none !important;
+  box-shadow: 0 6px 16px rgba(46, 51, 53, 0.08) !important;
 }
 
-.teacher-table :deep(tbody td) {
+.user-page--teacher-theme .user-nav-tabs :deep(button[class*="bg-[#FAFAFA]"]) {
+  background: transparent !important;
+  color: #7b838e !important;
+  border: none !important;
+}
+
+.user-page--teacher-theme .user-nav-tabs {
+  display: inline-flex;
+  align-items: center;
+  align-self: stretch;
+  width: 100%;
+  padding: 4px;
+  background: var(--user-teacher-surface-low);
+  border-radius: 16px;
+}
+
+.user-page--teacher-theme .user-nav-tabs :deep(.flex) {
+  width: 100%;
+}
+
+.user-page--teacher-theme .user-nav-tabs :deep(button) {
+  flex: 1 1 0;
+  width: auto !important;
+  min-width: 0;
+  outline: none !important;
+}
+
+.user-page--teacher-theme .user-teacher-side-card {
+  border: 1px solid var(--user-teacher-border);
+  border-radius: 24px;
+  background: var(--user-teacher-surface-lowest);
+  box-shadow: var(--user-teacher-shadow);
+  overflow: hidden;
+  padding: 16px 14px;
+  gap: 10px;
+}
+
+.user-page--teacher-theme .user-teacher-school-item {
+  padding: 14px 16px !important;
+  border-radius: 16px !important;
+  transition: all 0.2s ease;
+}
+
+.user-page--teacher-theme .user-teacher-school-item:hover {
+  background: #f7fbff !important;
+}
+
+.user-page--teacher-theme .user-teacher-school-name {
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--user-teacher-text-main) !important;
+}
+
+.user-page--teacher-theme .user-teacher-card {
+  border: 1px solid var(--user-teacher-border);
+  border-radius: 24px !important;
+  background: var(--user-teacher-surface-lowest) !important;
+  box-shadow: var(--user-teacher-shadow);
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.user-page--teacher-theme .user-teacher-panel-head {
+  padding: 22px 24px 16px;
+}
+
+.user-page--teacher-theme .user-teacher-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.user-page--teacher-theme .user-teacher-toolbar--main {
+  min-width: 0;
+}
+
+.user-page--teacher-theme .user-teacher-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.user-page--teacher-theme .user-teacher-search {
+  flex: 0 0 220px;
+  max-width: 220px;
+}
+
+.user-page--teacher-theme .user-teacher-search :deep(.relative) {
+  width: 100%;
+}
+
+.user-page--teacher-theme .user-teacher-search :deep(input) {
+  height: 44px;
+  border: none !important;
+  border-radius: 16px !important;
+  background: var(--user-teacher-surface-low) !important;
+  padding-left: 42px !important;
+  padding-right: 42px !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  color: #475569;
+}
+
+.user-page--teacher-theme .user-teacher-search :deep(input:focus) {
+  box-shadow: inset 0 0 0 2px rgba(0, 91, 194, 0.16);
+}
+
+.user-page--teacher-theme .user-teacher-search :deep(.absolute.left-3) {
+  left: 14px;
+  color: #94a3b8;
+}
+
+.user-page--teacher-theme .user-teacher-password {
+  font-size: 13px !important;
+  font-weight: 700;
+  color: #a3acb7 !important;
+  white-space: nowrap;
+}
+
+.user-page--teacher-theme .user-teacher-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.user-page--teacher-theme .user-teacher-action-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.user-page--teacher-theme .user-teacher-action-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.user-page--teacher-theme .user-teacher-action-btn__icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.user-page--teacher-theme .user-teacher-action-btn--ghost {
+  background: var(--user-teacher-surface-low);
+  color: var(--user-teacher-text-main);
+}
+
+.user-page--teacher-theme .user-teacher-action-btn--ghost:hover {
+  background: #dee3e5;
+}
+
+.user-page--teacher-theme .user-teacher-action-btn--primary {
+  background: var(--user-teacher-primary);
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.2);
+}
+
+.user-page--teacher-theme .user-teacher-action-btn--primary:hover {
+  background: var(--user-teacher-primary-dim);
+}
+
+.user-page--teacher-theme .user-teacher-action-btn.is-active {
+  background: rgba(0, 91, 194, 0.1);
+  color: var(--user-teacher-primary);
+}
+
+.user-page--teacher-theme .user-teacher-action-btn.is-disabled {
+  background: #eceff1;
+  color: #a6adb5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.user-page--teacher-theme .user-teacher-count {
+  margin-left: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64707c !important;
+}
+
+.user-page--teacher-theme .user-teacher-count__num {
+  color: var(--user-teacher-primary) !important;
+}
+
+.user-page--teacher-theme .user-teacher-table-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px;
+}
+
+.user-page--teacher-theme .teacher-table {
+  box-shadow: none !important;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.user-page--teacher-theme .teacher-table :deep(thead) {
+  background-color: rgba(242, 244, 245, 0.7) !important;
+}
+
+.user-page--teacher-theme .teacher-table :deep(thead th) {
+  background-color: transparent !important;
+  color: #9aa4af !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.08em;
+}
+
+.user-page--teacher-theme .teacher-table :deep(.m-table) {
+  border-radius: 20px;
+  border: 1px solid rgba(174, 179, 181, 0.12);
+  background: #ffffff;
+  box-shadow: none;
+}
+
+.user-page--teacher-theme .teacher-table :deep(tbody tr:nth-child(odd)),
+.user-page--teacher-theme .teacher-table :deep(tbody tr:nth-child(even)) {
+  background-color: #ffffff;
+}
+
+.user-page--teacher-theme .teacher-table :deep(tbody tr:hover) {
+  background-color: #fbfdff !important;
+}
+
+.user-page--teacher-theme .teacher-table :deep(tbody td) {
   border-bottom: none !important;
+  border-top: 1px solid #f0f3f6;
   padding-top: 16px;
   padding-bottom: 16px;
+  color: var(--user-teacher-text-main) !important;
 }
 
-.teacher-table-name {
+.user-page--teacher-theme :deep(.m-table__select-box.is-checked),
+.user-page--teacher-theme :deep(.m-table__select-box.is-indeterminate) {
+  background: var(--user-teacher-primary) !important;
+  border-color: var(--user-teacher-primary) !important;
+}
+
+.user-page--teacher-theme :deep(.m-table__select-box:not(.is-disabled):hover) {
+  border-color: var(--user-teacher-primary) !important;
+}
+
+.user-page--teacher-theme .user-teacher-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.user-page--teacher-theme .user-teacher-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  color: #0d5bc4;
+  flex-shrink: 0;
+}
+
+.user-page--teacher-theme .user-teacher-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.user-page--teacher-theme .teacher-table-name {
   max-width: 96px;
 }
 
-.teacher-table-account {
+.user-page--teacher-theme .teacher-table-account {
   max-width: 120px;
 }
 
+.user-page--teacher-theme .user-teacher-row-actions {
+  gap: 16px;
+}
+
+.user-page--teacher-theme .user-teacher-row-action {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  color: var(--user-teacher-primary) !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+}
+
+.user-page--teacher-theme .user-teacher-row-action:hover {
+  color: var(--user-teacher-primary-dim) !important;
+}
+
+.user-page--teacher-theme .user-teacher-row-action.is-danger {
+  color: #ac3434 !important;
+}
+
+.user-page--teacher-theme .user-teacher-row-action.is-danger:hover {
+  color: #70030f !important;
+}
+
+.user-page--teacher-theme .user-teacher-row-action.is-disabled {
+  color: #c2c9d1 !important;
+  cursor: not-allowed;
+}
+
+.user-page--teacher-theme .user-teacher-batch-bar {
+  margin: 14px 24px 20px !important;
+  padding: 14px 18px !important;
+  border: 1px solid rgba(164, 193, 255, 0.3) !important;
+  border-radius: 16px;
+  background: #f7fbff !important;
+}
+
+.user-page--teacher-theme .user-teacher-batch-checkbox {
+  border-color: rgba(174, 179, 181, 0.32);
+  background: #ffffff;
+}
+
+.user-page--teacher-theme .user-teacher-batch-checkbox.is-checked {
+  background: var(--user-teacher-primary);
+  border-color: var(--user-teacher-primary);
+}
+
+.user-page--teacher-theme .user-teacher-batch-summary {
+  color: var(--user-teacher-text-main);
+}
+
+.user-page--teacher-theme .user-teacher-batch-count {
+  color: var(--user-teacher-primary) !important;
+  font-weight: 700;
+}
+
+.user-page--teacher-theme .user-teacher-batch-actions {
+  gap: 18px;
+}
+
+.user-page--teacher-theme .user-teacher-batch-action {
+  color: var(--user-teacher-text-sub);
+  transition: color 0.2s ease;
+}
+
+.user-page--teacher-theme .user-teacher-batch-action:hover {
+  color: var(--user-teacher-primary);
+}
+
+.user-page--teacher-theme .user-teacher-batch-action--danger:hover {
+  color: #ac3434;
+}
+
+.user-page--teacher-theme :deep(.m-pagination) {
+  border-top: 1px solid #eef2f6;
+  padding: 10px 24px 12px;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(select) {
+  min-width: 100px;
+  height: 32px;
+  border-radius: 8px;
+  border-color: rgba(174, 179, 181, 0.28) !important;
+  background: #ffffff;
+  color: var(--user-teacher-text-main);
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(select:focus),
+.user-page--teacher-theme .user-teacher-pagination :deep(select:hover) {
+  border-color: var(--user-teacher-primary) !important;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(button) {
+  border-radius: 8px !important;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(button[class*="bg-[#FF9900]"]) {
+  background: var(--user-teacher-primary) !important;
+  border-color: var(--user-teacher-primary) !important;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(button:hover:not(:disabled)) {
+  border-color: var(--user-teacher-primary) !important;
+  color: var(--user-teacher-primary) !important;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(.text-gray-500),
+.user-page--teacher-theme .user-teacher-pagination :deep(.text-gray-700) {
+  color: var(--user-teacher-text-sub) !important;
+}
+
+.user-page--teacher-theme .user-teacher-pagination {
+  margin-top: 0 !important;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(.m-pagination) {
+  justify-content: flex-end !important;
+  gap: 12px;
+  padding-right: 8px;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(.m-pagination__total) {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+.user-page--teacher-theme .user-teacher-pagination :deep(.m-pagination__controls) {
+  flex: 0 0 auto;
+  gap: 8px;
+}
+
+.user-page--teacher-theme .user-teacher-card > .mt-4.flex-shrink-0 {
+  margin-top: 0 !important;
+}
+
+.user-teacher-modal {
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 28px;
+  background:
+    linear-gradient(180deg, rgba(244, 248, 255, 0.88) 0%, rgba(255, 255, 255, 0.98) 28%, #ffffff 100%);
+  box-shadow: 0 24px 60px rgba(46, 51, 53, 0.14);
+  color: #2e3335;
+}
+
+.user-teacher-modal--compact {
+  min-height: 249px;
+}
+
+.user-teacher-modal__close {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: rgba(242, 244, 245, 0.92);
+  color: #7b838e !important;
+  transition: all 0.2s ease;
+}
+
+.user-teacher-modal__close:hover {
+  background: rgba(0, 91, 194, 0.1);
+  color: #005bc2 !important;
+}
+
+.user-teacher-modal__title {
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #2e3335 !important;
+}
+
+.user-teacher-modal :deep(input[type="text"]),
+.user-teacher-modal :deep(input[type="password"]),
+.user-teacher-modal :deep(input[type="tel"]),
+.user-teacher-modal :deep(input[type="number"]),
+.user-teacher-modal :deep(input:not([type])) {
+  min-height: 44px;
+  border-color: rgba(174, 179, 181, 0.32) !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  color: #2e3335 !important;
+  box-shadow: none !important;
+}
+
+.user-teacher-modal :deep(input:focus) {
+  border-color: rgba(0, 91, 194, 0.42) !important;
+  box-shadow: 0 0 0 4px rgba(0, 91, 194, 0.08) !important;
+}
+
+.user-teacher-modal :deep(.relative > div.cursor-pointer) {
+  min-height: 44px;
+  border-color: rgba(174, 179, 181, 0.32) !important;
+  border-radius: 16px !important;
+  background: #f8fafc !important;
+  box-shadow: none !important;
+}
+
+.user-teacher-modal :deep(.relative > div.cursor-pointer:hover),
+.user-teacher-modal :deep(.relative > div.cursor-pointer[class*="ring-2"]) {
+  border-color: rgba(0, 91, 194, 0.42) !important;
+}
+
+.user-teacher-modal :deep(.m-table) {
+  border-radius: 18px;
+  border: 1px solid rgba(174, 179, 181, 0.16);
+  overflow: hidden;
+  box-shadow: none;
+}
+
+.user-teacher-modal :deep(.m-table__head-row) {
+  background: rgba(242, 244, 245, 0.72);
+}
+
+.user-teacher-modal :deep(.m-table__head-cell) {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #8e99a5 !important;
+}
+
+.user-teacher-modal :deep(.m-table__cell) {
+  color: #2e3335 !important;
+  border-top: 1px solid #eef2f6;
+}
+
+.user-teacher-modal .checkbox-box {
+  border-color: rgba(174, 179, 181, 0.28);
+  background: #ffffff;
+}
+
+.user-teacher-modal .checkbox-box:hover {
+  border-color: #005bc2;
+}
+
+.user-teacher-modal .checkbox-box.checked {
+  background: #005bc2;
+  border-color: #005bc2;
+}
+
+.user-teacher-modal button[class*="bg-[#FF9900]"],
+.user-teacher-modal button[class*="bg-[#40A9FF]"] {
+  background: #005bc2 !important;
+  color: #ffffff !important;
+  border-color: transparent !important;
+  box-shadow: 0 12px 24px rgba(0, 91, 194, 0.18);
+}
+
+.user-teacher-modal button[class*="bg-[#FF9900]"]:hover,
+.user-teacher-modal button[class*="bg-[#40A9FF]"]:hover {
+  background: #004ea8 !important;
+}
+
+.user-teacher-modal button[class*="border-gray-300"],
+.user-teacher-modal button[class*="bg-gray-200"],
+.user-teacher-modal button[class*="bg-white"] {
+  border-color: rgba(174, 179, 181, 0.28) !important;
+  background: #f8fafc !important;
+  color: #4b5563 !important;
+}
+
+.user-teacher-modal button[class*="border-gray-300"]:hover,
+.user-teacher-modal button[class*="bg-gray-200"]:hover,
+.user-teacher-modal button[class*="bg-white"]:hover {
+  border-color: rgba(0, 91, 194, 0.2) !important;
+  background: #f1f6ff !important;
+  color: #005bc2 !important;
+}
+
+.user-teacher-modal__actions {
+  margin-top: 28px;
+}
+
+.user-teacher-modal__actions button {
+  min-width: 120px;
+  min-height: 42px;
+  border-radius: 14px !important;
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+@media (min-width: 1024px) {
+  .user-page--teacher-theme .user-side-panel {
+    width: 228px !important;
+    max-width: 228px;
+  }
+}
+
 @media (min-width: 1400px) and (max-width: 1600px) {
-  .left-panel {
-    width: 240px !important;
+  .user-page--teacher-theme .user-side-panel {
+    width: 216px !important;
+    max-width: 216px;
   }
 
   .main-panel {
     padding: 12px;
   }
 
-  .teacher-table :deep(thead th),
-  .teacher-table :deep(tbody td) {
+  .user-page--teacher-theme .teacher-table :deep(thead th),
+  .user-page--teacher-theme .teacher-table :deep(tbody td) {
     padding-left: 12px;
     padding-right: 12px;
-  }
-
-  .teacher-table-actions {
-    gap: 6px;
-  }
-
-  .teacher-table-action-btn {
-    padding: 4px 8px;
-    font-size: 12px;
   }
 
   .teacher-table-name {
@@ -3422,6 +5053,43 @@ onMounted(async () => {
 
   .teacher-table-account {
     max-width: 104px;
+  }
+}
+
+@media (max-width: 1280px) {
+  .user-page--teacher-theme .user-layout-shell {
+    padding: 18px 16px 20px 10px;
+    gap: 14px;
+  }
+
+  .user-page--teacher-theme .user-teacher-panel-head {
+    padding: 18px 18px 14px;
+  }
+
+  .user-page--teacher-theme .user-teacher-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .user-page--teacher-theme .user-teacher-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .user-page--teacher-theme .user-teacher-count {
+    margin-left: 0;
+  }
+
+  .user-page--teacher-theme .user-teacher-table-wrap {
+    padding: 0 18px;
+  }
+
+  .user-page--teacher-theme .user-teacher-batch-bar {
+    margin: 14px 18px 18px !important;
+  }
+
+  .user-page--teacher-theme :deep(.m-pagination) {
+    padding: 10px 18px 12px;
   }
 }
 </style>

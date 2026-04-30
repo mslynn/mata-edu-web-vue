@@ -226,13 +226,13 @@
                 <div class="flex justify-center mt-4">
                   <button
                     class="px-10 py-2 rounded-lg transition-colors text-sm"
-                    :class="selectedChapters.length > 0 
+                    :class="selectedChapters.length > 0 && !externalLinkSubmitting
                       ? 'border border-[#FF9900] text-[#FF9900] hover:bg-[#FFF7E6]' 
                       : 'border border-gray-300 text-gray-400 cursor-not-allowed'"
-                    :disabled="selectedChapters.length === 0"
+                    :disabled="selectedChapters.length === 0 || externalLinkSubmitting"
                     @click="handleLink"
                   >
-                    {{ $t("linkCourse.goLink") }}
+                    {{ externalLinkSubmitting ? "处理中..." : $t("linkCourse.goLink") }}
                   </button>
                 </div>
               </div>
@@ -407,11 +407,18 @@ const props = defineProps<{
   visible: boolean;
   exerciseId?: string;
   initialLinked?: number[];
+  submitMode?: "default" | "external";
+  singleSelect?: boolean;
+  refreshToken?: number;
+  externalLinkRequest?: (
+    rows: Array<{ courseId: string; chapterId: string }>
+  ) => Promise<{ exerciseId?: string | number | null } | void>;
 }>();
 
 const emit = defineEmits<{
   close: [];
   confirm: [];
+  "submit-link": [{ courseId: string; chapterId: string }];
 }>();
 
 const { t } = useI18n();
@@ -491,6 +498,7 @@ const linkedChapters = ref<Chapter[]>([]);
 const initialLinkedIds = ref<number[]>([]);
 const expandedLinkedCourses = ref<number[]>([]);
 const selectedLinkedChapters = ref<number[]>([]);
+const externalLinkSubmitting = ref(false);
 
 // 课程数据（官方课程）
 const courses = ref<Course[]>([]);
@@ -636,6 +644,24 @@ watch(
       loadMenuTree();
     }
   },
+);
+
+watch(
+  () => props.exerciseId,
+  async (newValue, oldValue) => {
+    if (!props.visible) return;
+    if (String(newValue || "") === String(oldValue || "")) return;
+    await loadLinkedChapters();
+  }
+);
+
+watch(
+  () => props.refreshToken,
+  async () => {
+    if (!props.visible) return;
+    if (!props.exerciseId) return;
+    await loadLinkedChapters();
+  }
 );
 
 // Watch course type change
@@ -843,6 +869,12 @@ const getCourseCheckState = (courseId: number): "none" | "partial" | "full" => {
 };
 
 const toggleCourse = (course: Course) => {
+  if (props.singleSelect) {
+    const firstChapter = course.chapters[0];
+    if (!firstChapter) return;
+    selectedChapters.value = [firstChapter.id];
+    return;
+  }
   const state = getCourseCheckState(course.id);
   const chapterIds = course.chapters.map((c) => c.id);
 
@@ -901,6 +933,11 @@ const getCourseCheckClass = (courseId: number) => {
 };
 
 const toggleChapter = (chapter: Chapter) => {
+  if (props.singleSelect) {
+    const currentSelected = selectedChapters.value[0];
+    selectedChapters.value = currentSelected === chapter.id ? [] : [chapter.id];
+    return;
+  }
   const index = selectedChapters.value.indexOf(chapter.id);
   if (index > -1) {
     selectedChapters.value.splice(index, 1);
@@ -911,6 +948,47 @@ const toggleChapter = (chapter: Chapter) => {
 
 const handleLink = async () => {
   if (selectedChapters.value.length === 0) return;
+  if (props.submitMode === "external") {
+    const selectedRows = selectedChapters.value
+      .map((chapterId) => findChapterById(chapterId))
+      .filter((item): item is Chapter => !!item)
+      .map((item) => ({
+        courseId: String(item.courseId),
+        chapterId: String(item.id),
+      }));
+    if (!selectedRows.length) {
+      ElMessage.error("未找到章节信息");
+      return;
+    }
+    if (props.externalLinkRequest) {
+      if (externalLinkSubmitting.value) return;
+      externalLinkSubmitting.value = true;
+      try {
+        await props.externalLinkRequest(selectedRows);
+        selectedChapters.value.forEach((chapterId) => {
+          if (!linkedChapters.value.find((item) => item.id === chapterId)) {
+            const chapter = findChapterById(chapterId);
+            if (chapter) {
+              linkedChapters.value.push(chapter);
+              if (!expandedLinkedCourses.value.includes(chapter.courseId)) {
+                expandedLinkedCourses.value.push(chapter.courseId);
+              }
+            }
+          }
+        });
+        selectedChapters.value = [];
+        ElMessage.success(t("linkCourse.linkSuccess"));
+        emit("confirm");
+      } catch (error: any) {
+        ElMessage.error(error?.message || "关联课程章节失败");
+      } finally {
+        externalLinkSubmitting.value = false;
+      }
+      return;
+    }
+    emit("submit-link", selectedRows[0]);
+    return;
+  }
   if (!props.exerciseId) {
     ElMessage.error('缺少练习题ID');
     return;

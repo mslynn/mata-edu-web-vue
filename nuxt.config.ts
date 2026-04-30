@@ -1,9 +1,9 @@
-// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.54:8001'  ws://192.168.0.54:8001/resource/websocket
+// https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.63:8001'  ws://192.168.0.54:8001/resource/websocket
 
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'https://test-gateway.matatastudio.com'
+  : 'http://192.168.0.145:8001'
 
 // 预览服务地址
 
@@ -62,6 +62,9 @@ export default defineNuxtConfig({
       signalingUrl: signalingUrl || 'ws://192.168.0.60:8001/resource/websocket',
       // Cloudflare Turnstile 站点公钥
       turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '',
+      // Azure 语音合成演示配置，仅用于前端 Demo
+      azureSpeechKey: process.env.NUXT_PUBLIC_AZURE_SPEECH_KEY || '',
+      azureSpeechRegion: process.env.NUXT_PUBLIC_AZURE_SPEECH_REGION || '',
     }
   },
 

@@ -1,82 +1,7 @@
 <template>
   <div ref="teacher2PageRef" class="teacher2-page" :style="pageAdaptiveStyle">
     <div class="teacher2-container">
-      <aside class="teacher2-sidebar">
-        <div class="teacher2-brand" @click="handleSidebarLogoClick">
-          <img :src="brandLogo" alt="玛塔创想 AI 智学云" class="teacher2-brand__image" />
-        </div>
-
-        <nav class="teacher2-nav" aria-label="教师导航">
-          <button
-            v-for="item in sidebarNavItems"
-            :key="item.path"
-            type="button"
-            class="teacher2-nav__item"
-            :class="{ 'is-active': isSidebarItemActive(item) }"
-            @click="handleSidebarItemClick(item)"
-          >
-            <span class="material-symbols-outlined teacher2-nav__icon">
-              {{ item.icon }}
-            </span>
-            <span class="teacher2-nav__label">{{ item.label }}</span>
-          </button>
-        </nav>
-
-        <div class="teacher2-profile-wrap">
-          <div ref="profileDropdownRef" class="teacher2-profile-entry">
-            <button
-              type="button"
-              class="teacher2-profile"
-              :aria-label="teacherDisplayName"
-              :title="teacherDisplayName"
-              @click="toggleProfileDropdown"
-            >
-              <img
-                :src="resolvedTeacherAvatar"
-                alt="教师头像"
-                class="teacher2-profile__avatar"
-                @error="handleTeacherAvatarError"
-              />
-              <div class="teacher2-profile__meta">
-                <p class="teacher2-profile__name">{{ teacherDisplayName }}</p>
-                <p class="teacher2-profile__role">{{ teacherDisplayRole }}</p>
-              </div>
-            </button>
-
-            <Transition name="teacher2-profile-dropdown">
-              <div v-if="showProfileDropdown" class="teacher2-profile-dropdown">
-                <div class="teacher2-profile-dropdown__head">
-                  <p class="teacher2-profile-dropdown__name">{{ teacherDisplayName }}</p>
-                  <p class="teacher2-profile-dropdown__role">{{ teacherDisplayRole }}</p>
-                </div>
-
-                <button
-                  v-if="showModuleSwitch"
-                  type="button"
-                  class="teacher2-profile-dropdown__item"
-                  @click="handleModuleSwitch"
-                >
-                  模块切换
-                </button>
-                <button
-                  type="button"
-                  class="teacher2-profile-dropdown__item"
-                  @click="handleProfile"
-                >
-                  个人中心
-                </button>
-                <button
-                  type="button"
-                  class="teacher2-profile-dropdown__item teacher2-profile-dropdown__item--danger"
-                  @click="handleLogout"
-                >
-                  退出登录
-                </button>
-              </div>
-            </Transition>
-          </div>
-        </div>
-      </aside>
+      <TeacherSidebar />
 
       <div class="teacher2-content">
         <header class="teacher2-topbar" aria-hidden="true"></header>
@@ -654,8 +579,6 @@
 </template>
 
 <script setup lang="ts">
-import brandLogoImage from "~/assets/newimages/logo.svg";
-import teacherAvatarImage from "~/assets/newimages/user.png";
 import tool1Icon from "~/assets/images/tool1.png";
 import tool2Icon from "~/assets/images/tool2.png";
 import tool4Icon from "~/assets/images/too4.png";
@@ -668,7 +591,6 @@ import { aiAdmin } from "~/composables/api/ai";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import { useAuth } from "~/composables/api/useAuth";
 import { useTeacher } from "~/composables/api/useTeacher";
-import { useTeacherNav } from "~/composables/api/useTeacherNav";
 import { ElMessage } from "~/components/ui";
 import { useI18n } from "vue-i18n";
 
@@ -707,8 +629,7 @@ const route = useRoute();
 const router = useRouter();
 const runtimeConfig = useRuntimeConfig();
 const { locale, t } = useI18n();
-const { user, logout } = useAuth();
-const { menuItems, loadMenus } = useTeacherNav();
+const { user } = useAuth();
 const { ssoLogin, getAiList, createAi, updateAi, deleteAi, deleteOss } = aiAdmin();
 const {
   getTeachList,
@@ -719,9 +640,6 @@ const {
   getCourseMenuTree,
   getTeachChapterList,
   beginClass,
-  endClass,
-  stopQuickLogin,
-  getTeacherStatus,
 } = useTeacher();
 const {
   parseMessageData,
@@ -737,7 +655,6 @@ const {
 } = useIframeFileBridge();
 
 onMounted(async () => {
-  loadMenus();
   void loadTeacherStats();
   void loadTeachList();
   void refreshQuickLoginInfo();
@@ -755,7 +672,6 @@ onMounted(() => {
     teacher2PageResizeObserver.observe(teacher2PageRef.value);
   }
   window.addEventListener("message", handleToolIframeMessage);
-  document.addEventListener("click", handleProfileClickOutside);
 });
 
 onBeforeUnmount(() => {
@@ -765,16 +681,7 @@ onBeforeUnmount(() => {
   teacher2PageResizeObserver?.disconnect();
   teacher2PageResizeObserver = null;
   window.removeEventListener("message", handleToolIframeMessage);
-  document.removeEventListener("click", handleProfileClickOutside);
 });
-
-type NavItem = {
-  label: string;
-  icon: string;
-  path: string;
-  activeMenu?: string;
-  externalUrl?: string;
-};
 
 type HeroAction = {
   key: "teach" | "prepare" | "task";
@@ -885,9 +792,6 @@ type TeacherStatsState = {
   teachHours: number;
 };
 
-const brandLogo = brandLogoImage;
-const defaultTeacherAvatar = teacherAvatarImage;
-
 const heroIllustration =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAWtSm_7HgEqoCo1Re6s4knjXHIO1T750D26mUjlkWtflEnGZ-aAZfIZbtk6RpZAQCKxgBsdJZ53M_e-W7lCS71gi2RFijS7YoVhKsQIx6ECt_7Q4QTob0NPexqDTtSmmNgE8yhlXCyjYH27l65T3hooUYeQQnUevOWe6YBgjNi6aRFrqtQhX-1_EIjXFkNQ-TyuibshtR5STqoTKSk_SGWd0a_itiWtOkXv-5YmznkjTYI1shfxvQdbmF5-V1skyp0YYA3JnhP";
 const heroBackgroundStyle = {
@@ -943,256 +847,6 @@ const pageAdaptiveStyle = computed(() => ({
 
 const lessonCover =
   "https://lh3.googleusercontent.com/aida/ADBb0ui6IdgX373LRvMlzFkxxWAcVCEDPGVAo6YHY60SB_HHfqSMpC-BxbKS-2vgfs-u4t9NzrQxKK0WuRHx_eFvZroagvyEEGldid4Bi3ZvI7Ng1gQYa6mRZZ2xE8Oacmd26H8wgaUzgOAQXrVrLoiTxVjESnb3mpIDRc1_TfC5-EB-QNvqzTPXi9CgygpQwESgK_9YfwTfQlDi3Jh-F1iwZahTITiuqmeHBohqbUKretpgAK_7eEJ3VNbQQJwIbaSgYcfOJyL70w";
-
-const fallbackNavItems: NavItem[] = [
-  { label: "首页", icon: "home", path: "/teacher" },
-  { label: "班级管理", icon: "group", path: "/system/class" },
-  { label: "课程中心", icon: "menu_book", path: "/system/course" },
-  { label: "玛塔工具中心", icon: "construction", path: "/system/tool" },
-  { label: "AI实践中心", icon: "psychology", path: "/system/ai" },
-  { label: "学情中心", icon: "insights", path: "/system/study" },
-  { label: "教师成长中心", icon: "trending_up", path: "/system/growth" },
-  { label: "赛事中心", icon: "emoji_events", path: "/system/event" },
-];
-
-const implementedSidebarPaths = [
-  "/teacher",
-  "/teacher2",
-  "/system/class",
-  "/system/course",
-  "/system/tool",
-  "/system/ai",
-  "/system/study",
-  "/system/growth",
-  "/system/event",
-  "/system/user",
-];
-
-const resolveSidebarIcon = (label: string, path: string) => {
-  if (path === "/teacher" || path === "/teacher2") return "home";
-  if (
-    path.startsWith("/system/class") ||
-    label.includes("班级") ||
-    label.includes("账号")
-  ) {
-    return "group";
-  }
-  if (path.startsWith("/system/course") || label.includes("课程")) {
-    return "menu_book";
-  }
-  if (path.startsWith("/system/tool") || label.includes("工具")) {
-    return "construction";
-  }
-  if (path.startsWith("/system/ai") || label.includes("AI")) {
-    return "psychology";
-  }
-  if (
-    path.startsWith("/system/study") ||
-    label.includes("学情") ||
-    label.includes("学习")
-  ) {
-    return "insights";
-  }
-  if (path.startsWith("/system/growth") || label.includes("成长")) {
-    return "trending_up";
-  }
-  if (
-    path.startsWith("/system/event") ||
-    label.includes("赛事") ||
-    label.includes("比赛")
-  ) {
-    return "emoji_events";
-  }
-  return "smart_toy";
-};
-
-const sidebarNavItems = computed<NavItem[]>(() => {
-  if (!menuItems.value.length) {
-    return fallbackNavItems;
-  }
-
-  return menuItems.value.map((item) => ({
-    label: item.label,
-    path: item.path,
-    activeMenu: item.activeMenu,
-    externalUrl: item.externalUrl,
-    icon: resolveSidebarIcon(item.label, item.path),
-  }));
-});
-
-const showProfileDropdown = ref(false);
-const profileDropdownRef = ref<HTMLElement | null>(null);
-const showModuleSwitch = computed(() => {
-  const roleKey = user.value?.role_key || user.value?.roleKey;
-  return roleKey === "city_admin" || roleKey === "district_admin";
-});
-
-const teacherDisplayName = computed(() => {
-  return (
-    user.value?.nickName ||
-    user.value?.userName ||
-    user.value?.nickname ||
-    user.value?.nick_name ||
-    user.value?.user_name ||
-    "用户"
-  );
-});
-
-const teacherDisplayRole = computed(() => {
-  return user.value?.roleName || user.value?.role_name || "教师";
-});
-
-const resolvedTeacherAvatar = computed(() => {
-  const avatar = String(
-    user.value?.avatar ||
-      user.value?.avatarUrl ||
-      user.value?.headImg ||
-      user.value?.headimg ||
-      ""
-  ).trim();
-
-  return avatar || defaultTeacherAvatar;
-});
-
-const isSidebarItemActive = (item: NavItem) => {
-  const currentPath = route.path;
-
-  if (item.path === "/teacher") {
-    return ["/teacher", "/teacher/", "/teacher2", "/teacher2/"].includes(currentPath);
-  }
-
-  return currentPath === item.path || currentPath.startsWith(`${item.path}/`);
-};
-
-const isSidebarPathImplemented = (path: string) => {
-  return implementedSidebarPaths.some(
-    (implementedPath) =>
-      path === implementedPath || path.startsWith(`${implementedPath}/`)
-  );
-};
-
-const handleSidebarLogoClick = () => {
-  const roleKey = user.value?.role_key || user.value?.roleKey;
-
-  if (roleKey === "student") {
-    router.push("/student");
-    return;
-  }
-
-  if (route.path.startsWith("/teacher2")) {
-    router.push("/teacher2");
-    return;
-  }
-
-  router.push("/teacher");
-};
-
-const handleSidebarItemClick = (item: NavItem) => {
-  if (isSidebarItemActive(item)) {
-    return;
-  }
-
-  if (item.externalUrl) {
-    window.open(item.externalUrl, "_blank", "noopener,noreferrer");
-    return;
-  }
-
-  if (!isSidebarPathImplemented(item.path)) {
-    return;
-  }
-
-  navigateTo(item.path);
-};
-
-const handleTeacherAvatarError = (event: Event) => {
-  const target = event.target as HTMLImageElement | null;
-  if (!target) return;
-  target.src = defaultTeacherAvatar;
-};
-
-const toggleProfileDropdown = () => {
-  showProfileDropdown.value = !showProfileDropdown.value;
-};
-
-const handleProfile = () => {
-  showProfileDropdown.value = false;
-  router.push("/personalcenter");
-};
-
-const handleModuleSwitch = () => {
-  showProfileDropdown.value = false;
-  router.push("/district");
-};
-
-const getActiveOngoingClassroom = async () => {
-  const stored = getStoredOngoingClassroom();
-  if (!stored) return null;
-
-  try {
-    const status = await getTeacherStatus();
-    if (status?.isTeach) {
-      return stored;
-    }
-  } catch (error) {
-    console.error("teacher2 校验进行中课堂失败:", error);
-  }
-
-  clearStoredOngoingClassroom();
-  return null;
-};
-
-const handleLogout = async () => {
-  showProfileDropdown.value = false;
-
-  const ongoingClassroom = await getActiveOngoingClassroom();
-  if (!ongoingClassroom) {
-    await logout();
-    return;
-  }
-
-  try {
-    await ElMessageBox.confirm(
-      "当前有进行中的课堂，退出登录将自动结束当前课堂，是否继续？",
-      "确认退出",
-      {
-        confirmButtonText: "确认退出",
-        cancelButtonText: "取消",
-        type: "warning",
-      }
-    );
-  } catch {
-    return;
-  }
-
-  try {
-    await endClass({
-      classId: ongoingClassroom.classId,
-      courseId: ongoingClassroom.courseId,
-      chapterId: ongoingClassroom.chapterId,
-      peerId: ongoingClassroom.classId,
-    });
-
-    try {
-      await stopQuickLogin(ongoingClassroom.classId);
-    } catch (error) {
-      console.error("teacher2 退出登录时停用快捷登录失败:", error);
-    }
-
-    await logout();
-  } catch (error: any) {
-    console.error("teacher2 退出登录时自动结束课堂失败:", error);
-    ElMessage.error(error?.message || "自动结束课堂失败，请稍后重试");
-  }
-};
-
-const handleProfileClickOutside = (event: MouseEvent) => {
-  if (
-    profileDropdownRef.value &&
-    !profileDropdownRef.value.contains(event.target as Node)
-  ) {
-    showProfileDropdown.value = false;
-  }
-};
 
 const createDefaultTeacherStats = (): TeacherStatsState => ({
   classCount: 0,
@@ -1429,10 +1083,10 @@ const loadTeachList = async () => {
                 courseName: String(course?.courseName || "").trim(),
                 courseCoverUrl: course?.courseCoverUrl || "",
               }))
-              .filter((course) => course.courseId && course.courseName)
+              .filter((course: CourseItem) => course.courseId && course.courseName)
           : [],
       }))
-      .filter((item) => item.classId && item.className);
+      .filter((item: TeachRecordClassItem) => item.classId && item.className);
   } catch (error) {
     console.error("teacher2 加载授课记录失败:", error);
     teachList.value = [];
@@ -2773,221 +2427,6 @@ const aiCards: AICard[] = [
   margin: 0 auto;
   position: relative;
   background: #f8f9fa;
-}
-
-.teacher2-sidebar {
-  position: sticky;
-  top: 0;
-  align-self: start;
-  z-index: 50;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  padding: 24px 16px;
-  background: #f2f4f5;
-  overflow: hidden;
-}
-
-.teacher2-brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 32px;
-  padding: 0 16px;
-  cursor: pointer;
-}
-
-.teacher2-brand__image {
-  width: 200px;
-  height: 30px;
-  max-width: none;
-  flex-shrink: 0;
-  object-fit: contain;
-  display: block;
-}
-
-.teacher2-nav {
-  flex: 1;
-}
-
-.teacher2-nav__item {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  width: 100%;
-  padding: 12px 16px;
-  border: 0;
-  border-radius: 12px;
-  background: transparent;
-  color: #2e3335;
-  text-align: left;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.teacher2-nav__item + .teacher2-nav__item {
-  margin-top: 8px;
-}
-
-.teacher2-nav__item:hover {
-  background: #dee3e5;
-}
-
-.teacher2-nav__item.is-active {
-  background: rgba(255, 255, 255, 0.5);
-  color: #005bc2;
-  font-weight: 700;
-}
-
-.teacher2-nav__item.is-active::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  right: 0;
-  width: 3px;
-  height: calc(100% - 16px);
-  background: #005bc2;
-  transform: translateY(-50%);
-}
-
-.teacher2-nav__icon {
-  font-size: 24px;
-  color: inherit;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-}
-
-.teacher2-nav__label {
-  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.teacher2-nav__item.is-active .teacher2-nav__label {
-  font-weight: 700;
-}
-
-.teacher2-profile-wrap {
-  margin-top: auto;
-  padding: 24px 16px 0;
-  border-top: 1px solid rgba(174, 179, 181, 0.1);
-}
-
-.teacher2-profile-entry {
-  position: relative;
-}
-
-.teacher2-profile {
-  width: 100%;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 16px;
-  background: #ffffff;
-  text-align: left;
-  cursor: pointer;
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.teacher2-profile:hover {
-  background: #f8fbff;
-  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.08);
-}
-
-.teacher2-profile:focus-visible {
-  outline: 2px solid rgba(0, 91, 194, 0.28);
-  outline-offset: 3px;
-}
-
-.teacher2-profile__avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  object-fit: cover;
-  background: #a4c1ff;
-}
-
-.teacher2-profile__meta {
-  min-width: 0;
-}
-
-.teacher2-profile__name {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.teacher2-profile__role {
-  margin: 2px 0 0;
-  font-size: 10px;
-  color: #5a6062;
-}
-
-.teacher2-profile-dropdown {
-  position: absolute;
-  right: 0;
-  bottom: calc(100% + 12px);
-  width: 188px;
-  border: 1px solid #edf1f4;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 18px 36px rgba(12, 15, 16, 0.1);
-  overflow: hidden;
-  z-index: 80;
-}
-
-.teacher2-profile-dropdown__head {
-  padding: 12px 16px 10px;
-  border-bottom: 1px solid #f1f4f6;
-}
-
-.teacher2-profile-dropdown__name {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 700;
-  color: #2e3335;
-}
-
-.teacher2-profile-dropdown__role {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: #767c7e;
-}
-
-.teacher2-profile-dropdown__item {
-  width: 100%;
-  border: none;
-  background: transparent;
-  padding: 11px 16px;
-  text-align: left;
-  font-size: 14px;
-  color: #4d4d4d;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.teacher2-profile-dropdown__item:hover {
-  background: #f8fbff;
-  color: #005bc2;
-}
-
-.teacher2-profile-dropdown__item--danger:hover {
-  color: #f56c6c;
-}
-
-.teacher2-profile-dropdown-enter-active,
-.teacher2-profile-dropdown-leave-active {
-  transition: opacity 0.18s ease, transform 0.18s ease;
-}
-
-.teacher2-profile-dropdown-enter-from,
-.teacher2-profile-dropdown-leave-to {
-  opacity: 0;
-  transform: translateY(8px);
 }
 
 .teacher2-content {

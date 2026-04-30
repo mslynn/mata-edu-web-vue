@@ -207,6 +207,31 @@ export const cursorAdmin = () => {
       }
 
       const response = await http.get(
+        "/system/course/resource/list",
+        queryParams,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "获取课程章节资源列表失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  const getVisibleResourceList = async (
+    chapterId: string,
+    resourceType?: number,
+  ) => {
+    try {
+      const queryParams: Record<string, any> = {};
+      if (chapterId) {
+        queryParams.chapterId = chapterId;
+      }
+      if (resourceType !== undefined) {
+        queryParams.resourceType = resourceType;
+      }
+
+      const response = await http.get(
         "/system/course/resource/visible/list",
         queryParams,
       );
@@ -351,8 +376,8 @@ export const cursorAdmin = () => {
       throw error;
     }
   };
-  //获取学生可见资源列表
-  const getResourceeVisible = async (data: { chapterId: string }) => {
+  // 获取学生可见资源 ID 列表
+  const getVisibleResourceIds = async (data: { chapterId: string }) => {
     try {
       const response = await http.get("/system/course/resource/visible", data);
       if (response.code !== 200) {
@@ -649,9 +674,8 @@ export const cursorAdmin = () => {
   };
   // AI-查询非模型关联的实践列表
 
-  const getCursorOptListNoModel = async ( chapterId: string) => {
-    try
-     {
+  const getCursorOptListNoModel = async (chapterId: string) => {
+    try {
       const response = await http.get(`/system/opt/bond/${chapterId}`);
       if (response.code !== 200) {
         throw new Error(response.msg || "查询非模型关联的实践列表失败");
@@ -669,8 +693,8 @@ export const cursorAdmin = () => {
     }
   };
   // AI-非模型关联/取消关联课程章节
-    const toggleChapterOptNoModel = async (data: {
-    optType: string ;
+  const toggleChapterOptNoModel = async (data: {
+    optType: string;
     chapterId: string | number;
     type: string | number; // 1-关联 2-取消关联
   }) => {
@@ -706,7 +730,7 @@ export const cursorAdmin = () => {
     setChapterResourceVisibleStudent,
     setChapterResourceVisibleClass,
     GetChapterCourse,
-    getResourceeVisible,
+    getVisibleResourceIds,
     getCourseEvaluationList,
     getCourseEvaluationDetail,
     setCourseEvaluationList,
@@ -724,5 +748,6 @@ export const cursorAdmin = () => {
     deleteCursorOpt,
     getCursorOptListNoModel,
     toggleChapterOptNoModel,
+    getVisibleResourceList,
   };
 };

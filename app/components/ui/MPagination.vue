@@ -1,14 +1,14 @@
 <template>
-  <div class="flex items-center justify-between flex-wrap gap-4">
+  <div class="m-pagination flex items-center justify-between flex-wrap gap-4">
     <!-- 左侧信息 -->
-    <div v-if="showTotal" class="text-sm text-gray-500">
+    <div v-if="showTotal" class="m-pagination__total text-sm text-gray-500">
       {{ $t('pagination.total') }} <span class="font-medium text-gray-700">{{ total }}</span> {{ $t('pagination.items') }}
     </div>
     
     <!-- 分页器 -->
-    <div class="flex items-center gap-2">
+    <div class="m-pagination__controls flex items-center gap-2">
       <!-- 每页条数选择 -->
-      <div v-if="showSizeChanger" class="flex items-center gap-2">
+      <div v-if="showSizeChanger" class="m-pagination__size flex items-center gap-2">
         <select 
           :value="pageSize"
           class="px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:border-[#FF9900]"
@@ -70,7 +70,7 @@
       </button>
       
       <!-- 跳转 -->
-      <div v-if="showQuickJumper" class="flex items-center gap-2 ml-2">
+      <div v-if="showQuickJumper" class="m-pagination__jumper flex items-center gap-2 ml-2">
         <span class="text-sm text-gray-500">{{ $t('pagination.jumpTo') }}</span>
         <input 
           v-model.number="jumpPage"

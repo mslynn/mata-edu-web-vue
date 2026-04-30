@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Manrope:wght@400;500;600&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "surface-bright": "#f8f9fa",
+                    "surface-variant": "#dee3e5",
+                    "tertiary-fixed": "#ffa44f",
+                    "on-primary-fixed": "#002658",
+                    "error-dim": "#70030f",
+                    "on-surface": "#2e3335",
+                    "tertiary-container": "#ffa44f",
+                    "surface-container-highest": "#dee3e5",
+                    "secondary": "#5948d3",
+                    "on-secondary": "#fcf7ff",
+                    "tertiary-fixed-dim": "#f3953a",
+                    "on-tertiary-fixed": "#351900",
+                    "surface-container-low": "#f2f4f5",
+                    "inverse-surface": "#0c0f10",
+                    "secondary-dim": "#4d39c7",
+                    "secondary-fixed": "#e4dfff",
+                    "error-container": "#f56965",
+                    "on-tertiary-container": "#552c00",
+                    "tertiary-dim": "#7f4400",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-container-high": "#e5e9eb",
+                    "surface-tint": "#005bc2",
+                    "primary-fixed-dim": "#8eb3ff",
+                    "surface-container": "#ebeef0",
+                    "on-secondary-container": "#4b38c5",
+                    "on-secondary-fixed": "#381eb3",
+                    "background": "#f8f9fa",
+                    "outline": "#767c7e",
+                    "on-tertiary-fixed-variant": "#623400",
+                    "secondary-container": "#e4dfff",
+                    "on-error-container": "#65000b",
+                    "on-secondary-fixed-variant": "#5543cf",
+                    "surface": "#f8f9fa",
+                    "primary-fixed": "#a4c1ff",
+                    "surface-dim": "#d5dbdd",
+                    "outline-variant": "#aeb3b5",
+                    "tertiary": "#904e00",
+                    "on-primary-container": "#003a80",
+                    "on-tertiary": "#fff7f4",
+                    "secondary-fixed-dim": "#d5cfff",
+                    "on-primary": "#f9f8ff",
+                    "error": "#ac3434",
+                    "on-error": "#fff7f6",
+                    "primary-dim": "#0050ab",
+                    "on-surface-variant": "#5a6062",
+                    "inverse-primary": "#4b8eff",
+                    "inverse-on-surface": "#9b9d9e",
+                    "primary-container": "#a4c1ff",
+                    "primary": "#005bc2",
+                    "on-background": "#2e3335",
+                    "on-primary-fixed-variant": "#004291"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "2xl": "1rem",
+                    "3xl": "1.5rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Manrope"],
+                    "label": ["Manrope"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Manrope', 'PingFang SC', sans-serif; }
+        .plus-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        .app-container {
+            max-width: 1920px;
+            margin: 0 auto;
+            position: relative;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<div class="app-container min-h-screen flex">
+<!-- Sidebar -->
+<aside class="h-screen w-64 fixed left-auto top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50 border-r border-[#dee3e5]/30">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg"/>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">home</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">group</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">construction</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">psychology</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">AI 实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">insights</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#">
+<span class="material-symbols-outlined">trending_up</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">emoji_events</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">赛事中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium">AI 助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-outline-variant/10">
+<div class="flex items-center gap-3 bg-surface-container-lowest p-3 rounded-2xl">
+<img alt="教师头像" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDR0EHEsckca4JuG6FYiQ5PMDfHBVDZCzHIRbaUwtyiOTN-KXkBuU4-ne0P6Ct_N8IL_RrT8CyubYvaMXeLnhBLqvtkZiKprSMdhH241SiuA3cvJi65m-fJ8pFqRd4BZa6BLYvOWH9Ma7Ee-FYvnhDlRSkGxFtA6a52xYV7huqoEX6gpvKdInDXIG3T7fGQr1R-Sqtmuil9tqbvrNfS16EAfOmD4SG7_CC-p2ckuO8pChG4Twa4HS0q5ajVnuDYfWxqnv9Xgesh"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">王明老师</p>
+<p class="text-[10px] text-on-surface-variant">高级讲师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Right Side: Header + Main -->
+<div class="flex-1 flex flex-col min-w-0 ml-64 bg-background">
+<!-- Main Content Area -->
+<main class="flex-1 px-4 pb-12 pt-6">
+<div class="max-w-[1600px] mx-auto space-y-8">
+<!-- Redesigned Internal Navigation Bar -->
+<div class="flex items-center justify-center gap-4">
+<a class="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-2xl shadow-md font-bold transition-transform hover:scale-105" href="#">
+<span class="material-symbols-outlined text-xl" style='font-variation-settings: "FILL" 1;'>local_library</span>
+<span>教师培训课程</span>
+</a>
+<a class="flex items-center gap-2 px-8 py-3 bg-surface-container-lowest text-on-surface-variant hover:text-primary border border-outline-variant/20 rounded-2xl shadow-sm transition-all font-medium" href="#">
+<span class="material-symbols-outlined text-xl">forum</span>
+<span>教师社区</span>
+</a>
+<a class="flex items-center gap-2 px-8 py-3 bg-surface-container-lowest text-on-surface-variant hover:text-primary border border-outline-variant/20 rounded-2xl shadow-sm transition-all font-medium" href="#">
+<span class="material-symbols-outlined text-xl">menu_book</span>
+<span>图书馆</span>
+</a>
+<a class="flex items-center gap-2 px-8 py-3 bg-surface-container-lowest text-on-surface-variant hover:text-primary border border-outline-variant/20 rounded-2xl shadow-sm transition-all font-medium" href="#">
+<span class="material-symbols-outlined text-xl">verified</span>
+<span>教师认证</span>
+</a>
+</div>
+<!-- Filters - Background/Border Removed -->
+<div class="flex flex-wrap gap-8 items-end justify-between px-2">
+<div class="flex gap-8">
+<div class="space-y-2">
+<p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest px-1">类型</p>
+<select class="bg-surface-container-high border-none rounded-xl text-sm font-bold py-2.5 pr-10 focus:ring-primary/20 min-w-[140px] shadow-sm">
+<option>产品培训</option>
+<option>小学部</option>
+<option>初中部</option>
+<option>高中部</option>
+</select>
+</div>
+<div class="space-y-2">
+<p class="text-[11px] text-on-surface-variant font-bold uppercase tracking-widest px-1">开通状态</p>
+<select class="bg-surface-container-high border-none rounded-xl text-sm font-bold py-2.5 pr-10 focus:ring-primary/20 min-w-[160px] shadow-sm">
+<option>产品培训</option>
+<option>通用通识课</option>
+<option>信息技术</option>
+<option>心理健康</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-medium pb-2">
+<span>共 <span class="text-primary font-bold">128</span> 门相关课程</span>
+</div>
+</div>
+<!-- Course Bento Grid - 4 items per row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Course Card 1 -->
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="relative overflow-hidden h-[17.5rem]">
+<img alt="教学场景" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-GCt5dBUEatz57NpYpI7rtTxPdKbJiJNIOhAUTNbI_498vOPkXS-MDPO8Yf0UiQvOV52jhiuaLSz8sAjWWPqq4LEKooQZ75CBvKbgrUE26jRyXcnNFUqJ3A_qBKgVGuDvJkkrO7o1ekzvxwrY1kHW0se_T3CAqJ_0Fhbc_0AC1gR4-O5lV8veeEoV9IRLArHMR65Wp6S4W4pqXC_e-GZxVMt5gQ9LSR1g8Ek2KrnOPkhxofWLgB8XSiaZnz4wAsJNkgAN1lvd"/>
+<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style='font-variation-settings: "FILL" 1;'>check_circle</span>
+<span>已开通</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-center min-h-[62.5px]">
+<h3 class="text-sm font-bold text-on-surface leading-tight text-center">现代课堂互动艺术与学生心理疏导策略</h3>
+</div>
+</div>
+<!-- Course Card 2 -->
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="relative overflow-hidden h-[17.5rem]">
+<img alt="实验室教学" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDB_Yy3CwI-6iL9TbtHE3Om2VKlqfCE1XYLbKxxwPhIHfJj2JWvVWI3uOjTY-8IVWz0V-XKtvErXxoVSXQRYlI4VTsx7PdsRS2o1pC-ZIGKshmj65pNQd0tXYxOGzbf4Zjud_ZIrik-gF-t22nE6qN5GKpTg-uNeWneiuYYenni-puPw0T22mQcRHMEyE55xPdhnK5XKJiF_Z06v4OSQ697Bx6jQj3ikp1jBtN55AqCH0e_Ngv_k90zZGclM1y7jHj1ZOvbREX4"/>
+<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style='font-variation-settings: "FILL" 1;'>check_circle</span>
+<span>已开通</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-center min-h-[62.5px]">
+<h3 class="text-sm font-bold text-on-surface leading-tight text-center">STEAM教育在中学理科教学中的跨学科应用</h3>
+</div>
+</div>
+<!-- Course Card 3 -->
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="relative overflow-hidden h-[17.5rem]">
+<img alt="数字化教学" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDjbkOwjcXSZ3-Ts6gbF20MzbKT2EvivUseocP746AeAB212kh-s2ai1icqsS_rz-rej6MoF7K02PjkxX39_BtOjPdvuesayBPtHjIuH6oLQiZhxfGAmN7gmbzcz8b2zh2gE3B3nAStbYcEq7-ZQ4KSDXIcudRp-bTRqYCRbPjVwA-kdcQ3vOfxCbO39JuyYi35vU2-Fv_MYAaVcNZ-TGddnuohd23xNTDGTFVRmdhJRzZumu4F7h3TbYUEgDM3AbhvJT_hi4L"/>
+<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style='font-variation-settings: "FILL" 1;'>check_circle</span>
+<span>已开通</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-center min-h-[62.5px]">
+<h3 class="text-sm font-bold text-on-surface leading-tight text-center">数字化转型下的智慧教学平台深度应用指南</h3>
+</div>
+</div>
+<!-- Course Card 4 -->
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="relative overflow-hidden h-[17.5rem]">
+<img alt="小学教育" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEKAnmIDq8_hX7uVsh2tK8s-07Vv83G9r_NlF2F3D9OqM2A7z-t3K_1-yD06vU-rZ-y4PqP4V1k6l3m7x_r7A"/>
+<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style='font-variation-settings: "FILL" 1;'>check_circle</span>
+<span>已开通</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-center min-h-[62.5px]">
+<h3 class="text-sm font-bold text-on-surface leading-tight text-center">小学低段项目式学习(PBL)的设计与实施</h3>
+</div>
+</div>
+<!-- Course Card 5 -->
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="relative overflow-hidden h-[17.5rem]">
+<img alt="心理辅导" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDM7z-Pz7v5f5_t3N5m_7V_v8O7V_N3_5v-N-R-O-R-O-N-v-P-z-7-M-z"/>
+<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style='font-variation-settings: "FILL" 1;'>check_circle</span>
+<span>已开通</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-center min-h-[62.5px]">
+<h3 class="text-sm font-bold text-on-surface leading-tight text-center">教师职场压力管理与心理韧性提升工作坊</h3>
+</div>
+</div>
+<!-- Course Card 6 -->
+<div class="group bg-surface-container-lowest rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300">
+<div class="relative overflow-hidden h-[17.5rem]">
+<img alt="AI教学" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC-Pz7v5f5_t3N5m_7V_v8O7V_N3_5v-N-R-O-R-O-N-v-P-z-7-M-z"/>
+<div class="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1 rounded-full flex items-center gap-1 shadow-lg">
+<span class="material-symbols-outlined text-[10px]" style='font-variation-settings: "FILL" 1;'>check_circle</span>
+<span>已开通</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-center min-h-[62.5px]">
+<h3 class="text-sm font-bold text-on-surface leading-tight text-center">人工智能辅助教学：从提问技巧到课件生成</h3>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

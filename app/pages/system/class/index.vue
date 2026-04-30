@@ -1,5 +1,5 @@
 <template>
-  <div class="class-page flex-1 flex">
+  <div class="class-page class-ui-shell flex-1 flex">
     <!-- 页面初始化加载状态 -->
     <div v-if="!pageInitialized" class="flex-1 flex items-center justify-center">
       <div class="flex flex-col items-center gap-3">
@@ -11,28 +11,17 @@
     </div>
 
     <!-- 中间内容：年级树 + 主内容 -->
-    <div v-else class="flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
+    <div v-else class="class-layout-shell flex-1 flex flex-col lg:flex-row gap-4 p-4 min-h-0">
       <!-- 年级/班级树 -->
       <section
-        class="grade-panel w-full lg:w-[240px] xl:w-[280px] flex-shrink-0 p-3 flex flex-col"
+        class="grade-panel class-grade-panel w-full lg:w-[240px] xl:w-[280px] flex-shrink-0 p-3 flex flex-col"
       >
-        <MButton
-          type="primary"
-          class="mb-3 w-[142px] h-[50px] flex-shrink-0"
-          size="small"
-          @click="handleSelectAll"
-          style="
-            border-radius: 10px;
-            font-size: 16px;
-            background-color: #ff9900;
-            border-color: #ff9900;
-          "
-        >
-          {{ $t("class.allClass") }}
-        </MButton>
-        <div class="bg-[#FFFFFF] shadow-sm flex-1 flex flex-col min-h-0">
+        <div class="class-grade-card bg-[#FFFFFF] shadow-sm flex-1 flex flex-col min-h-0">
+          <button type="button" class="class-grade-header" @click="handleSelectAll">
+            <span class="class-grade-header__title">{{ $t("class.allClass") }}</span>
+          </button>
           <!-- 有数据时显示树 -->
-          <div v-if="treeData.length" class="flex-1 overflow-y-auto p-2">
+          <div v-if="treeData.length" class="class-grade-tree-wrap flex-1 overflow-y-auto p-2">
             <MTree
               :data="treeData"
               :selected-key="selectedClass?.id"
@@ -43,10 +32,84 @@
               @expand="handleTreeExpand"
               @create-class="handleCreateNewClass"
             >
+              <template #icon="{ node, expanded }">
+                <span v-if="node.children" class="class-tree-folder-icon">
+                  <svg
+                    v-if="expanded"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3 7.5C3 6.67157 3.67157 6 4.5 6H9.2C9.59782 6 9.97936 6.15804 10.2607 6.43934L11.5607 7.73934C11.842 8.02064 12.2235 8.17868 12.6213 8.17868H19.5C20.3284 8.17868 21 8.85025 21 9.67868V10.2H3V7.5Z"
+                      fill="#0D5BC4"
+                      fill-opacity="0.15"
+                    />
+                    <path
+                      d="M4.5 7.25H9.1L10.85 9H19.5C19.9142 9 20.25 9.33579 20.25 9.75V16.5C20.25 17.3284 19.5784 18 18.75 18H5.25C4.42157 18 3.75 17.3284 3.75 16.5V8C3.75 7.58579 4.08579 7.25 4.5 7.25Z"
+                      stroke="#0D5BC4"
+                      stroke-width="1.6"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                  <svg
+                    v-else
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M3.75 8C3.75 7.58579 4.08579 7.25 4.5 7.25H8.9236C9.32142 7.25 9.70296 7.40804 9.98426 7.68934L11.2893 8.99439C11.5706 9.27569 11.9522 9.43373 12.35 9.43373H19.5C19.9142 9.43373 20.25 9.76952 20.25 10.1837V16.5C20.25 17.3284 19.5784 18 18.75 18H5.25C4.42157 18 3.75 17.3284 3.75 16.5V8Z"
+                      stroke="#94A3B8"
+                      stroke-width="1.6"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </span>
+                <span
+                  v-else
+                  class="class-tree-leaf-icon"
+                  :class="{ 'is-selected': String(selectedClass?.id || '') === String(node.id || '') }"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M12 4L3 8.5L12 13L21 8.5L12 4Z"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M7 10.6V14.2L12 16.8L17 14.2V10.6"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linejoin="round"
+                    />
+                    <path
+                      d="M18.8 9.6V14.1"
+                      stroke="currentColor"
+                      stroke-width="1.8"
+                      stroke-linecap="round"
+                    />
+                    <path
+                      d="M18.8 14.1C18.8 14.7075 18.3075 15.2 17.7 15.2C17.0925 15.2 16.6 14.7075 16.6 14.1C16.6 13.4925 17.0925 13 17.7 13C18.3075 13 18.8 13.4925 18.8 14.1Z"
+                      stroke="currentColor"
+                      stroke-linejoin="round"
+                      fill="currentColor"
+                    />
+                  </svg>
+                </span>
+              </template>
               <template #actions="{ node }">
                 <template v-if="node.children"></template>
                 <template v-else>
-                  <div class="flex items-center gap-2">
+                  <div class="class-tree-node-actions flex items-center gap-2">
                     <img
                       src="~/assets/images/edit.png"
                       :alt="$t('common.edit')"
@@ -56,7 +119,7 @@
                     <img
                       src="~/assets/images/del.png"
                       :alt="$t('common.delete')"
-                      class="w-5 h-5 cursor-pointer"
+                      class="class-tree-delete-icon w-5 h-5 cursor-pointer"
                       @click.stop="handleDeleteClass(node)"
                     />
                   </div>
@@ -69,9 +132,9 @@
             <p class="text-gray-400 text-sm">{{ $t("class.noClassRecord") }}</p>
           </div>
           <!-- 创建班级按钮始终固定在底部 -->
-          <div class="flex-shrink-0 p-3 border-t border-gray-100 flex justify-center">
+          <div class="class-grade-create-wrap flex-shrink-0 p-3 border-t border-gray-100 flex justify-center">
             <button
-              class="w-[142px] h-[50px] flex items-center justify-center gap-2 bg-[#FF9900] text-white rounded-[20px] text-[16px]"
+              class="class-grade-create-btn w-[142px] h-[50px] flex items-center justify-center gap-2 bg-[#FF9900] text-white rounded-[20px] text-[16px]"
               @click="handleCreateNewClass(null)"
             >
               <span class="text-xl">+</span>
@@ -82,149 +145,216 @@
       </section>
 
       <!-- 右侧主内容 -->
-      <section class="main-panel flex-1 min-w-0 p-4 flex flex-col">
-        <!-- Tab 切换 - 固定 -->
-        <!-- <MTabs v-model="activeTab" :tabs="tabList" class="mb-4 flex-shrink-0" /> -->
-
-        <div class="mb-4 flex-shrink-0 relative">
-          <MTabs v-model="activeTab" :tabs="tabList" @change="handleTabChange" />
-          <span
-            class="absolute top-1/2 -translate-y-1/2 right-[3%] inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap"
-          >
-            {{
-              activeTab === "student" ? $t("class.studentCount") : $t("class.groupCount")
-            }}
-            <span class="text-[#FF9900] font-medium ml-1">
-              {{ activeTab === "student" ? studentList.length : groupList.length }}
-            </span>
-            <span>{{
-              activeTab === "student" ? $t("class.person") : $t("class.groupUnit")
-            }}</span>
-          </span>
-        </div>
-
+      <section class="main-panel class-main-panel flex-1 min-w-0 p-4 flex flex-col">
         <!-- 学生管理 Tab -->
         <div
           v-show="activeTab === 'student'"
-          class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0"
+          class="class-card class-student-card bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0"
         >
-          <!-- 搜索 + 统一密码 + 操作按钮 - 固定 -->
-          <div
-            class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0"
-          >
-            <!-- 左侧：搜索框 + 提示 -->
-            <div class="flex items-center gap-3">
-              <MInput
-                v-model="searchKeyword"
-                :placeholder="$t('class.searchStudentPlaceholder')"
-                clearable
-                class="w-[200px] xl:w-[270px]"
-                @enter="handleSearch"
-                @clear="handleSearch"
-              >
-                <template #prefix>
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+          <div class="class-panel-head flex-shrink-0">
+            <div class="class-panel-topline">
+              <div class="class-tabs-shell">
+                <MTabs
+                  v-model="activeTab"
+                  :tabs="tabList"
+                  class="class-tabs-native"
+                  @change="handleTabChange"
+                />
+              </div>
+
+              <div class="class-toolbar-actions class-toolbar-actions--top flex items-center gap-1.5 xl:gap-3">
+                <div class="relative group">
+                  <button
+                    :class="[
+                      'class-action-btn class-action-btn--ghost',
+                      activeAction === 'batch' || isOtherClassQuickLogin
+                        ? 'is-disabled'
+                        : isCurrentClassQuickLogin
+                        ? 'is-active'
+                        : '',
+                    ]"
+                    :disabled="activeAction === 'batch' || isOtherClassQuickLogin"
+                    @click="handleQuickLogin"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </template>
-              </MInput>
-              <span
-                class="hidden lg:inline-block w-[180px] xl:w-[200px] text-sm text-[#CBCBCB]"
-                >{{ $t("class.studentDefaultPassword")
-                }}{{ studentPassword || "-" }}</span
-              >
-            </div>
-            <!-- 右侧：按钮组 -->
-            <div class="flex items-center gap-1.5 xl:gap-3">
-              <button
-                :class="[
-                  'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  activeAction === 'batch' || isCurrentClassQuickLogin
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#FF9900] text-white',
-                ]"
-                :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
-                @click="handleCreateAction()"
-              >
-                + {{ $t("class.createStudent") }}
-              </button>
-              <div class="relative group">
+                    <span class="class-action-btn__icon" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" fill="none">
+                        <path
+                          d="M4 12.5C5.8 8.83333 8.46667 7 12 7C15.5333 7 18.2 8.83333 20 12.5C18.2 16.1667 15.5333 18 12 18C8.46667 18 5.8 16.1667 4 12.5Z"
+                          stroke="currentColor"
+                          stroke-width="1.8"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        />
+                        <circle cx="12" cy="12.5" r="2.5" stroke="currentColor" stroke-width="1.8" />
+                      </svg>
+                    </span>
+                    {{ isCurrentClassQuickLogin ? $t("class.disableQuickLogin") : $t("class.enableQuickLogin") }}
+                  </button>
+                  <div
+                    v-if="isOtherClassQuickLogin"
+                    class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                  >
+                    {{ $t("class.quickLoginTip") }}
+                    <div
+                      class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"
+                    ></div>
+                  </div>
+                </div>
                 <button
                   :class="[
-                    'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                    activeAction === 'batch' || isOtherClassQuickLogin
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : isCurrentClassQuickLogin
-                      ? 'bg-[#FF9900] text-white'
-                      : 'bg-[#E5E5E5] text-[#4D4D4D]',
-                  ]"
-                  :disabled="activeAction === 'batch' || isOtherClassQuickLogin"
-                  @click="handleQuickLogin"
-                >
-                  {{
+                    'class-action-btn class-action-btn--ghost',
                     isCurrentClassQuickLogin
-                      ? $t("class.disableQuickLogin")
-                      : $t("class.enableQuickLogin")
+                      ? 'is-disabled'
+                      : activeAction === 'batch'
+                      ? 'is-active'
+                      : '',
+                  ]"
+                  :disabled="isCurrentClassQuickLogin"
+                  @click="handleBatchAction"
+                >
+                  <span class="class-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M7 6H19"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M7 12H19"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M7 18H19"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <circle cx="5" cy="6" r="1" fill="currentColor" />
+                      <circle cx="5" cy="12" r="1" fill="currentColor" />
+                      <circle cx="5" cy="18" r="1" fill="currentColor" />
+                    </svg>
+                  </span>
+                  {{
+                    activeAction === "batch"
+                      ? $t("class.cancelBatch")
+                      : $t("class.batchOperation")
                   }}
                 </button>
-                <!-- 自定义tooltip -->
-                <div
-                  v-if="isOtherClassQuickLogin"
-                  class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-gray-800 text-white text-xs rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"
+                <button
+                  :class="[
+                    'class-action-btn class-action-btn--primary',
+                    activeAction === 'batch' || isCurrentClassQuickLogin ? 'is-disabled' : '',
+                  ]"
+                  :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
+                  @click="handleCreateAction()"
                 >
-                  {{ $t("class.quickLoginTip") }}
-                  <div
-                    class="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800"
-                  ></div>
-                </div>
+                  <span class="class-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M15.5 18.5V17C15.5 15.6193 14.3807 14.5 13 14.5H8C6.61929 14.5 5.5 15.6193 5.5 17V18.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <circle cx="10.5" cy="9" r="3" stroke="currentColor" stroke-width="1.8" />
+                      <path
+                        d="M18.5 8V14"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M15.5 11H21.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </span>
+                  {{ $t("class.createStudent") }}
+                </button>
+                <button
+                  :class="[
+                    'class-action-btn class-action-btn--ghost',
+                    activeAction === 'batch' ? 'is-disabled' : '',
+                  ]"
+                  :disabled="activeAction === 'batch'"
+                  @click="handleExport"
+                >
+                  <span class="class-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M12 4V14"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M8.5 10.5L12 14L15.5 10.5"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      <path
+                        d="M5 18H19"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </span>
+                  {{ $t("class.exportStudentInfo") }}
+                </button>
               </div>
-              <button
-                :class="[
-                  'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  activeAction === 'batch'
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#E5E5E5] text-[#4D4D4D]',
-                ]"
-                :disabled="activeAction === 'batch'"
-                @click="handleExport"
-              >
-                {{ $t("class.exportStudentInfo") }}
-              </button>
-              <button
-                :class="[
-                  'px-3 xl:px-4 h-[34px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  isCurrentClassQuickLogin
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : activeAction === 'batch'
-                    ? 'bg-[#FF9900] text-white'
-                    : 'bg-[#E5E5E5] text-[#4D4D4D]',
-                ]"
-                :disabled="isCurrentClassQuickLogin"
-                @click="handleBatchAction"
-              >
-                {{
-                  activeAction === "batch"
-                    ? $t("class.cancelBatch")
-                    : $t("class.batchOperation")
-                }}
-              </button>
+            </div>
+
+            <div class="class-panel-subline">
+              <div class="class-toolbar-search class-toolbar-search--wide">
+                <MInput
+                  v-model="searchKeyword"
+                  :placeholder="$t('class.searchStudentPlaceholder')"
+                  clearable
+                  class="w-[200px] xl:w-[270px]"
+                  @enter="handleSearch"
+                  @clear="handleSearch"
+                >
+                  <template #prefix>
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </template>
+                </MInput>
+              </div>
+              <span class="class-toolbar-password">
+                {{ $t("class.studentDefaultPassword") }}{{ studentPassword || "-" }}
+              </span>
+              <span class="class-toolbar-stat">
+                {{ $t("class.studentCount") }}
+                <span class="class-toolbar-stat__num">{{ studentList.length }}</span>
+                {{ $t("class.person") }}
+              </span>
             </div>
           </div>
 
           <!-- 快捷登录信息栏 -->
           <div
             v-if="isCurrentClassQuickLogin"
-            class="flex items-center gap-4 px-4 py-3 mb-3 bg-[#FF9900] rounded-lg text-white text-sm"
+            class="class-quick-login-banner flex items-center gap-4 px-4 py-3 mb-3 bg-[#FF9900] rounded-lg text-white text-sm"
           >
             <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded">NEW</span>
 
@@ -269,7 +399,7 @@
           </div>
 
           <!-- 表格 - 可滚动区域 -->
-          <div class="flex-1 overflow-auto min-h-0">
+          <div class="class-table-wrap flex-1 overflow-auto min-h-0">
             <MTable
               :columns="tableColumns"
               :data="studentList"
@@ -282,8 +412,17 @@
               @select-all="handleStudentSelectAll"
             >
               <template #studentName="{ row }">
-                <div class="tooltip-wrapper group relative">
-                  <span class="truncate block max-w-[120px]">{{
+                <div class="class-student-cell tooltip-wrapper group relative">
+                  <span
+                    class="class-student-avatar"
+                    :style="{
+                      backgroundColor: getStudentAvatarTheme(row.studentName || row.name).bg,
+                      color: getStudentAvatarTheme(row.studentName || row.name).text,
+                    }"
+                  >
+                    {{ getStudentAvatarText(row.studentName || row.name) }}
+                  </span>
+                  <span class="class-student-name truncate block max-w-[120px]">{{
                     row.studentName || "-"
                   }}</span>
                   <div v-if="row.studentName" class="tooltip-content">
@@ -328,13 +467,13 @@
                 </span>
               </template>
               <template #action="{ row }">
-                <div class="flex items-center justify-center gap-1 whitespace-nowrap">
+                <div class="class-row-actions">
                   <button
                     :class="[
-                      'px-2 py-1 text-xs border rounded-[7px] transition-colors',
+                      'class-row-action',
                       activeAction === 'batch' || isCurrentClassQuickLogin
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]',
+                        ? 'is-disabled'
+                        : '',
                     ]"
                     :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                     @click="handleResetPassword(row)"
@@ -343,10 +482,10 @@
                   </button>
                   <button
                     :class="[
-                      'px-2 py-1 text-xs border rounded-[7px] transition-colors',
+                      'class-row-action',
                       activeAction === 'batch' || isCurrentClassQuickLogin
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]',
+                        ? 'is-disabled'
+                        : '',
                     ]"
                     :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                     @click="handleTransfer(row)"
@@ -355,10 +494,10 @@
                   </button>
                   <button
                     :class="[
-                      'px-2 py-1 text-xs border rounded-[7px] transition-colors',
+                      'class-row-action is-danger',
                       activeAction === 'batch' || isCurrentClassQuickLogin
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]',
+                        ? 'is-disabled'
+                        : '',
                     ]"
                     :disabled="activeAction === 'batch' || isCurrentClassQuickLogin"
                     @click="handleDeleteStudent(row)"
@@ -373,7 +512,7 @@
           <!-- 批量操作栏 - 表格底部 -->
           <div
             v-if="activeAction === 'batch'"
-            class="flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] border-t border-gray-200"
+            class="class-batch-bar flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] border-t border-gray-200"
           >
             <div class="flex items-center gap-4">
               <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -384,11 +523,11 @@
                   @change="handleSelectAllToggle"
                 />
                 <span
-                  class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                  class="class-batch-bar__checkbox w-4 h-4 rounded border flex items-center justify-center transition-colors"
                   :class="
                     isAllSelected
-                      ? 'bg-[#FF9900] border-[#FF9900]'
-                      : 'bg-white border-gray-300'
+                      ? 'is-checked'
+                      : ''
                   "
                 >
                   <svg
@@ -409,33 +548,33 @@
                 </span>
                 <span class="text-sm text-[#4D4D4D]">{{ $t("class.selectAll") }}</span>
               </label>
-              <span class="text-sm text-[#4D4D4D]"
+              <span class="class-batch-bar__summary text-sm text-[#4D4D4D]"
                 >{{ $t("class.selected") }}
-                <span class="text-[#FF9900]">{{ selectedStudentIds.length }}</span>
+                <span class="class-batch-bar__count">{{ selectedStudentIds.length }}</span>
                 {{ $t("class.items") }}</span
               >
             </div>
-            <div class="flex items-center gap-4">
+            <div class="class-batch-bar__actions flex items-center gap-4">
               <button
-                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                class="class-batch-bar__action text-sm"
                 @click="handleBatchResetPassword"
               >
                 {{ $t("class.batchResetPassword") }}
               </button>
               <button
-                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                class="class-batch-bar__action text-sm"
                 @click="handleBatchTransfer"
               >
                 {{ $t("class.batchTransfer") }}
               </button>
               <button
-                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                class="class-batch-bar__action class-batch-bar__action--danger text-sm"
                 @click="handleBatchDelete"
               >
                 {{ $t("class.batchDelete") }}
               </button>
               <button
-                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                class="class-batch-bar__action text-sm"
                 @click="handleBatchAction"
               >
                 {{ $t("class.cancelBatch") }}
@@ -447,73 +586,134 @@
         <!-- 小组管理 Tab -->
         <div
           v-show="activeTab === 'group'"
-          class="bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0"
+          class="class-card class-group-card bg-[#FFFFFF] rounded-lg p-4 flex-1 flex flex-col min-h-0"
         >
-          <!-- 搜索 + 操作按钮 -->
-          <div
-            class="flex flex-wrap items-center justify-between gap-3 mb-3 flex-shrink-0"
-          >
-            <!-- 左侧：搜索框 -->
-            <div class="flex items-center gap-3">
-              <MInput
-                v-model="groupSearchKeyword"
-                :placeholder="$t('class.searchGroupPlaceholder')"
-                clearable
-                class="w-[220px] xl:w-[280px]"
-                @enter="handleGroupSearch"
-                @clear="handleGroupSearch"
-              >
-                <template #prefix>
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                    />
-                  </svg>
-                </template>
-              </MInput>
+          <div class="class-panel-head flex-shrink-0">
+            <div class="class-panel-topline">
+              <div class="class-tabs-shell">
+                <MTabs
+                  v-model="activeTab"
+                  :tabs="tabList"
+                  class="class-tabs-native"
+                  @change="handleTabChange"
+                />
+              </div>
+
+              <div class="class-toolbar-actions class-toolbar-actions--top flex items-center gap-2 xl:gap-3">
+                <button
+                  :class="[
+                    'class-action-btn class-action-btn--primary',
+                    groupActiveAction === 'batch' ? 'is-active-primary' : '',
+                  ]"
+                  :disabled="groupActiveAction === 'batch'"
+                  @click="handleCreateGroup"
+                >
+                  <span class="class-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M7.5 12.5C8.88071 12.5 10 11.3807 10 10C10 8.61929 8.88071 7.5 7.5 7.5C6.11929 7.5 5 8.61929 5 10C5 11.3807 6.11929 12.5 7.5 12.5Z"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                      />
+                      <path
+                        d="M16.5 12.5C17.8807 12.5 19 11.3807 19 10C19 8.61929 17.8807 7.5 16.5 7.5C15.1193 7.5 14 8.61929 14 10C14 11.3807 15.1193 12.5 16.5 12.5Z"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                      />
+                      <path
+                        d="M3.5 18C3.5 16.3431 4.84315 15 6.5 15H8.5C10.1569 15 11.5 16.3431 11.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M12.5 18C12.5 16.3431 13.8431 15 15.5 15H17.5C19.1569 15 20.5 16.3431 20.5 18"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                    </svg>
+                  </span>
+                  {{ $t("class.createGroup") }}
+                </button>
+                <button
+                  :class="[
+                    'class-action-btn class-action-btn--ghost',
+                    groupActiveAction === 'batch' ? 'is-active' : '',
+                  ]"
+                  @click="handleGroupBatchAction"
+                >
+                  <span class="class-action-btn__icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none">
+                      <path
+                        d="M7 6H19"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M7 12H19"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <path
+                        d="M7 18H19"
+                        stroke="currentColor"
+                        stroke-width="1.8"
+                        stroke-linecap="round"
+                      />
+                      <circle cx="5" cy="6" r="1" fill="currentColor" />
+                      <circle cx="5" cy="12" r="1" fill="currentColor" />
+                      <circle cx="5" cy="18" r="1" fill="currentColor" />
+                    </svg>
+                  </span>
+                  {{
+                    groupActiveAction === "batch"
+                      ? $t("class.cancelBatch")
+                      : $t("class.batchOperation")
+                  }}
+                </button>
+              </div>
             </div>
-            <!-- 右侧：按钮组 -->
-            <div class="flex items-center gap-2 xl:gap-3">
-              <button
-                :class="[
-                  'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  groupActiveAction === 'batch'
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-[#FF9900] text-white',
-                ]"
-                :disabled="groupActiveAction === 'batch'"
-                @click="handleCreateGroup"
-              >
-                + {{ $t("class.createGroup") }}
-              </button>
-              <button
-                :class="[
-                  'w-[100px] xl:w-[132px] h-[36px] xl:h-[40px] flex items-center justify-center rounded-[20px] text-[12px] xl:text-[14px] whitespace-nowrap transition-colors',
-                  groupActiveAction === 'batch'
-                    ? 'bg-[#FF9900] text-white'
-                    : 'bg-[#FFF1DD] text-[#4D4D4D]',
-                ]"
-                @click="handleGroupBatchAction"
-              >
-                {{
-                  groupActiveAction === "batch"
-                    ? $t("class.cancelBatch")
-                    : $t("class.batchOperation")
-                }}
-              </button>
+
+            <div class="class-panel-subline">
+              <div class="class-toolbar-search class-toolbar-search--group">
+                <MInput
+                  v-model="groupSearchKeyword"
+                  :placeholder="$t('class.searchGroupPlaceholder')"
+                  clearable
+                  class="w-[260px] xl:w-[320px]"
+                  @enter="handleGroupSearch"
+                  @clear="handleGroupSearch"
+                >
+                  <template #prefix>
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                      />
+                    </svg>
+                  </template>
+                </MInput>
+              </div>
+              <span class="class-toolbar-stat">
+                {{ $t("class.groupCount") }}
+                <span class="class-toolbar-stat__num">{{ groupList.length }}</span>
+                {{ $t("class.groupUnit") }}
+              </span>
             </div>
           </div>
 
           <!-- 表格 -->
-          <div class="flex-1 overflow-auto min-h-0">
+          <div class="class-table-wrap flex-1 overflow-auto min-h-0">
             <MTable
               :columns="groupTableColumns"
               :data="groupList"
@@ -537,8 +737,17 @@
                 </div>
               </template>
               <template #leaderName="{ row }">
-                <div class="tooltip-wrapper group relative">
-                  <span class="block max-w-[140px] truncate">{{
+                <div class="class-group-leader-cell tooltip-wrapper group relative">
+                  <span
+                    class="class-student-avatar"
+                    :style="{
+                      backgroundColor: getStudentAvatarTheme(formatLimitedLeaderName(row.leaderName) || '-').bg,
+                      color: getStudentAvatarTheme(formatLimitedLeaderName(row.leaderName) || '-').text,
+                    }"
+                  >
+                    {{ getStudentAvatarText(formatLimitedLeaderName(row.leaderName) || "-") }}
+                  </span>
+                  <span class="block max-w-[120px] truncate">{{
                     formatLimitedLeaderName(row.leaderName) || "-"
                   }}</span>
                   <div v-if="row.leaderName" class="tooltip-content">
@@ -579,13 +788,11 @@
                 </div>
               </template>
               <template #action="{ row }">
-                <div class="flex items-center justify-center gap-2 whitespace-nowrap">
+                <div class="class-row-actions class-row-actions--group">
                   <button
                     :class="[
-                      'px-3 py-1 text-sm border rounded-[7px] transition-colors',
-                      groupActiveAction === 'batch'
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#4D4D4D] border-[#CBCBCB] hover:border-[#FF9900]',
+                      'class-row-action',
+                      groupActiveAction === 'batch' ? 'is-disabled' : '',
                     ]"
                     :disabled="groupActiveAction === 'batch'"
                     @click="handleEditGroup(row)"
@@ -594,10 +801,8 @@
                   </button>
                   <button
                     :class="[
-                      'px-3 py-1 text-sm border rounded-[7px] transition-colors',
-                      groupActiveAction === 'batch'
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-[#FF0000] border-[#CBCBCB] hover:border-[#FF0000]',
+                      'class-row-action is-danger',
+                      groupActiveAction === 'batch' ? 'is-disabled' : '',
                     ]"
                     :disabled="groupActiveAction === 'batch'"
                     @click="handleDeleteGroup(row)"
@@ -612,7 +817,7 @@
           <!-- 批量操作栏 -->
           <div
             v-if="groupActiveAction === 'batch'"
-            class="flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] border-t border-gray-200"
+            class="class-batch-bar flex items-center justify-between mt-3 p-3 bg-[#FFF2DD] border-t border-gray-200"
           >
             <div class="flex items-center gap-4">
               <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -623,11 +828,11 @@
                   @change="handleGroupSelectAllToggle"
                 />
                 <span
-                  class="w-4 h-4 rounded border flex items-center justify-center transition-colors"
+                  class="class-batch-bar__checkbox w-4 h-4 rounded border flex items-center justify-center transition-colors"
                   :class="
                     isAllGroupSelected
-                      ? 'bg-[#FF9900] border-[#FF9900]'
-                      : 'bg-white border-gray-300'
+                      ? 'is-checked'
+                      : ''
                   "
                 >
                   <svg
@@ -648,21 +853,21 @@
                 </span>
                 <span class="text-sm text-[#4D4D4D]">{{ $t("class.selectAll") }}</span>
               </label>
-              <span class="text-sm text-[#4D4D4D]">
+              <span class="class-batch-bar__summary text-sm text-[#4D4D4D]">
                 {{ $t("class.selected") }}
-                <span class="text-[#FF9900]">{{ selectedGroupIds.length }}</span>
+                <span class="class-batch-bar__count">{{ selectedGroupIds.length }}</span>
                 {{ $t("class.items") }}
               </span>
             </div>
-            <div class="flex items-center gap-4">
+            <div class="class-batch-bar__actions flex items-center gap-4">
               <button
-                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                class="class-batch-bar__action class-batch-bar__action--danger text-sm"
                 @click="handleBatchDeleteGroup"
               >
                 {{ $t("class.batchDelete") }}
               </button>
               <button
-                class="text-sm text-[#4D4D4D] hover:text-[#FF9900]"
+                class="class-batch-bar__action text-sm"
                 @click="handleGroupBatchAction"
               >
                 {{ $t("class.cancelBatch") }}
@@ -676,15 +881,15 @@
     <!-- 添加学生弹窗 -->
     <MModal
       v-model="showCreateModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="h-[428px] p-6 relative flex flex-col">
+      <div class="class-theme-modal class-theme-modal--student-create relative flex flex-col">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="createForm.name = ''; showCreateModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -698,18 +903,18 @@
         </button>
 
         <!-- 标题居中 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("class.addStudent") }}
         </h3>
 
         <!-- 添加方式切换 -->
-        <div class="flex justify-center gap-3 mb-6">
+        <div class="class-theme-modal__mode-switch">
           <button
             :class="[
-              'w-[136px] h-[40px] rounded-lg text-[14px] font-medium transition-colors',
+              'class-theme-modal__mode-btn',
               addStudentMode === 'batch'
-                ? 'bg-[#FF9900] text-white'
-                : 'border border-gray-300 text-[#FF9900]',
+                ? 'is-active'
+                : '',
             ]"
             @click="addStudentMode = 'batch'"
           >
@@ -717,10 +922,10 @@
           </button>
           <button
             :class="[
-              'w-[136px] h-[40px] rounded-lg text-[14px] font-medium transition-colors',
+              'class-theme-modal__mode-btn',
               addStudentMode === 'manual'
-                ? 'bg-[#FF9900] text-white'
-                : 'border border-gray-300 text-[#FF9900]',
+                ? 'is-active'
+                : '',
             ]"
             @click="addStudentMode = 'manual'"
           >
@@ -730,51 +935,51 @@
 
         <!-- 批量导入模式 -->
         <template v-if="addStudentMode === 'batch'">
-          <div class="flex justify-center gap-3 mb-6">
+          <div class="class-theme-modal__import-actions">
             <button
-              class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500"
+              class="class-theme-modal__secondary-action"
               @click="handleImportStudents"
             >
               {{ $t("class.importStudentInfo") }}
             </button>
             <button
-              class="w-[136px] h-[40px] rounded-lg text-[14px] bg-gray-200 text-gray-500"
+              class="class-theme-modal__secondary-action"
               @click="handleDownloadTemplate"
             >
               {{ $t("class.downloadTemplate") }}
             </button>
           </div>
 
-          <p class="text-sm text-gray-400 flex-1">
+          <p class="class-theme-modal__tip flex-1">
             {{ $t("class.batchImportTip") }}{{ studentPassword }}
           </p>
         </template>
 
         <!-- 手动添加模式 -->
         <template v-else>
-          <div class="flex flex-col items-center gap-3 flex-1">
+          <div class="class-theme-modal__manual-form flex-1">
             <MInput
               v-model="createForm.name"
               :placeholder="$t('class.studentName')"
-              class="w-[275px]"
+              class="class-theme-modal__field class-theme-modal__input"
               maxlength="10"
             />
-            <p class="text-sm text-gray-400">
+            <p class="class-theme-modal__tip class-theme-modal__tip--center">
               {{ $t("class.studentDefaultPasswordIs") }}{{ studentPassword }}
             </p>
           </div>
         </template>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4 mt-auto pt-4">
+        <div class="class-theme-modal__actions mt-auto">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="createForm.name = ''; showCreateModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleCreateStudent"
           >
             {{ $t("common.confirm") }}
@@ -786,15 +991,15 @@
     <!-- 创建班级弹窗 -->
     <MModal
       v-model="showCreateClassModal"
-      custom-width="380px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative">
+      <div class="class-theme-modal class-theme-modal--form relative">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showCreateClassModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -808,38 +1013,42 @@
         </button>
 
         <!-- 标题居中 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
+        <h3 class="class-theme-modal__title text-center">
           {{ isEditClass ? $t("class.editClass") : $t("class.createClass") }}
         </h3>
 
         <!-- 表单 -->
-        <div class="space-y-4 px-2">
+        <div class="class-theme-modal__form">
           <MSelect
             v-model="createClassForm.gradeId"
             :options="gradeOptions"
             :placeholder="$t('class.grade')"
+            class="class-theme-modal__field class-theme-modal__select"
+            dropdown-class="class-theme-modal__dropdown"
           />
           <MInput
             v-model="createClassForm.className"
             :placeholder="$t('class.className')"
+            class="class-theme-modal__field class-theme-modal__input"
           />
           <MInput
             v-model="createClassForm.teacherName"
             :placeholder="$t('class.teacher')"
             disabled
+            class="class-theme-modal__field class-theme-modal__input class-theme-modal__input--disabled"
           />
         </div>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4 mt-8">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showCreateClassModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmCreateClass"
           >
             {{ $t("common.confirm") }}
@@ -849,20 +1058,34 @@
     </MModal>
 
     <!-- 创建班级成功提示弹窗 -->
-    <MModal v-model="showClassCreatedTip" custom-width="381px" :show-footer="false" :show-close="false" content-class="!p-0">
-      <div class="p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showClassCreatedTip = false">
+    <MModal
+      v-model="showClassCreatedTip"
+      custom-width="392px"
+      :show-footer="false"
+      :show-close="false"
+      content-class="!p-0"
+    >
+      <div class="class-theme-modal class-theme-modal--tip relative flex flex-col">
+        <button class="class-theme-modal__close absolute top-5 right-5" @click="showClassCreatedTip = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
-        <p class="text-center text-[#4D4D4D] mb-6">{{ $t('class.classCreatedTip') }}</p>
-        <div class="flex items-center justify-center gap-4">
-          <button class="w-[120px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
-            @click="showClassCreatedTip = false">{{ $t('common.cancel') }}</button>
-          <button class="w-[120px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
-            @click="showClassCreatedTip = false; addStudentMode = 'manual'; createForm.name = ''; showCreateModal = true">{{ $t('class.addStudentBtn') }}</button>
+        <h3 class="class-theme-modal__title text-center">{{ $t('common.tips') }}</h3>
+        <p class="class-theme-modal__desc class-theme-modal__desc--center">{{ $t('class.classCreatedTip') }}</p>
+        <div class="class-theme-modal__actions">
+          <button
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
+            @click="showClassCreatedTip = false"
+          >
+            {{ $t('common.cancel') }}
+          </button>
+          <button
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
+            @click="showClassCreatedTip = false; addStudentMode = 'manual'; createForm.name = ''; showCreateModal = true"
+          >
+            {{ $t('class.addStudentBtn') }}
+          </button>
         </div>
       </div>
     </MModal>
@@ -870,15 +1093,15 @@
     <!-- 删除班级确认弹窗 -->
     <MModal
       v-model="showDeleteClassModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="h-[249px] p-6 relative flex flex-col">
+      <div class="class-theme-modal class-theme-modal--confirm relative flex flex-col">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showDeleteClassModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -892,25 +1115,27 @@
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("common.tips") }}
         </h3>
 
         <!-- 内容居中 -->
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">{{ $t("class.confirmDeleteClass") }}</p>
+        <div class="class-theme-modal__confirm-body">
+          <p class="class-theme-modal__desc class-theme-modal__desc--center">
+            {{ $t("class.confirmDeleteClass") }}
+          </p>
         </div>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showDeleteClassModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmDeleteClass"
           >
             {{ $t("common.confirm") }}
@@ -922,15 +1147,15 @@
     <!-- 重置密码确认弹窗 -->
     <MModal
       v-model="showResetPasswordModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="h-[249px] p-6 relative flex flex-col">
+      <div class="class-theme-modal class-theme-modal--confirm relative flex flex-col">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showResetPasswordModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -944,13 +1169,13 @@
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("common.tips") }}
         </h3>
 
         <!-- 内容居中 -->
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">
+        <div class="class-theme-modal__confirm-body">
+          <p class="class-theme-modal__desc class-theme-modal__desc--center">
             {{
               $t("class.confirmResetPassword", { name: resettingStudent?.studentName })
             }}
@@ -958,15 +1183,15 @@
         </div>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showResetPasswordModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmResetPassword"
           >
             {{ $t("common.confirm") }}
@@ -978,15 +1203,15 @@
     <!-- 移班弹窗 -->
     <MModal
       v-model="showTransferModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative">
+      <div class="class-theme-modal class-theme-modal--form relative">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showTransferModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1000,16 +1225,18 @@
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("class.transfer") }}
         </h3>
 
         <!-- 表单 -->
-        <div class="space-y-4 px-2">
+        <div class="class-theme-modal__form">
           <MSelect
             v-model="transferForm.gradeId"
             :options="transferGradeOptions"
             :placeholder="$t('class.selectGrade')"
+            class="class-theme-modal__field class-theme-modal__select"
+            dropdown-class="class-theme-modal__dropdown"
             @update:model-value="handleTransferGradeChange"
           />
           <MSelect
@@ -1017,20 +1244,22 @@
             :options="transferClassOptions"
             :placeholder="$t('class.selectClass')"
             :disabled="!transferForm.gradeId"
+            class="class-theme-modal__field class-theme-modal__select"
+            dropdown-class="class-theme-modal__dropdown"
             @change="handleTransferClassChange"
           />
         </div>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4 mt-8">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showTransferModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmTransfer"
           >
             {{ $t("common.confirm") }}
@@ -1042,15 +1271,15 @@
     <!-- 删除学生确认弹窗 -->
     <MModal
       v-model="showDeleteStudentModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="h-[249px] p-6 relative flex flex-col">
+      <div class="class-theme-modal class-theme-modal--confirm relative flex flex-col">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showDeleteStudentModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1064,13 +1293,13 @@
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("common.tips") }}
         </h3>
 
         <!-- 内容居中 -->
-        <div class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">
+        <div class="class-theme-modal__confirm-body">
+          <p class="class-theme-modal__desc class-theme-modal__desc--center">
             {{
               $t("class.confirmDeleteStudent", {
                 name: deletingStudent?.studentName || deletingStudent?.name || "-",
@@ -1080,15 +1309,15 @@
         </div>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showDeleteStudentModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmDeleteStudent"
           >
             {{ $t("common.confirm") }}
@@ -1100,15 +1329,15 @@
     <!-- 批量重置密码确认弹窗 -->
     <MModal
       v-model="showBatchResetPasswordModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative flex flex-col">
+      <div class="class-theme-modal class-theme-modal--password relative flex flex-col">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="closeBatchResetPasswordModal"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1122,26 +1351,26 @@
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("common.tips") }}
         </h3>
 
         <!-- 内容居中 -->
-        <p class="text-[15px] text-[#4D4D4D] text-center leading-relaxed mb-5">
+        <p class="class-theme-modal__desc class-theme-modal__desc--center class-theme-modal__desc--spaced">
           {{ $t("class.confirmBatchResetPassword", { names: selectedStudentNames }) }}
         </p>
-        <div class="relative mb-6">
+        <div class="class-theme-modal__password-wrap">
           <input
             v-model="batchResetPassword"
             :type="showBatchResetPassword ? 'text' : 'password'"
             minlength="6"
             maxlength="30"
             :placeholder="t('user.pleaseInputTeacherPassword')"
-            class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
+            class="class-theme-modal__plain-input"
           />
           <button
             type="button"
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#666]"
+            class="class-theme-modal__password-toggle"
             @click="showBatchResetPassword = !showBatchResetPassword"
           >
             <svg
@@ -1184,15 +1413,15 @@
         </div>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="closeBatchResetPasswordModal"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmBatchResetPassword"
           >
             {{ $t("common.confirm") }}
@@ -1204,14 +1433,14 @@
     <!-- 批量删除确认弹窗 -->
     <MModal
       v-model="showBatchDeleteModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative flex flex-col">
+      <div class="class-theme-modal class-theme-modal--password relative flex flex-col">
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="closeBatchDeleteModal"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1223,13 +1452,13 @@
             />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("common.tips") }}
         </h3>
-        <p class="text-[15px] text-[#4D4D4D] text-center leading-relaxed mb-5">
+        <p class="class-theme-modal__desc class-theme-modal__desc--center class-theme-modal__desc--spaced">
           {{ $t("class.confirmBatchDelete", { count: selectedStudentIds.length }) }}
         </p>
-        <div class="relative mb-6">
+        <div class="class-theme-modal__password-wrap">
           <input
             v-model="batchDeletePassword"
             :type="showBatchDeletePassword ? 'text' : 'password'"
@@ -1237,11 +1466,11 @@
             maxlength="30"
             autocomplete="new-password"
             :placeholder="t('user.pleaseInputTeacherPassword')"
-            class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
+            class="class-theme-modal__plain-input"
           />
           <button
             type="button"
-            class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#666]"
+            class="class-theme-modal__password-toggle"
             @click="showBatchDeletePassword = !showBatchDeletePassword"
           >
             <svg
@@ -1282,15 +1511,15 @@
             </svg>
           </button>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="closeBatchDeleteModal"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmBatchDelete"
           >
             {{ $t("common.confirm") }}
@@ -1302,15 +1531,15 @@
     <!-- 批量移班弹窗 -->
     <MModal
       v-model="showBatchTransferModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative">
+      <div class="class-theme-modal class-theme-modal--form relative">
         <!-- 关闭按钮 -->
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showBatchTransferModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1324,21 +1553,23 @@
         </button>
 
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("class.batchTransfer") }}
         </h3>
 
         <!-- 提示文字 -->
-        <p class="text-sm text-gray-500 text-center mb-4">
+        <p class="class-theme-modal__desc class-theme-modal__desc--center class-theme-modal__desc--spaced-sm">
           {{ $t("class.confirmBatchTransfer", { count: selectedStudentIds.length }) }}
         </p>
 
         <!-- 表单 -->
-        <div class="space-y-4 px-2">
+        <div class="class-theme-modal__form">
           <MSelect
             v-model="batchTransferForm.gradeId"
             :options="transferGradeOptions"
             :placeholder="$t('class.selectGrade')"
+            class="class-theme-modal__field class-theme-modal__select"
+            dropdown-class="class-theme-modal__dropdown"
             @update:model-value="handleBatchTransferGradeChange"
           />
           <MSelect
@@ -1346,19 +1577,21 @@
             :options="batchTransferClassOptions"
             :placeholder="$t('class.selectClass')"
             :disabled="!batchTransferForm.gradeId"
+            class="class-theme-modal__field class-theme-modal__select"
+            dropdown-class="class-theme-modal__dropdown"
           />
         </div>
 
         <!-- 按钮 -->
-        <div class="flex items-center justify-center gap-4 mt-8">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showBatchTransferModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmBatchTransfer"
           >
             {{ $t("common.confirm") }}
@@ -1370,14 +1603,14 @@
     <!-- 新密码展示弹窗 -->
     <MModal
       v-model="showNewPasswordModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="h-[249px] p-6 relative flex flex-col">
+      <div class="class-theme-modal class-theme-modal--confirm relative flex flex-col">
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showNewPasswordModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1389,20 +1622,20 @@
             />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("common.tips") }}
         </h3>
-        <div class="flex-1 flex flex-col items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D] mb-2">
+        <div class="class-theme-modal__confirm-body class-theme-modal__confirm-body--stack">
+          <p class="class-theme-modal__desc class-theme-modal__desc--center class-theme-modal__desc--tight">
             {{ $t("class.passwordResetSuccess") }}
           </p>
-          <p class="text-[18px] text-[#FF9900] font-medium">
+          <p class="class-theme-modal__value">
             {{ $t("class.newPassword") }}{{ newPassword }}
           </p>
         </div>
-        <div class="flex items-center justify-center">
+        <div class="class-theme-modal__actions class-theme-modal__actions--single">
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="showNewPasswordModal = false"
           >
             {{ $t("common.confirm") }}
@@ -1414,14 +1647,14 @@
     <!-- 快捷登录弹窗 -->
     <MModal
       v-model="showQuickLoginModal"
-      custom-width="420px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative">
+      <div class="class-theme-modal class-theme-modal--tip relative">
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showQuickLoginModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1433,14 +1666,14 @@
             />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("class.enableQuickLoginTitle") }}
         </h3>
-        <p class="text-center text-[#4D4D4D] mb-6">
+        <p class="class-theme-modal__desc class-theme-modal__desc--center class-theme-modal__desc--spaced">
           {{ $t("class.quickLoginDesc") }}
         </p>
-        <div class="flex items-center justify-center gap-2 text-[#999] text-sm mb-8">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="class-theme-modal__notice">
+          <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -1450,15 +1683,15 @@
           </svg>
           <span>{{ $t("class.quickLoginWarning") }}</span>
         </div>
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showQuickLoginModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmQuickLogin"
           >
             {{ $t("class.create") }}
@@ -1485,9 +1718,9 @@
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative">
+      <div class="class-theme-modal class-theme-modal--group relative">
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showGroupModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1500,56 +1733,52 @@
           </svg>
         </button>
 
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
+        <h3 class="class-theme-modal__title text-center">
           {{ isEditGroupMode ? $t("class.editGroup") : $t("class.createGroup") }}
         </h3>
 
         <!-- 第一步：填写小组信息 -->
-        <div class="mb-6">
-          <p class="text-[#4D4D4D] font-medium mb-4">
+        <div class="class-group-modal__section">
+          <p class="class-group-modal__section-title">
             {{ $t("class.stepOneGroupInfo") }}
           </p>
-          <div class="space-y-4 pl-4">
-            <div class="flex items-center gap-2">
-              <span class="text-red-500 w-2">*</span>
-              <span class="text-[#4D4D4D]" style="width: 140px; flex-shrink: 0"
-                >{{ $t("class.groupName") }}：</span
-              >
+          <div class="class-group-modal__form">
+            <div class="class-group-modal__row">
+              <span class="class-group-modal__required">*</span>
+              <span class="class-group-modal__label">{{ $t("class.groupName") }}：</span>
               <MInput
                 v-model="groupForm.name"
                 :placeholder="$t('class.pleaseInputGroupName')"
                 maxlength="10"
-                style="flex: 1; max-width: 320px"
+                class="class-group-modal__field class-theme-modal__input"
               />
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-transparent w-2">*</span>
-              <span class="text-[#4D4D4D]" style="width: 140px; flex-shrink: 0"
-                >{{ $t("class.groupDesc") }}：</span
-              >
+            <div class="class-group-modal__row">
+              <span class="class-group-modal__required class-group-modal__required--empty">*</span>
+              <span class="class-group-modal__label">{{ $t("class.groupDesc") }}：</span>
               <MInput
                 v-model="groupForm.remarks"
                 :placeholder="$t('class.pleaseInputGroupName')"
                 maxlength="100"
-                style="flex: 1; max-width: 320px"
+                class="class-group-modal__field class-theme-modal__input"
               />
             </div>
           </div>
         </div>
 
         <!-- 第二步：添加小组成员 -->
-        <div class="mb-6">
-          <div class="flex items-start justify-between gap-4 mb-4">
+        <div class="class-group-modal__section">
+          <div class="class-group-modal__section-head">
             <div class="flex-1">
-              <p class="text-[#4D4D4D] font-medium leading-relaxed">
+              <p class="class-group-modal__section-title class-group-modal__section-title--compact">
                 {{ $t("class.stepTwoAddMembers") }}
               </p>
-              <p class="text-[#FF9900] text-sm font-normal mt-1">
+              <p class="class-group-modal__hint">
                 {{ $t("class.rememberSelectLeader") }}
               </p>
             </div>
             <button
-              class="px-4 py-2 bg-[#FF9900] text-white rounded-lg text-sm hover:bg-[#E68A00] whitespace-nowrap shrink-0"
+              class="class-group-modal__add-btn"
               @click="handleAddGroupMember"
             >
               + {{ $t("class.addMember") }}
@@ -1557,32 +1786,32 @@
           </div>
 
           <!-- 成员表格 -->
-          <div class="border border-gray-200 rounded-lg overflow-hidden">
+          <div class="class-group-modal__table-wrap">
             <table class="w-full">
-              <thead class="bg-[#FFF1DD]">
+              <thead class="class-group-modal__table-head">
                 <tr>
                   <th
-                    class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap"
+                    class="class-group-modal__th px-3 py-2 text-left whitespace-nowrap"
                   >
                     {{ $t("class.serialNumber") }}
                   </th>
                   <th
-                    class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap"
+                    class="class-group-modal__th px-3 py-2 text-left whitespace-nowrap"
                   >
                     {{ $t("class.account") }}
                   </th>
                   <th
-                    class="px-3 py-2 text-left text-sm font-medium text-[#4D4D4D] whitespace-nowrap"
+                    class="class-group-modal__th px-3 py-2 text-left whitespace-nowrap"
                   >
                     {{ $t("class.name") }}
                   </th>
                   <th
-                    class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D] leading-tight min-w-[100px]"
+                    class="class-group-modal__th px-3 py-2 text-center leading-tight min-w-[100px]"
                   >
                     {{ $t("class.isLeader") }}
                   </th>
                   <th
-                    class="px-3 py-2 text-center text-sm font-medium text-[#4D4D4D] whitespace-nowrap"
+                    class="class-group-modal__th px-3 py-2 text-center whitespace-nowrap"
                   >
                     {{ $t("common.operation") }}
                   </th>
@@ -1592,27 +1821,27 @@
                 <tr
                   v-for="(member, index) in groupForm.members"
                   :key="member.id"
-                  class="border-t border-gray-100"
+                  class="class-group-modal__tr border-t border-gray-100"
                 >
-                  <td class="px-3 py-2 text-sm text-[#4D4D4D]">{{ index + 1 }}</td>
-                  <td class="px-3 py-2 text-sm text-[#4D4D4D]">
+                  <td class="class-group-modal__td px-3 py-2">{{ index + 1 }}</td>
+                  <td class="class-group-modal__td px-3 py-2">
                     {{ member.studentNumber }}
                   </td>
-                  <td class="px-3 py-2 text-sm text-[#4D4D4D]">
+                  <td class="class-group-modal__td px-3 py-2">
                     {{ member.studentName }}
                   </td>
-                  <td class="px-3 py-2 text-center">
+                  <td class="class-group-modal__td px-3 py-2 text-center">
                     <input
                       type="radio"
                       :name="'group-leader'"
                       :checked="groupForm.leaderId === member.id"
-                      class="w-4 h-4 accent-[#FF9900]"
+                      class="class-group-modal__radio"
                       @change="groupForm.leaderId = member.id"
                     />
                   </td>
-                  <td class="px-3 py-2 text-center">
+                  <td class="class-group-modal__td px-3 py-2 text-center">
                     <button
-                      class="text-red-500 text-sm hover:text-red-600"
+                      class="class-group-modal__delete-btn"
                       @click="handleRemoveGroupMember(index)"
                     >
                       {{ $t("common.delete") }}
@@ -1645,15 +1874,15 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showGroupModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmGroup"
           >
             {{ $t("common.confirm") }}
@@ -1670,9 +1899,9 @@
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-6 relative">
+      <div class="class-theme-modal class-theme-modal--group relative">
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="showAddMemberModal = false"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1685,17 +1914,17 @@
           </svg>
         </button>
 
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-6">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("class.selectMembers") }}
         </h3>
 
         <!-- 搜索栏 -->
-        <div class="mb-2">
+        <div class="class-group-modal__search">
           <MInput
             v-model="memberSearchKeyword"
             :placeholder="$t('class.searchStudentPlaceholder')"
             clearable
-            class="w-full"
+            class="class-group-modal__search-input"
             @enter="handleMemberSearch"
             @clear="handleMemberSearch"
           >
@@ -1713,30 +1942,30 @@
         </div>
 
         <!-- 学生统计 -->
-        <div class="mb-2 text-sm text-[#4D4D4D]">
+        <div class="class-group-modal__meta">
           {{ $t("class.totalStudents", { count: filteredAvailableStudents.length }) }}
         </div>
 
         <!-- 学生列表表格 -->
-        <div class="max-h-[300px] overflow-y-auto border border-gray-200 rounded-lg">
+        <div class="class-group-modal__table-wrap class-group-modal__table-wrap--scroll">
           <table class="w-full">
-            <thead class="bg-[#FFF1DD] sticky top-0">
+            <thead class="class-group-modal__table-head sticky top-0">
               <tr>
-                <th class="w-10 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">
+                <th class="class-group-modal__th w-10 px-2 py-3 text-left">
                   <input
                     type="checkbox"
                     :checked="isAllMemberSelected"
-                    class="w-4 h-4 accent-[#FF9900]"
+                    class="class-group-modal__checkbox"
                     @change="toggleAllMemberSelection"
                   />
                 </th>
-                <th class="w-16 px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">
+                <th class="class-group-modal__th w-16 px-2 py-3 text-left">
                   {{ $t("class.serialNumber") }}
                 </th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">
+                <th class="class-group-modal__th px-2 py-3 text-left">
                   {{ $t("class.account") }}
                 </th>
-                <th class="px-2 py-3 text-left text-sm font-medium text-[#4D4D4D]">
+                <th class="class-group-modal__th px-2 py-3 text-left">
                   {{ $t("class.name") }}
                 </th>
               </tr>
@@ -1745,23 +1974,23 @@
               <tr
                 v-for="(student, index) in filteredAvailableStudents"
                 :key="student.id"
-                class="border-b border-gray-100 last:border-b-0 hover:bg-[#FFF1DD] cursor-pointer"
+                class="class-group-modal__tr border-b border-gray-100 last:border-b-0 cursor-pointer"
                 @click="toggleStudentSelection(student)"
               >
-                <td class="px-2 py-3">
+                <td class="class-group-modal__td px-2 py-3">
                   <input
                     type="checkbox"
                     :checked="selectedMemberIds.includes(student.id)"
-                    class="w-4 h-4 accent-[#FF9900]"
+                    class="class-group-modal__checkbox"
                     @click.stop
                     @change="toggleStudentSelection(student)"
                   />
                 </td>
-                <td class="px-2 py-3 text-sm text-[#4D4D4D]">{{ index + 1 }}</td>
-                <td class="px-2 py-3 text-sm text-[#4D4D4D]">
+                <td class="class-group-modal__td px-2 py-3">{{ index + 1 }}</td>
+                <td class="class-group-modal__td px-2 py-3">
                   {{ student.studentNumber || "-" }}
                 </td>
-                <td class="px-2 py-3 text-sm text-[#4D4D4D]">
+                <td class="class-group-modal__td px-2 py-3">
                   {{ student.studentName || "-" }}
                 </td>
               </tr>
@@ -1776,16 +2005,16 @@
         </div>
 
         <!-- 已选学生标签 -->
-        <div v-if="selectedMemberIds.length" class="mt-3 p-3 bg-[#F5F5F5] rounded-lg">
+        <div v-if="selectedMemberIds.length" class="class-group-modal__selected">
           <div class="flex flex-wrap gap-2">
             <div
               v-for="id in selectedMemberIds"
               :key="id"
-              class="group inline-flex items-center gap-1 px-3 py-1 bg-white border border-gray-200 rounded-lg text-sm text-[#4D4D4D] hover:border-[#FF9900] hover:bg-[#FFF1DD] cursor-pointer transition-colors"
+              class="class-group-modal__tag group inline-flex items-center gap-1 px-3 py-1 cursor-pointer"
             >
               <span>{{ getStudentNameById(id) }}</span>
               <button
-                class="w-4 h-4 items-center justify-center text-gray-400 hover:text-[#FF0000] transition-colors hidden group-hover:flex"
+                class="class-group-modal__tag-remove w-4 h-4 items-center justify-center hidden group-hover:flex"
                 @click="removeSelectedMember(id)"
               >
                 <svg
@@ -1806,15 +2035,15 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-center gap-4 mt-6">
+        <div class="class-theme-modal__actions mt-6">
           <button
-            class="w-[120px] h-[44px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="showAddMemberModal = false"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmAddMembers"
           >
             {{ $t("common.confirm") }}
@@ -1826,17 +2055,17 @@
     <!-- 删除小组确认弹窗 -->
     <MModal
       v-model="showDeleteGroupModal"
-      custom-width="381px"
+      custom-width="392px"
       :show-footer="false"
       :show-close="false"
       content-class="!p-0"
     >
       <div
-        class="p-6 relative flex flex-col"
-        :class="!isBatchDeleteGroup ? 'h-[249px]' : ''"
+        class="class-theme-modal relative flex flex-col"
+        :class="isBatchDeleteGroup ? 'class-theme-modal--password' : 'class-theme-modal--confirm'"
       >
         <button
-          class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+          class="class-theme-modal__close absolute top-5 right-5"
           @click="closeDeleteGroupModal"
         >
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1849,31 +2078,31 @@
           </svg>
         </button>
 
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">
+        <h3 class="class-theme-modal__title text-center">
           {{ $t("common.tips") }}
         </h3>
 
-        <div v-if="!isBatchDeleteGroup" class="flex-1 flex items-center justify-center">
-          <p class="text-[16px] text-[#4D4D4D]">
+        <div v-if="!isBatchDeleteGroup" class="class-theme-modal__confirm-body">
+          <p class="class-theme-modal__desc class-theme-modal__desc--center">
             {{ $t("class.confirmDeleteGroup", { name: deletingGroup?.teamName }) }}
           </p>
         </div>
         <template v-else>
-          <p class="text-[15px] text-[#4D4D4D] text-center leading-relaxed mb-5">
+          <p class="class-theme-modal__desc class-theme-modal__desc--center class-theme-modal__desc--spaced">
             {{ $t("class.confirmBatchDeleteGroup", { count: selectedGroupIds.length }) }}
           </p>
-          <div class="relative mb-6">
+          <div class="class-theme-modal__password-wrap">
             <input
               v-model="batchDeleteGroupPassword"
               :type="showBatchDeleteGroupPassword ? 'text' : 'password'"
               minlength="6"
               maxlength="30"
               :placeholder="t('user.pleaseInputTeacherPassword')"
-              class="w-full h-[50px] px-4 pr-12 border border-[#E5E5E5] rounded-[10px] text-[15px] text-[#333] placeholder-[#999] outline-none focus:border-[#FF9900] transition-colors"
+              class="class-theme-modal__plain-input"
             />
             <button
               type="button"
-              class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999] hover:text-[#666]"
+              class="class-theme-modal__password-toggle"
               @click="showBatchDeleteGroupPassword = !showBatchDeleteGroupPassword"
             >
               <svg
@@ -1916,15 +2145,15 @@
           </div>
         </template>
 
-        <div class="flex items-center justify-center gap-4">
+        <div class="class-theme-modal__actions">
           <button
-            class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+            class="class-theme-modal__btn class-theme-modal__btn--ghost"
             @click="closeDeleteGroupModal"
           >
             {{ $t("common.cancel") }}
           </button>
           <button
-            class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+            class="class-theme-modal__btn class-theme-modal__btn--primary"
             @click="handleConfirmDeleteGroup"
           >
             {{ $t("common.confirm") }}
@@ -2039,7 +2268,7 @@ const classOptions = computed(() => {
 
 // 表格列配置
 const tableColumns = computed(() => [
-  { key: "studentName", title: t("class.studentName"), minWidth: "100px" },
+  { key: "studentName", title: t("class.studentName"), minWidth: "148px" },
   { key: "studentNumber", title: t("class.studentAccount"), minWidth: "120px" },
   { key: "createTime", title: t("class.createTime"), minWidth: "130px" },
   ...(isCurrentClassQuickLogin.value
@@ -2055,10 +2284,32 @@ const tableColumns = computed(() => [
   {
     key: "action",
     title: t("common.operation"),
-    width: "200px",
+    width: "148px",
     align: "center" as const,
   },
 ]);
+
+const studentAvatarThemes = [
+  { bg: "#dbeafe", text: "#2563eb" },
+  { bg: "#ede9fe", text: "#7c3aed" },
+  { bg: "#ffedd5", text: "#ea580c" },
+  { bg: "#ccfbf1", text: "#0f766e" },
+  { bg: "#fee2e2", text: "#dc2626" },
+  { bg: "#fef3c7", text: "#d97706" },
+];
+
+const getStudentAvatarTheme = (name: string) => {
+  const safeName = String(name || "").trim();
+  const seed = safeName
+    .split("")
+    .reduce((total, char) => total + char.charCodeAt(0), 0);
+  return studentAvatarThemes[seed % studentAvatarThemes.length];
+};
+
+const getStudentAvatarText = (name: string) => {
+  const safeName = String(name || "").trim();
+  return safeName.charAt(0) || "?";
+};
 
 // 学生列表
 const studentList = ref<any[]>([]);
@@ -2073,15 +2324,15 @@ const groupActiveAction = ref<GroupActionType>(null);
 
 // 小组表格列配置
 const groupTableColumns = computed(() => [
-  { key: "teamName", title: t("class.groupName"), minWidth: "120px" },
-  { key: "leaderName", title: t("class.groupLeader"), minWidth: "60px" },
-  { key: "members", title: t("class.groupMembers"), minWidth: "100px" },
-  { key: "remarks", title: t("class.groupRemarks"), minWidth: "100px" },
-  { key: "createTime", title: t("class.createTime"), minWidth: "170px" },
+  { key: "teamName", title: t("class.groupName"), minWidth: "112px" },
+  { key: "leaderName", title: t("class.groupLeader"), minWidth: "124px" },
+  { key: "members", title: t("class.groupMembers"), minWidth: "132px" },
+  { key: "remarks", title: t("class.groupRemarks"), minWidth: "120px" },
+  { key: "createTime", title: t("class.createTime"), minWidth: "136px" },
   {
     key: "action",
     title: t("common.operation"),
-    width: "100px",
+    width: "92px",
     align: "center" as const,
   },
 ]);
@@ -3645,38 +3896,726 @@ const handleTabChange = (newTab: string) => {
 </script>
 
 <style scoped>
+@font-face {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 100 700;
+  src: url("/fonts/material-symbols-outlined-teacher2.woff2") format("woff2");
+}
+
+.class-material-symbols {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  direction: ltr;
+  font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 500, "GRAD" 0, "opsz" 24;
+}
+
 .class-page {
+  --class-bg: #f8f9fa;
+  --class-surface-low: #f2f4f5;
+  --class-surface-lowest: #ffffff;
+  --class-border: rgba(174, 179, 181, 0.18);
+  --class-border-soft: rgba(174, 179, 181, 0.12);
+  --class-shadow: 0 12px 32px rgba(46, 51, 53, 0.06);
+  --class-primary: #005bc2;
+  --class-primary-dim: #0050ab;
+  --class-primary-soft: rgba(0, 91, 194, 0.06);
+  --class-text-main: #2e3335;
+  --class-text-sub: #5a6062;
   height: calc(100vh - 70px);
   overflow: hidden;
+  background: var(--class-bg);
 }
 
-/* 平板及以上 */
-@media (min-width: 768px) {
-  .class-page {
-    height: calc(100vh - 70px);
-  }
+.class-layout-shell {
+  height: 100%;
+  gap: 24px;
+  padding: 28px 32px 32px;
 }
 
-.left-panel {
-  background: white;
-}
-
-.right-panel {
-  background: #f5f5f5;
-}
-
-/* 主内容区 - 不滚动，让内部表格滚动 */
 .main-panel {
   overflow: hidden;
 }
 
-/* 年级树面板 - 占满高度，不显示滚动条 */
 .grade-panel {
   height: 100%;
   overflow: hidden;
+  padding: 0 !important;
 }
 
-/* 自定义 Tooltip 样式 */
+.class-grade-panel {
+  width: 288px;
+  max-width: 288px;
+}
+
+.class-grade-card {
+  border-radius: 24px;
+  border: 1px solid var(--class-border);
+  background: var(--class-surface-lowest);
+  box-shadow: var(--class-shadow);
+  overflow: hidden;
+}
+
+.class-grade-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 24px 24px 10px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.class-grade-header__title {
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--class-text-main);
+}
+
+.class-grade-tree-wrap {
+  padding: 0 14px 14px;
+}
+
+.class-grade-create-wrap {
+  margin-top: auto;
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--class-border-soft);
+}
+
+.class-grade-create-btn {
+  width: 100% !important;
+  height: 50px !important;
+  border-radius: 16px !important;
+  font-size: 13px !important;
+  font-weight: 700;
+  background: var(--class-primary) !important;
+  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.22);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.class-main-panel {
+  padding: 0 !important;
+  min-width: 0;
+}
+
+.class-card {
+  border: 1px solid var(--class-border);
+  border-radius: 24px !important;
+  background: var(--class-surface-lowest) !important;
+  box-shadow: var(--class-shadow);
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.class-panel-head {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 22px 24px 16px;
+}
+
+.class-panel-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.class-tabs-shell {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: var(--class-surface-low);
+  border-radius: 16px;
+}
+
+.class-tabs-native {
+  width: 100%;
+}
+
+.class-tabs-native :deep(.flex) {
+  gap: 4px !important;
+}
+
+.class-tabs-native :deep(button) {
+  min-width: 116px;
+  height: 38px;
+  border-radius: 12px !important;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  box-shadow: none;
+}
+
+.class-tabs-native :deep(button[class*="bg-[#FF9900]"]) {
+  background: #ffffff !important;
+  color: var(--class-primary) !important;
+  box-shadow: 0 6px 16px rgba(46, 51, 53, 0.08) !important;
+}
+
+.class-tabs-native :deep(button[class*="bg-[#FAFAFA]"]) {
+  background: transparent !important;
+  color: #7b838e !important;
+  border: none !important;
+}
+
+.class-toolbar-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.class-toolbar-actions--top {
+  justify-content: flex-end;
+}
+
+.class-action-btn {
+  min-height: 42px;
+  padding: 0 18px;
+  border: none;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.class-action-btn--ghost {
+  background: var(--class-surface-low);
+  color: var(--class-text-main);
+}
+
+.class-action-btn--ghost:hover {
+  background: #dee3e5;
+}
+
+.class-action-btn--primary {
+  background: var(--class-primary);
+  color: #ffffff;
+  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.2);
+}
+
+.class-action-btn--primary:hover {
+  background: var(--class-primary-dim);
+}
+
+.class-action-btn.is-active {
+  background: rgba(0, 91, 194, 0.1);
+  color: var(--class-primary);
+}
+
+.class-action-btn.is-active-primary {
+  background: #d9e8ff;
+  color: #7b8ca8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.class-action-btn.is-disabled {
+  background: #eceff1;
+  color: #a6adb5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.class-action-btn__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.class-action-btn__icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.class-panel-subline {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.class-toolbar-search {
+  display: flex;
+  align-items: center;
+}
+
+.class-toolbar-search--wide {
+  flex: 0 0 272px;
+  max-width: 272px;
+}
+
+.class-toolbar-search--group {
+  flex: 0 0 300px;
+  max-width: 300px;
+}
+
+.class-toolbar-password {
+  font-size: 13px;
+  font-weight: 700;
+  color: #a3acb7;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.class-toolbar-stat {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: #64707c;
+  white-space: nowrap;
+}
+
+.class-toolbar-stat__num {
+  color: var(--class-primary);
+}
+
+.class-quick-login-banner {
+  margin: 0 24px 14px !important;
+  border-radius: 16px !important;
+  background: linear-gradient(135deg, #1f7df0 0%, #005bc2 60%, #004da4 100%) !important;
+}
+
+.class-table-wrap {
+  flex: 1;
+  min-height: 0;
+  padding: 0 20px 20px;
+  border: none;
+  background: transparent;
+}
+
+.class-batch-bar {
+  margin: 8px 20px 20px !important;
+  padding: 14px 18px !important;
+  border: 1px solid rgba(164, 193, 255, 0.3) !important;
+  border-radius: 16px;
+  background: #f7fbff !important;
+}
+
+.class-batch-bar__checkbox {
+  border-color: rgba(174, 179, 181, 0.32);
+  background: #ffffff;
+}
+
+.class-batch-bar__checkbox.is-checked {
+  background: var(--class-primary);
+  border-color: var(--class-primary);
+}
+
+.class-batch-bar__summary {
+  color: var(--class-text-main);
+}
+
+.class-batch-bar__count {
+  color: var(--class-primary);
+  font-weight: 700;
+}
+
+.class-batch-bar__actions {
+  gap: 18px;
+}
+
+.class-batch-bar__action {
+  color: var(--class-text-sub);
+  transition: color 0.2s ease;
+}
+
+.class-batch-bar__action:hover {
+  color: var(--class-primary);
+}
+
+.class-batch-bar__action--danger:hover {
+  color: #ac3434;
+}
+
+.class-row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  gap: 12px;
+  white-space: nowrap;
+}
+
+.class-row-actions--group {
+  gap: 16px;
+}
+
+.class-row-action {
+  border: none;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--class-primary);
+  transition: color 0.2s ease;
+}
+
+.class-row-action:hover {
+  color: var(--class-primary-dim);
+}
+
+.class-row-action.is-danger {
+  color: #ac3434;
+}
+
+.class-row-action.is-danger:hover {
+  color: #70030f;
+}
+
+.class-row-action.is-disabled {
+  color: #c2c9d1;
+  cursor: not-allowed;
+}
+
+.class-student-cell,
+.class-student-cell.tooltip-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+}
+
+.class-group-leader-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  width: 100%;
+  flex-wrap: nowrap;
+}
+
+.class-group-leader-cell.tooltip-wrapper {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  max-width: 100%;
+}
+
+.class-group-leader-cell > span:last-of-type {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.class-student-cell > .class-student-name {
+  flex: 1;
+  min-width: 0;
+}
+
+.class-student-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.class-student-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.class-tree-node-actions {
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  display: flex;
+  align-items: center;
+}
+
+.class-tree-delete-icon {
+  filter: invert(31%) sepia(92%) saturate(2671%) hue-rotate(343deg) brightness(102%)
+    contrast(93%);
+}
+
+.class-tree-folder-icon,
+.class-tree-leaf-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.class-tree-folder-icon svg,
+.class-tree-leaf-icon svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.class-tree-leaf-icon {
+  color: #96a1b2;
+}
+
+.class-tree-leaf-icon.is-selected {
+  color: #0d5bc4;
+}
+
+.class-page :deep(.m-tree) {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.class-page :deep(.m-tree__node) {
+  margin: 0;
+}
+
+.class-page :deep(.m-tree__content) {
+  min-height: 34px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding-top: 6px;
+  padding-bottom: 6px;
+  transition: all 0.2s ease;
+}
+
+.class-page :deep(.m-tree__content:hover) {
+  background: var(--class-surface-low) !important;
+}
+
+.class-page :deep(.m-tree__content .truncate) {
+  font-size: 13px !important;
+  color: var(--class-text-main) !important;
+}
+
+.class-page :deep(.m-tree__content.is-parent .truncate) {
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-weight: 700;
+  font-size: 15px !important;
+}
+
+.class-page :deep(.m-tree__content.is-leaf .truncate) {
+  font-weight: 600;
+  font-size: 13px !important;
+  color: #52606d !important;
+}
+
+.class-page :deep(.m-tree__content.is-leaf.is-selected) {
+  background: #f7fbff !important;
+  border-color: rgba(0, 91, 194, 0.28);
+}
+
+.class-page :deep(.m-tree__content.is-leaf.is-selected .truncate) {
+  color: var(--class-primary) !important;
+  font-weight: 700;
+}
+
+.class-page :deep(.m-tree__content.is-leaf:hover .m-tree__actions),
+.class-page :deep(.m-tree__content.is-leaf.is-selected .m-tree__actions) {
+  opacity: 1;
+}
+
+.class-page :deep(.m-tree__content.is-leaf:hover .class-tree-node-actions),
+.class-page :deep(.m-tree__content.is-leaf.is-selected .class-tree-node-actions) {
+  opacity: 1;
+}
+
+.class-page :deep(.m-tree__content .w-4.h-4) {
+  color: #94a3b8;
+}
+
+.class-page :deep(.m-tree__content.is-leaf .m-tree__actions) {
+  gap: 6px;
+}
+
+.class-page :deep(.m-tree__content.is-leaf .m-tree__actions img) {
+  width: 12px;
+  height: 12px;
+}
+
+.class-toolbar-search--wide :deep(input) {
+  height: 44px;
+  border: none !important;
+  border-radius: 16px !important;
+  background: var(--class-surface-low) !important;
+  padding-left: 48px !important;
+  padding-right: 42px !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  color: #475569;
+}
+
+.class-toolbar-search--group :deep(input) {
+  height: 36px;
+  border: none !important;
+  border-radius: 14px !important;
+  background: var(--class-surface-low) !important;
+  padding-left: 40px !important;
+  padding-right: 36px !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  color: #607086;
+}
+
+.class-toolbar-search--group :deep(input:focus) {
+  box-shadow: inset 0 0 0 2px rgba(0, 91, 194, 0.12);
+}
+
+.class-toolbar-search--group :deep(.absolute.left-3) {
+  left: 12px;
+  color: #94a3b8;
+}
+
+.class-toolbar-search--wide :deep(input:focus) {
+  box-shadow: inset 0 0 0 2px rgba(0, 91, 194, 0.16);
+}
+
+.class-toolbar-search--wide :deep(.absolute.left-3) {
+  left: 16px;
+  color: #94a3b8;
+}
+
+.class-page :deep(.m-table) {
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: none;
+  border: 1px solid rgba(174, 179, 181, 0.12);
+}
+
+.class-page :deep(.m-table__table) {
+  width: 100%;
+}
+
+.class-page :deep(.m-table__head-row) {
+  background: rgba(242, 244, 245, 0.7);
+}
+
+.class-page :deep(.m-table__head-cell) {
+  padding: 14px 16px !important;
+  background: transparent !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  color: #9aa4af !important;
+  letter-spacing: 0.08em;
+}
+
+.class-page :deep(.m-table__row) {
+  background: #ffffff !important;
+}
+
+.class-page :deep(.m-table__cell) {
+  padding: 14px 16px !important;
+  font-size: 12px !important;
+  color: var(--class-text-main) !important;
+  border-top: 1px solid #f0f3f6;
+  background: #ffffff;
+}
+
+.class-page :deep(.m-table__head-cell:last-child),
+.class-page :deep(.m-table__cell:last-child) {
+  padding-right: 18px !important;
+}
+
+.class-page :deep(.m-table__head-cell > div[class*="bg-[#FF9900]"]),
+.class-page :deep(.m-table__cell > div[class*="bg-[#FF9900]"]) {
+  background: var(--class-primary) !important;
+  border-color: var(--class-primary) !important;
+}
+
+.class-page :deep(.m-table__head-cell > div[class*="bg-[#FF9900]"]:hover),
+.class-page :deep(.m-table__cell > div[class*="bg-[#FF9900]"]:hover) {
+  background: var(--class-primary-dim) !important;
+  border-color: var(--class-primary-dim) !important;
+}
+
+.class-page :deep(.m-table__head-cell > div.border-gray-300:hover),
+.class-page :deep(.m-table__cell > div.border-gray-300:hover) {
+  border-color: rgba(0, 91, 194, 0.36) !important;
+  background: rgba(0, 91, 194, 0.04) !important;
+}
+
+.class-group-card .class-panel-head {
+  padding-bottom: 14px;
+}
+
+.class-group-card .class-panel-topline {
+  align-items: center;
+}
+
+.class-group-card .class-toolbar-actions--top {
+  margin-left: auto;
+}
+
+.class-group-card .class-toolbar-stat {
+  font-size: 12px;
+}
+
+.class-group-card .class-toolbar-stat__num {
+  font-size: 12px;
+}
+
+.class-group-card :deep(.m-table__head-cell) {
+  font-size: 10px !important;
+}
+
+.class-group-card :deep(.m-table__cell) {
+  font-size: 12px !important;
+}
+
+.class-group-card .tooltip-wrapper .max-w-\[120px\] {
+  max-width: 96px !important;
+}
+
+.class-group-card .tooltip-wrapper .max-w-\[100px\] {
+  max-width: 88px !important;
+}
+
+.class-group-card .tooltip-wrapper .max-w-\[80px\] {
+  max-width: 72px !important;
+}
+
+.class-page :deep(.m-table__row:hover .m-table__cell) {
+  background: #fbfdff;
+}
+
+.left-panel {
+  background: #fff;
+}
+
+.right-panel {
+  background: var(--class-bg);
+}
+
 .tooltip-wrapper {
   display: inline-block;
   max-width: 100%;
@@ -3690,7 +4629,7 @@ const handleTabChange = (newTab: string) => {
   padding: 8px 12px;
   background-color: #4a4a4a;
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   border-radius: 6px;
   white-space: nowrap;
   max-width: 300px;
@@ -3701,7 +4640,6 @@ const handleTabChange = (newTab: string) => {
   pointer-events: none;
 }
 
-/* 小箭头 */
 .tooltip-arrow {
   position: absolute;
   top: 100%;
@@ -3712,9 +4650,732 @@ const handleTabChange = (newTab: string) => {
   border-color: #4a4a4a transparent transparent transparent;
 }
 
-/* 鼠标悬停显示 */
 .tooltip-wrapper:hover .tooltip-content {
   opacity: 1;
   visibility: visible;
+}
+
+.class-theme-modal {
+  padding: 24px;
+  border: 1px solid rgba(174, 179, 181, 0.2);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 16px 40px rgba(25, 28, 30, 0.08);
+}
+
+.class-theme-modal--form {
+  padding-top: 28px;
+}
+
+.class-theme-modal--confirm,
+.class-theme-modal--tip {
+  min-height: 228px;
+}
+
+.class-theme-modal--password {
+  min-height: 288px;
+}
+
+.class-theme-modal--student-create {
+  min-height: 428px;
+}
+
+.class-theme-modal--group {
+  min-height: 520px;
+}
+
+.class-theme-modal__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: #9aa4af;
+  background: #f8f9fa;
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 999px;
+  transition: all 0.2s ease;
+}
+
+.class-theme-modal__close:hover {
+  color: var(--class-primary, #005bc2);
+  background: #f2f6fb;
+  border-color: rgba(0, 91, 194, 0.18);
+}
+
+.class-theme-modal__title {
+  margin-bottom: 20px;
+  padding-right: 24px;
+  padding-left: 24px;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: var(--class-text-main, #2e3335);
+  letter-spacing: -0.01em;
+}
+
+.class-theme-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.class-theme-modal__field {
+  width: 100%;
+}
+
+.class-theme-modal__mode-switch {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.class-theme-modal__mode-btn {
+  height: 42px;
+  border: 1px solid rgba(0, 91, 194, 0.2);
+  border-radius: 14px;
+  background: #ffffff;
+  color: var(--class-primary, #005bc2);
+  font-size: 14px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+.class-theme-modal__mode-btn:hover {
+  background: rgba(0, 91, 194, 0.06);
+}
+
+.class-theme-modal__mode-btn.is-active {
+  border-color: var(--class-primary, #005bc2);
+  background: var(--class-primary, #005bc2);
+  color: #ffffff;
+}
+
+.class-theme-modal__import-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.class-theme-modal__secondary-action {
+  height: 42px;
+  border: 1px solid rgba(174, 179, 181, 0.24);
+  border-radius: 14px;
+  background: #f5f7fa;
+  color: #64707c;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.class-theme-modal__secondary-action:hover {
+  border-color: rgba(0, 91, 194, 0.22);
+  background: #eef4fb;
+  color: var(--class-primary, #005bc2);
+}
+
+.class-theme-modal__select :deep(.cursor-pointer) {
+  height: 48px;
+  padding: 0 16px;
+  border: 1px solid rgba(174, 179, 181, 0.32) !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: none;
+}
+
+.class-theme-modal__select :deep(.cursor-pointer:hover) {
+  border-color: rgba(0, 91, 194, 0.42) !important;
+}
+
+.class-theme-modal__select :deep(.ring-2) {
+  border-color: rgba(0, 91, 194, 0.52) !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.1);
+}
+
+.class-theme-modal__select :deep(span) {
+  font-size: 14px;
+  color: var(--class-text-main, #2e3335) !important;
+}
+
+.class-theme-modal__select :deep(svg) {
+  color: #8b96a3;
+}
+
+:deep(.class-theme-modal__dropdown) {
+  border: 1px solid rgba(174, 179, 181, 0.24) !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  box-shadow: 0 18px 36px rgba(25, 28, 30, 0.08) !important;
+  overflow: hidden;
+}
+
+:deep(.class-theme-modal__dropdown .py-1) {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+:deep(.class-theme-modal__dropdown .py-1 > div) {
+  margin: 0 6px;
+  border-radius: 12px;
+  color: var(--class-text-main, #2e3335) !important;
+  background: transparent !important;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+:deep(.class-theme-modal__dropdown .py-1 > div:hover) {
+  color: var(--class-primary, #005bc2) !important;
+  background: rgba(0, 91, 194, 0.08) !important;
+}
+
+:deep(.class-theme-modal__dropdown .py-1 > div[class*="bg-"]) {
+  color: var(--class-primary, #005bc2) !important;
+  background: rgba(0, 91, 194, 0.1) !important;
+  font-weight: 700;
+}
+
+:deep(.class-theme-modal__dropdown::-webkit-scrollbar) {
+  width: 8px;
+}
+
+:deep(.class-theme-modal__dropdown::-webkit-scrollbar-track) {
+  background: #f3f5f7;
+}
+
+:deep(.class-theme-modal__dropdown::-webkit-scrollbar-thumb) {
+  background: rgba(0, 91, 194, 0.28);
+  border-radius: 999px;
+}
+
+:deep(.class-theme-modal__dropdown::-webkit-scrollbar-thumb:hover) {
+  background: rgba(0, 91, 194, 0.42);
+}
+
+.class-theme-modal__input :deep(input) {
+  height: 48px;
+  padding-top: 0;
+  padding-bottom: 0;
+  border: 1px solid rgba(174, 179, 181, 0.32) !important;
+  border-radius: 16px !important;
+  background: #ffffff !important;
+  font-size: 14px;
+  color: var(--class-text-main, #2e3335);
+  box-shadow: none;
+}
+
+.class-theme-modal__input :deep(input::placeholder) {
+  color: #97a1ad;
+}
+
+.class-theme-modal__input :deep(input:focus) {
+  border-color: rgba(0, 91, 194, 0.52) !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.1);
+}
+
+.class-theme-modal__input--disabled :deep(input) {
+  color: #7b8794 !important;
+  background: #f5f7fa !important;
+}
+
+.class-theme-modal__confirm-body {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 82px;
+  padding: 0 12px 6px;
+}
+
+.class-theme-modal__desc {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--class-text-sub, #5a6062);
+}
+
+.class-theme-modal__desc--center {
+  text-align: center;
+}
+
+.class-theme-modal__desc--spaced {
+  margin-bottom: 18px;
+}
+
+.class-theme-modal__desc--spaced-sm {
+  margin-bottom: 14px;
+}
+
+.class-theme-modal__desc--tight {
+  margin-bottom: 8px;
+}
+
+.class-theme-modal__tip {
+  font-size: 14px;
+  line-height: 1.75;
+  color: #97a1ad;
+}
+
+.class-theme-modal__tip--center {
+  text-align: center;
+}
+
+.class-theme-modal__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 24px;
+  padding: 12px 14px;
+  border: 1px solid rgba(164, 193, 255, 0.3);
+  border-radius: 14px;
+  background: #f7fbff;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #7b8794;
+}
+
+.class-theme-modal__notice svg {
+  margin-top: 1px;
+  color: var(--class-primary, #005bc2);
+}
+
+.class-theme-modal__manual-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.class-theme-modal__manual-form .class-theme-modal__field {
+  max-width: 100%;
+}
+
+.class-group-modal__section {
+  margin-bottom: 22px;
+}
+
+.class-group-modal__section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.class-group-modal__section-title {
+  margin-bottom: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.6;
+  color: var(--class-text-main, #2e3335);
+}
+
+.class-group-modal__section-title--compact {
+  margin-bottom: 0;
+}
+
+.class-group-modal__hint {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--class-primary, #005bc2);
+}
+
+.class-group-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-left: 12px;
+}
+
+.class-group-modal__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.class-group-modal__required {
+  width: 10px;
+  color: #ac3434;
+  text-align: center;
+}
+
+.class-group-modal__required--empty {
+  color: transparent;
+}
+
+.class-group-modal__label {
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 14px;
+  color: var(--class-text-main, #2e3335);
+}
+
+.class-group-modal__field {
+  flex: 1;
+  max-width: 320px;
+}
+
+.class-group-modal__add-btn {
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 14px;
+  background: var(--class-primary, #005bc2);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  transition: background-color 0.2s ease;
+}
+
+.class-group-modal__add-btn:hover {
+  background: var(--class-primary-dim, #0050ab);
+}
+
+.class-group-modal__table-wrap {
+  border: 1px solid rgba(174, 179, 181, 0.18);
+  border-radius: 16px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.class-group-modal__table-wrap--scroll {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.class-group-modal__table-head {
+  background: #f7fbff;
+}
+
+.class-group-modal__th {
+  font-size: 12px;
+  font-weight: 700;
+  color: #7b8794;
+}
+
+.class-group-modal__tr {
+  transition: background-color 0.2s ease;
+}
+
+.class-group-modal__tr:hover {
+  background: rgba(0, 91, 194, 0.04);
+}
+
+.class-group-modal__td {
+  font-size: 13px;
+  color: var(--class-text-main, #2e3335);
+}
+
+.class-group-modal__radio,
+.class-group-modal__checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--class-primary, #005bc2);
+}
+
+.class-group-modal__delete-btn {
+  font-size: 13px;
+  color: #ac3434;
+  transition: color 0.2s ease;
+}
+
+.class-group-modal__delete-btn:hover {
+  color: #70030f;
+}
+
+.class-group-modal__search {
+  margin-bottom: 8px;
+}
+
+.class-group-modal__search-input :deep(input) {
+  height: 44px;
+  border: 1px solid rgba(174, 179, 181, 0.24) !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  padding-left: 44px !important;
+  color: #607086;
+}
+
+.class-group-modal__search-input :deep(input:focus) {
+  border-color: rgba(0, 91, 194, 0.42) !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.1);
+}
+
+.class-group-modal__search-input :deep(.absolute.left-3) {
+  left: 14px;
+  color: #94a3b8;
+}
+
+.class-group-modal__meta {
+  margin-bottom: 10px;
+  font-size: 13px;
+  color: var(--class-text-main, #2e3335);
+}
+
+.class-group-modal__selected {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: #f7fbff;
+}
+
+.class-group-modal__tag {
+  border: 1px solid rgba(174, 179, 181, 0.22);
+  border-radius: 12px;
+  background: #ffffff;
+  color: var(--class-text-main, #2e3335);
+  transition: all 0.2s ease;
+}
+
+.class-group-modal__tag:hover {
+  border-color: rgba(0, 91, 194, 0.28);
+  background: rgba(0, 91, 194, 0.06);
+}
+
+.class-group-modal__tag-remove {
+  color: #9aa4af;
+  transition: color 0.2s ease;
+}
+
+.class-group-modal__tag-remove:hover {
+  color: #ac3434;
+}
+
+.class-theme-modal__password-wrap {
+  position: relative;
+  margin-bottom: 2px;
+}
+
+.class-theme-modal__plain-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 48px 0 16px;
+  border: 1px solid rgba(174, 179, 181, 0.32);
+  border-radius: 16px;
+  background: #ffffff;
+  font-size: 14px;
+  color: var(--class-text-main, #2e3335);
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.class-theme-modal__plain-input::placeholder {
+  color: #97a1ad;
+}
+
+.class-theme-modal__plain-input:focus {
+  border-color: rgba(0, 91, 194, 0.52);
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.1);
+}
+
+.class-theme-modal__password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #99a3af;
+  transform: translateY(-50%);
+  transition: color 0.2s ease;
+}
+
+.class-theme-modal__password-toggle:hover {
+  color: var(--class-primary, #005bc2);
+}
+
+.class-theme-modal__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 24px;
+}
+
+.class-theme-modal__actions--single .class-theme-modal__btn {
+  min-width: 160px;
+}
+
+.class-theme-modal__btn {
+  min-width: 136px;
+  height: 44px;
+  padding: 0 24px;
+  border: none;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.class-theme-modal__btn--ghost {
+  border: 1px solid rgba(0, 91, 194, 0.2);
+  color: var(--class-primary, #005bc2);
+  background: #ffffff;
+}
+
+.class-theme-modal__btn--ghost:hover {
+  background: rgba(0, 91, 194, 0.06);
+  border-color: rgba(0, 91, 194, 0.3);
+}
+
+.class-theme-modal__btn--primary {
+  color: #ffffff;
+  background: var(--class-primary, #005bc2);
+  background-image: none;
+  box-shadow: none;
+}
+
+.class-theme-modal__btn--primary:hover {
+  background: var(--class-primary-dim, #0050ab);
+  background-image: none;
+  box-shadow: none;
+}
+
+.class-theme-modal__confirm-body--stack {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.class-theme-modal__value {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--class-primary, #005bc2);
+  text-align: center;
+  word-break: break-all;
+}
+
+@media (max-width: 1599px) {
+  .class-layout-shell {
+    gap: 20px;
+    padding: 24px 24px 28px;
+  }
+
+  .class-grade-panel {
+    width: 272px;
+    max-width: 272px;
+  }
+
+  .class-panel-head {
+    padding: 24px 24px 18px;
+  }
+
+  .class-table-wrap {
+    padding: 0 18px 18px;
+  }
+
+  .class-batch-bar {
+    margin: 8px 18px 18px !important;
+  }
+
+  .class-group-card .class-panel-subline {
+    flex-wrap: wrap;
+  }
+
+  .class-group-card .class-toolbar-search--group {
+    flex: 1 1 320px;
+    max-width: none;
+  }
+}
+
+@media (max-width: 1439px) {
+  .class-group-card .class-panel-topline {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+
+  .class-group-card .class-toolbar-actions--top {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 1279px) {
+  .class-layout-shell {
+    gap: 16px;
+    padding: 18px;
+  }
+
+  .class-grade-panel {
+    width: 248px;
+    max-width: 248px;
+  }
+
+  .class-panel-topline,
+  .class-panel-subline {
+    flex-wrap: wrap;
+  }
+
+  .class-toolbar-search--wide {
+    flex-basis: 280px;
+  }
+
+  .class-toolbar-stat {
+    margin-left: 0;
+  }
+
+  .class-row-actions {
+    gap: 16px;
+  }
+
+  .class-group-card .class-toolbar-actions--top {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1023px) {
+  .class-layout-shell {
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .class-grade-panel {
+    width: 100%;
+    max-width: none;
+  }
+
+  .class-panel-head {
+    padding: 20px 18px 16px;
+  }
+
+  .class-tabs-native :deep(button),
+  .class-action-btn {
+    min-width: 120px;
+  }
+
+  .class-quick-login-banner {
+    margin: 0 18px 14px !important;
+  }
+
+  .class-table-wrap {
+    padding: 0 12px 12px;
+  }
+
+  .class-batch-bar {
+    margin: 8px 12px 12px !important;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .class-theme-modal {
+    padding: 22px 18px 20px;
+  }
+
+  .class-theme-modal__title {
+    margin-bottom: 18px;
+    padding-right: 16px;
+    padding-left: 16px;
+    font-size: 18px;
+  }
+
+  .class-theme-modal__actions {
+    flex-direction: column;
+  }
+
+  .class-theme-modal__btn {
+    width: 100%;
+  }
 }
 </style>

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-lg overflow-hidden shadow-sm relative">
+  <div class="m-table bg-white rounded-lg overflow-hidden shadow-sm relative">
     <!-- 加载遮罩 -->
     <Transition name="fade">
       <div v-if="loading" class="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
@@ -8,14 +8,18 @@
     </Transition>
     
     <div class="overflow-x-auto">
-      <table class="w-full">
-        <thead class="bg-[#FFF1DD]">
-          <tr>
+      <table class="m-table__table w-full">
+        <thead class="m-table__head bg-[#FFF1DD]">
+          <tr class="m-table__head-row">
             <!-- 选择列 -->
-            <th v-if="selectable" class="w-12 px-4 py-3">
+            <th v-if="selectable" class="m-table__head-cell w-12 px-4 py-3">
               <div 
-                class="w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors mx-auto"
-                :class="isAllSelected ? 'bg-[#FF9900] border-[#FF9900]' : isIndeterminate ? 'bg-[#FF9900] border-[#FF9900]' : 'border-gray-300 bg-white'"
+                class="m-table__select-box w-4 h-4 rounded border flex items-center justify-center cursor-pointer transition-colors mx-auto"
+                :class="{
+                  'is-checked': isAllSelected,
+                  'is-indeterminate': isIndeterminate && !isAllSelected,
+                  'border-gray-300 bg-white': !isAllSelected && !isIndeterminate
+                }"
                 @click="handleSelectAllClick"
               >
                 <svg v-if="isAllSelected" width="10" height="8" viewBox="0 0 10 8" fill="none">
@@ -25,7 +29,7 @@
               </div>
             </th>
             <!-- 序号列 -->
-            <th v-if="showIndex" class="w-16 px-4 py-3 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
+            <th v-if="showIndex" class="m-table__head-cell w-16 px-4 py-3 text-left text-sm font-medium text-gray-600 whitespace-nowrap">
               {{ $t('common.serialNumber') }}
             </th>
             <!-- 数据列 -->
@@ -34,7 +38,7 @@
               :key="col.key"
               :style="{ width: col.width, minWidth: col.minWidth }"
               :class="[
-                'px-4 py-3 text-sm font-medium text-gray-600',
+                'm-table__head-cell px-4 py-3 text-sm font-medium text-gray-600',
                 col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
               ]"
             >
@@ -49,21 +53,21 @@
             v-for="(row, index) in data" 
             :key="rowKey ? row[rowKey] : index" 
             :class="[
-              'border-t border-gray-100 transition-colors',
+              'm-table__row border-t border-gray-100 transition-colors',
               stripe && index % 2 === 1 ? 'bg-gray-50' : '',
               'hover:bg-[#4CB9CF]/5'
             ]"
             @click="$emit('row-click', row, index)"
           >
             <!-- 选择列 -->
-            <td v-if="selectable" class="px-4 py-3">
+            <td v-if="selectable" class="m-table__cell px-4 py-3">
               <div 
-                class="w-4 h-4 rounded border flex items-center justify-center transition-colors mx-auto"
-                :class="!isRowSelectable(row) 
-                  ? 'border-gray-200 bg-gray-100 cursor-not-allowed' 
-                  : selectedKeys.includes(row[rowKey || 'id']) 
-                    ? 'bg-[#FF9900] border-[#FF9900] cursor-pointer' 
-                    : 'border-gray-300 bg-white cursor-pointer'"
+                class="m-table__select-box w-4 h-4 rounded border flex items-center justify-center transition-colors mx-auto"
+                :class="{
+                  'is-disabled border-gray-200 bg-gray-100 cursor-not-allowed': !isRowSelectable(row),
+                  'is-checked cursor-pointer': isRowSelectable(row) && selectedKeys.includes(row[rowKey || 'id']),
+                  'border-gray-300 bg-white cursor-pointer': isRowSelectable(row) && !selectedKeys.includes(row[rowKey || 'id'])
+                }"
                 @click.stop="handleSelect(row)"
               >
                 <svg v-if="isRowSelectable(row) && selectedKeys.includes(row[rowKey || 'id'])" width="10" height="8" viewBox="0 0 10 8" fill="none">
@@ -72,7 +76,7 @@
               </div>
             </td>
             <!-- 序号列 -->
-            <td v-if="showIndex" class="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+            <td v-if="showIndex" class="m-table__cell px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
               {{ index + 1 }}
             </td>
             <!-- 数据列 -->
@@ -80,7 +84,7 @@
               v-for="col in columns" 
               :key="col.key"
               :class="[
-                'px-4 py-3 text-sm text-gray-600',
+                'm-table__cell px-4 py-3 text-sm text-gray-600',
                 col.align === 'center' ? 'text-center' : col.align === 'right' ? 'text-right' : 'text-left'
               ]"
             >
@@ -97,7 +101,7 @@
           <tr v-if="!data || !data.length">
             <td 
               :colspan="(selectable ? 1 : 0) + (showIndex ? 1 : 0) + columns.length" 
-              class="px-4 py-12 text-center text-gray-400"
+              class="m-table__empty px-4 py-12 text-center text-gray-400"
             >
               <slot name="empty">
                 <div class="flex flex-col items-center gap-2">

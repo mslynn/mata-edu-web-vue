@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2026-03-11 15:16:56
- * @LastEditTime: 2026-03-12 12:02:19
+ * @LastEditTime: 2026-04-21 14:19:05
  * @LastEditors: lynn
  * @Description: In User Settings Edit
  * @FilePath: \mata-edu-web\app\composables\api\ai.ts
@@ -10,7 +10,7 @@
 /**
  * ai实践 API
  */
-import { useHttp } from "./useHttp";
+import { getCurrentContentLanguage, useHttp } from "./useHttp";
 
 export interface Teacher {
   userId: string;
@@ -25,6 +25,85 @@ export interface AiListParams {
   optType: string;
   userId: string;
 }
+export interface chat {
+  sessionId?: string;
+  sessionType: string | number;
+  message: string;
+  formData?: string;
+  title?: string;
+  fileRefs?: [
+    {
+      fileId: string;
+      fileType: string;
+    },
+  ];
+  enableThinking?: boolean;
+}
+
+interface AiChatStreamOptions {
+  onChunk?: (payload: unknown, fullText: string) => void;
+  signal?: AbortSignal;
+}
+
+const resolveAiStreamText = (payload: unknown): string => {
+  if (payload === null || payload === undefined) return "";
+  if (typeof payload === "string") return payload;
+  if (Array.isArray(payload)) {
+    return payload.map((item) => resolveAiStreamText(item)).join("");
+  }
+  if (typeof payload !== "object") {
+    return String(payload);
+  }
+
+  const record = payload as Record<string, unknown>;
+  const directKeys = [
+    "delta",
+    "content",
+    "text",
+    "message",
+    "answer",
+    "reply",
+    "outputText",
+  ];
+
+  for (const key of directKeys) {
+    const value = record[key];
+    if (value === null || value === undefined) continue;
+    const resolved = resolveAiStreamText(value);
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  const nestedKeys = ["data", "output", "choices", "messages"];
+  for (const key of nestedKeys) {
+    const value = record[key];
+    if (value === null || value === undefined) continue;
+    const resolved = resolveAiStreamText(value);
+    if (resolved) {
+      return resolved;
+    }
+  }
+
+  return "";
+};
+
+const mergeAiStreamText = (currentText: string, incomingText: string) => {
+  if (!incomingText) return currentText;
+  if (!currentText) return incomingText;
+  if (incomingText.startsWith(currentText)) return incomingText;
+  return `${currentText}${incomingText}`;
+};
+
+const resolveAiApiResponseData = (response: Record<string, any>) => {
+  if (Array.isArray(response.rows)) {
+    return response.rows;
+  }
+  if (response.data !== undefined) {
+    return response.data;
+  }
+  return response.rows;
+};
 // 图像分类:image_cls 语音分类:audio_cls 姿态分类:pose_cls 手势分类:gesture_cls
 
 export const aiAdmin = () => {
@@ -45,16 +124,15 @@ export const aiAdmin = () => {
   //玛塔编程平台SSO登录
   const ssoLogin = async () => {
     try {
-      const response = await http.post("/system/matatacode/sso/login");   
-        if (response.code !== 200) {
-            throw new Error(response.msg || "SSO登录失败");
-        }   
-        return response.data;
+      const response = await http.post("/system/matatacode/sso/login");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "SSO登录失败");
+      }
+      return response.data;
     } catch (error: any) {
-        throw error;
+      throw error;
     }
   };
-
 
   const getAiList = async (params: AiListParams) => {
     try {
@@ -128,12 +206,416 @@ export const aiAdmin = () => {
     }
   };
 
+  //  **ai助手** **
+  //查询会话历史列表
+  const getAiSessions = async (sessionType?: string | number) => {
+    try {
+      const requestParams =
+        sessionType === undefined || sessionType === null || String(sessionType).trim() === ""
+          ? undefined
+          : { sessionType };
+      const response = requestParams
+        ? await http.get("/system/ai/sessions", requestParams)
+        : await http.get("/system/ai/sessions");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询AI会话历史列表失败");
+      }
+      return resolveAiApiResponseData(response);
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查询会话消息列表
+  const getSessions = async (sessionId: string) => {
+    try {
+      const response = await http.get(`/system/ai/sessions/${sessionId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询会话消息列表失败");
+      }
+      return resolveAiApiResponseData(response);
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //删除会话
+  const deleteSession = async (sessionId: string) => {
+    try {
+      const response = await http.del(`/system/ai/sessions/${sessionId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "删除会话失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查询当前用户AI额度详情
+  const getAiQuotaDetail = async () => {
+    try {
+      const response = await http.get("/system/ai/quota/detail");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询AI额度详情失败");
+      }
+      const rows = Array.isArray(response.rows) ? response.rows : undefined;
+      const data = response.data;
+
+      if (rows) {
+        return rows;
+      }
+
+      if (Array.isArray(data)) {
+        return data;
+      }
+
+      if (data && typeof data === "object") {
+        const nestedRows = Array.isArray((data as any).rows) ? (data as any).rows : undefined;
+        if (nestedRows) {
+          return nestedRows;
+        }
+
+        const nestedData = Array.isArray((data as any).data) ? (data as any).data : undefined;
+        if (nestedData) {
+          return nestedData;
+        }
+      }
+
+      return [];
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //AI对话（Responses API，SSE流式响应）
+
+  const createAiChat = async (params: chat, options: AiChatStreamOptions = {}) => {
+    try {
+      const config = useRuntimeConfig();
+      const token = http.getToken();
+      const response = await fetch(`${config.public.apiBaseUrl}/system/ai/chat`, {
+        method: "POST",
+        signal: options.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/event-stream, application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+          "Content-Language": getCurrentContentLanguage(),
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        throw new Error(`新增AI对话失败(${response.status})`);
+      }
+
+      const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+      if (!contentType.includes("text/event-stream")) {
+        const json = await response.json();
+        if (json.code !== 200) {
+          throw new Error(json.msg || "新增AI对话失败");
+        }
+        return json.data;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("AI对话流读取失败");
+      }
+
+      const decoder = new TextDecoder("utf-8");
+      const eventChunks: unknown[] = [];
+      let buffer = "";
+      let streamText = "";
+      let lastPayload: unknown = null;
+
+      const consumeEventBlock = (eventBlock: string) => {
+        const lines = eventBlock.split(/\r?\n/);
+        const dataLines: string[] = [];
+        let eventName = "";
+        lines.forEach((line) => {
+          if (line.startsWith("event:")) {
+            eventName = line.slice(6).trim().toLowerCase();
+          }
+          if (line.startsWith("data:")) {
+            const lineValue = line.slice(5);
+            dataLines.push(lineValue.startsWith(" ") ? lineValue.slice(1) : lineValue);
+          }
+        });
+
+        const rawDataText = dataLines.join("\n");
+        if (!rawDataText.trim()) {
+          return false;
+        }
+        if (rawDataText.trim() === "[DONE]") {
+          return true;
+        }
+
+        let payload: unknown = rawDataText;
+        try {
+          payload = JSON.parse(rawDataText);
+        } catch {
+          payload = rawDataText;
+        }
+
+        if (eventName === "error") {
+          const errorMessage =
+            typeof payload === "object" && payload !== null
+              ? String(
+                (payload as Record<string, unknown>).message ||
+                (payload as Record<string, unknown>).msg ||
+                rawDataText
+              ).trim()
+              : String(payload || rawDataText).trim();
+          throw new Error(errorMessage || "AI对话失败");
+        }
+
+        lastPayload = payload;
+        eventChunks.push(payload);
+        const nextText = resolveAiStreamText(payload);
+        if (nextText) {
+          streamText = mergeAiStreamText(streamText, nextText);
+        }
+        options.onChunk?.(payload, streamText);
+        return eventName === "done";
+      };
+
+      let isDone = false;
+      while (!isDone) {
+        const { value, done } = await reader.read();
+        if (done) {
+          buffer += decoder.decode();
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const eventBlocks = buffer.split(/\r?\n\r?\n/);
+        buffer = eventBlocks.pop() || "";
+
+        for (const eventBlock of eventBlocks) {
+          if (consumeEventBlock(eventBlock)) {
+            isDone = true;
+            await reader.cancel().catch(() => undefined);
+            break;
+          }
+        }
+      }
+
+      if (!isDone && buffer.trim()) {
+        consumeEventBlock(buffer);
+      }
+
+      return {
+        data: lastPayload,
+        chunks: eventChunks,
+        text: streamText,
+      };
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //上传文件到火山方舟（用于AI对话多模态输入）
+  const uploadAI = async (file: File, options?: { signal?: AbortSignal }) => {
+    try {
+      const config = useRuntimeConfig();
+      const token = http.getToken();
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch(`${config.public.apiBaseUrl}/system/ai/upload`, {
+        method: "POST",
+        signal: options?.signal,
+        headers: {
+          Authorization: token ? `Bearer ${token}` : "",
+        },
+        body: formData,
+      });
+
+      const response = await res.json();
+      if (response.code !== 200) {
+        throw new Error(response.msg || "上传AI文件失败");
+      }
+      return response.data; // 返回 { url, fileName, ossId }
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //获取火山方舟上的文件
+  const getFiles = async (fileId: string) => {
+    try {
+      const response = await http.get(`/system/ai/files/${fileId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询AI文件失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //删除火山方舟上的文件
+  const deleteFiles = async (fileId: string) => {
+    try {
+      const response = await http.del(`/system/ai/files/${fileId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "删除AI文件失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //在已有课程中打开AI生成教案
+  const getExistingCursor = async (data: {
+    sessionId: string;
+    courseId: string;
+    chapterId: String;
+  }) => {
+    try {
+      const response = await http.get(
+        "/system/ai/lesson-plan/existing-course",
+        data,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "在已有课程中打开AI生成教案失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //创建新课程并打开AI生成教案
+
+  const getNewCursor = async (data: { sessionId: string }) => {
+    try {
+      const response = await http.get(
+        "/system/ai/lesson-plan/new-course",
+        data,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "创建新课程并打开AI生成教案失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //在已有课程中打开AI生成课件PPT
+  const getPptExistingCursor = async (data: {
+    sessionId: string;
+    courseId: string;
+    chapterId: String;
+  }) => {
+    try {
+      const response = await http.get("/system/ai/ppt/existing-course", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "在已有课程中打开AI生成课件PPT失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //创建新课程并打开AI生成课件PPT
+  const getPptNewCursor = async (data: { sessionId: string }) => {
+    try {
+      const response = await http.get("/system/ai/ppt/new-course", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "创建新课程并打开AI生成课件PPT失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //保存AI生成习题并关联已有课程章节
+  const getExerciseExistingCursor = async (data: {
+    sessionId: string;
+    courseId: string;
+    chapterId: String;
+  }) => {
+    try {
+      const response = await http.get(
+        "/system/ai/exercise/existing-course",
+        data,
+      );
+      if (response.code !== 200) {
+        throw new Error(response.msg || "在已有课程中打开AI生成习题失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //保存AI生成习题并进入自定义编辑
+  const getExerciseNewCursorEdit = async (data: { sessionId: string }) => {
+    try {
+      const response = await http.get("/system/ai/exercise/custom-edit", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "创建新课程并打开AI生成习题失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //获取热门会话（热门会话标题）
+  const getHotAiList = async () => {
+    try {
+      const response = await http.get("/system/ai/sessions/hot");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询热门会话失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //停止回答
+  const stopSession = async (sessionId: string | number) => {
+    try {
+      const response = await http.get(`/system/ai/sessions/${sessionId}/stop`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "停止会话失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查询智能生图历史列表
+  const getImageList = async () => {
+    try {
+      const response = await http.get("/system/ai/images");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询智能生图历史列表失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
   return {
     ssoLogin,
     getAiList,
     createAi,
     updateAi,
     deleteAi,
-    deleteOss
+    deleteOss,
+    getAiSessions,
+    getSessions,
+    deleteSession,
+    stopSession,
+    getAiQuotaDetail,
+    createAiChat,
+    uploadAI,
+    getFiles,
+    deleteFiles,
+    getExistingCursor,
+    getNewCursor,
+    getPptExistingCursor,
+    getPptNewCursor,
+    getExerciseExistingCursor,
+    getExerciseNewCursorEdit,
+    getHotAiList,
+    getImageList,
   };
 };

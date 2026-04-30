@@ -1,25 +1,25 @@
 <template>
-  <div class="h-full bg-[#FAFAFA] py-4 lg:py-6 overflow-auto">
-    <div class="w-[92%] mx-auto">
+  <div ref="schoolAdminPageRef" class="school-admin-page" :style="pageAdaptiveStyle">
+    <div class="school-admin-shell">
       <!-- 页面标题和管理员人数（白色卡片外面） -->
-      <div class="flex items-center justify-between mb-4">
-        <div class="flex items-center gap-2 text-base font-medium text-gray-800">
-          <span class="cursor-pointer hover:text-[#FF9900]" @click="handleBack">{{ $t('school.schoolManage') }}</span>
+      <div class="school-admin-page-header">
+        <div class="school-admin-breadcrumb">
+          <span class="school-admin-breadcrumb__back" @click="handleBack">{{ $t('school.schoolManage') }}</span>
           <span class="text-gray-400">></span>
           <span>{{ $t('schoolAdmin.title') }}</span>
         </div>
-        <div class="inline-flex items-center text-sm text-[#4D4D4D] whitespace-nowrap">
-          {{ $t('schoolAdmin.adminCount') }}：<span class="text-[#FF9900] font-medium">{{ total }}</span><span>{{ $t('schoolAdmin.person') }}</span>
+        <div class="school-admin-stat-card">
+          {{ $t('schoolAdmin.adminCount') }}：<span class="school-admin-stat-card__value">{{ total }}</span><span>{{ $t('schoolAdmin.person') }}</span>
         </div>
       </div>
 
       <!-- 内容区域（白色卡片） -->
-      <div class="bg-[#FFFFFF] rounded-[20px] p-6 shadow-sm">
+      <div class="school-admin-card">
         <!-- 搜索栏和操作按钮 -->
-        <div class="flex items-center justify-between mb-4">
-          <div class="flex items-center gap-4">
+        <div class="school-admin-page-header">
+          <div class="school-admin-toolbar-left">
             <!-- 搜索框 -->
-            <div class="w-[240px]">
+            <div class="school-admin-search">
               <MInput v-model="searchKeyword" :placeholder="$t('schoolAdmin.searchPlaceholder')" clearable @enter="handleSearch">
                 <template #prefix>
                   <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -30,40 +30,40 @@
               </MInput>
             </div>
             <!-- 密码提示 -->
-            <span class="text-sm text-[#999]">
-              {{ $t('schoolAdmin.teacherPassword') }}<span class="text-[#4D4D4D]">{{ teacherPassword || 'xxxxx' }}</span>
+            <span class="school-admin-password-tip">
+              {{ $t('schoolAdmin.teacherPassword') }}<span class="school-admin-password-value">{{ teacherPassword || 'xxxxx' }}</span>
             </span>
           </div>
 
-          <div class="flex gap-3">
-            <MButton type="primary" class="!bg-[#FF9900] hover:!bg-[#e88a00] px-4"
+          <div class="school-admin-toolbar-actions">
+            <MButton type="primary" class="school-admin-create-btn"
               @click="handleCreateAdmin">
               + {{ $t('schoolAdmin.createAdmin') }}
             </MButton>
-            <MButton class="!bg-[#FAFAFA] px-4 !text-[#4D4D4D] border !border-[#E5E5E5]" @click="handleExport">
+            <MButton class="school-admin-export-btn" @click="handleExport">
               {{ $t('school.exportData') }}
             </MButton>
           </div>
         </div>
 
         <!-- 表格 -->
-        <div class="h-[480px] overflow-auto">
+        <div class="school-admin-table-wrap">
           <MTable :columns="teacherTableColumns" :data="tableData" :loading="loading" show-index row-key="userId"
             class="admin-table">
             <template #action="{ row }">
-              <div class="flex items-center justify-center gap-2 whitespace-nowrap">
+              <div class="school-admin-action-group">
                 <button
-                  class="px-3 py-1 text-xs border rounded transition-colors text-[#4D4D4D] border-[#E5E5E5] hover:bg-[#FFF8F0]"
+                  class="school-admin-action-btn"
                   @click="handleResetTeacherPassword(row)">
                   {{ $t('schoolAdmin.resetPassword') }}
                 </button>
                 <button
-                  class="px-3 py-1 text-xs border rounded transition-colors text-[#4D4D4D] border-[#E5E5E5] hover:bg-[#FFF8F0]"
+                  class="school-admin-action-btn"
                   @click="handleEditTeacher(row)">
                   {{ $t('common.edit') }}
                 </button>
                 <button
-                  class="px-3 py-1 text-xs border rounded transition-colors text-[#4D4D4D] border-[#E5E5E5] hover:bg-[#FFF8F0]"
+                  class="school-admin-action-btn"
                   @click="handleDeleteTeacher(row)">
                   {{ $t('common.delete') }}
                 </button>
@@ -73,7 +73,7 @@
         </div>
 
         <!-- 分页 -->
-        <div class="mt-6 flex justify-center">
+        <div class="school-admin-pagination">
           <MPagination v-model:current-page="currentPage" v-model:page-size="pageSize" :total="total"
             show-quick-jumper />
         </div>
@@ -83,16 +83,16 @@
     <!-- 添加/编辑校管理员弹窗 -->
     <MModal v-model="showTeacherModal" custom-width="420px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="p-8 relative">
+      <div class="school-admin-modal p-8 relative">
         <!-- 关闭按钮 -->
-        <button class="absolute top-4 right-4 text-gray-400 hover:text-gray-600" @click="showTeacherModal = false">
+        <button class="school-admin-modal__close absolute top-4 right-4 text-gray-400 hover:text-gray-600" @click="showTeacherModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
         
         <!-- 标题 -->
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-8">
+        <h3 class="school-admin-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-8">
           {{ isEditTeacher ? $t('schoolAdmin.editAdmin') : $t('schoolAdmin.addAdmin') }}
         </h3>
 
@@ -103,11 +103,11 @@
             v-model="teacherForm.teacherName" 
             type="text"
             :placeholder="$t('schoolAdmin.inputAdminName')"
-            class="w-full px-4 py-3 border border-[#E5E5E5] rounded-full text-sm text-[#4D4D4D] placeholder-[#999] outline-none focus:border-[#FF9900]"
+            class="school-admin-form-input w-full px-4 py-3 border rounded-full text-sm placeholder-[#999] outline-none"
           />
           
           <!-- 手机号输入框 -->
-          <div class="flex items-center border border-[#E5E5E5] rounded-full focus-within:border-[#FF9900] relative">
+          <div class="school-admin-phone-input flex items-center border rounded-full relative">
             <div class="pl-4 pr-1 py-3">
               <CountryCodeSelector 
                 ref="countryCodeRef"
@@ -142,13 +142,13 @@
         <!-- 按钮组 -->
         <div class="flex items-center justify-center gap-4 mt-8">
           <button 
-            class="w-[120px] h-[44px] border border-[#E5E5E5] rounded-full text-[#4D4D4D] hover:bg-gray-50 transition-colors"
+            class="school-admin-modal-btn school-admin-modal-btn--ghost w-[120px] h-[44px] border rounded-full transition-colors"
             @click="showTeacherModal = false"
           >
             {{ $t('common.cancel') }}
           </button>
           <button 
-            class="w-[120px] h-[44px] bg-[#FF9900] text-white rounded-full hover:bg-[#E68A00] transition-colors"
+            class="school-admin-modal-btn school-admin-modal-btn--primary w-[120px] h-[44px] text-white rounded-full transition-colors"
             @click="handleConfirmTeacher"
           >
             {{ $t('common.confirm') }}
@@ -164,9 +164,9 @@
       :show-close="false"
       content-class="!p-0"
     >
-      <div class="p-8 relative">
+      <div class="school-admin-modal p-8 relative">
         <button
-          class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
+          class="school-admin-modal__close absolute top-4 right-4 text-gray-400 hover:text-gray-600"
           @click="showAdminLimitModal = false"
         >
           <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -194,21 +194,21 @@
     <!-- 删除教师确认弹窗 -->
     <MModal v-model="showDeleteTeacherModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+      <div class="school-admin-modal h-[249px] p-6 relative flex flex-col">
+        <button class="school-admin-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600"
           @click="showDeleteTeacherModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="school-admin-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center px-4">
           <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ deleteTeacherConfirmText }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
-          <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+          <button class="school-admin-modal-btn school-admin-modal-btn--ghost w-[136px] h-[40px] border rounded-lg"
             @click="showDeleteTeacherModal = false">{{ $t('common.cancel') }}</button>
-          <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+          <button class="school-admin-modal-btn school-admin-modal-btn--primary w-[136px] h-[40px] text-white rounded-lg"
             @click="handleConfirmDeleteTeacher">{{ $t('common.confirm') }}</button>
         </div>
       </div>
@@ -217,20 +217,20 @@
     <!-- 重置教师密码确认弹窗 -->
     <MModal v-model="showResetTeacherModal" custom-width="381px" :show-footer="false" :show-close="false"
       content-class="!p-0">
-      <div class="h-[249px] p-6 relative flex flex-col">
-        <button class="absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showResetTeacherModal = false">
+      <div class="school-admin-modal h-[249px] p-6 relative flex flex-col">
+        <button class="school-admin-modal__close absolute top-3 right-3 text-gray-400 hover:text-gray-600" @click="showResetTeacherModal = false">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
-        <h3 class="text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
+        <h3 class="school-admin-modal__title text-center text-lg font-medium text-[#4D4D4D] mb-4">{{ $t('common.tips') }}</h3>
         <div class="flex-1 flex items-center justify-center px-4">
           <p class="text-[16px] text-[#4D4D4D] text-center leading-relaxed">{{ resetTeacherConfirmText }}</p>
         </div>
         <div class="flex items-center justify-center gap-4">
-          <button class="w-[136px] h-[40px] border border-gray-300 rounded-lg text-[#4D4D4D] hover:bg-gray-50"
+          <button class="school-admin-modal-btn school-admin-modal-btn--ghost w-[136px] h-[40px] border rounded-lg"
             @click="showResetTeacherModal = false">{{ $t('common.cancel') }}</button>
-          <button class="w-[136px] h-[40px] bg-[#FF9900] text-white rounded-lg hover:bg-[#E68A00]"
+          <button class="school-admin-modal-btn school-admin-modal-btn--primary w-[136px] h-[40px] text-white rounded-lg"
             @click="handleConfirmResetTeacher">{{ $t('common.confirm') }}</button>
         </div>
       </div>
@@ -259,8 +259,49 @@ const router = useRouter()
 const schoolUserApi = useSchoolUser()
 const { getStudentPassword, getLimit } = useTeacher()
 
+const schoolAdminPageRef = ref<HTMLElement | null>(null)
+let schoolAdminPageResizeObserver: ResizeObserver | null = null
+const schoolAdminLayoutWidth = ref(1360)
+
 // 学校ID
 const orgId = computed(() => route.params.orgId as string)
+
+const getSchoolAdminLayoutWidth = () => {
+  if (typeof window === 'undefined') {
+    return 1360
+  }
+
+  const clientWidth = document.documentElement?.clientWidth || 0
+  const pageClientWidth = schoolAdminPageRef.value?.clientWidth || 0
+  const outerWidth = window.outerWidth || 0
+  const innerWidth = window.innerWidth || 0
+  const referenceWidth = outerWidth || innerWidth || clientWidth || 1360
+  const visibleWidthCandidates = [clientWidth, pageClientWidth].filter(width => width > 0)
+  const visibleWidth = visibleWidthCandidates.length
+    ? Math.min(...visibleWidthCandidates)
+    : referenceWidth
+  const boundedWidth = Math.min(referenceWidth, visibleWidth)
+  return Math.max(1280, Math.round(boundedWidth))
+}
+
+const syncSchoolAdminLayoutWidth = () => {
+  schoolAdminLayoutWidth.value = getSchoolAdminLayoutWidth()
+}
+
+const schoolAdminShellWidth = computed(() => {
+  if (schoolAdminLayoutWidth.value <= 1700) {
+    return `${Math.max(1280, Math.round(schoolAdminLayoutWidth.value))}px`
+  }
+
+  return `${Math.min(
+    1920,
+    Math.max(1280, Math.round(schoolAdminLayoutWidth.value * 0.9))
+  )}px`
+})
+
+const pageAdaptiveStyle = computed(() => ({
+  '--school-admin-shell-width': schoolAdminShellWidth.value
+}))
 
 // 学校信息
 const schoolInfo = ref<any>(null)
@@ -554,6 +595,17 @@ const handleExport = async () => {
 
 // 初始化加载
 onMounted(async () => {
+  syncSchoolAdminLayoutWidth()
+  if (typeof window !== 'undefined') {
+    window.addEventListener('resize', syncSchoolAdminLayoutWidth)
+    window.visualViewport?.addEventListener('resize', syncSchoolAdminLayoutWidth)
+    if (window.ResizeObserver && schoolAdminPageRef.value) {
+      schoolAdminPageResizeObserver = new window.ResizeObserver(() => {
+        syncSchoolAdminLayoutWidth()
+      })
+      schoolAdminPageResizeObserver.observe(schoolAdminPageRef.value)
+    }
+  }
   //   new Promise((resolve) => {
   //   Promise.all([
 
@@ -566,6 +618,14 @@ onMounted(async () => {
   await fetchTeacherList()
 })
 
+onBeforeUnmount(() => {
+  if (typeof window === 'undefined') return
+  window.removeEventListener('resize', syncSchoolAdminLayoutWidth)
+  window.visualViewport?.removeEventListener('resize', syncSchoolAdminLayoutWidth)
+  schoolAdminPageResizeObserver?.disconnect()
+  schoolAdminPageResizeObserver = null
+})
+
 // 监听分页变化
 watch([currentPage, pageSize], () => {
   fetchTeacherList()
@@ -573,42 +633,356 @@ watch([currentPage, pageSize], () => {
 </script>
 
 <style scoped>
-/* 覆盖 MTable 表头背景色 */
-.admin-table :deep(thead) {
-  background-color: #FAFAFA !important;
+.school-admin-page {
+  --school-admin-min-width: 1280px;
+  --school-admin-max-width: 1920px;
+  --school-admin-shell-width: var(--school-admin-min-width);
+  width: 100%;
+  height: 100%;
+  min-width: var(--school-admin-min-width);
+  min-height: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 18px 0 20px;
+  background: linear-gradient(180deg, #f3f6fb 0%, #eef3fb 100%);
 }
 
-.admin-table :deep(thead th) {
-  background-color: transparent !important;
+.school-admin-shell {
+  width: min(
+    var(--school-admin-max-width),
+    max(var(--school-admin-min-width), var(--school-admin-shell-width))
+  );
+  min-width: var(--school-admin-min-width);
+  margin: 0 auto;
+  padding: 0 clamp(32px, 3vw, 56px);
+  box-sizing: border-box;
 }
 
-/* 去掉表格圆角和阴影 */
+.school-admin-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 14px;
+}
+
+.school-admin-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #16233d;
+}
+
+.school-admin-breadcrumb__back {
+  color: #16233d;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.school-admin-breadcrumb__back:hover {
+  color: #005bc2;
+}
+
+.school-admin-stat-card {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  color: #26344f;
+  font-size: 14px;
+}
+
+.school-admin-stat-card__value {
+  color: #005bc2;
+  font-weight: 600;
+}
+
+.school-admin-card {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 166px);
+  min-height: 0;
+  padding: 16px 18px 16px;
+  border: 1px solid #dfe8f5;
+  border-radius: 28px;
+  background: #ffffff;
+  box-shadow: 0 20px 48px rgba(38, 76, 130, 0.1);
+}
+
+.school-admin-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.school-admin-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: nowrap;
+  min-width: 0;
+}
+
+.school-admin-search {
+  width: min(240px, 100%);
+}
+
+.school-admin-search :deep(input) {
+  min-height: 40px;
+  border-color: #d6e2f0 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  color: #1f2a37;
+}
+
+.school-admin-search :deep(input:focus) {
+  border-color: #4b8eff !important;
+  box-shadow: 0 0 0 4px rgba(75, 142, 255, 0.12);
+}
+
+.school-admin-password-tip {
+  color: #8a96a3;
+  font-size: 14px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.school-admin-password-value {
+  color: #26344f;
+}
+
+.school-admin-toolbar-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.school-admin-create-btn {
+  min-height: 38px;
+  padding: 0 18px !important;
+  border: 1px solid #005bc2 !important;
+  border-radius: 12px !important;
+  background: #005bc2 !important;
+  color: #ffffff !important;
+}
+
+.school-admin-create-btn:hover {
+  border-color: #004a9f !important;
+  background: #004a9f !important;
+}
+
+.school-admin-export-btn {
+  min-height: 38px;
+  padding: 0 18px !important;
+  border: 1px solid #d6e2f0 !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  color: #13223a !important;
+}
+
+.school-admin-export-btn:hover {
+  border-color: #4b8eff !important;
+  background: #f4f8ff !important;
+  color: #005bc2 !important;
+}
+
+.school-admin-table-wrap {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #dfe8f5;
+  border-radius: 22px;
+  background: #ffffff;
+}
+
+.school-admin-action-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.school-admin-action-btn {
+  min-width: 74px;
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid #d8e4f2;
+  border-radius: 10px;
+  background: #ffffff;
+  color: #005bc2;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.school-admin-action-btn:hover {
+  border-color: #4b8eff;
+  background: #f4f8ff;
+}
+
+.school-admin-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+.school-admin-page :deep(.m-pagination) {
+  gap: 8px;
+  color: #51617a;
+}
+
+.school-admin-page :deep(.m-pagination button),
+.school-admin-page :deep(.m-pagination .page-btn) {
+  width: 30px;
+  height: 30px;
+  border-color: #d6e2f0;
+  border-radius: 12px;
+  color: #51617a;
+}
+
+.school-admin-page :deep(.m-pagination button:not(:disabled):hover) {
+  border-color: #005bc2 !important;
+  color: #005bc2 !important;
+}
+
+.school-admin-page :deep(.m-pagination button[class*="bg-"]) {
+  border-color: #005bc2 !important;
+  background-color: #005bc2 !important;
+  color: #ffffff !important;
+}
+
+.school-admin-page :deep(.m-pagination select),
+.school-admin-page :deep(.m-pagination input) {
+  min-height: 30px;
+  border-color: #d6e2f0 !important;
+  border-radius: 8px;
+  color: #13223a;
+}
+
+.school-admin-page :deep(.m-pagination select:focus),
+.school-admin-page :deep(.m-pagination input:focus) {
+  border-color: #005bc2 !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.1);
+}
+
 .admin-table {
   box-shadow: none !important;
-  border-radius: 8px;
+  border-radius: 22px;
   overflow: hidden;
 }
 
-/* 表格行斑马纹 - 交叉间隔色 */
-.admin-table :deep(tbody tr:nth-child(odd)) {
-  background-color: #FFFFFF;
+.admin-table :deep(.m-table) {
+  box-shadow: none !important;
+  border-radius: 22px;
 }
 
-.admin-table :deep(tbody tr:nth-child(even)) {
-  background-color: #F9F9F9;
+.admin-table :deep(thead) {
+  background: #f5f8fc !important;
+}
+
+.admin-table :deep(thead th) {
+  height: 48px;
+  background-color: transparent !important;
+  color: #51617a !important;
+  font-size: 14px;
+  font-weight: 700 !important;
+  border-bottom: 1px solid #dfe8f5;
+}
+
+.admin-table :deep(tbody tr) {
+  background-color: #ffffff;
 }
 
 .admin-table :deep(tbody tr:hover) {
-  background-color: #FFF8F0 !important;
+  background-color: #f4f8ff !important;
 }
 
 .admin-table :deep(tbody td) {
+  height: 46px;
+  color: #13223a;
+  font-size: 14px;
+  border-top: 1px solid #eef3f8;
   border-bottom: none !important;
-  padding-top: 16px;
-  padding-bottom: 16px;
+  padding-top: 6px;
+  padding-bottom: 6px;
 }
 
-/* 自定义滚动条 */
+.admin-table :deep(tbody td:first-child) {
+  color: #6f7f92;
+  font-weight: 600;
+}
+
+.school-admin-modal {
+  border-radius: 18px;
+  background: #ffffff;
+}
+
+.school-admin-modal__title {
+  color: #16233d !important;
+  font-weight: 600 !important;
+}
+
+.school-admin-modal__close {
+  color: #8a96a3 !important;
+}
+
+.school-admin-modal__close:hover {
+  color: #005bc2 !important;
+}
+
+.school-admin-modal-info {
+  border: 1px solid #dfe8f5 !important;
+  background: #f5f8fc !important;
+  border-radius: 14px !important;
+}
+
+.school-admin-form-input,
+.school-admin-phone-input {
+  border-color: #d6e2f0 !important;
+  color: #26344f;
+}
+
+.school-admin-form-input:focus,
+.school-admin-phone-input:focus-within {
+  border-color: #005bc2 !important;
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.1);
+}
+
+.school-admin-theme-number {
+  color: #005bc2 !important;
+}
+
+.school-admin-modal-btn {
+  border-radius: 999px !important;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.school-admin-modal-btn--ghost {
+  border-color: #d6e2f0 !important;
+  background: #ffffff !important;
+  color: #26344f !important;
+}
+
+.school-admin-modal-btn--ghost:hover {
+  border-color: #005bc2 !important;
+  background: #f4f8ff !important;
+  color: #005bc2 !important;
+}
+
+.school-admin-modal-btn--primary {
+  border: 1px solid #005bc2 !important;
+  background: #005bc2 !important;
+  color: #ffffff !important;
+}
+
+.school-admin-modal-btn--primary:hover {
+  border-color: #004a9f !important;
+  background: #004a9f !important;
+}
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -619,15 +993,14 @@ watch([currentPage, pageSize], () => {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #cbd5e1;
   border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #9ca3af;
+  background: #94a3b8;
 }
 
-/* 自定义方形复选框 */
 .custom-checkbox {
   display: inline-flex;
   align-items: center;
@@ -638,8 +1011,8 @@ watch([currentPage, pageSize], () => {
 .checkbox-box {
   width: 18px;
   height: 18px;
-  border: 2px solid #E5E5E5;
-  border-radius: 3px;
+  border: 2px solid #d6e2f0;
+  border-radius: 4px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -648,16 +1021,42 @@ watch([currentPage, pageSize], () => {
 }
 
 .checkbox-box:hover {
-  border-color: #FF9900;
+  border-color: #005bc2;
 }
 
 .checkbox-box.checked {
-  background: #FF9900;
-  border-color: #FF9900;
+  background: #005bc2;
+  border-color: #005bc2;
 }
 
 .checkbox-icon {
   width: 12px;
   height: 12px;
+}
+
+@media (max-width: 768px) {
+  .school-admin-page {
+    padding: 20px 0 28px;
+  }
+
+  .school-admin-shell {
+    padding: 0 16px;
+  }
+
+  .school-admin-page-header,
+  .school-admin-toolbar,
+  .school-admin-toolbar-left {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .school-admin-toolbar-actions {
+    justify-content: stretch;
+  }
+
+  .school-admin-create-btn,
+  .school-admin-export-btn {
+    width: 100%;
+  }
 }
 </style>

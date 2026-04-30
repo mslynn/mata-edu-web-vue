@@ -136,7 +136,12 @@
             @click="showLogoutConfirmModal = false"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 6l12 12M18 6L6 18" />
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 6l12 12M18 6L6 18"
+              />
             </svg>
           </button>
         </div>
@@ -299,10 +304,10 @@ const showModuleSwitch = computed(() => {
 const resolvedAvatar = computed(() => {
   const avatar = String(
     user.value?.avatar ||
-    user.value?.avatarUrl ||
-    user.value?.headImg ||
-    user.value?.headimg ||
-    ""
+      user.value?.avatarUrl ||
+      user.value?.headImg ||
+      user.value?.headimg ||
+      ""
   ).trim();
   return avatar || defaultAvatar;
 });
@@ -316,11 +321,12 @@ const implementedPages = [
   "/system/class",
   "/system/course",
   "/system/tool",
-  "/system/ai",
+  "/system/opt",
   "/system/study",
   "/system/growth",
   "/system/event",
   "/system/user",
+  "system/ai",
 ];
 
 const go = (path: string) => {
@@ -349,6 +355,8 @@ const isPageImplemented = (path: string) => {
 
 // 处理菜单点击
 const handleMenuClick = (item: SidebarMenuItem) => {
+  alert("功能开发中，敬请期待！");
+  console.log("[sidebar] 菜单点击:", item.path);
   if (isPageImplemented(item.path)) {
     // 页面已实现，正常跳转
     go(item.path);

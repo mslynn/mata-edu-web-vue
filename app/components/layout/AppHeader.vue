@@ -1,38 +1,40 @@
 <template>
-  <header class="header-wrapper bg-[#FF9900] h-[70px]">
+  <header class="header-wrapper bg-[#FF9900] h-[70px]" :class="{ 'header-wrapper--admin': showModuleSwitch }">
     <div class="header-content">
       <div class="flex items-center">
         <img 
           :src="logoSrc" 
           alt="Logo" 
-          class="h-[37px] w-auto object-contain cursor-pointer" 
+          class="header-logo h-[37px] w-auto object-contain cursor-pointer" 
           @click="handleLogoClick"
         />
       </div>
       <nav class="flex-1 flex justify-center gap-8">
         <!-- 导航菜单占位 -->
       </nav>
-      <div class="flex items-center gap-4">
+      <div class="header-actions flex items-center gap-4">
         <!-- 语言切换 -->
-        <LanguageSwitcher />
+        <LanguageSwitcher v-if="!showModuleSwitch" />
         
-        <img src="~/assets/images/infor.png" alt="infor" class="w-10 h-10 rounded-lg object-cover transition-all cursor-pointer" />
+        <img v-if="!showModuleSwitch" src="~/assets/images/infor.png" alt="infor" class="w-10 h-10 rounded-lg object-cover transition-all cursor-pointer" />
         
         <!-- 用户头像下拉菜单 -->
         <div class="relative" ref="dropdownRef">
-        <img 
-          :src="resolvedAvatar" 
-          alt="Avatar" 
-          class="w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 transition-all"
-          @click="toggleDropdown"
-          @error="handleAvatarError"
-        />
+          <button class="header-user-trigger" type="button" @click="toggleDropdown">
+            <img 
+              :src="resolvedAvatar" 
+              alt="Avatar" 
+              class="header-avatar w-10 h-10 rounded-full object-cover cursor-pointer hover:ring-2 transition-all"
+              @error="handleAvatarError"
+            />
+            <span v-if="showModuleSwitch" class="header-user-name">{{ displayUserName }}</span>
+          </button>
           
           <!-- 下拉菜单 -->
           <Transition name="dropdown">
             <div 
               v-if="showDropdown"
-              class="absolute right-0 top-12 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
+              class="header-dropdown absolute right-0 top-12 w-44 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
             >
               <div class="px-4 py-2 border-b border-gray-100">
                 <p class="text-sm font-medium text-gray-800 truncate">{{ displayUserName }}</p>
@@ -86,15 +88,20 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useAuth } from '~/composables/api/useAuth'
 import { useI18n } from 'vue-i18n'
 import defaultAvatar from '~/assets/newimages/user.png'
+import adminLogo from '~/assets/newimages/logo.svg'
 import logoZh from '~/assets/images/logo.png'
 import logoEn from '~/assets/images/logo_en.png'
 
 const router = useRouter()
+const route = useRoute()
 const { logout, user } = useAuth()
 const { locale } = useI18n()
 
 // 根据语言显示不同的 Logo
 const logoSrc = computed(() => {
+  if (showModuleSwitch.value) {
+    return adminLogo
+  }
   return locale.value === 'en' ? logoEn : logoZh
 })
 
@@ -115,7 +122,11 @@ const displayUserName = computed(() => {
 // 判断是否显示模块切换（仅市/区管理员）
 const showModuleSwitch = computed(() => {
   const roleKey = user.value?.role_key
-  return roleKey === 'city_admin' || roleKey === 'district_admin'
+  if (roleKey === 'city_admin' || roleKey === 'district_admin') {
+    return true
+  }
+
+  return ['/city', '/school'].some(path => route.path === path || route.path.startsWith(`${path}/`))
 })
 
 const resolvedAvatar = computed(() => {
@@ -194,6 +205,13 @@ onUnmounted(() => {
   width: 100%;
 }
 
+.header-wrapper--admin {
+  height: 94px;
+  background: #ffffff !important;
+  border-bottom: 1px solid #edf0f5;
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.04);
+}
+
 /* 头部内容 - 最大宽度1712px，左边距115px，右边距95px */
 .header-content {
   display: flex;
@@ -202,6 +220,60 @@ onUnmounted(() => {
   padding: 16px 5% 16px 6%;
   width: 100%;
   box-sizing: border-box;
+}
+
+.header-wrapper--admin .header-content {
+  height: 94px;
+  padding: 0 clamp(56px, 6vw, 116px) 0 clamp(56px, 6vw, 116px);
+}
+
+.header-wrapper--admin .header-logo {
+  width: 200px;
+  height: 32px;
+}
+
+.header-user-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #1f2a37;
+  cursor: pointer;
+}
+
+.header-wrapper--admin .header-avatar {
+  width: 34px;
+  height: 34px;
+  border: 2px solid #ffffff;
+  box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+}
+
+.header-user-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: #1f2a37;
+}
+
+.header-wrapper--admin .header-dropdown {
+  top: 46px;
+  width: 188px;
+  padding: 10px 0;
+  border: 1px solid #edf0f5;
+  border-radius: 16px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.12);
+}
+
+.header-wrapper--admin .header-dropdown button,
+.header-wrapper--admin .header-dropdown > div {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.header-wrapper--admin .header-dropdown button:hover {
+  color: #005bc2;
+  background: #f4f8ff;
 }
 
 /* 小屏幕时减少内边距 */

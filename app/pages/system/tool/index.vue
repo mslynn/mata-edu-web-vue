@@ -1,163 +1,299 @@
 <template>
-  <div class="tool-center-page">
-    <!-- 页面标题 -->
-    <h1 class="page-title">{{ t("tool.pageTitle") }}</h1>
+  <div ref="toolCenterPageRef" class="tool-center-page" :style="pageAdaptiveStyle">
+    <div class="tool-center-shell">
+      <section class="tool-hero-banner">
+        <div class="tool-hero-banner__copy">
+          <h1 class="tool-hero-banner__title">
+            <span>激发无限创意</span>
+            <span>数字工具赋能智慧教学</span>
+          </h1>
+          <p class="tool-hero-banner__desc">
+            配套智能教具，软硬件结合，探索未来教育的无限可能。为每一个创意提供触手可及的实现路径。
+          </p>
+        </div>
 
-    <div class="tool-grid">
-      <!-- 骨架屏 -->
-      <template v-if="pageLoading">
-        <div v-for="i in 5" :key="i" class="tool-card">
-          <el-skeleton animated :rows="0">
-            <template #template>
-              <div class="tool-content">
-                <div class="tool-left">
+        <div class="tool-hero-banner__visual" aria-hidden="true">
+          <img
+            :src="toolHeroImage"
+            alt=""
+            class="tool-hero-banner__image"
+          />
+        </div>
+      </section>
+
+      <div class="tool-grid tool-grid--featured">
+        <template v-if="pageLoading">
+          <div v-for="i in 2" :key="`featured-${i}`" class="tool-card tool-card--featured">
+            <el-skeleton animated :rows="0">
+              <template #template>
+                <div class="tool-card__featured-inner">
                   <el-skeleton-item
                     variant="rect"
-                    style="
-                      width: 70px;
-                      height: 70px;
-                      border-radius: 16px;
-                      margin-bottom: 10px;
-                    "
+                    style="width: 88px; height: 88px; border-radius: 22px"
                   />
-                  <el-skeleton-item variant="text" style="width: 60px" />
+                  <div style="flex: 1">
+                    <el-skeleton-item
+                      variant="text"
+                      style="width: 60%; height: 24px; margin-bottom: 14px"
+                    />
+                    <el-skeleton-item
+                      variant="text"
+                      style="width: 100%; height: 16px; margin-bottom: 10px"
+                    />
+                    <el-skeleton-item
+                      variant="text"
+                      style="width: 90%; height: 16px; margin-bottom: 18px"
+                    />
+                    <div class="tool-card__featured-actions">
+                      <el-skeleton-item
+                        variant="rect"
+                        style="width: 110px; height: 34px; border-radius: 10px"
+                      />
+                      <el-skeleton-item
+                        variant="rect"
+                        style="width: 110px; height: 34px; border-radius: 10px"
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div class="tool-right">
-                  <el-skeleton-item
-                    variant="text"
-                    style="width: 100%; margin-bottom: 10px"
-                  />
-                  <el-skeleton-item
-                    variant="text"
-                    style="width: 100%; margin-bottom: 10px"
-                  />
-                  <el-skeleton-item variant="text" style="width: 70%" />
+              </template>
+            </el-skeleton>
+          </div>
+        </template>
+
+        <template v-else>
+          <article
+            v-for="tool in featuredTools"
+            :key="tool.id"
+            class="tool-card tool-card--featured"
+          >
+            <div class="tool-card__featured-inner">
+              <div class="tool-brand-box">
+                 <img :src="getToolVisualMeta(tool.id).featuredLogo" :alt="getToolDisplayName(tool.id)" />
+                <!-- <div
+                  class="tool-brand-box__inner"
+                
+                >
+                 
+                </div> -->
+              </div>
+
+              <div class="tool-card__body">
+                <h2 class="tool-card__title tool-card__title--featured">
+                  {{ getToolDisplayName(tool.id) }}
+                </h2>
+                <p class="tool-card__desc tool-card__desc--featured">
+                  {{ t(tool.descKey) }}
+                </p>
+
+                <div class="tool-card__featured-actions">
+                  <button
+                    v-if="tool.hasCreate"
+                    class="tool-btn tool-btn--primary"
+                    @click="handleCreate(tool)"
+                  >
+                    {{ t("tool.startCreate") }}
+                  </button>
+
+                  <button
+                    v-if="tool.hasDownloadClient"
+                    class="tool-btn tool-btn--soft"
+                    @click="handleDownloadClient(tool)"
+                  >
+                    {{ t("tool.downloadClient") }}
+                  </button>
                 </div>
               </div>
-              <div class="tool-actions">
+            </div>
+          </article>
+        </template>
+      </div>
+
+      <div class="tool-grid tool-grid--compact">
+        <template v-if="pageLoading">
+          <div v-for="i in 3" :key="`compact-${i}`" class="tool-card tool-card--compact">
+            <el-skeleton animated :rows="0">
+              <template #template>
+                <div class="tool-card__compact-icon-skeleton">
+                  <el-skeleton-item
+                    variant="rect"
+                    style="width: 68px; height: 68px; border-radius: 18px"
+                  />
+                </div>
                 <el-skeleton-item
-                  variant="rect"
-                  style="width: 100px; height: 34px; border-radius: 6px"
+                  variant="text"
+                  style="width: 56%; height: 22px; margin: 0 auto 16px"
                 />
                 <el-skeleton-item
-                  variant="rect"
-                  style="width: 100px; height: 34px; border-radius: 6px"
+                  variant="text"
+                  style="width: 92%; height: 16px; margin-bottom: 10px"
+                />
+                <el-skeleton-item
+                  variant="text"
+                  style="width: 84%; height: 16px; margin: 0 auto 20px"
+                />
+                <div class="tool-card__compact-actions tool-card__compact-actions--stack">
+                  <el-skeleton-item
+                    variant="rect"
+                    style="width: 100%; height: 34px; border-radius: 10px"
+                  />
+                  <el-skeleton-item
+                    variant="rect"
+                    style="width: 100%; height: 34px; border-radius: 10px"
+                  />
+                </div>
+              </template>
+            </el-skeleton>
+          </div>
+        </template>
+
+        <template v-else>
+          <article
+            v-for="tool in compactTools"
+            :key="tool.id"
+            class="tool-card tool-card--compact"
+            :class="{
+              'tool-card--compact-xplore': tool.id === 'matataxplore',
+            }"
+          >
+            <div class="tool-card__compact-icon">
+              <div
+                class="tool-card__compact-icon-inner"
+                :style="{
+                  background: getToolVisualMeta(tool.id).compactBg,
+                  boxShadow: `0 10px 24px ${getToolVisualMeta(tool.id).compactShadow}`,
+                }"
+              >
+                <img
+                  :src="tool.icon"
+                  :alt="getToolDisplayName(tool.id)"
+                  class="tool-card__compact-symbol-image"
                 />
               </div>
-            </template>
-          </el-skeleton>
-        </div>
-      </template>
-      <!-- 真实内容 -->
-      <template v-else>
-        <div v-for="tool in toolList" :key="tool.id" class="tool-card">
-          <div class="tool-content">
-            <!-- 左侧图标和名称 -->
-            <div class="tool-left">
-              <div class="tool-icon">
-                <img :src="tool.icon" :alt="tool.name" />
-              </div>
-              <div class="tool-name" v-html="tool.name"></div>
             </div>
-            <!-- 右侧描述 -->
-            <div class="tool-right">
-              <p>{{ t(tool.titleKey) }}</p>
-              <p class="tool-desc">{{ t(tool.descKey) }}</p>
+
+            <h3 class="tool-card__title tool-card__title--compact">
+              {{ getToolDisplayName(tool.id) }}
+            </h3>
+            <p class="tool-card__desc tool-card__desc--compact">{{ t(tool.descKey) }}</p>
+
+            <div
+              class="tool-card__compact-actions"
+              :class="{
+                'tool-card__compact-actions--stack': tool.id === 'matatacode',
+                'tool-card__compact-actions--single': tool.id === 'talemap',
+                'tool-card__compact-actions--grid': tool.id === 'matataxplore',
+              }"
+            >
+              <button
+                v-if="tool.hasMacOS"
+                class="tool-btn tool-btn--compact"
+                @click="handleDownloadMacOS(tool)"
+              >
+                <span
+                  class="tool-icon-svg tool-btn__icon"
+                  v-html="getActionIconSvg(tool.id, 'macOS')"
+                ></span>
+                {{ t("tool.downloadMacOS") }}
+              </button>
+
+              <button
+                v-if="tool.hasWindows"
+                class="tool-btn tool-btn--compact"
+                @click="handleDownloadWindows(tool)"
+              >
+                <span
+                  class="tool-icon-svg tool-btn__icon"
+                  v-html="getActionIconSvg(tool.id, 'windows')"
+                ></span>
+                {{ t("tool.downloadWindows") }}
+              </button>
+
+              <button
+                v-if="tool.hasAppStore"
+                class="tool-btn tool-btn--compact"
+                @click="handleDownloadAppStore(tool)"
+              >
+                <span
+                  class="tool-icon-svg tool-btn__icon"
+                  v-html="getActionIconSvg(tool.id, 'appStore')"
+                ></span>
+                {{ t(tool.appStoreKey || "tool.downloadAppStore") }}
+              </button>
+
+              <button
+                v-if="tool.hasGooglePlay"
+                class="tool-btn tool-btn--compact"
+                @click="handleDownloadGooglePlay(tool)"
+              >
+                <span
+                  class="tool-icon-svg tool-btn__icon"
+                  v-html="getActionIconSvg(tool.id, 'googlePlay')"
+                ></span>
+                {{ t(tool.googlePlayKey || "tool.downloadGooglePlay") }}
+              </button>
+
+              <button
+                v-if="tool.hasDownloadClient"
+                class="tool-btn tool-btn--compact"
+                @click="handleDownloadClient(tool)"
+              >
+                <span
+                  class="tool-icon-svg tool-btn__icon"
+                  v-html="getActionIconSvg(tool.id, 'client')"
+                ></span>
+                {{ t("tool.downloadClient") }}
+              </button>
             </div>
-          </div>
-          <!-- 底部按钮 -->
-          <div class="tool-actions">
-            <button v-if="tool.hasCreate" class="btn-primary" @click="handleCreate(tool)">
-              {{ t("tool.startCreate") }}
-            </button>
+          </article>
+        </template>
+      </div>
 
-            <!-- 下载客户端 (VinciBot, Nous, TaleMap) -->
-            <button
-              v-if="tool.hasDownloadClient"
-              class="btn-outline"
-              @click="handleDownloadClient(tool)"
-            >
-              {{ t("tool.downloadClient") }}
-            </button>
+      <div
+        v-if="showIframeModal"
+        class="iframe-modal-overlay"
+        @click.self="closeIframeModal"
+      >
+        <div class="iframe-modal-container">
+          <div class="iframe-modal-header">
+            <div class="iframe-modal-copy">
+              <span class="iframe-modal-title">{{ currentToolName }}</span>
+              <span class="iframe-modal-desc">
+                工具内容保持原有交互逻辑，仅更新当前容器界面样式。
+              </span>
+            </div>
 
-            <!-- macOS (MatataXplore) -->
-            <button
-              v-if="tool.hasMacOS"
-              class="btn-outline"
-              @click="handleDownloadMacOS(tool)"
-            >
-              {{ t("tool.downloadMacOS") }}
-            </button>
-
-            <!-- Windows (MatataXplore) -->
-            <button
-              v-if="tool.hasWindows"
-              class="btn-outline"
-              @click="handleDownloadWindows(tool)"
-            >
-              {{ t("tool.downloadWindows") }}
-            </button>
-
-            <!-- App Store (MatataXplore, MatataCode) -->
-            <button
-              v-if="tool.hasAppStore"
-              class="btn-outline"
-              @click="handleDownloadAppStore(tool)"
-            >
-              {{ t(tool.appStoreKey || "tool.downloadAppStore") }}
-            </button>
-
-            <!-- Google Play (MatataXplore, MatataCode) -->
-            <button
-              v-if="tool.hasGooglePlay"
-              class="btn-outline"
-              @click="handleDownloadGooglePlay(tool)"
-            >
-              {{ t(tool.googlePlayKey || "tool.downloadGooglePlay") }}
+            <button class="iframe-close-btn" @click="closeIframeModal">
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
             </button>
           </div>
-        </div>
-      </template>
-    </div>
 
-    <!-- iframe 弹窗 -->
-    <div
-      v-if="showIframeModal"
-      class="iframe-modal-overlay"
-      @click.self="closeIframeModal"
-    >
-      <div class="iframe-modal-container">
-        <div class="iframe-modal-header">
-          <span class="iframe-modal-title">{{ currentToolName }}</span>
-          <button class="iframe-close-btn" @click="closeIframeModal">
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </svg>
-          </button>
-        </div>
-        <div class="iframe-modal-body">
-          <div v-if="iframeLoading" class="iframe-loading">
-            <div class="loading-spinner"></div>
-            <span class="loading-text">{{ t("common.loading") }}</span>
+          <div class="iframe-modal-body">
+            <div v-if="iframeLoading" class="iframe-loading">
+              <div class="loading-spinner"></div>
+              <span class="loading-text">{{ t("common.loading") }}</span>
+            </div>
+            <iframe
+              ref="toolIframeRef"
+              :src="currentIframeUrl"
+              class="tool-iframe"
+              :class="{ hidden: iframeLoading }"
+              frameborder="0"
+              allowfullscreen
+              allow="camera; microphone; bluetooth; serial"
+              @load="onIframeLoad"
+            ></iframe>
           </div>
-          <iframe
-            ref="toolIframeRef"
-            :src="currentIframeUrl"
-            class="tool-iframe"
-            :class="{ hidden: iframeLoading }"
-            frameborder="0"
-            allowfullscreen
-            allow="camera; microphone; bluetooth; serial"
-            @load="onIframeLoad"
-          ></iframe>
         </div>
       </div>
     </div>
@@ -165,7 +301,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { aiAdmin } from "~/composables/api/ai";
@@ -200,23 +336,32 @@ const {
   postFileBufferToIframe,
 } = useIframeFileBridge();
 
-// 页面骨架屏（最少显示 300ms）
 const pageLoading = ref(true);
 const TOOL_OUTER_SCROLL_CLASS = "tool-page-use-outer-scroll";
+const toolCenterPageRef = ref<HTMLElement | null>(null);
+let toolCenterResizeObserver: ResizeObserver | null = null;
+const toolCenterLayoutWidth = ref(1360);
 
 const toggleToolOuterScroll = (enabled: boolean) => {
   if (typeof document === "undefined") return;
 
-  document.documentElement.classList.toggle(TOOL_OUTER_SCROLL_CLASS, enabled);
-  document.body.classList.toggle(TOOL_OUTER_SCROLL_CLASS, enabled);
+  document.documentElement.classList.remove(TOOL_OUTER_SCROLL_CLASS);
+  document.body.classList.remove(TOOL_OUTER_SCROLL_CLASS);
 };
 
-onMounted(() => {
-  toggleToolOuterScroll(true);
-  setTimeout(() => {
-    pageLoading.value = false;
-  }, 300);
-});
+const resetToolPageScroll = () => {
+  if (typeof window === "undefined") return;
+
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  document.documentElement.scrollTop = 0;
+  document.body.scrollTop = 0;
+
+  const shell = document.querySelector(".sidebar-shell") as HTMLElement | null;
+  const content = document.querySelector(".sidebar-shell-content") as HTMLElement | null;
+
+  if (shell) shell.scrollTop = 0;
+  if (content) content.scrollTop = 0;
+};
 
 interface Tool {
   id: string;
@@ -226,13 +371,13 @@ interface Tool {
   descKey: string;
   hasCreate: boolean;
   onlyCreateFlow?: boolean;
-  hasDownloadClient?: boolean; // 下载客户端
-  hasMacOS?: boolean; // 下载macOS
-  hasWindows?: boolean; // 下载Windows
-  hasAppStore?: boolean; // App Store
-  hasGooglePlay?: boolean; // Google Play
-  appStoreKey?: string; // App Store 按钮文案key
-  googlePlayKey?: string; // Google Play 按钮文案key
+  hasDownloadClient?: boolean;
+  hasMacOS?: boolean;
+  hasWindows?: boolean;
+  hasAppStore?: boolean;
+  hasGooglePlay?: boolean;
+  appStoreKey?: string;
+  googlePlayKey?: string;
   createUrl?: string;
   downloadClientUrl?: string;
   macOSUrl?: string;
@@ -240,6 +385,17 @@ interface Tool {
   appStoreUrl?: string;
   googlePlayUrl?: string;
 }
+
+interface ToolVisualMeta {
+  displayName: string;
+  brandBg: string;
+  featuredLogo: string;
+  compactBg: string;
+  compactShadow: string;
+}
+
+const toolHeroImage =
+  "https://lh3.googleusercontent.com/aida-public/AB6AXuDk1c_6ZDuQwwgDFOjqPfih4MXVYL3VustVas6xDTBKdfNS0Zbpbmku_25sTY7ETEhkbVdhQRCVBmrjBS3Nqy_2pjyVZ0j-H958SyarZkcdEPk-MTnzqFYg6hs-mF9WXGAihiob6gGjUydnYo4fkhRZJrx2WsjrwLxKOUjFVwBLNSQsdwXPuAd84V6WfZtYypbXnT5Scp0SbTHfj_fwRjcpAQFx8C_E1h_oyqSVeGcUCwRXGOVtp_ZITTbQYw2R9a4OdJ9snShr";
 
 const toolList: Tool[] = [
   {
@@ -280,7 +436,6 @@ const toolList: Tool[] = [
     appStoreUrl: "https://apps.apple.com/us/app/matatacode/id1448969038",
     googlePlayUrl: "https://play.google.com/store/apps/details?id=com.matatalab.matatacode",
   },
-  // https://nous.matatastudio.com/?page=download&lang=zh
   {
     id: "talemap",
     name: "MatataCode<br/>(TaleMap)",
@@ -299,7 +454,6 @@ const toolList: Tool[] = [
     titleKey: "tool.matataxplore.title",
     descKey: "tool.matataxplore.desc",
     hasCreate: false,
-    hasDownloadClient: false,
     hasMacOS: true,
     hasWindows: true,
     hasAppStore: true,
@@ -315,6 +469,144 @@ const toolList: Tool[] = [
       "https://play.google.com/store/apps/details?id=com.matatalab.mtts&pli=1",
   },
 ];
+
+const TOOL_VISUAL_META: Record<string, ToolVisualMeta> = {
+  vincibot: {
+    displayName: "MatataCode (VinciBot)",
+    brandBg: "#0d1016",
+    featuredLogo: tool1Icon,
+    compactBg: "#eef2ff",
+    compactShadow: "rgba(0, 91, 194, 0.12)",
+  },
+  nous: {
+    displayName: "MatataCode (Nous)",
+    brandBg: "#0f1824",
+    featuredLogo: tool2Icon,
+    compactBg: "#eef6ff",
+    compactShadow: "rgba(0, 91, 194, 0.1)",
+  },
+  matatacode: {
+    displayName: "MatataCode (Kids)",
+    brandBg: "#121212",
+    featuredLogo: "",
+    compactBg: "#fff0f0",
+    compactShadow: "rgba(236, 94, 94, 0.14)",
+  },
+  talemap: {
+    displayName: "MatataCode (TaleMap)",
+    brandBg: "#132236",
+    featuredLogo: "",
+    compactBg: "#eef4ff",
+    compactShadow: "rgba(74, 115, 255, 0.14)",
+  },
+  matataxplore: {
+    displayName: "MatataXplore",
+    brandBg: "#171124",
+    featuredLogo: "",
+    compactBg: "#f4efff",
+    compactShadow: "rgba(147, 99, 255, 0.16)",
+  },
+};
+
+const featuredTools = computed(() => toolList.slice(0, 2));
+const compactTools = computed(() => toolList.slice(2));
+
+const getToolVisualMeta = (toolId: string) => TOOL_VISUAL_META[toolId];
+const getToolDisplayName = (toolId: string) =>
+  TOOL_VISUAL_META[toolId]?.displayName || toolId;
+
+const TOOL_ICON_SVGS = {
+  action: {
+    macOS: `
+      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="5" y="6" width="14" height="9.5" rx="1.8" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M3.5 18.2H20.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+    windows: `
+      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="4.5" y="4.5" width="6.5" height="6.5" rx="1.2" stroke="currentColor" stroke-width="1.8"/>
+        <rect x="13" y="4.5" width="6.5" height="6.5" rx="1.2" stroke="currentColor" stroke-width="1.8"/>
+        <rect x="4.5" y="13" width="6.5" height="6.5" rx="1.2" stroke="currentColor" stroke-width="1.8"/>
+        <rect x="13" y="13" width="6.5" height="6.5" rx="1.2" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+    `,
+    client: `
+      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="4.5" y="5.5" width="15" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M9.5 19H14.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+    tablet: `
+      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="7" y="3.8" width="10" height="16.4" rx="2.2" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="12" cy="16.9" r="0.85" fill="currentColor"/>
+      </svg>
+    `,
+    phone: `
+      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <rect x="8" y="3.5" width="8" height="17" rx="2.2" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="12" cy="17.3" r="0.75" fill="currentColor"/>
+      </svg>
+    `,
+    googlePlay: `
+      <svg viewBox="0 0 24 24" width="100%" height="100%" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path d="M8 5.5L16.5 12L8 18.5V5.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M6 4.8L17.5 12L6 19.2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" opacity="0.6"/>
+      </svg>
+    `,
+  },
+} as const;
+
+const getActionIconSvg = (
+  toolId: string,
+  action: "macOS" | "windows" | "appStore" | "googlePlay" | "client"
+) => {
+  if (action === "appStore") {
+    return toolId === "matatacode"
+      ? TOOL_ICON_SVGS.action.tablet
+      : TOOL_ICON_SVGS.action.phone;
+  }
+
+  return TOOL_ICON_SVGS.action[action];
+};
+
+const getToolCenterLayoutWidth = () => {
+  if (typeof window === "undefined") {
+    return 1360;
+  }
+
+  const clientWidth = document.documentElement?.clientWidth || 0;
+  const pageClientWidth = toolCenterPageRef.value?.clientWidth || 0;
+  const outerWidth = window.outerWidth || 0;
+  const innerWidth = window.innerWidth || 0;
+  const referenceWidth = outerWidth || innerWidth || clientWidth || 1360;
+  const visibleWidthCandidates = [clientWidth, pageClientWidth].filter(width => width > 0);
+  const visibleWidth = visibleWidthCandidates.length
+    ? Math.min(...visibleWidthCandidates)
+    : referenceWidth;
+  const boundedWidth = Math.min(referenceWidth, visibleWidth);
+  return Math.max(1280, Math.round(boundedWidth));
+};
+
+const syncToolCenterLayoutWidth = () => {
+  toolCenterLayoutWidth.value = getToolCenterLayoutWidth();
+};
+
+const toolCenterShellWidth = computed(() => {
+  if (toolCenterLayoutWidth.value <= 1700) {
+    return `${Math.max(1280, Math.round(toolCenterLayoutWidth.value))}px`;
+  }
+
+  return `${Math.min(
+    1920,
+    Math.max(1280, Math.round(toolCenterLayoutWidth.value * 0.9))
+  )}px`;
+});
+
+const pageAdaptiveStyle = computed(() => ({
+  "--tool-center-shell-width": toolCenterShellWidth.value,
+}));
 
 const showIframeModal = ref(false);
 const currentIframeUrl = ref("");
@@ -720,7 +1012,6 @@ const handleCreate = async (tool: Tool) => {
   try {
     let url = tool.createUrl;
 
-    // 动态添加语言参数
     if (tool.id === "vincibot") {
       const token = await getToolAccessToken();
       const lang = locale.value === "zh" ? "zh-CN" : "en";
@@ -747,7 +1038,7 @@ const handleCreate = async (tool: Tool) => {
     } else {
       currentToolCacheKey.value = `tool:${tool.id}`;
     }
-    currentToolName.value = tool.name.replace("<br/>", " ");
+    currentToolName.value = getToolDisplayName(tool.id);
     iframeLoading.value = true;
     showIframeModal.value = true;
   } catch (error) {
@@ -773,11 +1064,32 @@ const closeIframeModal = () => {
 };
 
 onMounted(() => {
+  toggleToolOuterScroll(false);
+  resetToolPageScroll();
+  syncToolCenterLayoutWidth();
+  window.addEventListener("resize", syncToolCenterLayoutWidth);
+  window.visualViewport?.addEventListener("resize", syncToolCenterLayoutWidth);
+  if (window.ResizeObserver && toolCenterPageRef.value) {
+    toolCenterResizeObserver = new window.ResizeObserver(() => {
+      syncToolCenterLayoutWidth();
+    });
+    toolCenterResizeObserver.observe(toolCenterPageRef.value);
+  }
   window.addEventListener("message", handleIframeMessage);
+  setTimeout(() => {
+    pageLoading.value = false;
+  }, 300);
+  window.requestAnimationFrame(() => {
+    resetToolPageScroll();
+  });
 });
 
 onBeforeUnmount(() => {
   toggleToolOuterScroll(false);
+  window.removeEventListener("resize", syncToolCenterLayoutWidth);
+  window.visualViewport?.removeEventListener("resize", syncToolCenterLayoutWidth);
+  toolCenterResizeObserver?.disconnect();
+  toolCenterResizeObserver = null;
   window.removeEventListener("message", handleIframeMessage);
 });
 
@@ -825,266 +1137,449 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 </script>
 
 <style scoped>
-.tool-center-page {
-  padding: 30px 40px;
-  min-height: calc(100vh - 70px);
-  background: #f5f5f5;
+.tool-icon-svg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 0;
 }
 
-.page-title {
+.tool-center-page {
+  display: block;
+  min-height: calc(100vh - 70px);
+  padding: 28px 0 72px;
+  background: #f8f9fa;
+}
+
+.tool-center-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 32px;
+  width: min(100%, 1440px, var(--tool-center-shell-width));
+  margin: 0 auto;
+  padding: 0 32px;
+  box-sizing: border-box;
+}
+
+.tool-hero-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 336px;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: 0 64px;
+  background: linear-gradient(135deg, #005bc2 0%, #a4c1ff 100%);
+  box-shadow: 0 18px 48px rgba(0, 91, 194, 0.16);
+}
+
+.tool-hero-banner__copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 620px;
+  padding: 40px 0;
+}
+
+.tool-hero-banner__title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  color: #ffffff;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 42px;
+  font-weight: 800;
+  line-height: 1.14;
+  letter-spacing: -0.02em;
+}
+
+.tool-hero-banner__desc {
+  max-width: 520px;
+  margin: 20px 0 0;
+  color: rgba(255, 255, 255, 0.82);
   font-size: 18px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 24px;
+  line-height: 1.72;
+}
+
+.tool-hero-banner__visual {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: min(60%, 760px);
+  height: 100%;
+  pointer-events: none;
+}
+
+.tool-hero-banner__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  mix-blend-mode: screen;
+  opacity: 0.92;
 }
 
 .tool-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 1fr;
-  gap: 24px;
+  gap: 32px;
+}
+
+.tool-grid--featured {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.tool-grid--compact {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .tool-card {
-  background: white;
-  border-radius: 20px;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  min-height: 220px;
-  height: 100%;
+  border: 1px solid rgba(174, 179, 181, 0.14);
+  border-radius: 24px;
+  background: #ffffff;
+  box-shadow: 0 12px 32px rgba(46, 51, 53, 0.05);
 }
 
-.tool-content {
-  display: flex;
-  gap: 20px;
-  flex: 1;
+.tool-card--featured {
+  padding: 36px 40px;
 }
 
-.tool-left {
-  flex-shrink: 0;
+.tool-card--compact {
   display: flex;
   flex-direction: column;
+  min-height: 360px;
+  padding: 32px;
+}
+
+.tool-card--compact-xplore {
+  padding: 28px 28px 26px;
+}
+
+.tool-card__featured-inner {
+  display: flex;
   align-items: center;
-  width: 80px;
+  gap: 32px;
+  min-height: 100%;
 }
 
-.tool-icon {
-  width: 70px;
-  height: 70px;
-  border-radius: 16px;
-  overflow: hidden;
-  background: #f5f5f5;
-  margin-bottom: 10px;
-}
-
-.tool-icon img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.tool-name {
-  font-size: 12px;
-  color: #666;
-  text-align: center;
-  line-height: 1.4;
-}
-
-.tool-right {
-  flex: 1;
-  min-width: 0;
-}
-
-.tool-right > p {
-  margin: 0;
-}
-
-.tool-right > p:first-child {
-  font-size: 16px;
-  line-height: 1.6;
-  color: #333;
-  margin-bottom: 6px;
-}
-
-.tool-desc {
-  font-size: 13px;
-  color: #666;
-  line-height: 1.8;
-  margin: 0;
-}
-
-.tool-actions {
-  display: flex;
-  gap: 12px;
-  margin-top: 16px;
-  flex-wrap: wrap;
-}
-
-.btn-primary {
-  background: #ff9900;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-.btn-primary:hover {
-  background: #e68a00;
-}
-
-.btn-outline {
-  background: white;
-  color: #ff9900;
-  border: 1px solid #ff9900;
-  border-radius: 6px;
-  padding: 8px 20px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-outline:hover {
-  background: #fff9f0;
-}
-
-/* 响应式 */
-@media (max-width: 1400px) {
-  .tool-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 1400px) and (max-width: 1600px) {
-  .tool-center-page {
-    padding: 22px 20px;
-  }
-
-  .page-title {
-    margin-bottom: 18px;
-  }
-
-  .tool-grid {
-    gap: 16px;
-  }
-
-  .tool-card {
-    padding: 18px;
-    min-height: 198px;
-    border-radius: 18px;
-  }
-
-  .tool-content {
-    gap: 14px;
-  }
-
-  .tool-left {
-    width: 68px;
-  }
-
-  .tool-icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 14px;
-    margin-bottom: 8px;
-  }
-
-  .tool-name {
-    font-size: 11px;
-  }
-
-  .tool-right > p:first-child {
-    font-size: 14px;
-    line-height: 1.55;
-    margin-bottom: 4px;
-  }
-
-  .tool-desc {
-    font-size: 12px;
-    line-height: 1.65;
-  }
-
-  .tool-actions {
-    gap: 8px;
-    margin-top: 12px;
-  }
-
-  .btn-primary,
-  .btn-outline {
-    padding: 7px 16px;
-    font-size: 12px;
-  }
-}
-
-@media (max-width: 900px) {
-  .tool-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* iframe 弹窗样式 */
-.iframe-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+.tool-brand-box {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  border-radius: 24px;
+  background: #f2f4f5;
+}
+
+.tool-brand-box__inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 112px;
+  height: 112px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.tool-brand-box__inner img {
+  width: 87px;
+  height: 87px;
+  object-fit: contain;
+}
+
+.tool-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  align-self: stretch;
+}
+
+.tool-card__title {
+  margin: 0;
+  color: #2e3335;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-weight: 800;
+}
+
+.tool-card__title--featured {
+  font-size: 30px;
+  line-height: 1.18;
+  letter-spacing: -0.02em;
+}
+
+.tool-card__title--compact {
+  font-size: 26px;
+  line-height: 1.24;
+  text-align: center;
+  letter-spacing: -0.02em;
+}
+
+.tool-card__desc {
+  color: #5a6062;
+}
+
+.tool-card__desc--featured {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+.tool-card__desc--compact {
+  min-height: 84px;
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.78;
+  text-align: center;
+}
+
+.tool-card__featured-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: auto;
+  padding-top: 28px;
+}
+
+.tool-card__featured-actions .tool-btn {
+  flex: 1 1 160px;
+}
+
+.tool-card__compact-icon,
+.tool-card__compact-icon-skeleton {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 24px;
+}
+
+.tool-card__compact-icon-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
+}
+
+.tool-card__compact-symbol-image {
+  display: block;
+  width: 87px;
+  height: 87px;
+  object-fit: contain;
+}
+
+.tool-card--compact-xplore .tool-card__compact-icon {
+  margin-bottom: 20px;
+}
+
+.tool-card--compact-xplore .tool-card__compact-icon-inner {
+  width: 88px;
+  height: 88px;
+}
+
+.tool-card--compact-xplore .tool-card__compact-symbol-image {
+  width: 87px;
+  height: 87px;
+}
+
+.tool-card--compact-xplore .tool-card__desc--compact {
+  min-height: 76px;
+  margin-top: 14px;
+}
+
+.tool-card__compact-actions {
+  display: grid;
+  margin-top: auto;
+}
+
+.tool-card__compact-actions--stack {
+  gap: 12px;
+}
+
+.tool-card__compact-actions--single {
+  gap: 12px;
+}
+
+.tool-card__compact-actions--grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.tool-card--compact-xplore .tool-card__compact-actions--grid {
+  gap: 10px;
+}
+
+.tool-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.tool-btn:hover {
+  transform: translateY(-2px);
+}
+
+.tool-btn--primary {
+  min-width: 148px;
+  background: #005bc2;
+  color: #ffffff;
+  box-shadow: 0 12px 24px rgba(0, 91, 194, 0.18);
+}
+
+.tool-btn--primary:hover {
+  background: #0050ab;
+}
+
+.tool-btn--soft,
+.tool-btn--compact {
+  background: #e5e9eb;
+  color: #2e3335;
+}
+
+.tool-btn--soft {
+  min-width: 148px;
+}
+
+.tool-btn--soft:hover,
+.tool-btn--compact:hover {
+  background: #dee3e5;
+}
+
+.tool-btn__icon {
+  width: 20px;
+  height: 20px;
+}
+
+.tool-card__compact-actions--stack .tool-btn--compact,
+.tool-card__compact-actions--single .tool-btn--compact {
+  width: 100%;
+  justify-content: center;
+}
+
+.tool-card__compact-actions--grid .tool-btn--compact {
+  flex-direction: column;
+  min-height: 88px;
+  padding: 12px 8px;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.tool-card--compact-xplore .tool-card__compact-actions--grid .tool-btn--compact {
+  min-height: 80px;
+  padding: 10px 8px;
+  font-size: 11px;
+}
+
+.tool-card__compact-actions--grid .tool-btn__icon {
+  width: 24px;
+  height: 24px;
+}
+
+.tool-card--compact-xplore .tool-card__compact-actions--grid .tool-btn__icon {
+  width: 22px;
+  height: 22px;
+}
+
+.iframe-modal-overlay {
+  position: fixed;
+  inset: 0;
   z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(12, 15, 16, 0.45);
+  backdrop-filter: blur(8px);
 }
 
 .iframe-modal-container {
-  width: 95vw;
-  height: 90vh;
-  background: white;
-  border-radius: 12px;
   display: flex;
   flex-direction: column;
+  width: min(1480px, calc(100vw - 48px));
+  height: min(880px, calc(100vh - 48px));
   overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow: 0 24px 64px rgba(12, 15, 16, 0.18);
 }
 
 .iframe-modal-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e5e5;
-  background: #fafafa;
+  gap: 16px;
+  padding: 18px 22px;
+  border-bottom: 1px solid rgba(174, 179, 181, 0.18);
+  background: #fafbfc;
+}
+
+.iframe-modal-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .iframe-modal-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #333;
+  color: #2e3335;
+  font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.iframe-modal-desc {
+  margin-top: 6px;
+  color: #5a6062;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .iframe-close-btn {
-  width: 32px;
-  height: 32px;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: #999;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
-  transition: all 0.2s;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: #edf1f4;
+  color: #5a6062;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 .iframe-close-btn:hover {
-  background: #f0f0f0;
-  color: #666;
+  background: #dee3e5;
+  color: #2e3335;
 }
 
 .iframe-modal-body {
+  position: relative;
   flex: 1;
   overflow: hidden;
-  position: relative;
+  background: #f8f9fa;
 }
 
 .tool-iframe {
@@ -1094,8 +1589,8 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 }
 
 .tool-iframe.hidden {
-  opacity: 0;
   position: absolute;
+  opacity: 0;
 }
 
 .iframe-loading {
@@ -1105,15 +1600,15 @@ const handleDownloadGooglePlay = (tool: Tool) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: white;
-  gap: 16px;
+  gap: 14px;
+  background: #ffffff;
 }
 
 .loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #f0f0f0;
-  border-top-color: #ff9900;
+  width: 42px;
+  height: 42px;
+  border: 4px solid rgba(174, 179, 181, 0.24);
+  border-top-color: #005bc2;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1125,8 +1620,150 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 }
 
 .loading-text {
-  font-size: 14px;
-  color: #666;
+  color: #5a6062;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+@media (max-width: 1600px) {
+  .tool-center-shell {
+    width: min(100%, 1360px, var(--tool-center-shell-width));
+    padding: 0 24px;
+  }
+
+  .tool-hero-banner {
+    min-height: 312px;
+    padding: 0 48px;
+  }
+
+  .tool-hero-banner__title {
+    font-size: 38px;
+  }
+
+  .tool-card--featured {
+    padding: 32px;
+  }
+
+  .tool-brand-box {
+    width: 144px;
+    height: 144px;
+  }
+
+  .tool-brand-box__inner {
+    width: 104px;
+    height: 104px;
+  }
+}
+
+@media (max-width: 1360px) {
+  .tool-grid--featured {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-grid--compact {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1180px) {
+  .tool-hero-banner {
+    min-height: 0;
+    padding: 32px 28px 220px;
+  }
+
+  .tool-hero-banner__visual {
+    width: 100%;
+    height: 220px;
+  }
+
+  .tool-grid--compact {
+    grid-template-columns: 1fr;
+  }
+
+  .tool-card--featured,
+  .tool-card--compact {
+    padding: 28px 24px;
+  }
+
+  .tool-card__featured-inner {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
+  }
+
+  .tool-brand-box {
+    width: 132px;
+    height: 132px;
+    margin: 0 auto;
+  }
+
+  .tool-card__title--featured,
+  .tool-card__title--compact {
+    text-align: center;
+  }
+
+  .tool-card__desc--featured {
+    text-align: center;
+  }
+
+  .tool-card__featured-actions {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .tool-center-page {
+    padding: 20px 0 40px;
+  }
+
+  .tool-center-shell {
+    gap: 24px;
+    padding: 0 16px;
+  }
+
+  .tool-hero-banner {
+    border-radius: 20px;
+    padding: 24px 20px 188px;
+  }
+
+  .tool-hero-banner__title {
+    font-size: 30px;
+  }
+
+  .tool-hero-banner__desc {
+    margin-top: 14px;
+    font-size: 14px;
+  }
+
+  .tool-hero-banner__visual {
+    height: 188px;
+  }
+
+  .tool-card {
+    border-radius: 20px;
+  }
+
+  .tool-card--featured,
+  .tool-card--compact {
+    padding: 24px 20px;
+  }
+
+  .tool-card__title--featured {
+    font-size: 24px;
+  }
+
+  .tool-card__title--compact {
+    font-size: 22px;
+  }
+
+  .tool-card__desc--featured,
+  .tool-card__desc--compact {
+    font-size: 14px;
+  }
+
+  .tool-card__compact-actions--grid {
+    grid-template-columns: 1fr 1fr;
+  }
 }
 </style>
 
@@ -1154,6 +1791,8 @@ html.tool-page-use-outer-scroll .sidebar-shell-main,
 body.tool-page-use-outer-scroll .sidebar-shell-main,
 html.tool-page-use-outer-scroll .sidebar-shell-content,
 body.tool-page-use-outer-scroll .sidebar-shell-content {
+  display: block;
+  min-height: auto;
   overflow: visible;
 }
 

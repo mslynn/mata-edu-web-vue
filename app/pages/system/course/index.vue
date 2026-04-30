@@ -1,236 +1,215 @@
 <template>
-    <div class="course-page flex-1 flex flex-col">
+    <div ref="coursePageRef" class="course-page" :style="courseAdaptiveStyle">
         <!-- 创建/编辑课程弹窗 -->
         <CreateCourseModal v-model="showCreateModal" :edit-data="editCourseData" @confirm="handleCreateCourse" />
 
         <!-- 删除课程确认弹窗 -->
         <DeleteCourseModal v-model:visible="showDeleteModal" @confirm="confirmDeleteCourse" />
 
-        <!-- 右侧内容区 -->
-        <div class="flex-1 flex flex-col p-4 w-[96.5%] mx-auto">
-            <!-- 顶部分类标签 + 创建按钮 -->
-            <div class="flex items-center justify-between mb-4 flex-shrink-0">
-                <!-- 一级分类标签 -->
-                <div class="flex items-center gap-2 flex-wrap">
-                    <!-- 主分类 -->
-                    <button v-for="cat in mainCategories" :key="cat.value" :class="[
-                        'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
-                        activeCategory === cat.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
-                    ]" @click="activeCategory = cat.value">
+        <div class="course-page__content">
+            <div class="course-topbar">
+                <div class="course-topbar__tabs">
+                    <button
+                        v-for="cat in mainCategories"
+                        :key="cat.value"
+                        :class="['course-pill', { 'is-active': activeCategory === cat.value }]"
+                        @click="activeCategory = cat.value"
+                    >
                         {{ cat.label }}
                     </button>
-                    <!-- 分隔线（只有主分类存在时才显示） -->
-                    <div v-if="mainCategories.length > 0" class="w-px h-6 bg-gray-300 mx-2"></div>
-                    <!-- 特殊分类 -->
-                    <button v-for="cat in extraCategories" :key="cat.value" :class="[
-                        'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
-                        activeCategory === cat.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
-                    ]" @click="activeCategory = cat.value">
+                    <div v-if="mainCategories.length > 0" class="course-topbar__divider"></div>
+                    <button
+                        v-for="cat in extraCategories"
+                        :key="cat.value"
+                        :class="['course-pill', { 'is-active': activeCategory === cat.value }]"
+                        @click="activeCategory = cat.value"
+                    >
                         {{ cat.label }}
                     </button>
                 </div>
-                <!-- 创建课程按钮 -->
-                <button class="w-[132px] h-[50px] bg-[#FF9900] text-white rounded-[10px] flex items-center justify-center gap-1 text-sm"
-                    @click="openCreateModal">
-                    <span class="text-lg">+</span>
+
+                <button class="course-create-btn" @click="openCreateModal">
+                    <span class="course-create-btn__icon">+</span>
                     <span>{{ $t('course.createCourse') }}</span>
                 </button>
             </div>
 
-            <!-- 二级分类 + 筛选 -->
-            <div class="flex items-center justify-between mb-4 flex-shrink-0">
-                <!-- 二级分类标签 -->
-                <div class="flex items-center gap-2 flex-wrap">
-                    <button v-for="sub in subCategories" :key="sub.value" :class="[
-                        'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
-                        activeSubCategory === sub.value
-                            ? 'bg-[#FF9900] text-white'
-                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
-                    ]" @click="handleSubCategoryClick(sub)">
-                        {{ sub.label }}
-                    </button>
-                </div>
-                <!-- 右侧筛选 -->
-                <div class="flex items-center gap-3 min-w-0">
-                    <!-- 开通状态筛选（自定义和共享课程不显示） -->
-                    <div v-if="activeCategory !== 'custom' && activeCategory !== 'shared'" class="flex items-center gap-2 shrink-0">
-                        <span class="text-sm text-gray-500 whitespace-nowrap">{{ $t('common.openStatus') }}</span>
-                        <!-- 自定义下拉框 -->
-                        <div class="relative shrink-0">
-                            <button type="button"
-                                class="flex items-center justify-center gap-2 w-[108px] h-[42px] px-3 bg-white border border-gray-200 rounded-[10px] text-sm text-gray-600 hover:border-[#FF9900] transition-colors"
-                                @click="showStatusDropdown = !showStatusDropdown">
-                                <span>{{statusOptions.find(o => o.value === courseStatus)?.label || $t('common.all')}}</span>
-                                <svg class="w-4 h-4 text-gray-400 transition-transform"
-                                    :class="{ 'rotate-180': showStatusDropdown }" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </button>
-                            <!-- 下拉选项 -->
-                            <Transition name="dropdown">
-                                <div v-if="showStatusDropdown"
-                                    class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-[200]">
-                                    <div v-for="option in statusOptions" :key="option.value"
-                                        class="px-3 py-2 text-sm cursor-pointer transition-colors" :class="[
-                                            courseStatus === option.value
-                                                ? 'bg-[#FFF7E6] text-[#FF9900]'
-                                                : 'text-gray-600 hover:bg-gray-50'
-                                        ]" @click="selectStatus(option.value)">
-                                        {{ option.label }}
-                                    </div>
-                                </div>
-                            </Transition>
-                        </div>
-                    </div>
-                    <div class="relative min-w-0">
-                        <input v-model="searchKeyword" type="text" :placeholder="$t('common.searchPlaceholder')"
-                            class="pl-9 pr-4 w-[220px] xl:w-[240px] 2xl:w-[267px] h-[42px] border border-gray-200 rounded-[10px] text-sm outline-none focus:border-[#FF9900]" />
-                        <svg class="w-5 h-5 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400" fill="none"
-                            stroke="currentColor" viewBox="0 0 24 24">
+            <div class="course-tools">
+                <MInput
+                    v-model="searchKeyword"
+                    clearable
+                    :placeholder="$t('common.searchPlaceholder')"
+                    class="course-search course-search__input"
+                >
+                    <template #prefix>
+                        <svg class="course-search__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                    </div>
+                    </template>
+                </MInput>
+
+                <div
+                    v-if="activeCategory !== 'custom' && activeCategory !== 'shared'"
+                    class="course-status-filter"
+                >
+                    <span class="course-status-filter__label">{{ $t('common.openStatus') }}:</span>
+                    <MSelect
+                        v-model="courseStatus"
+                        :options="statusOptions"
+                        class="course-status-filter__select"
+                        dropdown-class="course-status-filter__dropdown"
+                    />
                 </div>
             </div>
 
-            <!-- 三级分类 -->
-            <div v-if="thirdCategories.length > 0" class="flex items-center gap-2 flex-wrap mb-4 flex-shrink-0">
-                <button v-for="third in thirdCategories" :key="third.value" :class="[
-                    'min-w-[106px] h-[50px] px-4 rounded-[10px] text-sm transition-colors',
-                    activeThirdCategory === third.value
-                        ? 'bg-[#FF9900] text-white'
-                        : 'bg-white border border-gray-200 text-gray-600 hover:border-[#FF9900]'
-                ]" @click="activeThirdCategory = third.value">
+            <div class="course-filter-strip">
+                <span class="course-filter-strip__label">分类</span>
+                <button
+                    v-for="sub in subCategories"
+                    :key="sub.value"
+                    :class="['course-filter-strip__item', { 'is-active': activeSubCategory === sub.value }]"
+                    @click="handleSubCategoryClick(sub)"
+                >
+                    {{ sub.label }}
+                </button>
+            </div>
+
+            <div v-if="thirdCategories.length > 0" class="course-filter-strip course-filter-strip--secondary">
+                <span class="course-filter-strip__label">子类</span>
+                <button
+                    v-for="third in thirdCategories"
+                    :key="third.value"
+                    :class="['course-filter-strip__item', { 'is-active': activeThirdCategory === third.value }]"
+                    @click="activeThirdCategory = third.value"
+                >
                     {{ third.label }}
                 </button>
             </div>
 
-            <!-- 课程列表区域 -->
-            <div class="flex-1 bg-white rounded-lg border border-dashed border-gray-300 p-6 overflow-visible">
-                <!-- 骨架屏 -->
-                <div v-if="loading" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    <div v-for="i in 10" :key="i" class="w-full aspect-[265/380] rounded-[20px] border border-gray-200 pt-[5%] px-[8%]">
-                        <el-skeleton animated :rows="0">
-                            <template #template>
-                                <el-skeleton-item variant="rect" style="width: 100%; aspect-ratio: 220/276; border-radius: 5px; margin-bottom: 12px" />
-                                <el-skeleton-item variant="text" style="width: 70%; margin: 0 auto; display: block" />
-                            </template>
-                        </el-skeleton>
-                    </div>
-                </div>
-                <div v-else class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                    <div v-for="course in filteredCourseList" :key="course.id"
-                        class="course-card w-full aspect-[265/380] rounded-[20px] border border-gray-200 shadow-sm group pt-[5%] px-[8%]"
-                        :class="getCourseCardStateClass(course)"
-                        @click="handleCourseCardClick(course)">
-                        <!-- 课程封面 -->
-                        <div
-                            class="course-cover w-full aspect-[220/276] bg-gray-200 rounded-[5px] mb-3 flex items-center justify-center relative overflow-hidden">
-                            <!-- 自定义课程：显示编辑和删除图标 -->
-                            <div v-if="course.category === 'custom'" class="absolute top-2 right-2 flex gap-1 z-10">
-                                <div class="tooltip-wrapper group relative">
-                                    <button
-                                        class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-gray-50"
-                                        @click.stop.prevent="handleEditCourse(course)">
-                                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                        </svg>
-                                    </button>
-                                    <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
-                                </div>
-                                <!-- 学校可见的课程不显示删除按钮（coursePermission: 0=仅自己可见，1=全校老师可见） -->
-                                <div v-if="activeSubCategory !== 'public' && Number(course.coursePermission) !== 1" class="tooltip-wrapper group relative">
-                                    <button
-                                        class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-red-50"
-                                        @click.stop.prevent="handleDeleteCourse(course)">
-                                        <svg class="w-4 h-4 text-gray-500 hover:text-red-500" fill="none"
-                                            stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                    <div class="tooltip-content">{{ $t('common.delete') }}<span class="tooltip-arrow"></span></div>
-                                </div>
-                            </div>
-                            <!-- 共享课程：编辑或添加按钮 + 创建者标签 -->
-                            <template v-else-if="course.category === 'shared'">
-                                <!-- 右上角：编辑或添加按钮 -->
-                                <div class="absolute top-2 right-2 z-10">
-                                    <!-- 可添加的共享课程（别人分享的）只显示添加按钮 -->
-                                    <div v-if="course.canAdd" class="tooltip-wrapper group relative">
-                                        <button
-                                            class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-[#FFF7E6]"
-                                            @click.stop.prevent="handleAddToMyCourse(course)">
-                                            <svg class="w-4 h-4 text-[#FF9900]" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M12 4v16m8-8H4" />
-                                            </svg>
-                                        </button>
-                                        <div class="tooltip-content">{{ $t('common.add') }}<span class="tooltip-arrow"></span></div>
+            <div class="course-board">
+                <div class="course-board__scroll">
+                    <div v-if="loading" class="course-grid course-grid--loading">
+                        <div v-for="i in 10" :key="i" class="course-card course-card--skeleton">
+                            <el-skeleton animated :rows="0">
+                                <template #template>
+                                    <div class="course-cover">
+                                        <el-skeleton-item variant="rect" class="course-card__cover-skeleton" />
                                     </div>
-                                    <!-- 自己的共享课程只显示编辑按钮 -->
-                                    <div v-else class="tooltip-wrapper group relative">
+                                    <div class="course-card__body">
+                                        <el-skeleton-item variant="text" class="course-card__title-skeleton" />
+                                    </div>
+                                </template>
+                            </el-skeleton>
+                        </div>
+                    </div>
+
+                    <div v-else class="course-grid">
+                        <div
+                            v-for="course in filteredCourseList"
+                            :key="course.id"
+                            class="course-card group"
+                            :class="getCourseCardStateClass(course)"
+                            @click="handleCourseCardClick(course)"
+                        >
+                            <div class="course-cover">
+                                <div v-if="course.category === 'custom'" class="course-card__actions">
+                                    <div class="tooltip-wrapper group relative">
                                         <button
-                                            class="w-7 h-7 bg-white rounded flex items-center justify-center shadow hover:bg-gray-50"
-                                            @click.stop.prevent="handleEditCourse(course)">
-                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
+                                            class="course-card__action-btn"
+                                            @click.stop.prevent="handleEditCourse(course)"
+                                        >
+                                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                             </svg>
                                         </button>
                                         <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
                                     </div>
+                                    <div
+                                        v-if="activeSubCategory !== 'public' && Number(course.coursePermission) !== 1"
+                                        class="tooltip-wrapper group relative"
+                                    >
+                                        <button
+                                            class="course-card__action-btn course-card__action-btn--danger"
+                                            @click.stop.prevent="handleDeleteCourse(course)"
+                                        >
+                                            <svg class="w-4 h-4 text-gray-500 hover:text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                        <div class="tooltip-content">{{ $t('common.delete') }}<span class="tooltip-arrow"></span></div>
+                                    </div>
                                 </div>
-                                <!-- 右下角：我的/创建者标签（贴边） -->
-                                <span v-if="course.isOwner" class="absolute bottom-0 right-0 px-3 py-1 bg-[#FF9900] text-white text-xs rounded-tl z-10">我的</span>
-                                <span v-else-if="course.createByName" class="absolute bottom-0 right-0 px-3 py-1 bg-[#52C41A] text-white text-xs rounded-tl z-10">{{ course.createByName }}</span>
-                            </template>
-                            <!-- 其他课程：显示状态标签 -->
-                            <span v-else class="absolute top-2 right-2 px-2 py-0.5 rounded text-xs z-10"
-                                :class="[statusConfig[course.status]?.bg, statusConfig[course.status]?.color]">
-                                {{ statusConfig[course.status]?.label }}
-                            </span>
-                            <!-- 封面图片 -->
-                            <img
-                                v-if="course.cover"
-                                :src="course.cover"
-                                alt="课程封面"
-                                loading="lazy"
-                                decoding="async"
-                                fetchpriority="low"
-                                class="absolute inset-0 w-full h-full object-cover"
-                            />
-                            <template v-else>
-                                <div class="absolute inset-0 flex items-center justify-center">
-                                    <span class="text-gray-400 text-sm">{{ $t('common.courseCover') }}</span>
-                                </div>
-                                <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
-                                    <line x1="0" y1="0" x2="100%" y2="100%" stroke="#ccc" stroke-width="1" />
-                                    <line x1="100%" y1="0" x2="0" y2="100%" stroke="#ccc" stroke-width="1" />
-                                </svg>
-                            </template>
-                        </div>
-                        <!-- 课程名称 -->
-                        <div class="text-[18px] font-normal text-[#4D4D4D] leading-[24px] mb-[6px] text-center mt-[10px]">{{ course.name }}</div>
-                        <!-- 课时数 -->
-                        <!-- <div class="text-[16px] font-normal text-[#ADADAD] leading-[24px] text-center">{{ course.hours }}{{ $t('common.hours') }}</div> -->
-                    </div>
-                </div>
 
-                <!-- 空状态 -->
-                <div v-if="!loading && !filteredCourseList.length" class="flex flex-col items-center justify-center h-full text-gray-400">
-                    <p>{{ $t('course.noChapter') }}</p>
+                                <template v-else-if="course.category === 'shared'">
+                                    <div class="course-card__actions">
+                                        <div v-if="course.canAdd" class="tooltip-wrapper group relative">
+                                            <button
+                                                class="course-card__action-btn course-card__action-btn--accent"
+                                                @click.stop.prevent="handleAddToMyCourse(course)"
+                                            >
+                                                <svg class="w-4 h-4 text-[#005BC2]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                            </button>
+                                            <div class="tooltip-content">{{ $t('common.add') }}<span class="tooltip-arrow"></span></div>
+                                        </div>
+                                        <div v-else class="tooltip-wrapper group relative">
+                                            <button
+                                                class="course-card__action-btn"
+                                                @click.stop.prevent="handleEditCourse(course)"
+                                            >
+                                                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                                </svg>
+                                            </button>
+                                            <div class="tooltip-content">{{ $t('common.edit') }}<span class="tooltip-arrow"></span></div>
+                                        </div>
+                                    </div>
+                                    <span v-if="course.isOwner" class="course-card__tag course-card__tag--mine">我的</span>
+                                    <span v-else-if="course.createByName" class="course-card__tag course-card__tag--shared">{{ course.createByName }}</span>
+                                </template>
+
+                                <span
+                                    v-else
+                                    class="course-card__status"
+                                    :class="getCourseStatusBadgeClass(course.status)"
+                                >
+                                    {{ statusConfig[course.status]?.label }}
+                                </span>
+
+                                <img
+                                    v-if="course.cover"
+                                    :src="course.cover"
+                                    alt="课程封面"
+                                    loading="lazy"
+                                    decoding="async"
+                                    fetchpriority="low"
+                                    class="course-card__image"
+                                />
+                                <template v-else>
+                                    <div class="course-card__cover-empty">
+                                        <span class="text-gray-400 text-sm">{{ $t('common.courseCover') }}</span>
+                                    </div>
+                                    <svg class="absolute inset-0 w-full h-full" preserveAspectRatio="none">
+                                        <line x1="0" y1="0" x2="100%" y2="100%" stroke="#ccc" stroke-width="1" />
+                                        <line x1="100%" y1="0" x2="0" y2="100%" stroke="#ccc" stroke-width="1" />
+                                    </svg>
+                                </template>
+                            </div>
+
+                            <div class="course-card__body">
+                                <div class="course-card__title">{{ course.name }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div v-if="!loading && !filteredCourseList.length" class="course-empty-state">
+                        <p>{{ $t('course.noChapter') }}</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -250,6 +229,9 @@ definePageMeta({
 
 const router = useRouter()
 const { getCursorTreeMenu, getCursorList, createCursor, editCursor, deleteCursor, copyCursor } = cursorAdmin()
+const coursePageRef = ref<HTMLElement | null>(null)
+const courseLayoutWidth = ref(1360)
+let coursePageResizeObserver: ResizeObserver | null = null
 
 // 获取当前用户ID
 const currentUserId = ref<string>('')
@@ -526,17 +508,40 @@ const handleAddToMyCourse = async (course: any) => {
     }
 }
 
-// 开通状态下拉框
-const showStatusDropdown = ref(false)
 const { t } = useI18n()
-const COURSE_OUTER_SCROLL_CLASS = 'course-page-use-outer-scroll'
 
-const toggleCourseOuterScroll = (enabled: boolean) => {
-    if (typeof document === 'undefined') return
+const getCourseLayoutWidth = () => {
+    if (typeof window === 'undefined') {
+        return 1360
+    }
 
-    document.documentElement.classList.toggle(COURSE_OUTER_SCROLL_CLASS, enabled)
-    document.body.classList.toggle(COURSE_OUTER_SCROLL_CLASS, enabled)
+    const clientWidth = document.documentElement?.clientWidth || 0
+    const pageClientWidth = coursePageRef.value?.clientWidth || 0
+    const outerWidth = window.outerWidth || 0
+    const innerWidth = window.innerWidth || 0
+    const referenceWidth = outerWidth || innerWidth || clientWidth || 1360
+    const visibleWidthCandidates = [clientWidth, pageClientWidth].filter((width) => width > 0)
+    const visibleWidth = visibleWidthCandidates.length ? Math.min(...visibleWidthCandidates) : referenceWidth
+    const boundedWidth = Math.min(referenceWidth, visibleWidth)
+
+    return Math.max(1280, Math.round(boundedWidth))
 }
+
+const syncCourseLayoutWidth = () => {
+    courseLayoutWidth.value = getCourseLayoutWidth()
+}
+
+const courseShellWidth = computed(() => {
+    if (courseLayoutWidth.value <= 1700) {
+        return `${Math.max(1280, Math.round(courseLayoutWidth.value))}px`
+    }
+
+    return `${Math.min(1920, Math.max(1280, Math.round(courseLayoutWidth.value * 0.9)))}px`
+})
+
+const courseAdaptiveStyle = computed(() => ({
+    '--course-shell-width': courseShellWidth.value,
+}))
 
 const statusOptions = computed(() => [
     { label: t('common.all'), value: '' },
@@ -546,31 +551,27 @@ const statusOptions = computed(() => [
     { label: t('common.trial'), value: 'trial' },
 ])
 
-const selectStatus = (value: string) => {
-    courseStatus.value = value
-    showStatusDropdown.value = false
-}
-
-// 点击外部关闭下拉框
-const closeDropdown = (e: MouseEvent) => {
-    const target = e.target as HTMLElement
-    if (!target.closest('.relative')) {
-        showStatusDropdown.value = false
-    }
-}
-
 onMounted(() => {
-    toggleCourseOuterScroll(true)
+    syncCourseLayoutWidth()
     initUserInfo()
     if (process.client) {
         loadMenuData()
     }
-    document.addEventListener('click', closeDropdown)
+    window.addEventListener('resize', syncCourseLayoutWidth)
+    window.visualViewport?.addEventListener('resize', syncCourseLayoutWidth)
+    if (window.ResizeObserver && coursePageRef.value) {
+        coursePageResizeObserver = new window.ResizeObserver(() => {
+            syncCourseLayoutWidth()
+        })
+        coursePageResizeObserver.observe(coursePageRef.value)
+    }
 })
 
 onUnmounted(() => {
-    toggleCourseOuterScroll(false)
-    document.removeEventListener('click', closeDropdown)
+    window.removeEventListener('resize', syncCourseLayoutWidth)
+    window.visualViewport?.removeEventListener('resize', syncCourseLayoutWidth)
+    coursePageResizeObserver?.disconnect()
+    coursePageResizeObserver = null
     if (searchTimer) {
         clearTimeout(searchTimer)
         searchTimer = null
@@ -640,6 +641,19 @@ const getCourseCardStateClass = (course: Course) => {
     return canEnterCourse(course)
         ? 'cursor-pointer'
         : 'cursor-not-allowed opacity-80'
+}
+
+const getCourseStatusBadgeClass = (status: string) => {
+    switch (status) {
+    case 'opened':
+        return 'course-card__status--opened'
+    case 'expired':
+        return 'course-card__status--expired'
+    case 'trial':
+        return 'course-card__status--trial'
+    default:
+        return 'course-card__status--default'
+    }
 }
 
 const handleCourseCardClick = (course: Course) => {
@@ -761,32 +775,417 @@ watch(searchKeyword, () => {
 
 <style scoped>
 .course-page {
-    min-height: calc(100vh - 70px);
+    --course-min-width: 1280px;
+    --course-max-width: 1920px;
+    --course-shell-width: var(--course-min-width);
+    height: auto;
+    min-height: 100%;
+    min-width: 0;
     overflow: visible;
+    background:
+        radial-gradient(circle at top left, rgba(164, 193, 255, 0.14), transparent 28%),
+        linear-gradient(180deg, #f8f9fa 0%, #f4f8ff 100%);
+    color: #191b23;
+    font-family: 'Manrope', 'PingFang SC', sans-serif;
 }
 
-.course-cover {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+.course-page__content {
+    width: 100%;
+    min-width: 0;
+    min-height: 100%;
+    margin: 0;
+    padding: 24px clamp(20px, 2vw, 40px) 40px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+.course-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.course-topbar__tabs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.course-topbar__divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(194, 198, 215, 0.5);
+    margin: 0 4px;
+}
+
+.course-pill {
+    min-width: 0;
+    border: 0;
+    border-radius: 999px;
+    background: #f2f4f5;
+    color: #5a606f;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.course-pill:hover {
+    background: #e6e7f3;
+    color: #005bc2;
+}
+
+.course-pill.is-active {
+    background: #096ef3;
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(9, 110, 243, 0.18);
+}
+
+.course-create-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 0;
+    border-radius: 12px;
+    background: #0056c4;
+    color: #ffffff;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 14px 28px rgba(0, 86, 196, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.course-create-btn:hover {
+    transform: translateY(-1px);
+    background: #004cad;
+    box-shadow: 0 18px 30px rgba(0, 86, 196, 0.26);
+}
+
+.course-create-btn__icon {
+    font-size: 18px;
+    line-height: 1;
+}
+
+.course-tools {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.course-search {
+    width: 384px;
+    max-width: 100%;
+}
+
+.course-search__icon {
+    width: 18px;
+    height: 18px;
+    color: #7a8090;
+}
+
+.course-status-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    height: 48px;
+    padding: 0;
+}
+
+.course-status-filter__label {
+    color: #667080;
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.course-status-filter__select {
+    width: 164px;
+}
+
+.course-filter-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 14px;
+    border-radius: 18px;
+    background: #f2f4f5;
+    padding: 8px 12px;
+}
+
+.course-filter-strip--secondary {
+    margin-top: -6px;
+}
+
+.course-filter-strip__label {
+    padding: 0 8px 0 4px;
+    color: #8b90a0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+}
+
+.course-filter-strip__item {
+    border: 0;
+    border-radius: 12px;
+    background: transparent;
+    color: #5a606f;
+    padding: 8px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.2;
+    transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.course-filter-strip__item:hover {
+    background: rgba(255, 255, 255, 0.72);
+    color: #0056c4;
+}
+
+.course-filter-strip__item.is-active {
+    background: #ffffff;
+    color: #0056c4;
+    box-shadow: 0 4px 12px rgba(25, 27, 35, 0.06);
+}
+
+.course-board {
+    flex: 1;
+    min-height: 0;
+    padding-top: 8px;
+}
+
+.course-board__scroll {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    padding: 0 0 40px;
+}
+
+.course-grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    justify-content: stretch;
+    align-content: start;
+    gap: clamp(18px, 1.35vw, 24px);
 }
 
 .course-card {
-    transition: transform 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid rgba(224, 226, 237, 0.95);
+    border-radius: 6px;
+    background: #ffffff;
+    box-shadow: 0 9px 24px rgba(46, 51, 53, 0.06);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .course-card:hover {
-    transform: scale(1.05);
+    transform: translateY(-3px);
+    border-color: rgba(176, 198, 255, 0.8);
+    box-shadow: 0 18px 32px rgba(46, 51, 53, 0.1);
 }
 
 .course-card.cursor-not-allowed:hover {
     transform: none;
+    border-color: rgba(224, 226, 237, 0.95);
+    box-shadow: 0 9px 24px rgba(46, 51, 53, 0.06);
 }
 
-.course-card:hover .course-cover {
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+.course-cover {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    background: linear-gradient(180deg, #dce7f7 0%, #edf2fb 100%);
 }
 
-.course-card.cursor-not-allowed:hover .course-cover {
-    box-shadow: none;
+.course-card__image {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.45s ease;
+}
+
+.course-card:hover .course-card__image {
+    transform: scale(1.06);
+}
+
+.course-card.cursor-not-allowed:hover .course-card__image {
+    transform: none;
+}
+
+.course-card__actions {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+    display: flex;
+    gap: 6px;
+}
+
+.course-card__action-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: 0;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 8px 16px rgba(25, 27, 35, 0.12);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.course-card__action-btn:hover {
+    transform: translateY(-1px);
+    background: #ffffff;
+}
+
+.course-card__action-btn--danger:hover {
+    background: #fff1f2;
+}
+
+.course-card__action-btn--accent:hover {
+    background: #eef4ff;
+}
+
+.course-card__status {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    z-index: 10;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 54px;
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    backdrop-filter: blur(10px);
+}
+
+.course-card__status--opened {
+    background: rgba(0, 86, 196, 0.9);
+    color: #ffffff;
+}
+
+.course-card__status--trial {
+    background: rgba(68, 93, 149, 0.9);
+    color: #ffffff;
+}
+
+.course-card__status--expired {
+    background: rgba(186, 26, 26, 0.88);
+    color: #ffffff;
+}
+
+.course-card__status--default {
+    background: rgba(114, 119, 134, 0.85);
+    color: #ffffff;
+}
+
+.course-card__tag {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    z-index: 10;
+    border-top-left-radius: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.course-card__tag--mine {
+    background: #0056c4;
+    color: #ffffff;
+}
+
+.course-card__tag--shared {
+    background: #52c41a;
+    color: #ffffff;
+}
+
+.course-card__cover-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.course-card__body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    padding: 15px 14px 13px;
+    background: #ffffff;
+}
+
+.course-card__title {
+    color: #191b23;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-align: center;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.22s ease;
+}
+
+.course-card:hover .course-card__title {
+    color: #0056c4;
+}
+
+.course-card--skeleton {
+    padding: 0;
+}
+
+.course-card--skeleton :deep(.el-skeleton) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.course-card__cover-skeleton {
+    display: block;
+    width: 100%;
+    height: 100% !important;
+    border-radius: 0;
+}
+
+.course-card__title-skeleton {
+    display: block;
+    width: 72%;
+    height: 16px !important;
+    margin: 0 auto;
+}
+
+.course-empty-state {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+    color: #8b90a0;
+    font-size: 14px;
 }
 
 .course-cover-skeleton {
@@ -804,19 +1203,6 @@ watch(searchKeyword, () => {
     }
 }
 
-/* 下拉框动画 */
-.dropdown-enter-active,
-.dropdown-leave-active {
-    transition: all 0.2s ease;
-}
-
-.dropdown-enter-from,
-.dropdown-leave-to {
-    opacity: 0;
-    transform: translateY(-8px);
-}
-
-/* 自定义 Tooltip 样式 */
 .tooltip-wrapper {
     display: inline-block;
 }
@@ -828,7 +1214,7 @@ watch(searchKeyword, () => {
     transform: translateX(-50%);
     padding: 6px 12px;
     background: #333;
-    color: white;
+    color: #ffffff;
     font-size: 12px;
     border-radius: 4px;
     white-space: nowrap;
@@ -851,64 +1237,140 @@ watch(searchKeyword, () => {
     opacity: 1;
     visibility: visible;
 }
-</style>
 
-<style>
-html.course-page-use-outer-scroll,
-body.course-page-use-outer-scroll {
-    overflow-y: auto;
+:deep(.course-search__input > input) {
+    height: 48px !important;
+    border: 0 !important;
+    border-radius: 14px !important;
+    background: #f2f4f5 !important;
+    padding: 0 40px 0 42px !important;
+    color: #191b23 !important;
+    font-size: 14px !important;
+    box-shadow: inset 0 0 0 1px transparent !important;
 }
 
-html.course-page-use-outer-scroll .sidebar-shell,
-body.course-page-use-outer-scroll .sidebar-shell {
-    height: auto;
-    min-height: 100vh;
-    overflow: visible;
+:deep(.course-search__input > input::placeholder) {
+    color: #7a8090 !important;
 }
 
-html.course-page-use-outer-scroll .sidebar-shell-body,
-body.course-page-use-outer-scroll .sidebar-shell-body {
-    display: block;
-    height: auto;
-    min-height: 100vh;
+:deep(.course-search__input > input:focus) {
+    border: 0 !important;
+    background: #ffffff !important;
+    box-shadow: 0 0 0 2px rgba(0, 86, 196, 0.12), inset 0 0 0 1px rgba(0, 86, 196, 0.4) !important;
 }
 
-html.course-page-use-outer-scroll .sidebar-shell-main,
-body.course-page-use-outer-scroll .sidebar-shell-main,
-html.course-page-use-outer-scroll .sidebar-shell-content,
-body.course-page-use-outer-scroll .sidebar-shell-content {
-    overflow: visible;
+:deep(.course-search__input > .absolute:first-child) {
+    left: 14px !important;
+    color: #7a8090 !important;
 }
 
-html.course-page-use-outer-scroll .app-sidebar,
-body.course-page-use-outer-scroll .app-sidebar {
-    position: fixed;
-    left: 0;
-    top: 0;
-    height: 100vh;
-    z-index: 20;
+:deep(.course-search__input > button) {
+    right: 14px !important;
 }
 
-html.course-page-use-outer-scroll .sidebar-shell-main,
-body.course-page-use-outer-scroll .sidebar-shell-main {
-    width: auto;
-    margin-left: 264px;
-    margin-right: 24px;
+:deep(.course-status-filter__select > div) {
+    min-height: auto !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    padding: 0 !important;
+    box-shadow: none !important;
 }
 
-@media (min-width: 1280px) {
-    html.course-page-use-outer-scroll .sidebar-shell-main,
-    body.course-page-use-outer-scroll .sidebar-shell-main {
-        margin-left: 328px;
-        margin-right: 40px;
+:deep(.course-status-filter__select > div > span:first-child) {
+    color: #0056c4 !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+
+:deep(.course-status-filter__select > div > svg) {
+    color: #7a8090 !important;
+}
+
+:deep(.course-status-filter__select > div.ring-2) {
+    box-shadow: none !important;
+}
+
+:global(.course-status-filter__dropdown) {
+    min-width: 180px !important;
+    border: 1px solid rgba(194, 198, 215, 0.7) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 18px 36px rgba(25, 27, 35, 0.12) !important;
+    padding: 8px 0 !important;
+}
+
+:global(.course-status-filter__dropdown > div.py-1 > div) {
+    margin: 0 8px 4px !important;
+    border-radius: 8px !important;
+    padding: 10px 14px !important;
+    color: #5a606f !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    transition: background-color 0.2s ease, color 0.2s ease !important;
+}
+
+:global(.course-status-filter__dropdown > div.py-1 > div:not(.text-gray-700)) {
+    background: #eef4ff !important;
+    color: #0056c4 !important;
+    font-weight: 700 !important;
+}
+
+:global(.course-status-filter__dropdown > div.py-1 > div.text-gray-700:hover) {
+    background: #f5f8ff !important;
+    color: #0056c4 !important;
+}
+
+.course-page::-webkit-scrollbar,
+.course-board__scroll::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.course-page::-webkit-scrollbar-track,
+.course-board__scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.course-page::-webkit-scrollbar-thumb,
+.course-board__scroll::-webkit-scrollbar-thumb {
+    background-color: rgba(174, 179, 181, 0.3);
+    border-radius: 999px;
+}
+
+@media (max-width: 1780px) {
+    .course-grid {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
     }
 }
 
-@media (min-width: 1536px) {
-    html.course-page-use-outer-scroll .sidebar-shell-main,
-    body.course-page-use-outer-scroll .sidebar-shell-main {
-        margin-left: 416px;
-        margin-right: 68px;
+@media (max-width: 1580px) {
+    .course-search {
+        width: 360px;
+    }
+
+    .course-topbar {
+        margin-bottom: 20px;
+    }
+}
+
+@media (max-width: 1320px) {
+    .course-topbar {
+        flex-wrap: wrap;
+    }
+
+    .course-tools {
+        gap: 14px;
+    }
+
+    .course-create-btn {
+        margin-left: auto;
+    }
+
+    .course-status-filter__select {
+        width: 156px;
     }
 }
 </style>

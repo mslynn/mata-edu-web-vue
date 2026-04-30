@@ -1224,7 +1224,6 @@ import {
   RadarComponent,
   TooltipComponent,
 } from "echarts/components";
-import "~/assets/css/study-global.css";
 import SemesterSettingsModal from "~/components/study/SemesterSettingsModal.vue";
 import { studyApi } from "~/composables/api/study";
 import { useAuth } from "~/composables/api/useAuth";
@@ -1262,8 +1261,8 @@ use([
   TooltipComponent,
 ]);
 
-const STUDY_OUTER_SCROLL_CLASS = "study-page-use-outer-scroll";
 const STUDY_BACK_TOP_VISIBLE_THRESHOLD = 40;
+const LEGACY_STUDY_OUTER_SCROLL_CLASS = "study-page-use-outer-scroll";
 const SCHOOL_ALL_COURSE_VALUE = "all";
 const SCHOOL_ALL_GRADE_VALUE = "__all_grade__";
 const SCHOOL_ALL_COURSE_OPTION = {
@@ -1340,12 +1339,6 @@ const SCHOOL_GRADE_DISTRIBUTION_MOCK_DATA: StudyGradeDistributionItem[] = [
   { gradeName: "5年级", studentCount: 265 },
   { gradeName: "6年级", studentCount: 34 },
 ];
-
-const toggleStudyOuterScroll = (enabled: boolean) => {
-  if (typeof document === "undefined") return;
-  document.documentElement.classList.toggle(STUDY_OUTER_SCROLL_CLASS, enabled);
-  document.body.classList.toggle(STUDY_OUTER_SCROLL_CLASS, enabled);
-};
 
 const {
   getSituationCascade,
@@ -5614,13 +5607,14 @@ const getStudyScrollElements = () => {
   if (typeof document === "undefined") return [] as HTMLElement[];
 
   return [
-    document.querySelector(".study-center-page"),
     document.querySelector(".sidebar-shell-content"),
-    document.querySelector(".sidebar-shell-main"),
-    document.scrollingElement,
-    document.documentElement,
-    document.body,
   ].filter((item): item is HTMLElement => !!item);
+};
+
+const clearLegacyStudyOuterScroll = () => {
+  if (typeof document === "undefined") return;
+  document.documentElement.classList.remove(LEGACY_STUDY_OUTER_SCROLL_CLASS);
+  document.body.classList.remove(LEGACY_STUDY_OUTER_SCROLL_CLASS);
 };
 
 const getStudyPageElement = () => {
@@ -5981,11 +5975,10 @@ watch(
 );
 
 onMounted(() => {
-  toggleStudyOuterScroll(true);
+  clearLegacyStudyOuterScroll();
+  scrollStudyPageToTop();
   updateBackToTopVisible();
   document.addEventListener("click", handleDocumentClick);
-  document.addEventListener("scroll", updateBackToTopVisible, true);
-  window.addEventListener("scroll", updateBackToTopVisible, { passive: true });
   getStudyScrollElements().forEach((item) =>
     item.addEventListener("scroll", updateBackToTopVisible, {
       passive: true,
@@ -6003,10 +5996,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-  toggleStudyOuterScroll(false);
   document.removeEventListener("click", handleDocumentClick);
-  document.removeEventListener("scroll", updateBackToTopVisible, true);
-  window.removeEventListener("scroll", updateBackToTopVisible);
   getStudyScrollElements().forEach((item) =>
     item.removeEventListener("scroll", updateBackToTopVisible)
   );

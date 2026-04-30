@@ -166,9 +166,9 @@ export const taskmanagementcenterApi = () => {
   };
 
   // 官方课程菜单树
-  const getExerciseCourseMenuTree = async () => {
+  const getExerciseCourseMenuTree = async (data?: { fix?: "no" }) => {
     try {
-      const response = await http.get("/system/exercise/course/menu/tree");
+      const response = await http.get("/system/course/menu/tree", data);
       if (response.code !== 200) {
         throw new Error(response.msg || "获取官方课程菜单树失败");
       }
@@ -529,7 +529,9 @@ export const taskmanagementcenterApi = () => {
           objectId: item.objectId ?? item.questionId ?? "",
           quotaIds: item.quotaIds || [],
         }))
-        .filter((item) => String(item.objectId).trim() && item.quotaIds.length > 0),
+        .filter(
+          (item) => String(item.objectId).trim() && item.quotaIds.length > 0,
+        ),
     };
 
     try {
