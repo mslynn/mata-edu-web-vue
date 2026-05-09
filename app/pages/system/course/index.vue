@@ -782,9 +782,9 @@ watch(searchKeyword, () => {
     min-height: 100%;
     min-width: 0;
     overflow: visible;
-    background:
+    /* background:
         radial-gradient(circle at top left, rgba(164, 193, 255, 0.14), transparent 28%),
-        linear-gradient(180deg, #f8f9fa 0%, #f4f8ff 100%);
+        linear-gradient(180deg, #f8f9fa 0%, #f4f8ff 100%); */
     color: #191b23;
     font-family: 'Manrope', 'PingFang SC', sans-serif;
 }
@@ -794,7 +794,7 @@ watch(searchKeyword, () => {
     min-width: 0;
     min-height: 100%;
     margin: 0;
-    padding: 24px clamp(20px, 2vw, 40px) 40px;
+    padding: 14px clamp(20px, 0vw, 40px) 40px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -879,10 +879,11 @@ watch(searchKeyword, () => {
     flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 18px;
+    padding: 0;
 }
 
 .course-search {
-    width: 384px;
+    width: 420px;
     max-width: 100%;
 }
 
@@ -896,14 +897,18 @@ watch(searchKeyword, () => {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    height: 48px;
-    padding: 0;
+    min-height: 48px;
+    padding: 0 16px;
+    border: 1px solid rgba(212, 221, 236, 0.92);
+    border-radius: 16px;
+    background: rgba(248, 250, 253, 0.96);
+    box-shadow: 0 4px 12px rgba(80, 103, 136, 0.05);
 }
 
 .course-status-filter__label {
-    color: #667080;
+    color: #5c6880;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     white-space: nowrap;
 }
 
@@ -1242,26 +1247,31 @@ watch(searchKeyword, () => {
     height: 48px !important;
     border: 0 !important;
     border-radius: 14px !important;
-    background: #f2f4f5 !important;
+    background: rgba(248, 250, 253, 0.96) !important;
     padding: 0 40px 0 42px !important;
     color: #191b23 !important;
     font-size: 14px !important;
-    box-shadow: inset 0 0 0 1px transparent !important;
+    box-shadow:
+        0 4px 12px rgba(80, 103, 136, 0.05),
+        inset 0 0 0 1px rgba(212, 221, 236, 0.95) !important;
 }
 
 :deep(.course-search__input > input::placeholder) {
-    color: #7a8090 !important;
+    color: #7d8799 !important;
 }
 
 :deep(.course-search__input > input:focus) {
     border: 0 !important;
     background: #ffffff !important;
-    box-shadow: 0 0 0 2px rgba(0, 86, 196, 0.12), inset 0 0 0 1px rgba(0, 86, 196, 0.4) !important;
+    box-shadow:
+        0 0 0 2px rgba(0, 86, 196, 0.12),
+        0 10px 24px rgba(79, 117, 255, 0.1),
+        inset 0 0 0 1px rgba(0, 86, 196, 0.42) !important;
 }
 
 :deep(.course-search__input > .absolute:first-child) {
     left: 14px !important;
-    color: #7a8090 !important;
+    color: #6f7b90 !important;
 }
 
 :deep(.course-search__input > button) {

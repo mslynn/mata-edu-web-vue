@@ -285,7 +285,6 @@ export const aiAdmin = () => {
     }
   };
   //AI对话（Responses API，SSE流式响应）
-
   const createAiChat = async (params: chat, options: AiChatStreamOptions = {}) => {
     try {
       const config = useRuntimeConfig();
@@ -593,6 +592,265 @@ export const aiAdmin = () => {
     }
   };
 
+
+  //ai自由对话
+
+  //查询AI问答角色分组
+  const getOptList = async () => {
+    try {
+      const response = await http.get("/system/opt/qa/roles");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询查询AI问答角色分组列表失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //新增AI问答自定义角色
+  const createOptQa = async (data: {
+    roleName: string;
+    prompt?: string;
+
+  }) => {
+    try {
+      const response = await http.post("/system/opt/qa/roles", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "新增AI问答自定义角色失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //修改AI问答自定义角色
+  const editOptQa = async (data: {
+    roleName: string;
+    prompt?: string;
+    roleId: string
+  }) => {
+    try {
+      const response = await http.put("/system/opt/qa/roles", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "修改AI问答自定义角色失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //删除AI问答自定义角色
+  const delOptQa = async (roleId: string) => {
+    try {
+      const response = await http.del(`/system/opt/qa/roles/${roleId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "删除AI问答自定义角色失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查询AI问答历史会话列表
+  const getOptQaSessions = async () => {
+    try {
+      const response = await http.get("/system/opt/qa/sessions");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询AI问答历史会话列表失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //查询AI问答会话详情
+  const getOptQaDeatil = async (sessionId: string) => {
+    try {
+      const response = await http.get(`/system/opt/qa/sessions/${sessionId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询AI问答会话详情失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //重命名AI问答会话
+  const titleOptQa = async (sessionId: string, title: string) => {
+    try {
+      const response = await http.put(`/system/opt/qa/sessions/${sessionId}/title`, { title });
+      if (response.code !== 200) {
+        throw new Error(response.msg || "重命名AI问答会话失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //置顶/取消置顶AI问答会话
+  const topOptQa = async (sessionId: string, isTop: 0 | 1) => {
+    try {
+      const response = await http.put(`/system/opt/qa/sessions/${sessionId}/top`, { isTop });
+      if (response.code !== 200) {
+        throw new Error(response.msg || "置顶/取消置顶AI问答会话失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //删除AI问答会话
+  const delAiOptQa = async (sessionId: string) => {
+    try {
+      const response = await http.del(`/system/opt/qa/sessions/${sessionId}`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "删除AI问答会话失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //停止AI问答会话生成
+    const stopAiOptQa = async (sessionId: string) => {
+    try {
+      const response = await http.get(`/system/opt/qa/sessions/${sessionId}/stop`);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "停止AI问答会话生成失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //AI问答流式对话
+  //ai实践中心的AI对话（Responses API，SSE流式响应）
+
+  const createOptAiChat = async (params: chat, options: AiChatStreamOptions = {}) => {
+    try {
+      const config = useRuntimeConfig();
+      const token = http.getToken();
+      const response = await fetch(`${config.public.apiBaseUrl}/system/opt/qa/chat`, {
+        method: "POST",
+        signal: options.signal,
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "text/event-stream, application/json",
+          Authorization: token ? `Bearer ${token}` : "",
+          "Content-Language": getCurrentContentLanguage(),
+        },
+        body: JSON.stringify(params),
+      });
+
+      if (!response.ok) {
+        throw new Error(`新增AI对话失败(${response.status})`);
+      }
+
+      const contentType = String(response.headers.get("content-type") || "").toLowerCase();
+      if (!contentType.includes("text/event-stream")) {
+        const json = await response.json();
+        if (json.code !== 200) {
+          throw new Error(json.msg || "新增AI对话失败");
+        }
+        return json.data;
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error("AI对话流读取失败");
+      }
+
+      const decoder = new TextDecoder("utf-8");
+      const eventChunks: unknown[] = [];
+      let buffer = "";
+      let streamText = "";
+      let lastPayload: unknown = null;
+
+      const consumeEventBlock = (eventBlock: string) => {
+        const lines = eventBlock.split(/\r?\n/);
+        const dataLines: string[] = [];
+        let eventName = "";
+        lines.forEach((line) => {
+          if (line.startsWith("event:")) {
+            eventName = line.slice(6).trim().toLowerCase();
+          }
+          if (line.startsWith("data:")) {
+            const lineValue = line.slice(5);
+            dataLines.push(lineValue.startsWith(" ") ? lineValue.slice(1) : lineValue);
+          }
+        });
+
+        const rawDataText = dataLines.join("\n");
+        if (!rawDataText.trim()) {
+          return false;
+        }
+        if (rawDataText.trim() === "[DONE]") {
+          return true;
+        }
+
+        let payload: unknown = rawDataText;
+        try {
+          payload = JSON.parse(rawDataText);
+        } catch {
+          payload = rawDataText;
+        }
+
+        if (eventName === "error") {
+          const errorMessage =
+            typeof payload === "object" && payload !== null
+              ? String(
+                (payload as Record<string, unknown>).message ||
+                (payload as Record<string, unknown>).msg ||
+                rawDataText
+              ).trim()
+              : String(payload || rawDataText).trim();
+          throw new Error(errorMessage || "AI对话失败");
+        }
+
+        lastPayload = payload;
+        eventChunks.push(payload);
+        const nextText = resolveAiStreamText(payload);
+        if (nextText) {
+          streamText = mergeAiStreamText(streamText, nextText);
+        }
+        options.onChunk?.(payload, streamText);
+        return eventName === "done";
+      };
+
+      let isDone = false;
+      while (!isDone) {
+        const { value, done } = await reader.read();
+        if (done) {
+          buffer += decoder.decode();
+          break;
+        }
+
+        buffer += decoder.decode(value, { stream: true });
+        const eventBlocks = buffer.split(/\r?\n\r?\n/);
+        buffer = eventBlocks.pop() || "";
+
+        for (const eventBlock of eventBlocks) {
+          if (consumeEventBlock(eventBlock)) {
+            isDone = true;
+            await reader.cancel().catch(() => undefined);
+            break;
+          }
+        }
+      }
+
+      if (!isDone && buffer.trim()) {
+        consumeEventBlock(buffer);
+      }
+
+      return {
+        data: lastPayload,
+        chunks: eventChunks,
+        text: streamText,
+      };
+    } catch (error: any) {
+      throw error;
+    }
+  };
   return {
     ssoLogin,
     getAiList,
@@ -617,5 +875,16 @@ export const aiAdmin = () => {
     getExerciseNewCursorEdit,
     getHotAiList,
     getImageList,
+    getOptList,
+    createOptQa,
+    editOptQa,
+    delOptQa,
+    getOptQaSessions,
+    getOptQaDeatil,
+    titleOptQa,
+    topOptQa,
+    delAiOptQa,
+    stopAiOptQa,
+    createOptAiChat,
   };
 };

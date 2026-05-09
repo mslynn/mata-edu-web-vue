@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>语音转写工作台 - Lucid Academy</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "surface-container": "#eaeef1",
+                      "primary": "#005bc4",
+                      "surface-container-low": "#f1f4f6",
+                      "secondary-fixed-dim": "#ffc4dd",
+                      "inverse-surface": "#0b0f10",
+                      "on-primary-fixed-variant": "#004292",
+                      "on-primary-fixed": "#002659",
+                      "error-dim": "#70030f",
+                      "tertiary-fixed": "#69f6b8",
+                      "tertiary-fixed-dim": "#58e7ab",
+                      "surface-tint": "#005bc4",
+                      "surface-container-high": "#e3e9ec",
+                      "error-container": "#f56965",
+                      "inverse-on-surface": "#9a9d9f",
+                      "surface-container-highest": "#dde3e7",
+                      "surface-variant": "#dde3e7",
+                      "tertiary-dim": "#005f40",
+                      "on-secondary": "#fff7f8",
+                      "secondary-container": "#ffd8e7",
+                      "secondary": "#a53173",
+                      "error": "#ac3434",
+                      "primary-fixed-dim": "#8fb3ff",
+                      "secondary-dim": "#952467",
+                      "primary-dim": "#004fad",
+                      "surface": "#f7f9fb",
+                      "outline": "#757c7f",
+                      "primary-fixed": "#a5c1ff",
+                      "on-secondary-container": "#942265",
+                      "on-surface-variant": "#596063",
+                      "on-tertiary-fixed-variant": "#006544",
+                      "background": "#f7f9fb",
+                      "tertiary": "#006d4a",
+                      "on-primary": "#f9f8ff",
+                      "tertiary-container": "#69f6b8",
+                      "outline-variant": "#acb3b7",
+                      "on-error-container": "#65000b",
+                      "on-secondary-fixed-variant": "#a02d70",
+                      "on-tertiary-fixed": "#00452d",
+                      "on-secondary-fixed": "#7b0852",
+                      "on-tertiary-container": "#005a3c",
+                      "inverse-primary": "#4d8eff",
+                      "on-error": "#fff7f6",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary-fixed": "#ffd8e7",
+                      "surface-dim": "#d3dbdf",
+                      "on-surface": "#2d3337",
+                      "on-tertiary": "#e6ffee",
+                      "on-primary-container": "#003a81",
+                      "primary-container": "#a5c1ff",
+                      "surface-bright": "#f7f9fb",
+                      "on-background": "#2d3337"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "display": ["Plus Jakarta Sans"],
+                      "body": ["Plus Jakarta Sans"],
+                      "label": ["Plus Jakarta Sans"]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface flex h-screen w-full overflow-hidden selection:bg-primary-container selection:text-on-primary-container">
+<!-- JSON Component: SideNavBar -->
+<aside class="h-screen w-64 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50 border-r border-slate-100 shrink-0 relative">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg" style=""/>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">home</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">group</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">menu_book</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">construction</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">玛塔工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">psychology</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">AI实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">insights</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">trending_up</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#" style="">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary" style="">emoji_events</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm font-medium" style="">赛事中心</span>
+</a>
+<!-- Active: AI助手 -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#" style="">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans','PingFang_SC'] text-sm" style="">AI助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-slate-200">
+<div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm">
+<img alt="张老师" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFpyGDyAPBoTYZAsaphMxDt6u-Fh9vVTZh_-LUH9fAPuQkXx1L8EqFBJ_fNFLMQXqZmfA1ND5eqTL8DJsgnETPZ8i-8Djug9o8_WY4ZebvlKRX01jiQqGAA6CDOic6RmensRUszDteoTqtjaUdr8YA7SCiuw1MlP6sX3cwgamGmdsMfhp6-TXDeTzaM97pcv1i76_BvV-EwAmKqNBGvGLHUVq-y5vSzwOHIbeKJ1vHyrK7dqQCv1GYWerQPjVILCvarqCM5UxZ1js" style=""/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate" style="">张老师</p>
+<p class="text-[10px] text-slate-500" style="">特级教师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area (1920px logical width, 30px padding) -->
+<main class="flex-1 p-[30px] flex gap-8 overflow-hidden max-w-[1920px] mx-auto w-full">
+<!-- Left Column (approx 1/4): Built-in Voice Library -->
+<section class="w-80 shrink-0 flex flex-col gap-6 h-full">
+<header class="flex items-center justify-between px-2">
+<h2 class="font-display text-2xl font-bold text-on-surface tracking-tight" style="">语音库</h2>
+<button class="w-8 h-8 rounded-full bg-surface-container-highest text-on-surface-variant flex items-center justify-center hover:bg-primary hover:text-on-primary transition-colors" style="">
+<span class="material-symbols-outlined text-sm" style="">refresh</span>
+</button>
+</header>
+<div class="flex-1 overflow-y-auto flex flex-col gap-4 pr-2 pb-10" style="scrollbar-width: none;">
+<!-- Audio Card 1 -->
+<article class="bg-surface-container-lowest p-5 rounded-DEFAULT shadow-[0_12px_32px_rgba(0,91,196,0.03)] hover:shadow-[0_20px_48px_rgba(0,91,196,0.08)] transition-all cursor-pointer group flex flex-col gap-3 border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>play_arrow</span>
+</div>
+<div>
+<h3 class="font-headline font-semibold text-on-surface text-[15px] mb-0.5 group-hover:text-primary transition-colors" style="">学术讲座_01.mp3</h3>
+<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium" style="">
+<span class="material-symbols-outlined text-[14px]" style="">schedule</span> 45:20
+                                    <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="" style="">英文</span>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden mt-1">
+<div class="h-full bg-primary w-1/3 rounded-full"></div>
+</div>
+</article>
+<!-- Audio Card 2 -->
+<article class="bg-surface-container-lowest p-5 rounded-DEFAULT shadow-[0_12px_32px_rgba(0,91,196,0.03)] hover:shadow-[0_20px_48px_rgba(0,91,196,0.08)] transition-all cursor-pointer group flex flex-col gap-3 border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-tertiary-container text-tertiary flex items-center justify-center group-hover:bg-tertiary group-hover:text-on-tertiary transition-colors">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>play_arrow</span>
+</div>
+<div>
+<h3 class="font-headline font-semibold text-on-surface text-[15px] mb-0.5 group-hover:text-tertiary transition-colors" style="">小组讨论_产品设计.wav</h3>
+<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium" style="">
+<span class="material-symbols-outlined text-[14px]" style="">schedule</span> 12:05
+                                    <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="" style="">中文</span>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden mt-1">
+<div class="h-full bg-tertiary w-0 rounded-full"></div>
+</div>
+</article>
+<!-- Audio Card 3 -->
+<article class="bg-surface-container-lowest p-5 rounded-DEFAULT shadow-[0_12px_32px_rgba(0,91,196,0.03)] hover:shadow-[0_20px_48px_rgba(0,91,196,0.08)] transition-all cursor-pointer group flex flex-col gap-3 border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-secondary-container text-secondary flex items-center justify-center group-hover:bg-secondary group-hover:text-on-secondary transition-colors">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>play_arrow</span>
+</div>
+<div>
+<h3 class="font-headline font-semibold text-on-surface text-[15px] mb-0.5 group-hover:text-secondary transition-colors" style="">客户访谈_Q3_04.m4a</h3>
+<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium" style="">
+<span class="material-symbols-outlined text-[14px]" style="">schedule</span> 28:40
+                                    <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="" style="">中文</span>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden mt-1">
+<div class="h-full bg-secondary w-3/4 rounded-full"></div>
+</div>
+</article>
+<!-- Audio Card 4 -->
+<article class="bg-surface-container-lowest p-5 rounded-DEFAULT shadow-[0_12px_32px_rgba(0,91,196,0.03)] hover:shadow-[0_20px_48px_rgba(0,91,196,0.08)] transition-all cursor-pointer group flex flex-col gap-3 border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-primary-container text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-on-primary transition-colors">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>play_arrow</span>
+</div>
+<div>
+<h3 class="font-headline font-semibold text-on-surface text-[15px] mb-0.5 group-hover:text-primary transition-colors" style="">会议纪要_20240315.mp3</h3>
+<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium" style="">
+<span class="material-symbols-outlined text-[14px]" style="">schedule</span> 64:10
+                    <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="" style="">中文</span>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden mt-1">
+<div class="h-full bg-primary w-1/4 rounded-full"></div>
+</div>
+</article>
+<!-- Audio Card 5 -->
+<article class="bg-surface-container-lowest p-5 rounded-DEFAULT shadow-[0_12px_32px_rgba(0,91,196,0.03)] hover:shadow-[0_20px_48px_rgba(0,91,196,0.08)] transition-all cursor-pointer group flex flex-col gap-3 border border-transparent hover:border-primary/10">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-outline-variant/20 text-on-surface-variant flex items-center justify-center group-hover:bg-on-surface-variant group-hover:text-surface transition-colors">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>play_arrow</span>
+</div>
+<div>
+<h3 class="font-headline font-semibold text-on-surface text-[15px] mb-0.5 group-hover:text-on-surface-variant transition-colors" style="">访谈速记_测试.wav</h3>
+<div class="flex items-center gap-2 text-xs text-on-surface-variant font-medium" style="">
+<span class="material-symbols-outlined text-[14px]" style="">schedule</span> 05:45
+                    <span class="w-1 h-1 rounded-full bg-outline-variant"></span>
+<span class="" style="">中文</span>
+</div>
+</div>
+</div>
+</div>
+<div class="w-full h-1 bg-surface-container rounded-full overflow-hidden mt-1">
+<div class="h-full bg-outline-variant w-full rounded-full"></div>
+</div>
+</article></div>
+</section>
+<!-- Right Column (approx 3/4): Main Workspace -->
+<section class="flex-1 flex flex-col gap-6 h-full min-w-0">
+<!-- Top Card: Operation Area (Tabs + Action) -->
+<div class="bg-surface-container-lowest rounded-lg shadow-[0_24px_64px_rgba(0,91,196,0.04)] p-8 flex flex-col shrink-0">
+<!-- Tabs -->
+<div class="flex gap-8 mb-8 border-b-2 border-surface-container">
+<button class="pb-3 border-b-2 border-primary text-primary font-headline font-bold text-lg px-2 -mb-[2px] transition-colors" style="">
+                        录制语音
+                    </button>
+<button class="pb-3 border-b-2 border-transparent text-outline hover:text-on-surface font-headline font-semibold text-lg px-2 -mb-[2px] transition-colors" style="">
+                        本地上传
+                    </button>
+</div>
+<!-- Record Area (Active State) -->
+<div class="bg-surface-container-low rounded-DEFAULT flex flex-col items-center justify-center h-48 relative overflow-hidden group cursor-pointer border border-transparent hover:border-primary/20 transition-all p-8"><!-- Decorative ambient gradient -->
+<div class="absolute inset-0 bg-gradient-to-tr from-primary-container/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+<div class="relative z-10 w-full max-w-2xl flex flex-col items-center">
+<!-- Mic Icon & Status -->
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 bg-primary rounded-full flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-on-primary text-xl" style='font-variation-settings: "FILL" 1;'>mic</span>
+</div>
+<p class="text-sm text-primary font-bold flex items-center gap-2 tracking-wide" style="">
+<span class="w-2 h-2 rounded-full bg-error animate-pulse"></span>
+            正在录制中
+        </p>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-3 bg-surface-container-highest rounded-full overflow-hidden mb-4 shadow-inner">
+<div class="h-full bg-gradient-to-r from-primary to-primary-fixed w-[25%] rounded-full shadow-[0_0_12px_rgba(0,91,196,0.3)]"></div>
+</div>
+<!-- Time Limit Indicator -->
+<div class="flex justify-between w-full text-sm font-bold font-display">
+<span class="text-primary" style="">00:15</span>
+<span class="text-outline-variant" style="">/ 01:00</span>
+</div>
+</div></div><div class="mt-8 flex justify-center">
+<button class="px-10 py-4 rounded-full bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all flex items-center gap-3" style="">
+<span class="material-symbols-outlined" style="">transcribe</span>
+        开始转写
+    </button>
+</div>
+</div>
+<!-- Bottom Card: Transcription Result & Player -->
+<div class="bg-surface-container-lowest rounded-lg shadow-[0_24px_64px_rgba(0,91,196,0.04)] p-8 flex-1 flex flex-col min-h-0">
+<!-- Header -->
+<div class="flex justify-between items-center mb-6 shrink-0">
+<h2 class="font-display text-xl font-bold text-on-surface flex items-center gap-3" style="">
+<span class="w-1.5 h-6 bg-primary rounded-full"></span>转写结果
+                    </h2>
+<div class="flex gap-3">
+<button class="px-5 py-2 rounded-full bg-primary-container text-on-primary-container hover:bg-primary hover:text-on-primary font-medium text-sm transition-colors flex items-center gap-2" style="">
+<span class="material-symbols-outlined text-[18px]" style="">download</span> 导出文本
+                        </button>
+</div>
+</div>
+<!-- Text Display Area -->
+<div class="flex-1 bg-surface-container-low rounded-DEFAULT p-8 overflow-y-auto mb-6 custom-scrollbar text-lg leading-loose text-on-surface-variant font-body shadow-inner border border-outline-variant/10">
+<p class="mb-4" style="">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-surface-container-highest text-outline mr-3 cursor-pointer hover:bg-primary-container hover:text-primary transition-colors" style="">00:00:00</span>
+                        欢迎大家参加今天的研讨会。我们将探讨无边界设计在教育科技产品中的应用。
+                    </p>
+<p class="mb-4" style="">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-surface-container-highest text-outline mr-3 cursor-pointer hover:bg-primary-container hover:text-primary transition-colors" style="">00:00:15</span>
+                        传统界面经常使用生硬的线条来划分区域，这在无形中增加了用户的认知负担。而我们的目标是，让内容自然浮现。
+                    </p>
+<p class="mb-4 bg-primary-container/20 -mx-4 px-4 py-2 rounded border-l-4 border-primary" style="">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-primary text-on-primary mr-3 shadow-sm" style="">00:00:30</span>
+<span class="text-on-surface font-medium" style="">正如大家所见，通过利用背景色阶的微小差异，结合柔和的环境阴影，我们可以在不使用任何边框的情况下，清晰地界定信息的层级关系。这种方式被称为“色调堆叠”。</span>
+</p>
+<p class="mb-4" style="">
+<span class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-surface-container-highest text-outline mr-3 cursor-pointer hover:bg-primary-container hover:text-primary transition-colors" style="">00:01:12</span>
+                        接下来，我们将深入探讨排版系统在这一理念中的核心作用...
+                    </p>
+<p class="mt-8 text-primary animate-pulse flex items-center gap-2 text-base font-medium" style="">
+<span class="material-symbols-outlined animate-spin text-[18px]" style="">sync</span> AI 正在持续识别中...
+                    </p>
+</div>
+<!-- Audio Player Controls -->
+</div>
+</section>
+</main>
+</body></html>

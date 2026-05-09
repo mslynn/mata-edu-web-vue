@@ -3,7 +3,7 @@
 // 根据环境直接设置 API 地址
 const apiBaseUrl = process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.145:8001'
+  : 'http://192.168.0.30:8001'
 
 // 预览服务地址
 
@@ -34,9 +34,9 @@ export default defineNuxtConfig({
         { name: 'description', content: 'AI智学云-教育平台' }
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/key.png' },
-        { rel: 'shortcut icon', type: 'image/png', href: '/key.png' },
-        { rel: 'apple-touch-icon', href: '/key.png' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/favicon.ico' }
       ]
     }
   },

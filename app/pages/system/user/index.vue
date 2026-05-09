@@ -263,7 +263,7 @@
                   </template>
                 </MInput>
                 <span class="user-teacher-password hidden xl:inline-block text-sm text-[#999] whitespace-nowrap">
-                  {{ $t('user.teacherDefaultPassword') }}<span class="text-[#4D4D4D]">{{ teacherDefaultPasswordDisplay
+                  {{ $t('user.teacherDefaultPassword') }}<span class="text-[#CBCBCB]">{{ teacherDefaultPasswordDisplay
                     }}</span>
                 </span>
               </div>
@@ -3554,7 +3554,7 @@ onMounted(async () => {
   --user-class-surface-lowest: #ffffff;
   --user-class-border: rgba(174, 179, 181, 0.18);
   --user-class-border-soft: rgba(174, 179, 181, 0.12);
-  --user-class-shadow: 0 12px 32px rgba(46, 51, 53, 0.06);
+  --user-class-shadow: none;
   --user-class-primary: #005bc2;
   --user-class-primary-dim: #004ea8;
   --user-class-primary-soft: rgba(0, 91, 194, 0.08);
@@ -3639,7 +3639,7 @@ onMounted(async () => {
 
 .user-page--class-theme .user-class-side-card {
   border: 1px solid var(--user-class-border);
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--user-class-surface-lowest);
   box-shadow: var(--user-class-shadow);
   overflow: hidden;
@@ -3690,7 +3690,7 @@ onMounted(async () => {
 
 .user-page--class-theme .user-class-card {
   border: 1px solid var(--user-class-border);
-  border-radius: 24px !important;
+  border-radius: 16px !important;
   background: var(--user-class-surface-lowest) !important;
   box-shadow: var(--user-class-shadow);
   padding: 0 !important;
@@ -3983,11 +3983,12 @@ onMounted(async () => {
 }
 
 .user-page--class-theme .user-class-batch-bar {
-  margin: 14px 24px 20px !important;
-  padding: 14px 18px !important;
-  border: 1px solid rgba(164, 193, 255, 0.3) !important;
-  border-radius: 16px;
-  background: #f7fbff !important;
+  margin: 0 24px 0 !important;
+  padding: 14px 0 0 !important;
+  border: none !important;
+  border-top: 1px solid #eef2f6 !important;
+  border-radius: 0;
+  background: transparent !important;
 }
 
 .user-page--class-theme .user-class-batch-checkbox {
@@ -4133,8 +4134,8 @@ onMounted(async () => {
 }
 
 .user-page--class-theme :deep(.m-pagination) {
-  border-top: 1px solid #eef2f6;
-  padding-top: 16px;
+  border-top: none;
+  padding-top: 12px;
 }
 
 @media (min-width: 1024px) {
@@ -4191,7 +4192,7 @@ onMounted(async () => {
   }
 
   .user-page--class-theme .user-class-batch-bar {
-    margin: 14px 18px 18px !important;
+    margin: 0 18px 0 !important;
   }
 }
 
@@ -4405,7 +4406,7 @@ onMounted(async () => {
   --user-teacher-surface-lowest: #ffffff;
   --user-teacher-border: rgba(174, 179, 181, 0.18);
   --user-teacher-border-soft: rgba(174, 179, 181, 0.12);
-  --user-teacher-shadow: 0 12px 32px rgba(46, 51, 53, 0.06);
+  --user-teacher-shadow: none;
   --user-teacher-primary: #005bc2;
   --user-teacher-primary-dim: #004ea8;
   --user-teacher-text-main: #2e3335;
@@ -4477,7 +4478,7 @@ onMounted(async () => {
 
 .user-page--teacher-theme .user-teacher-side-card {
   border: 1px solid var(--user-teacher-border);
-  border-radius: 24px;
+  border-radius: 16px;
   background: var(--user-teacher-surface-lowest);
   box-shadow: var(--user-teacher-shadow);
   overflow: hidden;
@@ -4504,7 +4505,7 @@ onMounted(async () => {
 
 .user-page--teacher-theme .user-teacher-card {
   border: 1px solid var(--user-teacher-border);
-  border-radius: 24px !important;
+  border-radius: 16px !important;
   background: var(--user-teacher-surface-lowest) !important;
   box-shadow: var(--user-teacher-shadow);
   padding: 0 !important;
@@ -4775,11 +4776,12 @@ onMounted(async () => {
 }
 
 .user-page--teacher-theme .user-teacher-batch-bar {
-  margin: 14px 24px 20px !important;
-  padding: 14px 18px !important;
-  border: 1px solid rgba(164, 193, 255, 0.3) !important;
-  border-radius: 16px;
-  background: #f7fbff !important;
+  margin: 0 24px 0 !important;
+  padding: 14px 0 0 !important;
+  border: none !important;
+  border-top: 1px solid #eef2f6 !important;
+  border-radius: 0;
+  background: transparent !important;
 }
 
 .user-page--teacher-theme .user-teacher-batch-checkbox {
@@ -4819,7 +4821,7 @@ onMounted(async () => {
 }
 
 .user-page--teacher-theme :deep(.m-pagination) {
-  border-top: 1px solid #eef2f6;
+  border-top: none;
   padding: 10px 24px 12px;
 }
 
@@ -5085,7 +5087,7 @@ onMounted(async () => {
   }
 
   .user-page--teacher-theme .user-teacher-batch-bar {
-    margin: 14px 18px 18px !important;
+    margin: 0 18px 0 !important;
   }
 
   .user-page--teacher-theme :deep(.m-pagination) {

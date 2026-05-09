@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI 歌曲播放器 - 玛塔创想</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#f7f9fb",
+                        "primary-fixed": "#a5c1ff",
+                        "on-error": "#fff7f6",
+                        "on-error-container": "#65000b",
+                        "surface-variant": "#dde3e7",
+                        "surface": "#f7f9fb",
+                        "outline-variant": "#acb3b7",
+                        "on-secondary": "#fff7f8",
+                        "on-secondary-fixed": "#7b0852",
+                        "on-background": "#2d3337",
+                        "surface-tint": "#005bc4",
+                        "primary-container": "#a5c1ff",
+                        "surface-container-high": "#e3e9ec",
+                        "primary-dim": "#004fad",
+                        "on-surface": "#2d3337",
+                        "tertiary-container": "#69f6b8",
+                        "on-secondary-fixed-variant": "#a02d70",
+                        "on-primary": "#f9f8ff",
+                        "inverse-on-surface": "#9a9d9f",
+                        "surface-dim": "#d3dbdf",
+                        "secondary-fixed-dim": "#ffc4dd",
+                        "tertiary-dim": "#005f40",
+                        "primary": "#005bc4",
+                        "primary-fixed-dim": "#8fb3ff",
+                        "on-tertiary": "#e6ffee",
+                        "on-surface-variant": "#596063",
+                        "error-dim": "#70030f",
+                        "error-container": "#f56965",
+                        "surface-container": "#eaeef1",
+                        "on-secondary-container": "#942265",
+                        "on-primary-fixed-variant": "#004292",
+                        "inverse-surface": "#0b0f10",
+                        "error": "#ac3434",
+                        "background": "#f7f9fb",
+                        "on-primary-container": "#003a81",
+                        "surface-container-highest": "#dde3e7",
+                        "tertiary": "#006d4a",
+                        "on-primary-fixed": "#002659",
+                        "secondary-fixed": "#ffd8e7",
+                        "outline": "#757c7f",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary-fixed-variant": "#006544",
+                        "tertiary-fixed-dim": "#58e7ab",
+                        "secondary-dim": "#952467",
+                        "surface-container-low": "#f1f4f6",
+                        "tertiary-fixed": "#69f6b8",
+                        "on-tertiary-container": "#005a3c",
+                        "secondary-container": "#ffd8e7",
+                        "inverse-primary": "#4d8eff",
+                        "on-tertiary-fixed": "#00452d",
+                        "secondary": "#a53173"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        "headline": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .vinyl-spin {
+            animation: spin 20s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .lyrics-mask {
+            mask-image: linear-gradient(to bottom, transparent, black 20%, black 80%, transparent);
+        }
+    </style>
+</head>
+<body class="font-body text-on-surface overflow-hidden bg-slate-50">
+<!-- Main Shell Layout -->
+<div class="flex h-screen w-full">
+<!-- Side Navigation Bar: Synchronized with SCREEN_116 -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50 border-r border-slate-100">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg"/>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">home</span>
+<span class="text-sm font-medium">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">group</span>
+<span class="text-sm font-medium">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">menu_book</span>
+<span class="text-sm font-medium">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">construction</span>
+<span class="text-sm font-medium">玛塔工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">psychology</span>
+<span class="text-sm font-medium">AI实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">insights</span>
+<span class="text-sm font-medium">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">trending_up</span>
+<span class="text-sm font-medium">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">emoji_events</span>
+<span class="text-sm font-medium">赛事中心</span>
+</a>
+<!-- Active: AI助手 -->
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>smart_toy</span>
+<span class="text-sm">AI助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-slate-200">
+<div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm">
+<img alt="张老师" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFpyGDyAPBoTYZAsaphMxDt6u-Fh9vVTZh_-LUH9fAPuQkXx1L8EqFBJ_fNFLMQXqZmfA1ND5eqTL8DJsgnETPZ8i-8Djug9o8_WY4ZebvlKRX01jiQqGAA6CDOic6RmensRUszDteoTqtjaUdr8YA7SCiuw1MlP6sX3cwgamGmdsMfhp6-TXDeTzaM97pcv1i76_BvV-EwAmKqNBGvGLHUVq-y5vSzwOHIbeKJ1vHyrK7dqQCv1GYWerQPjVILCvarqCM5UxZ1js"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">张老师</p>
+<p class="text-[10px] text-slate-500">特级教师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Right Side: Immersive Player Canvas -->
+<main class="ml-64 relative flex-1 overflow-hidden flex flex-col min-h-screen">
+<!-- Dynamic Background -->
+<div class="absolute inset-0 -z-10">
+<div class="absolute inset-0 bg-gradient-to-br from-primary-container/40 via-surface-bright to-secondary-container/30"></div>
+<div class="absolute inset-0 bg-[url('{{DATA:IMAGE:IMAGE_140}}')] bg-cover bg-center blur-[120px] opacity-40 scale-110"></div>
+</div>
+<!-- Header Action Bar (Glassmorphic) -->
+<header class="flex justify-between items-center p-8 z-10">
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 rounded-full glass-panel flex items-center justify-center text-on-surface hover:bg-white transition-all">
+<span class="material-symbols-outlined" data-icon="arrow_back_ios_new">arrow_back_ios_new</span>
+</button>
+<div>
+<h2 class="text-2xl font-bold tracking-tight">星辰大海的彼岸</h2>
+</div>
+</div>
+<div class="flex gap-3">
+<!-- Favorite and Share buttons removed per request -->
+</div>
+</header>
+<!-- Main Content: Center Vinyl + Right Lyrics -->
+<div class="flex-1 flex px-16 items-center gap-20">
+<!-- Left: Rotating Vinyl Disk -->
+<div class="flex-1 flex flex-col items-center justify-center space-y-12">
+<div class="relative group">
+<!-- Outer Shadow/Glow -->
+<div class="absolute -inset-10 bg-primary/10 rounded-full blur-3xl group-hover:bg-primary/20 transition-all duration-700"></div>
+<!-- Vinyl Record Component -->
+<div class="relative w-[480px] h-[480px] rounded-full bg-slate-900 shadow-2xl flex items-center justify-center vinyl-spin p-4">
+<!-- Grooves Textures -->
+<div class="absolute inset-0 rounded-full border-[1.5px] border-white/5"></div>
+<div class="absolute inset-4 rounded-full border-[1.5px] border-white/5"></div>
+<div class="absolute inset-12 rounded-full border-[1px] border-white/5"></div>
+<!-- Album Cover -->
+<div class="w-[320px] h-[320px] rounded-full overflow-hidden border-8 border-slate-800 shadow-inner">
+<img alt="Album Art" class="w-full h-full object-cover" data-alt="A highly detailed and artistic album cover featuring an abstract depiction of cosmic nebulae in shades of deep indigo, electric blue, and magenta. Swirling celestial patterns create a sense of movement and depth, illuminated by soft starlight and glowing particles. The visual style is premium and modern, perfectly fitting a light-mode EdTech UI with a focus on creativity and digital synthesis." src="https://lh3.googleusercontent.com/aida/ADBb0ugJ4_XYMY6zicR2nPwgACyxx86tL0MoCu4Liu-kI68rUHMmpJimaZGPHlQQ55o20HMYdKBQX7CvMK35xDIzBUjTCYZxREHBXRUVmVRMwgtssYmOfvJ_YaTMwFXqmK8ePwuVWYwSW7Hyevl2fDjXZYj6qPCeNrg0r3n43TWdqj4iVLCQntGuoYkjzHJR19u2Ky562s3TAgEtMT-3P6SpY84kqOvfQW3EpbsUNIc_6cSQn_ZpgGuNab7pzvA"/>
+</div>
+<!-- Center Hole -->
+<div class="absolute w-6 h-6 rounded-full bg-slate-900 border-2 border-slate-700 shadow-inner"></div>
+</div>
+<!-- Tonearm Visual -->
+<div class="absolute -top-10 -right-4 w-32 h-64 origin-top-right transition-transform duration-500">
+<div class="w-4 h-48 bg-gradient-to-b from-slate-400 to-slate-600 rounded-full mx-auto transform rotate-[15deg] shadow-lg"></div>
+<div class="absolute bottom-10 left-0 w-8 h-12 bg-slate-700 rounded-lg transform rotate-[45deg]"></div>
+</div>
+</div>
+<!-- Song Metadata Summary -->
+<div class="text-center space-y-2">
+<h3 class="text-3xl font-extrabold text-slate-900">星辰大海的彼岸</h3>
+</div>
+</div>
+<!-- Right: Scrolling Lyrics -->
+<div class="w-[450px] h-[550px] relative glass-panel rounded-3xl p-10 flex flex-col shadow-2xl shadow-blue-900/5">
+<!-- Lyrics Header Removed per request -->
+<div class="flex-1 overflow-y-auto lyrics-mask space-y-8 pr-4">
+<p class="text-lg text-slate-400 font-medium">在光年之外的寂静里</p>
+<p class="text-lg text-slate-400 font-medium">我捕捉到一丝微弱的共鸣</p>
+<p class="text-3xl font-bold text-primary leading-tight">星辰在大海的彼岸闪烁</p>
+<p class="text-xl text-slate-900 font-semibold">指引着迷途的灵魂回航</p>
+<p class="text-lg text-slate-400 font-medium">不需要语言的翻译</p>
+<p class="text-lg text-slate-400 font-medium">那是代码与旋律的终极契合</p>
+<p class="text-lg text-slate-400 font-medium">在数字的虚空之中</p>
+<p class="text-lg text-slate-400 font-medium">构建出一个永恒的乐章</p>
+<p class="text-lg text-slate-400 font-medium">当算力化作跳动的音符</p>
+<p class="text-lg text-slate-400 font-medium">我们将穿越逻辑的屏障</p>
+</div>
+</div>
+</div>
+<!-- Footer: Playback Control Bar -->
+<footer class="h-32 px-12 glass-panel m-8 rounded-full flex items-center gap-12 shadow-2xl shadow-blue-900/10">
+<!-- Info -->
+<div class="flex items-center gap-4 w-64">
+<img alt="Mini Cover" class="w-14 h-14 rounded-xl shadow-md" data-alt="A thumbnail version of the cosmic nebulae album art, showcasing vibrant indigo and blue tones." src="https://lh3.googleusercontent.com/aida/ADBb0ugJ4_XYMY6zicR2nPwgACyxx86tL0MoCu4Liu-kI68rUHMmpJimaZGPHlQQ55o20HMYdKBQX7CvMK35xDIzBUjTCYZxREHBXRUVmVRMwgtssYmOfvJ_YaTMwFXqmK8ePwuVWYwSW7Hyevl2fDjXZYj6qPCeNrg0r3n43TWdqj4iVLCQntGuoYkjzHJR19u2Ky562s3TAgEtMT-3P6SpY84kqOvfQW3EpbsUNIc_6cSQn_ZpgGuNab7pzvA"/>
+<div class="truncate">
+<h4 class="font-bold text-slate-900 truncate">星辰大海的彼岸</h4>
+</div>
+</div>
+<!-- Main Controls -->
+<div class="flex-1 flex flex-col items-center gap-2">
+<div class="flex items-center gap-8">
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="shuffle">shuffle</span>
+</button>
+<button class="text-slate-900 hover:text-primary transition-all active:scale-90">
+<span class="material-symbols-outlined text-4xl" data-icon="skip_previous" style="font-variation-settings: 'FILL' 1;">skip_previous</span>
+</button>
+<button class="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/30 hover:scale-105 active:scale-95 transition-all">
+<span class="material-symbols-outlined text-4xl" data-icon="pause" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="text-slate-900 hover:text-primary transition-all active:scale-90">
+<span class="material-symbols-outlined text-4xl" data-icon="skip_next" style="font-variation-settings: 'FILL' 1;">skip_next</span>
+</button>
+<button class="text-slate-400 hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-2xl" data-icon="repeat">repeat</span>
+</button>
+</div>
+<!-- Progress Bar -->
+<div class="w-full flex items-center gap-4">
+<span class="text-xs font-bold text-slate-400 w-10 text-right">02:45</span>
+<div class="flex-1 h-1.5 bg-slate-200 rounded-full relative overflow-hidden group cursor-pointer">
+<div class="absolute left-0 top-0 h-full bg-primary w-2/3 rounded-full relative">
+<div class="absolute right-0 top-1/2 -translate-y-1/2 w-4 h-4 bg-white border-2 border-primary rounded-full shadow-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
+</div>
+</div>
+<span class="text-xs font-bold text-slate-400 w-10">04:12</span>
+</div>
+</div>
+<!-- Sound & More -->
+<div class="flex items-center gap-6 w-64 justify-end">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-500" data-icon="volume_up">volume_up</span>
+<div class="w-24 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+<div class="h-full bg-slate-600 w-3/4 rounded-full"></div>
+</div>
+</div>
+<button class="text-slate-500 hover:text-primary"><span class="material-symbols-outlined" data-icon="download">download</span></button>
+<button class="text-slate-500 hover:text-primary"><span class="material-symbols-outlined" data-icon="delete">delete</span></button>
+</div>
+</footer>
+</main>
+</div>
+<!-- Background Decorative Elements -->
+<div class="fixed top-0 right-0 -z-20 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
+<div class="fixed bottom-0 left-0 -z-20 w-[500px] h-[500px] bg-secondary/5 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/2"></div>
+</body></html>

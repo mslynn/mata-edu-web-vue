@@ -285,17 +285,17 @@ const statCards = [
 const toolCards = [
   {
     title: "MatataCode (VinciBot)",
-    description: "专为 VinciBot 设计的图形化编程环境",
+    description: "提供AI模型训练、图形化编程和Python文本编程，满足不同年龄段学生的认知水平和学习需求。内置AI、摄像头、乐器等趣味功能。",
     image: "/stitch/ceshi2/04-vincibot-logo.png",
   },
   {
     title: "MatataCode (Nous)",
-    description: "深度学习与神经科学启蒙工具",
+    description: "面向更高阶的人工智能编程学习平台，深度融合图形化与Python，提供丰富的AI功能体验。支持摄像头、传感器、多感官交互编程玩法。",
     image: "/stitch/ceshi2/05-nous-logo.png",
   },
   {
     title: "MatataCode (TaleMap)",
-    description: "将编程与故事创作完美结合",
+    description: "故事地图设计平台，用户可自行创建无限的交互式地图和场景，将编程融入叙事艺术中。",
     image: "/stitch/ceshi2/06-talemap-logo.png",
   },
 ];

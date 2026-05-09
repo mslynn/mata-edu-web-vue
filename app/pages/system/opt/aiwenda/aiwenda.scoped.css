@@ -1,0 +1,1343 @@
+@font-face {
+  font-family: "Material Symbols Outlined";
+  font-style: normal;
+  font-weight: 100 700;
+  src: url("/fonts/material-symbols-outlined-full.ttf") format("truetype");
+  font-display: block;
+}
+
+.material-symbols-outlined {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  font-family: "Material Symbols Outlined", sans-serif !important;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 1.5rem;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  flex-shrink: 0;
+  user-select: none;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+  -webkit-font-smoothing: antialiased;
+}
+
+.aiwenda-page {
+  --aiwenda-sidebar-width: 256px;
+  --aiwenda-page-min: 1280px;
+  --aiwenda-page-max: 1920px;
+  --aiwenda-shell-width: var(--aiwenda-page-min);
+  min-width: var(--aiwenda-page-min);
+  height: 100vh;
+  overflow-x: auto;
+  overflow-y: auto;
+  background: #f4f6f8;
+  color: #121826;
+}
+
+.aiwenda-layout {
+  display: grid;
+  grid-template-columns: var(--aiwenda-sidebar-width) minmax(0, 1fr);
+  width: min(
+    var(--aiwenda-page-max),
+    max(var(--aiwenda-page-min), var(--aiwenda-shell-width))
+  );
+  min-width: var(--aiwenda-page-min);
+  min-height: 100vh;
+  margin: 0 auto;
+  background: #f4f6f8;
+}
+
+.aiwenda-main {
+  min-width: 0;
+  min-height: 100vh;
+  height: 100vh;
+  padding: clamp(28px, 1.9vw, 36px) clamp(24px, 1.8vw, 34px) clamp(22px, 1.45vw, 26px) clamp(18px, 1.35vw, 22px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+}
+
+.aiwenda-breadcrumb {
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #7a8798;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.aiwenda-breadcrumb__back {
+  border: none;
+  color: #667386;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s ease;
+}
+
+.aiwenda-breadcrumb__back:hover {
+  color: #005bc2;
+}
+
+.aiwenda-breadcrumb__back .material-symbols-outlined {
+  font-size: 17px;
+}
+
+.aiwenda-breadcrumb__separator {
+  color: #b6c0cf;
+  font-size: 15px;
+}
+
+.aiwenda-breadcrumb__current {
+  color: #005bc2;
+}
+
+.aiwenda-content-grid {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 314px;
+  gap: 20px;
+  overflow: hidden;
+}
+
+.aiwenda-workspace,
+.aiwenda-history {
+  min-height: 0;
+  border-radius: 22px;
+  background: #ffffff;
+}
+
+.aiwenda-workspace {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 26px 28px 18px;
+  overflow: hidden;
+}
+
+.aiwenda-section-title,
+.aiwenda-history__title {
+  color: #151b28;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.aiwenda-role-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.aiwenda-role-view-all {
+  border: 0;
+  color: #005bc2;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.aiwenda-role-view-all:hover {
+  color: #00499b;
+}
+
+.aiwenda-role-list {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.aiwenda-role-card {
+  height: 58px;
+  border: 1px solid #e7edf4;
+  border-radius: 10px;
+  background: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.aiwenda-role-card:hover {
+  border-color: rgba(0, 91, 194, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.08);
+}
+
+.aiwenda-role-card.is-active {
+  border-color: rgba(0, 91, 194, 0.3);
+  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.08);
+}
+
+.aiwenda-role-card__icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  color: #005bc2;
+  background: #eaf3ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aiwenda-role-card__icon .material-symbols-outlined {
+  font-size: 17px;
+}
+
+.aiwenda-role-card__text {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aiwenda-role-card__text strong {
+  color: #182235;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.aiwenda-role-card__text small {
+  color: #8a95a6;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.aiwenda-chat-list {
+  flex: 1;
+  min-height: 0;
+  margin-top: 28px;
+  padding: 6px 8px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.aiwenda-message {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.aiwenda-message.is-user {
+  justify-content: flex-end;
+}
+
+.aiwenda-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aiwenda-avatar.is-assistant {
+  color: #ffffff;
+  background: linear-gradient(135deg, #006be6, #004db5);
+  box-shadow: 0 8px 18px rgba(0, 91, 194, 0.24);
+}
+
+.aiwenda-avatar.is-user img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.aiwenda-message__body {
+  max-width: min(620px, 72%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aiwenda-message.is-user .aiwenda-message__body {
+  align-items: flex-end;
+}
+
+.aiwenda-message__body time {
+  color: #98a3b3;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.aiwenda-message__bubble {
+  position: relative;
+  min-height: 46px;
+  border-radius: 10px;
+  padding: 13px 16px;
+  color: #273449;
+  background: #f2f5f8;
+  line-height: 1.7;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.aiwenda-message__bubble p {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.aiwenda-message.is-user .aiwenda-message__bubble {
+  color: #ffffff;
+  background: linear-gradient(135deg, #0067dc 0%, #005bc2 100%);
+  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.24);
+}
+
+.aiwenda-message__file {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  background: rgba(0, 91, 194, 0.08);
+  color: #005bc2;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.aiwenda-message.is-user .aiwenda-message__file {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+
+.aiwenda-message__file .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.aiwenda-scroll-btns {
+  position: absolute;
+  right: 10px;
+  bottom: 100px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10;
+}
+
+.aiwenda-scroll-btn {
+  width: 38px;
+  height: 38px;
+  border: 1px solid #e2e8f0;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.18s ease;
+}
+
+.aiwenda-scroll-btn:hover {
+  background: #f8fafc;
+  border-color: #005bc2;
+  color: #005bc2;
+  box-shadow: 0 4px 12px rgba(0, 91, 194, 0.15);
+}
+
+.aiwenda-scroll-btn .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.aiwenda-message__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0 2px;
+}
+
+.aiwenda-message__actions button {
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #64748b;
+  padding: 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.aiwenda-message__actions button:hover {
+  background: #f1f5f9;
+  color: #334155;
+}
+
+.aiwenda-message__actions button .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.aiwenda-message__stopped-tag {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  margin-right: 2px;
+}
+
+.aiwenda-message__actions-spacer {
+  flex: 1;
+}
+
+.aiwenda-message__like,
+.aiwenda-message__dislike {
+  width: 28px !important;
+  padding: 0 !important;
+  justify-content: center;
+}
+
+.aiwenda-suggestions {
+  padding: 12px 0 8px 46px;
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.aiwenda-suggestions__label {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.aiwenda-suggestions__item {
+  display: inline-block;
+  border: 1px solid #dbeafe;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1e40af;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.aiwenda-suggestions__item:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.aiwenda-stop-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0 4px;
+}
+
+.aiwenda-stop-btn {
+  height: 38px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+  padding: 0 20px;
+  font-size: 13px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.18s ease;
+}
+
+.aiwenda-stop-btn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.aiwenda-stop-btn .material-symbols-outlined {
+  font-size: 18px;
+  color: #005bc2;
+}
+
+.aiwenda-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 6px 0;
+  position: relative;
+}
+
+.aiwenda-toolbar__btn {
+  height: 32px;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #475569;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.aiwenda-toolbar__btn:hover {
+  background: #f8fafc;
+  border-color: #005bc2;
+  color: #005bc2;
+}
+
+.aiwenda-toolbar__btn .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.aiwenda-toolbar__btn.is-retry {
+  border-color: #005bc2;
+  color: #005bc2;
+  background: #eff6ff;
+}
+
+.aiwenda-toolbar__btn.is-retry:hover {
+  background: #dbeafe;
+}
+
+.aiwenda-quota-wrap {
+  position: relative;
+}
+
+.aiwenda-quota-popover {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 4px;
+  min-width: 180px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  padding: 12px 16px;
+  z-index: 100;
+}
+
+.aiwenda-quota-popover__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 13px;
+  color: #475569;
+}
+
+.aiwenda-quota-popover__row strong {
+  color: #1e293b;
+  font-weight: 800;
+}
+
+.aiwenda-composer {
+  border: 1px solid #dfe6ee;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 2px 12px rgba(28, 45, 76, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.aiwenda-composer__row-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 20px 8px;
+}
+
+.aiwenda-composer__ai-icon {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #006be6, #004db5);
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aiwenda-composer__ai-icon .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.aiwenda-composer__input {
+  flex: 1;
+  min-width: 0;
+  min-height: 34px;
+  max-height: 120px;
+  border: none;
+  outline: none;
+  resize: none;
+  color: #1e293b;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  padding: 6px 0;
+}
+
+.aiwenda-composer__input::placeholder {
+  color: #94a3b8;
+}
+
+.aiwenda-composer__input:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.aiwenda-composer__row-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 12px 10px 20px;
+}
+
+.aiwenda-composer__info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.aiwenda-composer__hint {
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.aiwenda-composer__count {
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.aiwenda-composer__tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aiwenda-thinking-btn {
+  height: 32px;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 999px;
+  background: #ffffff !important;
+  color: #64748b;
+  padding: 0 14px;
+  font-size: 12px;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.aiwenda-thinking-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.aiwenda-thinking-btn:hover {
+  border-color: #005bc2 !important;
+  color: #005bc2;
+}
+
+.aiwenda-thinking-btn.is-on {
+  border-color: #005bc2 !important;
+  color: #005bc2;
+  background: #eff6ff !important;
+}
+
+.aiwenda-upload-wrap {
+  position: relative;
+}
+
+.aiwenda-upload-input {
+  position: absolute;
+  width: 0;
+  height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aiwenda-upload-tooltip {
+  position: absolute;
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 8px;
+  width: 260px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #1e293b;
+  color: #f1f5f9;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.6;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.aiwenda-upload-wrap:hover .aiwenda-upload-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+.aiwenda-upload-file {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 20px 4px 66px;
+}
+
+.aiwenda-upload-file__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #005bc2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.aiwenda-upload-file__icon .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.aiwenda-upload-file__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aiwenda-upload-file__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.aiwenda-upload-file__status {
+  font-size: 11px;
+  font-weight: 600;
+  color: #005bc2;
+}
+
+.aiwenda-upload-file__status.is-error {
+  color: #dc2626;
+}
+
+.aiwenda-upload-file__remove {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: #f1f5f9;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.aiwenda-upload-file__remove:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.aiwenda-upload-file__remove .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.aiwenda-upload-btn {
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 10px;
+  background: #f1f5f9 !important;
+  color: #64748b;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.aiwenda-upload-btn:hover {
+  background: #e0ecff !important;
+  color: #005bc2;
+}
+
+.aiwenda-upload-btn .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.aiwenda-send-btn {
+  height: 38px;
+  min-width: 120px;
+  border: none;
+  border-radius: 999px;
+  color: #ffffff;
+  background: #005bc2 !important;
+  padding: 0 22px;
+  font-size: 13px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 91, 194, 0.3);
+  transition: all 0.18s ease;
+}
+
+.aiwenda-send-btn:hover:not(:disabled) {
+  background: #004db5 !important;
+  box-shadow: 0 6px 20px rgba(0, 91, 194, 0.38);
+}
+
+.aiwenda-send-btn:disabled {
+  cursor: not-allowed;
+  color: #94a3b8;
+  background: #e2e8f0 !important;
+  box-shadow: none;
+}
+
+.aiwenda-send-btn .material-symbols-outlined {
+  font-size: 16px;
+}
+
+.aiwenda-history {
+  padding: 26px 18px 18px;
+  background: #e9eef3;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.aiwenda-history__list {
+  flex: 1;
+  min-height: 0;
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.aiwenda-history__empty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 12px;
+  padding: 32px 0;
+}
+
+.aiwenda-history-card {
+  position: relative;
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 13px 38px 13px 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.aiwenda-history-card:hover,
+.aiwenda-history-card.is-active {
+  border-color: rgba(0, 91, 194, 0.24);
+  box-shadow: 0 10px 20px rgba(47, 68, 96, 0.08);
+}
+
+.aiwenda-history-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  color: #005bc2;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.aiwenda-history-card p {
+  margin: 8px 0 0;
+  color: #253247;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.55;
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.aiwenda-history-card__more {
+  position: absolute;
+  right: 12px;
+  top: 13px;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  color: #8a95a6;
+  background: rgba(242, 245, 248, 0.9);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.aiwenda-history-card:hover .aiwenda-history-card__more,
+.aiwenda-history-card.is-active .aiwenda-history-card__more {
+  color: #005bc2;
+  background: #eaf3ff;
+}
+
+.aiwenda-history-card__more .material-symbols-outlined {
+  font-size: 18px;
+}
+
+
+.aiwenda-new-chat {
+  height: 46px;
+  margin-top: 16px;
+  border: none;
+  border-radius: 10px;
+  background: #005bc2;
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 12px 24px rgba(0, 91, 194, 0.25);
+}
+
+.aiwenda-new-chat .material-symbols-outlined {
+  font-size: 17px;
+}
+
+.aiwenda-dialog-mask {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.aiwenda-dialog-backdrop {
+  position: absolute;
+  inset: 0;
+  backdrop-filter: blur(8px);
+}
+
+.aiwenda-dialog {
+  position: relative;
+  border-radius: 34px;
+  background: #ffffff;
+  padding: 36px 36px 30px;
+}
+
+.aiwenda-dialog__close {
+  position: absolute;
+  top: 28px;
+  right: 30px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  color: #5f6b7d;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.aiwenda-dialog__close:hover {
+  background: #f2f5f8;
+}
+
+.aiwenda-dialog__close .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.aiwenda-dialog__header h2 {
+  margin: 0;
+  color: #111827;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 1.15;
+}
+
+.aiwenda-dialog__header p {
+  margin: 8px 0 0;
+  color: #697586;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.aiwenda-role-dialog-mask {
+  z-index: 1000;
+}
+
+.aiwenda-role-dialog-mask > .aiwenda-dialog-backdrop {
+  background: rgba(15, 23, 42, 0.2);
+}
+
+.aiwenda-role-dialog {
+  width: min(860px, calc(100vw - 80px));
+  border-radius: 42px;
+  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.22);
+}
+
+.aiwenda-role-dialog__footer {
+  margin-top: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+}
+
+.aiwenda-role-dialog__confirm,
+.aiwenda-role-dialog__cancel {
+  height: 44px;
+  border-radius: 999px;
+  padding: 0 28px;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.aiwenda-role-dialog__confirm {
+  border: none;
+  color: #ffffff;
+  background: #005bc2;
+  box-shadow: 0 12px 26px rgba(0, 91, 194, 0.28);
+}
+
+.aiwenda-role-dialog__cancel {
+  border: 1px solid #d9e1ec;
+  color: #4a5568;
+  background: #ffffff;
+}
+
+.aiwenda-role-dialog__grid {
+  margin-top: 34px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.aiwenda-role-dialog-card {
+  position: relative;
+  min-height: 150px;
+  max-height: 220px;
+  border: 1px solid #e3eaf2;
+  border-radius: 12px;
+  background: #f8fafc;
+  padding: 22px 22px 18px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.aiwenda-role-dialog-card:hover,
+.aiwenda-role-dialog-card.is-active {
+  border-color: rgba(0, 91, 194, 0.35);
+  background: #ffffff;
+  box-shadow: 0 14px 32px rgba(0, 91, 194, 0.1);
+  transform: translateY(-1px);
+}
+
+.aiwenda-role-dialog-card strong {
+  color: #182235;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.aiwenda-role-dialog-card p {
+  margin: 16px 0 0;
+  color: #4a5568;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.65;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+}
+
+.aiwenda-role-delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: #9aa6b8;
+  background: #f2f5f8;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.aiwenda-role-delete-btn:hover {
+  color: #ffffff;
+  background: #e54848;
+}
+
+.aiwenda-role-delete-btn .material-symbols-outlined {
+  font-size: 15px;
+}
+
+.aiwenda-role-config-entry {
+  margin-top: auto;
+  padding-top: 14px;
+  color: #005bc2;
+  font-size: 12px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.aiwenda-role-config-entry:hover {
+  color: #004a9f;
+}
+
+.aiwenda-role-config-entry .material-symbols-outlined {
+  font-size: 14px;
+}
+
+.aiwenda-config-dialog-mask {
+  z-index: 1100;
+}
+
+.aiwenda-config-dialog-mask > .aiwenda-dialog-backdrop {
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.aiwenda-config-dialog {
+  width: min(620px, calc(100vw - 80px));
+  box-shadow: 0 32px 90px rgba(15, 23, 42, 0.28);
+}
+
+.aiwenda-config-form {
+  margin-top: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.aiwenda-config-field {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.aiwenda-config-field > span {
+  color: #1f2937;
+  font-size: 13px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.aiwenda-config-field em {
+  min-width: 58px;
+  height: 24px;
+  border-radius: 999px;
+  background: #eaf3ff;
+  color: #005bc2;
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.aiwenda-config-input-wrap {
+  height: 52px;
+  border-radius: 14px;
+  background: #f1f4f7;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 10px;
+}
+
+.aiwenda-config-input-wrap input,
+.aiwenda-config-field textarea {
+  width: 100%;
+  border: none;
+  outline: none;
+  color: #243044;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.aiwenda-config-input-wrap input::placeholder,
+.aiwenda-config-field textarea::placeholder {
+  color: #9aa6b8;
+}
+
+.aiwenda-config-input-wrap .material-symbols-outlined {
+  color: #b0bac8;
+  font-size: 20px;
+}
+
+.aiwenda-config-field textarea {
+  min-height: 158px;
+  resize: none;
+  border-radius: 14px;
+  background: #f1f4f7;
+  padding: 16px;
+  line-height: 1.6;
+}
+
+.aiwenda-config-tip {
+  margin: -4px 0 16px;
+  color: #6b7280;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.aiwenda-config-tip .material-symbols-outlined {
+  color: #7d8796;
+  font-size: 15px;
+}
+
+.aiwenda-config-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 14px;
+}
+
+.aiwenda-config-save,
+.aiwenda-config-reset {
+  height: 52px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 900;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.aiwenda-config-save {
+  border: none;
+  color: #ffffff;
+  background: #005bc2;
+  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.28);
+}
+
+.aiwenda-config-save .material-symbols-outlined {
+  font-size: 18px;
+}
+
+.aiwenda-config-save:disabled,
+.aiwenda-config-reset:disabled,
+.aiwenda-config-input-wrap input:disabled,
+.aiwenda-config-field textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.aiwenda-config-reset {
+  border: 1px solid #e3eaf2;
+  color: #4b5563;
+  background: #ffffff;
+}
+
+@media (max-width: 1500px) {
+  .aiwenda-main {
+    gap: 16px;
+    padding: 28px 24px 22px 18px;
+  }
+
+  .aiwenda-content-grid {
+    grid-template-columns: minmax(0, 1fr) 286px;
+    gap: 16px;
+  }
+
+  .aiwenda-workspace {
+    padding: 22px 24px 16px;
+  }
+
+  .aiwenda-role-list {
+    gap: 10px;
+  }
+
+  .aiwenda-message__body {
+    max-width: min(560px, 76%);
+  }
+}

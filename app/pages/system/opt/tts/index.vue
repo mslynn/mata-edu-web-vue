@@ -24,10 +24,20 @@
             在教育场景中，TTS 不仅可以帮助学生“听见知识”，还能够通过多语种朗读、情感化表达和个性化语速调节，提升学习体验与理解效率。
           </p>
 
-          <NuxtLink class="tts-intro-primary" to="/system/opt/tts/experience">
-            <span>立即体验</span>
+          <button
+            class="tts-intro-primary"
+            type="button"
+            :disabled="!canEnterExperience"
+            @click="handleEnterExperience"
+          >
+            <span>{{ primaryButtonText }}</span>
             <span class="tts-intro-primary__arrow">→</span>
-          </NuxtLink>
+          </button>
+
+          <div class="tts-intro-model-status" :class="`is-${localTtsStatus}`">
+            <span class="tts-intro-model-status__dot"></span>
+            <span>{{ modelStatusText }}</span>
+          </div>
         </section>
 
         <section id="tts-workflow" class="tts-intro-workflow">
@@ -111,8 +121,24 @@ const workflowSteps: WorkflowStep[] = [
   },
 ];
 
+const canEnterExperience = computed(() => true);
+const localTtsStatus = ref("ready");
+
+const primaryButtonText = computed(() => {
+  return "立即体验";
+});
+
+const modelStatusText = computed(() => {
+  return "在线试听与在线 MP3 下载已就绪。";
+});
+
 const handleBackToAiCenter = async () => {
   await navigateTo("/system/opt");
+};
+
+const handleEnterExperience = async () => {
+  if (!canEnterExperience.value) return;
+  await navigateTo("/system/opt/tts/experience");
 };
 </script>
 
@@ -226,23 +252,91 @@ const handleBackToAiCenter = async () => {
   border-radius: 999px;
   background: #005bc2;
   color: #ffffff;
+  border: none;
   font-size: 15px;
   font-weight: 900;
   text-decoration: none;
   box-shadow: 0 18px 38px rgba(0, 91, 194, 0.26);
+  cursor: pointer;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.tts-intro-primary:hover {
+.tts-intro-primary:not(:disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 22px 44px rgba(0, 91, 194, 0.3);
+}
+
+.tts-intro-primary:disabled {
+  cursor: not-allowed;
+  background: #9aa6b2;
+  opacity: 0.62;
+  box-shadow: none;
 }
 
 .tts-intro-primary__arrow {
   font-size: 24px;
   line-height: 1;
+}
+
+.tts-intro-model-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #6b7785;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.tts-intro-model-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa6b2;
+}
+
+.tts-intro-model-status.is-loading .tts-intro-model-status__dot,
+.tts-intro-model-status.is-idle .tts-intro-model-status__dot {
+  background: #005bc2;
+  animation: tts-status-pulse 1.1s ease-in-out infinite;
+}
+
+.tts-intro-model-status.is-ready {
+  color: #047857;
+  background: rgba(209, 250, 229, 0.88);
+}
+
+.tts-intro-model-status.is-ready .tts-intro-model-status__dot {
+  background: #047857;
+}
+
+.tts-intro-model-status.is-error {
+  color: #b91c1c;
+  background: rgba(254, 226, 226, 0.9);
+}
+
+.tts-intro-model-status.is-error .tts-intro-model-status__dot {
+  background: #dc2626;
+}
+
+@keyframes tts-status-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
 .tts-intro-workflow {

@@ -710,8 +710,8 @@ const aigcItems = ref<AICardItem[]>([
     label: "ai.atQA",
     routePath: "/system/opt/aiwenda",
   },
-  { key: "aiStory", label: "ai.aiStory" },
-  { key: "aiSong", label: "ai.aiSong" },
+  { key: "aiStory", label: "ai.aiStory", routePath: "/system/opt/story" },
+  { key: "aiSong", label: "ai.aiSong", routePath: "/system/opt/music" },
   { key: "aiVideo", label: "ai.aiVideo" },
 ]);
 
@@ -759,7 +759,7 @@ const languageItems = ref<AICardItem[]>([
   {
     key: "speechTranscription",
     label: "ai.speechTranscription",
-    routePath: "/system/opt/speech-transcription/experience",
+    routePath: "/system/opt/asr",
   },
   {
     key: "speechTranscriptionPrinciple",
@@ -797,51 +797,52 @@ const mlItems = ref<AICardItem[]>([
 
 const AI_CARD_COVER_MAP: Record<string, string> = {
   aiPainting:
-    "/images/ai-practice/practice-01-eb90e462.webp",
+    "/images/ai-practice/practice-01-eb90e462.svg",
   aiStory:
-    "/images/ai-practice/practice-02-2aa5c253.webp",
+    "/images/ai-practice/practice-02-2aa5c253.svg",
   aiSong:
-    "/images/ai-practice/practice-03-10ed00a3.webp",
+    "/images/ai-practice/practice-03-10ed00a3.svg",
   aiVideo:
-    "/images/ai-practice/practice-04-71172075.webp",
+    "/images/ai-practice/practice-04-71172075.svg",
   imageClassModel:
-    "/images/ai-practice/practice-05-f6a05d9d.webp",
+    "/images/ai-practice/practice-05-f6a05d9d.svg",
   faceRecognition:
-    "/images/ai-practice/practice-06-b311ccf2.webp",
+    "/images/ai-practice/practice-06-b311ccf2.svg",
   imageRecognition:
-    "/images/ai-practice/practice-07-0698f4e2.webp",
+    "/images/ai-practice/practice-07-0698f4e2.svg",
   handwrittenDigit:
-    "/images/ai-practice/practice-08-31ce93c4.webp",
+    "/images/ai-practice/practice-08-31ce93c4.svg",
   doodleRecognition:
-    "/images/ai-practice/practice-09-ed29662c.webp",
+    "/images/ai-practice/practice-09-ed29662c.svg",
   voiceClassModel:
-    "/images/ai-practice/practice-10-d1a9f616.webp",
+    "/images/ai-practice/practice-10-d1a9f616.svg",
   speechSynthesis:
-    "/images/ai-practice/practice-11-1da4999c.webp",
+    "/images/ai-practice/practice-11-1da4999c.svg",
   atQA:
-    "/images/ai-practice/practice-12-c48396fd.webp",
+    "/images/ai-practice/practice-12-c48396fd.svg",
   smartQA:
-    "/images/ai-practice/practice-12-c48396fd.webp",
+    "/images/ai-practice/wenda.svg",
   speechTranscription:
-    "/images/ai-practice/practice-13-8cc3f4df.webp",
+    "/images/ai-practice/practice-13-8cc3f4df.svg",
   speechTranscriptionPrinciple:
-    "/images/ai-practice/practice-14-6d6e5f8d.webp",
+    "/images/ai-practice/practice-14-6d6e5f8d.svg",
   poseClassModel:
-    "/images/ai-practice/practice-15-a0fc8317.webp",
+    "/images/ai-practice/practice-15-a0fc8317.svg",
   gestureClassModel:
-    "/images/ai-practice/practice-16-3c20b186.webp",
+    "/images/ai-practice/practice-16-3c20b186.svg",
   poseRecognition:
-    "/images/ai-practice/practice-17-a5b3aeef.webp",
+    "/images/ai-practice/practice-17-a5b3aeef.svg",
   gestureRecognition:
-    "/images/ai-practice/practice-18-941e689d.webp",
+    "/images/ai-practice/practice-18-941e689d.svg",
   emotionRecognition:
-    "/images/ai-practice/practice-19-ad61f826.webp",
+    "/images/ai-practice/practice-19-ad61f826.svg",
   mlProcess:
-    "/images/ai-practice/practice-20-9b486d3f.webp",
+    "/images/ai-practice/practice-20-9b486d3f.svg",
   decisionTree:
-    "/images/ai-practice/practice-21-de26116a.webp",
+    "/images/ai-practice/practice-21-de26116a.svg",
   bigData:
-    "/images/ai-practice/practice-22-2fa0b7b3.webp",
+    "/images/ai-practice/practice-22-2fa0b7b3.svg",
+ 
 };
 
 const getAICardCover = (item: AICardItem) =>
@@ -992,6 +993,8 @@ const pendingIframeMessage = ref<{
 
 const AVAILABLE_AI_CARD_KEYS = new Set([
   "aiPainting",
+  "aiStory",
+  "aiSong",
   "atQA",
   "smartQA",
   "speechSynthesis",

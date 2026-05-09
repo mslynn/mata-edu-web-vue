@@ -6,7 +6,6 @@
       <main class="aiwenda-main">
         <nav class="aiwenda-breadcrumb" aria-label="面包屑">
           <NuxtLink to="/system/opt" class="aiwenda-breadcrumb__back">
-            <!-- <span class="material-symbols-outlined">arrow_back</span> -->
             <span>AI实践中心</span>
           </NuxtLink>
           <span class="material-symbols-outlined aiwenda-breadcrumb__separator">
@@ -38,13 +37,13 @@
                 </span>
                 <span class="aiwenda-role-card__text">
                   <strong>{{ role.name }}</strong>
-                  <small>{{ role.desc }}</small>
+                  <small>{{ role.roleDesc }}</small>
                 </span>
               </button>
             </div>
           </div>
 
-          <div class="aiwenda-chat-list">
+          <div ref="chatListRef" class="aiwenda-chat-list">
             <div
               v-for="message in chatMessages"
               :key="message.id"
@@ -58,8 +57,27 @@
               <div class="aiwenda-message__body">
                 <div class="aiwenda-message__bubble">
                   <p>{{ message.content }}</p>
-                  <button type="button" class="aiwenda-message__more" aria-label="更多">
-                    <span class="material-symbols-outlined">more_horiz</span>
+                  <div v-if="message.fileName" class="aiwenda-message__file">
+                    <span class="material-symbols-outlined">description</span>
+                    <span>{{ message.fileName }}</span>
+                  </div>
+                </div>
+                <div v-if="message.role === 'assistant' && !message.pending" class="aiwenda-message__actions">
+                  <span v-if="message.stopped" class="aiwenda-message__stopped-tag">(已停止)</span>
+                  <button type="button" @click="copyMessageContent(message.content)" title="复制">
+                    <span class="material-symbols-outlined">content_copy</span>
+                    <span>复制</span>
+                  </button>
+                  <button type="button" @click="retryMessage(message)" title="再试一次">
+                    <span class="material-symbols-outlined">refresh</span>
+                    <span>再试一次</span>
+                  </button>
+                  <span class="aiwenda-message__actions-spacer"></span>
+                  <button v-if="!message.stopped" type="button" class="aiwenda-message__like" title="有帮助">
+                    <span class="material-symbols-outlined">thumb_up</span>
+                  </button>
+                  <button v-if="!message.stopped" type="button" class="aiwenda-message__dislike" title="没帮助">
+                    <span class="material-symbols-outlined">thumb_down</span>
                   </button>
                 </div>
                 <time>{{ message.time }}</time>
@@ -69,60 +87,174 @@
                 <img :src="teacherAvatar" alt="用户头像" />
               </div>
             </div>
+
+            <div v-if="suggestedQuestions.length && !chatRequesting" class="aiwenda-suggestions">
+              <p class="aiwenda-suggestions__label">您还可以这样问：</p>
+              <button
+                v-for="(q, i) in suggestedQuestions"
+                :key="i"
+                type="button"
+                class="aiwenda-suggestions__item"
+                @click="composerText = q; void handleSendMessage()"
+              >
+                {{ q }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="showScrollUp || showScrollDown" class="aiwenda-scroll-btns">
+            <button v-if="showScrollUp" type="button" class="aiwenda-scroll-btn" title="回到顶部" @click="scrollChatToTop">
+              <span class="material-symbols-outlined">arrow_upward</span>
+            </button>
+            <button v-if="showScrollDown" type="button" class="aiwenda-scroll-btn" title="回到底部" @click="scrollChatToBottom">
+              <span class="material-symbols-outlined">arrow_downward</span>
+            </button>
+          </div>
+
+          <div v-if="chatRequesting" class="aiwenda-stop-wrap">
+            <button type="button" class="aiwenda-stop-btn" @click="handleStopChat">
+              <span class="material-symbols-outlined">pause_circle</span>
+              停止回答
+            </button>
+          </div>
+
+          <div class="aiwenda-toolbar">
+            <button
+              v-if="lastAssistantMessage && !chatRequesting"
+              type="button"
+              class="aiwenda-toolbar__btn is-retry"
+              @click="retryMessage(lastAssistantMessage!)"
+            >
+              <span class="material-symbols-outlined">refresh</span>
+              重新回答
+            </button>
+            <div
+              class="aiwenda-quota-wrap"
+              @mouseenter="showQuotaPopover = true; loadQuotaInfo()"
+              @mouseleave="showQuotaPopover = false"
+            >
+              <button type="button" class="aiwenda-toolbar__btn">
+                <span class="material-symbols-outlined">bolt</span>
+                额度详情
+              </button>
+              <div v-if="showQuotaPopover" class="aiwenda-quota-popover">
+                <div v-if="!quotaItems.length" class="aiwenda-quota-popover__row">
+                  <span>暂无额度信息</span>
+                </div>
+                <div v-for="item in quotaItems" :key="item.name" class="aiwenda-quota-popover__row">
+                  <span>{{ item.name }}</span>
+                  <strong>{{ item.limit }}</strong>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="aiwenda-composer">
-            <button type="button" class="aiwenda-composer__icon" title="上传附件" aria-label="上传附件">
-              <span class="material-symbols-outlined">attach_file</span>
-            </button>
-            <textarea
-              class="aiwenda-composer__input"
-              rows="1"
-              placeholder="输入消息开始对话..."
-            ></textarea>
-            <button type="button" class="aiwenda-composer__voice" title="语音输入" aria-label="语音输入">
-              <span class="material-symbols-outlined">mic</span>
-            </button>
-            <button type="button" class="aiwenda-composer__send" title="发送" aria-label="发送">
-              <span class="material-symbols-outlined">send</span>
-            </button>
+            <div class="aiwenda-composer__row-input">
+              <span class="aiwenda-composer__ai-icon">
+                <span class="material-symbols-outlined">smart_toy</span>
+              </span>
+              <textarea
+                v-model="composerText"
+                class="aiwenda-composer__input"
+                rows="1"
+                placeholder="请输入您想咨询的教学问题..."
+                :disabled="chatRequesting"
+                maxlength="3000"
+                @keydown="handleComposerKeydown"
+              ></textarea>
+            </div>
+            <div v-if="aiUploadFile" class="aiwenda-upload-file">
+              <div class="aiwenda-upload-file__icon">
+                <span class="material-symbols-outlined">{{ aiUploadFile.fileType === 'image' ? 'image' : 'description' }}</span>
+              </div>
+              <div class="aiwenda-upload-file__info">
+                <span class="aiwenda-upload-file__name">{{ aiUploadFile.name }}</span>
+                <span v-if="aiUploading" class="aiwenda-upload-file__status">上传中...</span>
+                <span v-else-if="aiUploadError" class="aiwenda-upload-file__status is-error">{{ aiUploadError }}</span>
+              </div>
+              <button type="button" class="aiwenda-upload-file__remove" @click="handleRemoveFile">
+                <span class="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <div class="aiwenda-composer__row-toolbar">
+              <span class="aiwenda-composer__info">
+                <span class="aiwenda-composer__hint">按 Shift+Enter 换行</span>
+                <span class="aiwenda-composer__count">{{ composerText.length }} / 3000</span>
+              </span>
+              <span class="aiwenda-composer__tools">
+                <button
+                  type="button"
+                  class="aiwenda-thinking-btn"
+                  :class="{ 'is-on': enableThinking }"
+                  @click="enableThinking = !enableThinking"
+                >
+                  <span class="material-symbols-outlined">psychology</span>
+                  <span>深度思考</span>
+                </button>
+                <div class="aiwenda-upload-wrap">
+                  <button
+                    type="button"
+                    class="aiwenda-upload-btn"
+                    :disabled="aiUploading"
+                    aria-label="上传附件"
+                    @click="triggerUpload"
+                  >
+                    <span class="material-symbols-outlined">upload_file</span>
+                  </button>
+                  <div class="aiwenda-upload-tooltip">
+                    {{ AI_UPLOAD_TOOLTIP }}
+                  </div>
+                  <input
+                    ref="uploadInputRef"
+                    type="file"
+                    :accept="AI_UPLOAD_ACCEPT"
+                    class="aiwenda-upload-input"
+                    @change="handleFileChange"
+                  />
+                </div>
+                <button
+                  type="button"
+                  class="aiwenda-send-btn"
+                  :disabled="!canSendMessage"
+                  @click="handleSendMessage"
+                >
+                  开始提问
+                  <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+              </span>
+            </div>
           </div>
           </section>
 
           <aside class="aiwenda-history">
           <div class="aiwenda-history__title">历史对话记录</div>
           <div class="aiwenda-history__list">
+            <div v-if="!historyCards.length" class="aiwenda-history__empty">暂无对话记录</div>
             <button
-              v-for="item in historyCards"
+              v-for="(item, idx) in historyCards"
               :key="item.id"
               type="button"
               class="aiwenda-history-card"
-              :class="{ 'is-active': item.active }"
+              :class="{ 'is-active': item.active, 'menu-up': idx >= historyCards.length - 2 }"
+              @click="handleHistoryClick(item)"
             >
               <div class="aiwenda-history-card__head">
                 <span>{{ item.title }}</span>
               </div>
               <p>{{ item.content }}</p>
-              <span class="aiwenda-history-card__more" aria-label="更多操作">
+              <span
+                ref="moreRefs"
+                class="aiwenda-history-card__more"
+                aria-label="更多操作"
+                @mouseenter="openMenuAt(item.id, $event)"
+                @mouseleave="scheduleCloseMenu"
+              >
                 <span class="material-symbols-outlined">more_horiz</span>
-              </span>
-              <span class="aiwenda-history-menu">
-                <span class="aiwenda-history-menu__item">
-                  <span class="material-symbols-outlined">edit</span>
-                  <span>重命名</span>
-                </span>
-                <span class="aiwenda-history-menu__item">
-                  <span class="material-symbols-outlined">push_pin</span>
-                  <span>置顶聊天</span>
-                </span>
-                <span class="aiwenda-history-menu__item is-danger">
-                  <span class="material-symbols-outlined">delete</span>
-                  <span>删除</span>
-                </span>
               </span>
             </button>
           </div>
-          <button type="button" class="aiwenda-new-chat">
+          <button type="button" class="aiwenda-new-chat" @click="handleNewChatFromHistory">
             <span class="material-symbols-outlined">add</span>
             <span>发起新对话</span>
           </button>
@@ -132,13 +264,37 @@
     </div>
 
     <Teleport to="body">
-      <div v-if="showRoleDialog" class="aiwenda-role-dialog-mask">
-        <div class="aiwenda-role-dialog-backdrop" @click="closeRoleDialog"></div>
-        <section class="aiwenda-role-dialog" role="dialog" aria-modal="true" aria-label="推荐角色中心">
-          <button type="button" class="aiwenda-role-dialog__close" aria-label="关闭" @click="closeRoleDialog">
+      <div
+        v-show="hoverMenuId"
+        class="aiwenda-history-menu-fixed"
+        :style="menuFixedStyle"
+        @mouseenter="cancelCloseMenu"
+        @mouseleave="scheduleCloseMenu"
+        @click.stop
+      >
+        <span class="aiwenda-history-menu__item" @click="handleHistoryRename(menuTargetCard!)">
+          <span class="material-symbols-outlined">edit</span>
+          <span>重命名</span>
+        </span>
+        <span class="aiwenda-history-menu__item" @click="handleHistoryPin(menuTargetCard!)">
+          <span class="material-symbols-outlined">push_pin</span>
+          <span>{{ menuTargetCard?.pinned ? '取消置顶' : '置顶聊天' }}</span>
+        </span>
+        <span class="aiwenda-history-menu__item is-danger" @click="handleHistoryDelete(menuTargetCard!)">
+          <span class="material-symbols-outlined">delete</span>
+          <span>删除</span>
+        </span>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div v-if="showRoleDialog" class="aiwenda-dialog-mask aiwenda-role-dialog-mask">
+        <div class="aiwenda-dialog-backdrop" @click="closeRoleDialog"></div>
+        <section class="aiwenda-dialog aiwenda-role-dialog" role="dialog" aria-modal="true" aria-label="推荐角色中心">
+          <button type="button" class="aiwenda-dialog__close" aria-label="关闭" @click="closeRoleDialog">
             <span class="material-symbols-outlined">close</span>
           </button>
-          <header class="aiwenda-role-dialog__header">
+          <header class="aiwenda-dialog__header">
             <h2>推荐角色中心</h2>
             <p>选择一个最适合当前学习需求的 AI 导师</p>
           </header>
@@ -152,11 +308,19 @@
               :class="{ 'is-active': pendingDialogRoleKey === role.key }"
               @click="selectDialogRole(role.key)"
             >
-              <strong>{{ role.name }}</strong>
-              <p>{{ role.desc }}</p>
               <span
+                v-if="role.roleId && !role.isBuiltin"
+                class="aiwenda-role-delete-btn"
+                @click.stop="handleDeleteRole(role)"
+              >
+                <span class="material-symbols-outlined">close</span>
+              </span>
+              <strong>{{ role.name }}</strong>
+              <p :title="role.desc">{{ role.desc }}</p>
+              <span
+                v-if="role.roleId && !role.isBuiltin"
                 class="aiwenda-role-config-entry"
-                @click.stop="openRoleConfigDialog(role.name)"
+                @click.stop="openRoleConfigDialog(role)"
               >
                 <span class="material-symbols-outlined">tune</span>
                 修改角色配置
@@ -177,23 +341,28 @@
     </Teleport>
 
     <Teleport to="body">
-      <div v-if="showRoleConfigDialog" class="aiwenda-config-dialog-mask">
-        <div class="aiwenda-config-dialog-backdrop" @click="closeRoleConfigDialog"></div>
-        <section class="aiwenda-config-dialog" role="dialog" aria-modal="true" :aria-label="roleConfigDialogTitle">
-          <button type="button" class="aiwenda-config-dialog__close" aria-label="关闭" @click="closeRoleConfigDialog">
+      <div v-if="showRoleConfigDialog" class="aiwenda-dialog-mask aiwenda-config-dialog-mask">
+        <div class="aiwenda-dialog-backdrop" @click="closeRoleConfigDialog"></div>
+        <section class="aiwenda-dialog aiwenda-config-dialog" role="dialog" aria-modal="true" :aria-label="roleConfigDialogTitle">
+          <button type="button" class="aiwenda-dialog__close" aria-label="关闭" @click="closeRoleConfigDialog">
             <span class="material-symbols-outlined">close</span>
           </button>
 
-          <header class="aiwenda-config-dialog__header">
+          <header class="aiwenda-dialog__header">
             <h2>{{ roleConfigDialogTitle }}</h2>
             <p>{{ roleConfigDialogDesc }}</p>
           </header>
 
-          <form class="aiwenda-config-form">
+          <form class="aiwenda-config-form" @submit.prevent="handleCreateRoleSubmit">
             <label class="aiwenda-config-field">
               <span>角色名称</span>
               <div class="aiwenda-config-input-wrap">
-                <input :placeholder="roleConfigNamePlaceholder" />
+                <input
+                  v-model.trim="roleConfigForm.roleName"
+                  :placeholder="roleConfigNamePlaceholder"
+                  :disabled="roleConfigSubmitting"
+                  maxlength="30"
+                />
                 <span class="material-symbols-outlined">edit_note</span>
               </div>
             </label>
@@ -201,9 +370,13 @@
             <label class="aiwenda-config-field">
               <span>
                 <span>角色介绍/提示词</span>
-                <em>推荐模板</em>
               </span>
-              <textarea placeholder="请详细描述该角色的工作流程、常用语气以及必须遵守的规则..."></textarea>
+              <textarea
+                v-model.trim="roleConfigForm.prompt"
+                placeholder="请详细描述该角色的工作流程、常用语气以及必须遵守的规则..."
+                :disabled="roleConfigSubmitting"
+                maxlength="1000"
+              ></textarea>
             </label>
 
             <p class="aiwenda-config-tip">
@@ -212,11 +385,20 @@
             </p>
 
             <div class="aiwenda-config-actions">
-              <button type="button" class="aiwenda-config-save" @click="closeRoleConfigDialog">
+              <button
+                type="submit"
+                class="aiwenda-config-save"
+                :disabled="roleConfigSubmitting"
+              >
                 <span class="material-symbols-outlined">save</span>
-                {{ roleConfigSaveText }}
+                {{ roleConfigSubmitting ? "保存中..." : roleConfigSaveText }}
               </button>
-              <button type="button" class="aiwenda-config-reset">
+              <button
+                type="button"
+                class="aiwenda-config-reset"
+                :disabled="roleConfigSubmitting"
+                @click="resetRoleConfigForm"
+              >
                 重置角色配置
               </button>
             </div>
@@ -230,6 +412,10 @@
 <script setup lang="ts">
 import TeacherSidebar from "~/components/layout/TeacherSidebar.vue";
 import teacherAvatar from "~/assets/newimages/user.png";
+import { aiAdmin } from "~/composables/api/ai";
+import { useAiUpload, AI_UPLOAD_ACCEPT, AI_UPLOAD_TOOLTIP } from "~/composables/useAiUpload";
+import type { AiUploadFile } from "~/composables/useAiUpload";
+import { ElMessage, ElMessageBox } from "element-plus";
 
 definePageMeta({
   layout: false,
@@ -239,23 +425,10 @@ const aiwendaPageRef = ref<HTMLElement | null>(null);
 let aiwendaPageResizeObserver: ResizeObserver | null = null;
 const aiwendaLayoutWidth = ref(1360);
 
-// 沿用 teacher2 首页缩放适配：以浏览器外层宽度作为参考，缩放档位不切换布局。
 const getAiwendaLayoutWidth = () => {
-  if (typeof window === "undefined") {
-    return 1360;
-  }
-
-  const clientWidth = document.documentElement?.clientWidth || 0;
-  const pageClientWidth = aiwendaPageRef.value?.clientWidth || 0;
-  const outerWidth = window.outerWidth || 0;
-  const innerWidth = window.innerWidth || 0;
-  const referenceWidth = outerWidth || innerWidth || clientWidth || 1360;
-  const visibleWidthCandidates = [clientWidth, pageClientWidth].filter(width => width > 0);
-  const visibleWidth = visibleWidthCandidates.length
-    ? Math.min(...visibleWidthCandidates)
-    : referenceWidth;
-  const boundedWidth = Math.min(referenceWidth, visibleWidth);
-  return Math.max(1280, Math.round(boundedWidth));
+  if (typeof window === "undefined") return 1360;
+  const width = aiwendaPageRef.value?.clientWidth || document.documentElement.clientWidth || 1360;
+  return Math.max(1280, Math.round(width));
 };
 
 const syncAiwendaLayoutWidth = () => {
@@ -277,6 +450,104 @@ const pageAdaptiveStyle = computed(() => ({
   "--aiwenda-shell-width": aiwendaShellWidth.value,
 }));
 
+const { getOptList, createOptQa, editOptQa, delOptQa, createOptAiChat, stopAiOptQa, getAiQuotaDetail, uploadAI, getFiles, deleteFiles, getOptQaSessions, getOptQaDeatil, titleOptQa, topOptQa, delAiOptQa } = aiAdmin();
+
+type AiwendaRoleCard = {
+  key: string;
+  name: string;
+  roleName?: string;
+  roleDesc: string;
+  desc: string;
+  prompt?: string;
+  icon: string;
+  roleId?: string;
+  isBuiltin?: boolean;
+};
+
+type AiwendaChatMessage = {
+  id: string;
+  role: "assistant" | "user";
+  content: string;
+  time: string;
+  pending?: boolean;
+  stopped?: boolean;
+  fileName?: string;
+};
+
+const roleIconList = ["chat", "school", "person_raised_hand", "groups"];
+
+const optRoleCards = ref<AiwendaRoleCard[]>([]);
+const optAllRoleCards = ref<AiwendaRoleCard[]>([]);
+
+const getRoleField = (item: Record<string, unknown>, keys: string[]) => {
+  for (const key of keys) {
+    const value = item[key];
+    if (value !== undefined && value !== null && String(value).trim()) {
+      return String(value).trim();
+    }
+  }
+  return "";
+};
+
+const normalizeOptRoleRows = (rows: unknown, mode: "recommend" | "all"): unknown[] => {
+  if (Array.isArray(rows)) return rows;
+  if (!rows || typeof rows !== "object") return [];
+  const obj = rows as Record<string, unknown>;
+  if (Array.isArray(obj.recommendRoles)) {
+    const list = [...obj.recommendRoles];
+    if (mode === "all" && Array.isArray(obj.customRoles)) list.push(...obj.customRoles);
+    return list;
+  }
+  if (Array.isArray(obj.rows)) return obj.rows;
+  if (Array.isArray(obj.data)) return obj.data;
+  return [];
+};
+
+const normalizeOptRoleList = (rows: unknown, mode: "recommend" | "all" = "recommend"): AiwendaRoleCard[] => {
+  const list = normalizeOptRoleRows(rows, mode);
+
+  return list
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+    .map((item, index) => {
+      const key =
+        getRoleField(item, ["roleId", "id", "value", "key", "roleKey"]) || `role-${index}`;
+      const name = getRoleField(item, ["roleName", "name", "label", "title"]) || "未命名角色";
+      const roleDesc =
+        getRoleField(item, ["roleDesc"]) || "自定义角色";
+      const desc =
+        getRoleField(item, ["prompt", "desc", "description", "remark"]) ||
+        roleDesc;
+      const icon = getRoleField(item, ["icon", "roleIcon"]) || roleIconList[index % roleIconList.length];
+      const prompt = getRoleField(item, ["prompt"]) || "";
+      return {
+        key,
+        name,
+        roleName: name,
+        roleDesc,
+        desc,
+        prompt,
+        icon,
+        roleId: getRoleField(item, ["roleId", "id"]) || key,
+        isBuiltin: Number(item.isBuiltin ?? 0) === 1,
+      };
+    });
+};
+
+const loadOptRoleList = async () => {
+  try {
+    const roleListResult = await getOptList();
+    optRoleCards.value = normalizeOptRoleList(roleListResult, "recommend");
+    optAllRoleCards.value = normalizeOptRoleList(roleListResult, "all");
+    const firstRoleKey = roleCards.value.find((item) => item.key !== "config")?.key || "";
+    if (firstRoleKey && !roleCards.value.some((item) => item.key === activeRoleKey.value)) {
+      activeRoleKey.value = firstRoleKey;
+    }
+  } catch (error: unknown) {
+    optRoleCards.value = [];
+    optAllRoleCards.value = [];
+  }
+};
+
 onMounted(() => {
   if (typeof window === "undefined") return;
   syncAiwendaLayoutWidth();
@@ -288,6 +559,12 @@ onMounted(() => {
     });
     aiwendaPageResizeObserver.observe(aiwendaPageRef.value);
   }
+  void loadOptRoleList();
+  void loadQuotaInfo();
+  void loadHistorySessions();
+  nextTick(() => {
+    chatListRef.value?.addEventListener("scroll", updateScrollButtons, { passive: true });
+  });
 });
 
 onBeforeUnmount(() => {
@@ -296,55 +573,37 @@ onBeforeUnmount(() => {
   window.visualViewport?.removeEventListener("resize", syncAiwendaLayoutWidth);
   aiwendaPageResizeObserver?.disconnect();
   aiwendaPageResizeObserver = null;
+  chatListRef.value?.removeEventListener("scroll", updateScrollButtons);
 });
 
-const roleCards = [
-  { key: "assistant", name: "自由问答", desc: "通用答疑", icon: "chat" },
-  { key: "teacher", name: "教师", desc: "教学评估", icon: "school" },
-  { key: "student", name: "好学生", desc: "学习陪伴", icon: "person_raised_hand" },
-  { key: "planner", name: "班主任", desc: "班级管理", icon: "groups" },
-  { key: "config", name: "配置新角色", desc: "自定义角色", icon: "add" },
-];
+const roleCards = computed<AiwendaRoleCard[]>(() => [
+  ...optRoleCards.value,
+  { key: "config", name: "配置新角色", roleDesc: "自定义角色", desc: "自定义角色", icon: "add" },
+]);
 
-const extendedRoleCards = [
-  {
-    key: "science-teacher",
-    name: "全科教师",
-    desc: "耐心、专业的教学伙伴，能够针对不同水平的学生制定个性化的知识点讲解与课后辅导方案。",
-  },
-  {
-    key: "lab-scientist",
-    name: "实验科学家",
-    desc: "专注于物理、化学及生物实验设计，协助你进行严谨的数据分析，假设推导与科学报告撰写。",
-  },
-  {
-    key: "resource-architect",
-    name: "资源架构师",
-    desc: "不仅能帮你改 Bug，还能深入浅出地讲解数据结构、算法逻辑，助你构建稳健的系统工程。",
-  },
-  {
-    key: "history-note",
-    name: "历史评论家",
-    desc: "穿越时空的知识向导，为你剖析历史事件背后的社会脉络，培养批判性思维与宏观视角。",
-  },
-  {
-    key: "aesthetic-mentor",
-    name: "创意美学导师",
-    desc: "从色彩理论到现代流派，为你提供灵感火花，支持 Prompt 优化，助你将脑海中的画面完美实现。",
-  },
-  {
-    key: "psychology-consultant",
-    name: "学习心理顾问",
-    desc: "关注你的学习状态与焦虑，提供专业的情绪疏导与高效学习法建议，让学习不再成为负担。",
-  },
-];
+const extendedRoleCards = computed<AiwendaRoleCard[]>(() => optAllRoleCards.value);
 
 const activeRoleKey = ref("assistant");
-const pendingDialogRoleKey = ref(extendedRoleCards[0]?.key || "");
+const activeRole = computed(() => {
+  return (
+    roleCards.value.find((item) => item.key === activeRoleKey.value) ||
+    extendedRoleCards.value.find((item) => item.key === activeRoleKey.value) ||
+    roleCards.value.find((item) => item.key !== "config") ||
+    null
+  );
+});
+const pendingDialogRoleKey = ref("");
 const showRoleDialog = ref(false);
 const showRoleConfigDialog = ref(false);
+const roleConfigEditingRoleId = ref("");
 const roleConfigTargetName = ref("");
-const isEditingRoleConfig = computed(() => Boolean(roleConfigTargetName.value));
+const roleConfigSubmitting = ref(false);
+const roleConfigForm = reactive({
+  roleName: "",
+  prompt: "",
+  
+});
+const isEditingRoleConfig = computed(() => Boolean(roleConfigEditingRoleId.value));
 const roleConfigDialogTitle = computed(() => {
   return isEditingRoleConfig.value ? "编辑角色" : "配置新角色";
 });
@@ -360,21 +619,46 @@ const roleConfigNamePlaceholder = computed(() => {
   return roleConfigTargetName.value ? `例如：${roleConfigTargetName.value}` : "例如：资深数学竞赛导师";
 });
 
+const resetRoleConfigForm = () => {
+  roleConfigForm.roleName = "";
+  roleConfigForm.prompt = "";
+};
+
+const resetChatSession = () => {
+  activeChatSessionId.value = "";
+  chatMessages.value = [];
+  suggestedQuestions.value = [];
+  composerText.value = "";
+  activeChatAbortController.value?.abort();
+  activeChatAbortController.value = null;
+  chatRequesting.value = false;
+  historyCards.value.forEach((c) => { c.active = false; });
+};
+
 const handleRoleClick = (key: string) => {
   if (key === "config") {
-    openRoleConfigDialog("");
+    openRoleConfigDialog();
     return;
   }
+  if (key === activeRoleKey.value) return;
   activeRoleKey.value = key;
+  resetChatSession();
 };
 
 const openRoleDialog = () => {
-  pendingDialogRoleKey.value = extendedRoleCards[0]?.key || "";
+  pendingDialogRoleKey.value = extendedRoleCards.value[0]?.key || "";
   showRoleDialog.value = true;
 };
 
 const selectDialogRole = (key: string) => {
   pendingDialogRoleKey.value = key;
+  confirmDialogRole();
+  // 选中角色后用角色提示词自动发起对话
+  nextTick(() => {
+    const role = activeRole.value;
+    composerText.value = role?.prompt || "你好";
+    void handleSendMessage();
+  });
 };
 
 const closeRoleDialog = () => {
@@ -382,1003 +666,515 @@ const closeRoleDialog = () => {
 };
 
 const confirmDialogRole = () => {
-  if (pendingDialogRoleKey.value) {
+  if (pendingDialogRoleKey.value && pendingDialogRoleKey.value !== activeRoleKey.value) {
     activeRoleKey.value = pendingDialogRoleKey.value;
+    resetChatSession();
   }
   closeRoleDialog();
 };
 
-const openRoleConfigDialog = (roleName: string) => {
-  roleConfigTargetName.value = roleName;
+const openRoleConfigDialog = (role?: AiwendaRoleCard) => {
+  roleConfigEditingRoleId.value = role?.roleId || "";
+  roleConfigTargetName.value = role?.name || "";
+  resetRoleConfigForm();
+  roleConfigForm.roleName = role?.name || "";
+  roleConfigForm.prompt = role?.desc || "";
   showRoleConfigDialog.value = true;
 };
 
-const closeRoleConfigDialog = () => {
-  showRoleConfigDialog.value = false;
+const handleDeleteRole = async (role: AiwendaRoleCard) => {
+  if (!role.roleId) return;
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除角色「${role.name}」吗？删除后不可恢复。`,
+      "删除角色",
+      { confirmButtonText: "确定删除", cancelButtonText: "取消", type: "warning" },
+    );
+  } catch {
+    return;
+  }
+  try {
+    await delOptQa(role.roleId);
+    ElMessage.success("角色已删除");
+    void loadOptRoleList();
+  } catch (error: unknown) {
+    ElMessage.error(error instanceof Error && error.message ? error.message : "删除角色失败");
+  }
 };
 
-const chatMessages = [
-  {
-    id: "assistant-1",
-    role: "assistant",
-    content:
-      "您好！我是教学交互 AI 助教，有强大的数据理解、讲解与文本生成能力。请问今天我可以如何帮助你？",
-    time: "上午 09:41 AM",
-  },
-  {
-    id: "user-1",
-    role: "user",
-    content:
-      "请深入浅出地说明一下三年级学生如何用简单电路实验，理解一个开关控制一盏灯的基本原理。",
-    time: "上午 09:42 AM",
-  },
-  {
-    id: "assistant-2",
-    role: "assistant",
-    content:
-      "当然可以！建议准备小灯泡、导线、电池和开关。先让学生观察开关闭合前后灯泡状态变化，再引导他们理解电流需要形成完整回路，开关负责控制回路是否连通。",
-    time: "上午 09:43 AM",
-  },
+const closeRoleConfigDialog = () => {
+  if (roleConfigSubmitting.value) return;
+  showRoleConfigDialog.value = false;
+  roleConfigEditingRoleId.value = "";
+  roleConfigTargetName.value = "";
+  resetRoleConfigForm();
+};
+
+const handleCreateRoleSubmit = async () => {
+  const roleName = roleConfigForm.roleName.trim();
+  const prompt = roleConfigForm.prompt.trim();
+
+  if (!roleName) {
+    ElMessage.warning("请输入角色名称");
+    return;
+  }
+
+  if (!prompt) {
+    ElMessage.warning("请输入角色介绍或提示词");
+    return;
+  }
+
+  roleConfigSubmitting.value = true;
+  try {
+    if (isEditingRoleConfig.value) {
+      await editOptQa({
+        roleId: roleConfigEditingRoleId.value,
+        roleName,
+        prompt,
+      });
+      ElMessage.success("角色配置已更新");
+    } else {
+      await createOptQa({
+        roleName,
+        prompt,
+      });
+      ElMessage.success("角色配置已保存");
+    }
+    showRoleConfigDialog.value = false;
+    roleConfigEditingRoleId.value = "";
+    roleConfigTargetName.value = "";
+    resetRoleConfigForm();
+    void loadOptRoleList();
+  } catch (error: unknown) {
+    ElMessage.error(error instanceof Error && error.message ? error.message : "保存角色配置失败");
+  } finally {
+    roleConfigSubmitting.value = false;
+  }
+};
+
+const chatListRef = ref<HTMLElement | null>(null);
+const composerText = ref("");
+const chatRequesting = ref(false);
+
+// ---- 上传（composable） ----
+const {
+  uploadInputRef, aiUploadFile, aiUploading, aiUploadError,
+  triggerUpload, clearUploadFile, handleRemoveFile, handleFileChange,
+} = useAiUpload({ uploadAI, getFiles, deleteFiles });
+// ---- 上传 end ----
+const activeChatSessionId = ref("");
+const activeChatAbortController = ref<AbortController | null>(null);
+
+const createMessageId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+const formatMessageTime = () => {
+  const now = new Date();
+  const period = now.getHours() < 12 ? "上午" : "下午";
+  const hour = String(now.getHours()).padStart(2, "0");
+  const minute = String(now.getMinutes()).padStart(2, "0");
+  return `${period} ${hour}:${minute}`;
+};
+
+const scrollChatToBottom = async () => {
+  await nextTick();
+  const target = chatListRef.value;
+  if (!target) return;
+  target.scrollTo({ top: target.scrollHeight, behavior: "smooth" });
+};
+
+const scrollChatToTop = () => {
+  const target = chatListRef.value;
+  if (!target) return;
+  target.scrollTo({ top: 0, behavior: "smooth" });
+};
+
+const showScrollUp = ref(false);
+const showScrollDown = ref(false);
+
+const updateScrollButtons = () => {
+  const el = chatListRef.value;
+  if (!el) {
+    showScrollUp.value = false;
+    showScrollDown.value = false;
+    return;
+  }
+  const threshold = 50;
+  const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= threshold;
+  const canScroll = el.scrollHeight > el.clientHeight + threshold;
+  // 不在底部 → 显示↓；在底部且有滚动空间 → 显示↑
+  showScrollDown.value = !atBottom;
+  showScrollUp.value = atBottom && canScroll;
+};
+
+const resolveOptQaSessionId = (payload: unknown): string => {
+  if (!payload || typeof payload !== "object") return "";
+  const record = payload as Record<string, unknown>;
+  const directValue = record.sessionId || record.id;
+  if (directValue) return String(directValue).trim();
+  const data = record.data;
+  if (data && typeof data === "object") {
+    return resolveOptQaSessionId(data);
+  }
+  return "";
+};
+
+const enableThinking = ref(false);
+const suggestedQuestions = ref<string[]>([]);
+
+const defaultSuggestions = [
+  "高中数学的导数部分有什么高效的学习方法吗",
+  "2025年各省的高考招生政策有哪些新的调整变动",
+  "考研英语一的全年备考规划具体要怎么安排比较合理",
 ];
 
-const historyCards = [
-  {
-    id: "history-1",
-    title: "教学计划",
-    content: "基于学情生成本周教学安排，并拆分课前、课中、课后任务。",
-    active: true,
-  },
-  {
-    id: "history-2",
-    title: "问答",
-    content: "Python 列表推导式和普通循环有什么区别？",
-  },
-  {
-    id: "history-3",
-    title: "作业",
-    content: "学生实验记录：金属导体和绝缘体课堂总结。",
-  },
-];
+const chatMessages = ref<AiwendaChatMessage[]>([]);
+
+const canSendMessage = computed(
+  () => (Boolean(composerText.value.trim()) || Boolean(aiUploadFile.value?.ossId)) && !chatRequesting.value
+);
+
+const lastAssistantMessage = computed(() => {
+  for (let i = chatMessages.value.length - 1; i >= 0; i--) {
+    if (chatMessages.value[i].role === "assistant") return chatMessages.value[i];
+  }
+  return null;
+});
+
+const handleSendMessage = async () => {
+  const messageText = composerText.value.trim();
+  const currentFile = aiUploadFile.value ? { ...aiUploadFile.value } : null;
+  if (!messageText && !currentFile?.ossId) {
+    ElMessage.warning("请输入消息内容或上传附件");
+    return;
+  }
+  if (chatRequesting.value) return;
+
+  const currentRole = activeRole.value;
+  const abortController = new AbortController();
+  const assistantMessage = reactive<AiwendaChatMessage>({
+    id: createMessageId(),
+    role: "assistant",
+    content: "正在思考中...",
+    time: formatMessageTime(),
+    pending: true,
+  });
+
+  chatMessages.value.push(
+    {
+      id: createMessageId(),
+      role: "user",
+      content: messageText || "请帮我分析这个附件",
+      time: formatMessageTime(),
+      ...(currentFile?.name ? { fileName: currentFile.name } : {}),
+    },
+    assistantMessage,
+  );
+  composerText.value = "";
+  clearUploadFile();
+  chatRequesting.value = true;
+  suggestedQuestions.value = [];
+  activeChatAbortController.value = abortController;
+  await scrollChatToBottom();
+
+  try {
+    const response = await createOptAiChat(
+      {
+        sessionId: activeChatSessionId.value || undefined,
+        roleId: currentRole?.roleId || undefined,
+        message: messageText || "请帮我分析这个附件",
+        enableThinking: enableThinking.value,
+        ...(currentFile?.ossId ? { fileRefs: [{ fileId: currentFile.ossId, fileType: currentFile.fileType }] } : {}),
+      } as any,
+      {
+        signal: abortController.signal,
+        onChunk: (payload, fullText) => {
+          if (!activeChatSessionId.value) {
+            const sessionId = resolveOptQaSessionId(payload);
+            if (sessionId) {
+              activeChatSessionId.value = sessionId;
+            }
+          }
+          if (!fullText) return;
+          assistantMessage.content = fullText;
+          void scrollChatToBottom();
+        },
+      },
+    );
+
+    const resolvedSessionId = resolveOptQaSessionId(response);
+    if (resolvedSessionId) {
+      activeChatSessionId.value = resolvedSessionId;
+    }
+    const resolvedText = String((response as any)?.text || "").trim();
+    if (resolvedText) {
+      assistantMessage.content = resolvedText;
+    }
+    assistantMessage.pending = false;
+    suggestedQuestions.value = defaultSuggestions;
+  } catch (error: unknown) {
+    assistantMessage.pending = false;
+    const isAbort = error instanceof DOMException && error.name === "AbortError";
+    if (isAbort) {
+      assistantMessage.stopped = true;
+      if (!assistantMessage.content || assistantMessage.content === "正在思考中...") {
+        assistantMessage.content = "回答已停止。";
+      }
+    } else {
+      assistantMessage.content =
+        error instanceof Error && error.message
+          ? `当前回复失败：${error.message}`
+          : "当前回复失败，请稍后再试。";
+    }
+  } finally {
+    chatRequesting.value = false;
+    activeChatAbortController.value = null;
+    void scrollChatToBottom();
+    void loadHistorySessions();
+  }
+};
+
+const handleComposerKeydown = (event: KeyboardEvent) => {
+  if (event.key !== "Enter" || event.shiftKey) return;
+  event.preventDefault();
+  void handleSendMessage();
+};
+
+const handleStopChat = async () => {
+  activeChatAbortController.value?.abort();
+  activeChatAbortController.value = null;
+  chatRequesting.value = false;
+  if (activeChatSessionId.value) {
+    try {
+      await stopAiOptQa(activeChatSessionId.value);
+    } catch {
+      // 静默处理
+    }
+  }
+};
+
+
+const copyMessageContent = async (content: string) => {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(content);
+    } else {
+      const textarea = document.createElement("textarea");
+      textarea.value = content;
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand("copy");
+      document.body.removeChild(textarea);
+    }
+    ElMessage.success("已复制到剪贴板");
+  } catch {
+    ElMessage.error("复制失败");
+  }
+};
+
+const retryMessage = async (message: AiwendaChatMessage) => {
+  const idx = chatMessages.value.findIndex((m) => m.id === message.id);
+  if (idx < 1) return;
+  const userMsg = chatMessages.value[idx - 1];
+  if (!userMsg || userMsg.role !== "user") return;
+  composerText.value = userMsg.content;
+  suggestedQuestions.value = [];
+  await nextTick();
+  void handleSendMessage();
+};
+
+const showQuotaPopover = ref(false);
+const quotaItems = ref<{ name: string; limit: string }[]>([]);
+
+const loadQuotaInfo = async () => {
+  try {
+    const rows = await getAiQuotaDetail();
+    const list = Array.isArray(rows) ? rows : [];
+    quotaItems.value = list
+      .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
+      .map((item) => ({
+        name: String(item.quotaName || item.name || "未知"),
+        limit: String(item.userLimit ?? item.limit ?? 0),
+      }));
+  } catch {
+    // 静默处理
+  }
+};
+
+// ---- 历史记录 ----
+type HistoryCard = {
+  id: string;
+  title: string;
+  content: string;
+  active?: boolean;
+  pinned?: boolean;
+};
+
+const historyCards = ref<HistoryCard[]>([]);
+const hoverMenuId = ref("");
+const menuPosition = ref({ top: 0, left: 0 });
+let closeMenuTimer: ReturnType<typeof setTimeout> | null = null;
+
+const menuTargetCard = computed(() =>
+  historyCards.value.find((c) => c.id === hoverMenuId.value) || null
+);
+
+const menuFixedStyle = computed(() => ({
+  position: "fixed" as const,
+  top: `${menuPosition.value.top}px`,
+  left: `${menuPosition.value.left}px`,
+  zIndex: 9999,
+}));
+
+const openMenuAt = (id: string, event: MouseEvent) => {
+  cancelCloseMenu();
+  hoverMenuId.value = id;
+  const el = (event.currentTarget as HTMLElement);
+  const rect = el.getBoundingClientRect();
+  const menuHeight = 120;
+  const spaceBelow = window.innerHeight - rect.bottom;
+  if (spaceBelow < menuHeight) {
+    menuPosition.value = { top: rect.top - menuHeight - 4, left: rect.right - 140 };
+  } else {
+    menuPosition.value = { top: rect.bottom + 4, left: rect.right - 140 };
+  }
+};
+
+const scheduleCloseMenu = () => {
+  closeMenuTimer = setTimeout(() => { hoverMenuId.value = ""; }, 120);
+};
+const cancelCloseMenu = () => {
+  if (closeMenuTimer) { clearTimeout(closeMenuTimer); closeMenuTimer = null; }
+};
+
+const loadHistorySessions = async () => {
+  try {
+    const data = await getOptQaSessions();
+    const list = Array.isArray(data) ? data : (data as any)?.rows || (data as any)?.data || [];
+    historyCards.value = list
+      .filter((item: any) => !!item && typeof item === "object" && (item.sessionId || item.id))
+      .map((item: any) => ({
+        id: String(item.sessionId || item.id || ""),
+        title: String(item.title || item.sessionTitle || "未命名对话"),
+        content: String(item.lastMessage || item.summary || item.content || "暂无消息"),
+        pinned: Boolean(item.pinned || item.isTop || item.top),
+      }));
+    // 标记当前活跃会话
+    if (activeChatSessionId.value) {
+      historyCards.value.forEach((c) => {
+        c.active = c.id === activeChatSessionId.value;
+      });
+    }
+  } catch {
+    // 静默
+  }
+};
+
+const handleHistoryClick = async (card: HistoryCard) => {
+  if (card.id === activeChatSessionId.value) return;
+  activeChatAbortController.value?.abort();
+  activeChatAbortController.value = null;
+  chatRequesting.value = false;
+
+  try {
+    const detail = await getOptQaDeatil(card.id);
+    activeChatSessionId.value = card.id;
+
+    // 同步角色选中状态
+    const detailObj = (detail && typeof detail === "object" ? detail : {}) as Record<string, unknown>;
+    const sessionRoleId = String(detailObj.roleId || "").trim();
+    if (sessionRoleId) {
+      const matchedRole =
+        roleCards.value.find((r) => r.roleId === sessionRoleId) ||
+        extendedRoleCards.value.find((r) => r.roleId === sessionRoleId);
+      if (matchedRole) {
+        activeRoleKey.value = matchedRole.key;
+      }
+    }
+
+    const messages: any[] = Array.isArray(detail)
+      ? detail
+      : (detailObj.messages || detailObj.data || []) as any[];
+    chatMessages.value = messages
+      .filter((m: any) => !!m && typeof m === "object")
+      .map((m: any) => ({
+        id: String(m.id || m.messageId || createMessageId()),
+        role: String(m.role || "user") as "assistant" | "user",
+        content: String(m.content || m.message || ""),
+        time: String(m.time || m.createTime || ""),
+      }));
+    suggestedQuestions.value = chatMessages.value.length ? defaultSuggestions : [];
+    historyCards.value.forEach((c) => { c.active = c.id === card.id; });
+    await scrollChatToBottom();
+  } catch (error: any) {
+    ElMessage.error(error?.message || "加载会话详情失败");
+  }
+};
+
+const handleHistoryRename = async (card: HistoryCard) => {
+  hoverMenuId.value = "";
+  let newTitle = "";
+  try {
+    const { value } = await ElMessageBox.prompt("请输入新名称", "重命名", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      inputValue: card.title,
+      inputValidator: (v) => !!v?.trim() || "名称不能为空",
+    });
+    newTitle = value.trim();
+  } catch { return; }
+  try {
+    await titleOptQa(card.id, newTitle);
+    await loadHistorySessions();
+    ElMessage.success("重命名成功");
+  } catch (error: any) {
+    ElMessage.error(error?.message || "重命名失败");
+  }
+};
+
+const handleHistoryPin = async (card: HistoryCard) => {
+  hoverMenuId.value = "";
+  try {
+    await topOptQa(card.id, card.pinned ? 0 : 1);
+    await loadHistorySessions();
+    ElMessage.success(card.pinned ? "已取消置顶" : "已置顶");
+  } catch (error: any) {
+    ElMessage.error(error?.message || "操作失败");
+  }
+};
+
+const handleHistoryDelete = async (card: HistoryCard) => {
+  hoverMenuId.value = "";
+  try {
+    await ElMessageBox.confirm("确定要删除该对话记录吗？", "提示", {
+      confirmButtonText: "删除",
+      cancelButtonText: "取消",
+      type: "warning",
+    });
+  } catch { return; }
+  try {
+    await delAiOptQa(card.id);
+    if (card.id === activeChatSessionId.value) {
+      activeChatSessionId.value = "";
+      chatMessages.value = [];
+      suggestedQuestions.value = [];
+    }
+    await loadHistorySessions();
+    ElMessage.success("已删除");
+  } catch (error: any) {
+    ElMessage.error(error?.message || "删除失败");
+  }
+};
+
+const handleNewChatFromHistory = () => {
+  resetChatSession();
+  // 恢复默认角色
+  const defaultKey = roleCards.value.find((r) => r.key !== "config")?.key || "assistant";
+  activeRoleKey.value = defaultKey;
+};
+// ---- 历史记录 end ----
 </script>
 
-<style scoped>
-@font-face {
-  font-family: "Material Symbols Outlined";
-  font-style: normal;
-  font-weight: 100 700;
-  src: url("/fonts/material-symbols-outlined-full.ttf") format("truetype");
-  font-display: block;
-}
-
-.material-symbols-outlined {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1em;
-  height: 1em;
-  overflow: hidden;
-  font-family: "Material Symbols Outlined", sans-serif !important;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 1.5rem;
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-  white-space: nowrap;
-  word-wrap: normal;
-  direction: ltr;
-  flex-shrink: 0;
-  user-select: none;
-  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
-  -webkit-font-smoothing: antialiased;
-}
-
-.aiwenda-page {
-  --aiwenda-sidebar-width: 256px;
-  --aiwenda-page-min: 1280px;
-  --aiwenda-page-max: 1920px;
-  --aiwenda-shell-width: var(--aiwenda-page-min);
-  min-width: var(--aiwenda-page-min);
-  height: 100vh;
-  overflow-x: auto;
-  overflow-y: auto;
-  background: #f4f6f8;
-  color: #121826;
-}
-
-.aiwenda-layout {
-  display: grid;
-  grid-template-columns: var(--aiwenda-sidebar-width) minmax(0, 1fr);
-  width: min(
-    var(--aiwenda-page-max),
-    max(var(--aiwenda-page-min), var(--aiwenda-shell-width))
-  );
-  min-width: var(--aiwenda-page-min);
-  min-height: 100vh;
-  margin: 0 auto;
-  background: #f4f6f8;
-}
-
-.aiwenda-main {
-  min-width: 0;
-  min-height: 100vh;
-  height: 100vh;
-  padding: clamp(28px, 1.9vw, 36px) clamp(24px, 1.8vw, 34px) clamp(22px, 1.45vw, 26px) clamp(18px, 1.35vw, 22px);
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow: hidden;
-}
-
-.aiwenda-breadcrumb {
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #7a8798;
-  font-size: 13px;
-  font-weight: 700;
-}
-
-.aiwenda-breadcrumb__back {
-  border: none;
-  color: #667386;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: color 0.2s ease;
-}
-
-.aiwenda-breadcrumb__back:hover {
-  color: #005bc2;
-}
-
-.aiwenda-breadcrumb__back .material-symbols-outlined {
-  font-size: 17px;
-}
-
-.aiwenda-breadcrumb__separator {
-  color: #b6c0cf;
-  font-size: 15px;
-}
-
-.aiwenda-breadcrumb__current {
-  color: #005bc2;
-}
-
-.aiwenda-content-grid {
-  flex: 1;
-  min-height: 0;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 314px;
-  gap: 20px;
-  overflow: hidden;
-}
-
-.aiwenda-workspace,
-.aiwenda-history {
-  min-height: 0;
-  border-radius: 22px;
-  background: #ffffff;
-}
-
-.aiwenda-workspace {
-  display: flex;
-  flex-direction: column;
-  padding: 26px 28px 18px;
-  overflow: hidden;
-}
-
-.aiwenda-section-title,
-.aiwenda-history__title {
-  color: #151b28;
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: -0.01em;
-}
-
-.aiwenda-role-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.aiwenda-role-view-all {
-  border: 0;
-  color: #005bc2;
-  background: transparent;
-  font-size: 12px;
-  font-weight: 800;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.aiwenda-role-view-all:hover {
-  color: #00499b;
-}
-
-.aiwenda-role-list {
-  margin-top: 14px;
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.aiwenda-role-card {
-  height: 58px;
-  border: 1px solid #e7edf4;
-  border-radius: 10px;
-  background: #ffffff;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 0 12px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.aiwenda-role-card:hover {
-  border-color: rgba(0, 91, 194, 0.3);
-  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.08);
-}
-
-.aiwenda-role-card.is-active {
-  border-color: rgba(0, 91, 194, 0.3);
-  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.08);
-}
-
-.aiwenda-role-card__icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 9px;
-  color: #005bc2;
-  background: #eaf3ff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.aiwenda-role-card__icon.is-teacher {
-  color: #2563eb;
-  background: #e8f0ff;
-}
-
-.aiwenda-role-card__icon.is-student {
-  color: #e84f8a;
-  background: #fff0f6;
-}
-
-.aiwenda-role-card__icon.is-planner {
-  color: #0ca678;
-  background: #e9fbf4;
-}
-
-.aiwenda-role-card__icon.is-config {
-  color: #005bc2;
-  background: #f1f6ff;
-}
-
-.aiwenda-role-card__icon .material-symbols-outlined {
-  font-size: 17px;
-}
-
-.aiwenda-role-card__text {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.aiwenda-role-card__text strong {
-  color: #182235;
-  font-size: 13px;
-  font-weight: 800;
-  line-height: 1.2;
-}
-
-.aiwenda-role-card__text small {
-  color: #8a95a6;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.aiwenda-chat-list {
-  flex: 1;
-  min-height: 0;
-  margin-top: 28px;
-  padding: 6px 8px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 28px;
-  overflow-y: auto;
-}
-
-.aiwenda-message {
-  display: flex;
-  gap: 12px;
-  align-items: flex-start;
-}
-
-.aiwenda-message.is-user {
-  justify-content: flex-end;
-}
-
-.aiwenda-avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  flex: 0 0 auto;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.aiwenda-avatar.is-assistant {
-  color: #ffffff;
-  background: linear-gradient(135deg, #006be6, #004db5);
-  box-shadow: 0 8px 18px rgba(0, 91, 194, 0.24);
-}
-
-.aiwenda-avatar.is-user img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.aiwenda-message__body {
-  max-width: min(620px, 72%);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.aiwenda-message.is-user .aiwenda-message__body {
-  align-items: flex-end;
-}
-
-.aiwenda-message__body time {
-  color: #98a3b3;
-  font-size: 10px;
-  font-weight: 700;
-}
-
-.aiwenda-message__bubble {
-  position: relative;
-  min-height: 46px;
-  border-radius: 10px;
-  padding: 13px 42px 13px 16px;
-  color: #273449;
-  background: #f2f5f8;
-  line-height: 1.7;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.aiwenda-message__bubble p {
-  margin: 0;
-  white-space: pre-wrap;
-  word-break: break-word;
-}
-
-.aiwenda-message.is-user .aiwenda-message__bubble {
-  color: #ffffff;
-  background: linear-gradient(135deg, #0067dc 0%, #005bc2 100%);
-  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.24);
-}
-
-.aiwenda-message__more {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  border: none;
-  padding: 0;
-  color: currentColor;
-  opacity: 0.55;
-  background: transparent;
-}
-
-.aiwenda-message__more .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.aiwenda-composer {
-  min-height: 52px;
-  border: 1px solid #e5ebf3;
-  border-radius: 18px;
-  background: #ffffff;
-  box-shadow: 0 12px 28px rgba(28, 45, 76, 0.08);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 9px 8px 14px;
-}
-
-.aiwenda-composer button {
-  border: none;
-  padding: 0;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.aiwenda-composer__icon,
-.aiwenda-composer__voice {
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
-  background: transparent;
-  color: #9aa6b8;
-}
-
-.aiwenda-composer__input {
-  flex: 1;
-  min-width: 0;
-  height: 32px;
-  max-height: 90px;
-  border: none;
-  outline: none;
-  resize: none;
-  color: #263245;
-  background: transparent;
-  font: inherit;
-  font-size: 13px;
-  line-height: 32px;
-}
-
-.aiwenda-composer__input::placeholder {
-  color: #a9b4c4;
-}
-
-.aiwenda-composer__send {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  color: #ffffff;
-  background: #005bc2;
-  box-shadow: 0 8px 18px rgba(0, 91, 194, 0.26);
-}
-
-.aiwenda-composer__send .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.aiwenda-history {
-  padding: 26px 18px 18px;
-  background: #e9eef3;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.aiwenda-history__list {
-  flex: 1;
-  min-height: 0;
-  margin-top: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  overflow-y: auto;
-}
-
-.aiwenda-history-card {
-  position: relative;
-  width: 100%;
-  border: 1px solid transparent;
-  border-radius: 10px;
-  background: #ffffff;
-  padding: 13px 38px 13px 14px;
-  text-align: left;
-  cursor: pointer;
-}
-
-.aiwenda-history-card:hover,
-.aiwenda-history-card.is-active {
-  border-color: rgba(0, 91, 194, 0.24);
-  box-shadow: 0 10px 20px rgba(47, 68, 96, 0.08);
-}
-
-.aiwenda-history-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  color: #005bc2;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.aiwenda-history-card p {
-  margin: 8px 0 0;
-  color: #253247;
-  font-size: 12px;
-  font-weight: 700;
-  line-height: 1.55;
-  display: -webkit-box;
-  overflow: hidden;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-.aiwenda-history-card__more {
-  position: absolute;
-  right: 12px;
-  top: 13px;
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
-  color: #8a95a6;
-  background: rgba(242, 245, 248, 0.9);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 1;
-  transition: opacity 0.18s ease, background-color 0.18s ease, color 0.18s ease;
-}
-
-.aiwenda-history-card:hover .aiwenda-history-card__more,
-.aiwenda-history-card.is-active .aiwenda-history-card__more {
-  color: #005bc2;
-  background: #eaf3ff;
-}
-
-.aiwenda-history-card__more .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.aiwenda-history-menu {
-  position: absolute;
-  right: 8px;
-  top: 40px;
-  z-index: 10;
-  width: 142px;
-  border: 1px solid #e3eaf2;
-  border-radius: 12px;
-  background: #ffffff;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
-  padding: 7px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-4px);
-  transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
-}
-
-.aiwenda-history-card:hover .aiwenda-history-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.aiwenda-history-menu__item {
-  height: 34px;
-  border-radius: 8px;
-  color: #4b5563;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  padding: 0 10px;
-  font-size: 13px;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-.aiwenda-history-menu__item:hover {
-  background: #f2f6fb;
-}
-
-.aiwenda-history-menu__item.is-danger {
-  color: #e54848;
-}
-
-.aiwenda-history-menu__item .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.aiwenda-new-chat {
-  height: 46px;
-  margin-top: 16px;
-  border: none;
-  border-radius: 10px;
-  background: #005bc2;
-  color: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 13px;
-  font-weight: 800;
-  cursor: pointer;
-  box-shadow: 0 12px 24px rgba(0, 91, 194, 0.25);
-}
-
-.aiwenda-new-chat .material-symbols-outlined {
-  font-size: 17px;
-}
-
-.aiwenda-role-dialog-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 2000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
-
-.aiwenda-role-dialog-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.2);
-  backdrop-filter: blur(8px);
-}
-
-.aiwenda-role-dialog {
-  position: relative;
-  width: min(860px, calc(100vw - 80px));
-  border-radius: 42px;
-  background: #ffffff;
-  padding: 36px 36px 30px;
-  box-shadow: 0 30px 80px rgba(15, 23, 42, 0.22);
-}
-
-.aiwenda-role-dialog__close {
-  position: absolute;
-  top: 28px;
-  right: 30px;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  color: #5f6b7d;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.aiwenda-role-dialog__close:hover {
-  background: #f2f5f8;
-}
-
-.aiwenda-role-dialog__close .material-symbols-outlined {
-  font-size: 20px;
-}
-
-.aiwenda-role-dialog__header h2 {
-  margin: 0;
-  color: #111827;
-  font-size: 30px;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1.15;
-}
-
-.aiwenda-role-dialog__header p {
-  margin: 8px 0 0;
-  color: #697586;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.aiwenda-role-dialog__grid {
-  margin-top: 34px;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 22px;
-}
-
-.aiwenda-role-dialog-card {
-  min-height: 150px;
-  border: 1px solid #e3eaf2;
-  border-radius: 12px;
-  background: #f8fafc;
-  padding: 22px 22px 18px;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  cursor: pointer;
-  transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease,
-    transform 0.2s ease;
-}
-
-.aiwenda-role-dialog-card:hover,
-.aiwenda-role-dialog-card.is-active {
-  border-color: rgba(0, 91, 194, 0.35);
-  background: #ffffff;
-  box-shadow: 0 14px 32px rgba(0, 91, 194, 0.1);
-  transform: translateY(-1px);
-}
-
-.aiwenda-role-dialog-card strong {
-  color: #182235;
-  font-size: 17px;
-  font-weight: 900;
-  line-height: 1.25;
-}
-
-.aiwenda-role-dialog-card p {
-  margin: 16px 0 0;
-  color: #4a5568;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.65;
-}
-
-.aiwenda-role-config-entry {
-  margin-top: auto;
-  padding-top: 14px;
-  color: #005bc2;
-  font-size: 12px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  align-self: flex-start;
-  cursor: pointer;
-}
-
-.aiwenda-role-config-entry:hover {
-  color: #004a9f;
-}
-
-.aiwenda-role-config-entry .material-symbols-outlined {
-  font-size: 14px;
-}
-
-.aiwenda-role-dialog__footer {
-  margin-top: 36px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 14px;
-}
-
-.aiwenda-role-dialog__confirm,
-.aiwenda-role-dialog__cancel {
-  height: 44px;
-  border-radius: 999px;
-  padding: 0 28px;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-}
-
-.aiwenda-role-dialog__confirm {
-  border: none;
-  color: #ffffff;
-  background: #005bc2;
-  box-shadow: 0 12px 26px rgba(0, 91, 194, 0.28);
-}
-
-.aiwenda-role-dialog__cancel {
-  border: 1px solid #d9e1ec;
-  color: #4a5568;
-  background: #ffffff;
-}
-
-.aiwenda-config-dialog-mask {
-  position: fixed;
-  inset: 0;
-  z-index: 2100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 40px;
-}
-
-.aiwenda-config-dialog-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.42);
-  backdrop-filter: blur(8px);
-}
-
-.aiwenda-config-dialog {
-  position: relative;
-  width: min(620px, calc(100vw - 80px));
-  border-radius: 34px;
-  background: #ffffff;
-  padding: 36px 36px 30px;
-  box-shadow: 0 32px 90px rgba(15, 23, 42, 0.28);
-}
-
-.aiwenda-config-dialog__close {
-  position: absolute;
-  top: 28px;
-  right: 30px;
-  width: 32px;
-  height: 32px;
-  border: none;
-  border-radius: 50%;
-  color: #5f6b7d;
-  background: transparent;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-}
-
-.aiwenda-config-dialog__close:hover {
-  background: #f2f5f8;
-}
-
-.aiwenda-config-dialog__close .material-symbols-outlined {
-  font-size: 20px;
-}
-
-.aiwenda-config-dialog__header h2 {
-  margin: 0;
-  color: #111827;
-  font-size: 30px;
-  font-weight: 900;
-  letter-spacing: -0.04em;
-  line-height: 1.15;
-}
-
-.aiwenda-config-dialog__header p {
-  margin: 8px 0 0;
-  color: #697586;
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.aiwenda-config-form {
-  margin-top: 26px;
-  display: flex;
-  flex-direction: column;
-  gap: 22px;
-}
-
-.aiwenda-config-field {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.aiwenda-config-field > span {
-  color: #1f2937;
-  font-size: 13px;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.aiwenda-config-field em {
-  min-width: 58px;
-  height: 24px;
-  border-radius: 999px;
-  background: #eaf3ff;
-  color: #005bc2;
-  font-style: normal;
-  font-size: 11px;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.aiwenda-config-input-wrap {
-  height: 52px;
-  border-radius: 14px;
-  background: #f1f4f7;
-  display: flex;
-  align-items: center;
-  padding: 0 16px;
-  gap: 10px;
-}
-
-.aiwenda-config-input-wrap input,
-.aiwenda-config-field textarea {
-  width: 100%;
-  border: none;
-  outline: none;
-  color: #243044;
-  background: transparent;
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-}
-
-.aiwenda-config-input-wrap input::placeholder,
-.aiwenda-config-field textarea::placeholder {
-  color: #9aa6b8;
-}
-
-.aiwenda-config-input-wrap .material-symbols-outlined {
-  color: #b0bac8;
-  font-size: 20px;
-}
-
-.aiwenda-config-field textarea {
-  min-height: 158px;
-  resize: none;
-  border-radius: 14px;
-  background: #f1f4f7;
-  padding: 16px;
-  line-height: 1.6;
-}
-
-.aiwenda-config-tip {
-  margin: -4px 0 16px;
-  color: #6b7280;
-  font-size: 12px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.aiwenda-config-tip .material-symbols-outlined {
-  color: #7d8796;
-  font-size: 15px;
-}
-
-.aiwenda-config-actions {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 150px;
-  gap: 14px;
-}
-
-.aiwenda-config-save,
-.aiwenda-config-reset {
-  height: 52px;
-  border-radius: 14px;
-  font-size: 15px;
-  font-weight: 900;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-}
-
-.aiwenda-config-save {
-  border: none;
-  color: #ffffff;
-  background: #005bc2;
-  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.28);
-}
-
-.aiwenda-config-save .material-symbols-outlined {
-  font-size: 18px;
-}
-
-.aiwenda-config-reset {
-  border: 1px solid #e3eaf2;
-  color: #4b5563;
-  background: #ffffff;
-}
-
-@media (max-width: 1500px) {
-  .aiwenda-main {
-    gap: 16px;
-    padding: 28px 24px 22px 18px;
-  }
-
-  .aiwenda-content-grid {
-    grid-template-columns: minmax(0, 1fr) 286px;
-    gap: 16px;
-  }
-
-  .aiwenda-workspace {
-    padding: 22px 24px 16px;
-  }
-
-  .aiwenda-role-list {
-    gap: 10px;
-  }
-
-  .aiwenda-message__body {
-    max-width: min(560px, 76%);
-  }
-}
-</style>
+<style scoped src="./aiwenda.scoped.css"></style>
+<style src="./aiwenda.global.css"></style>

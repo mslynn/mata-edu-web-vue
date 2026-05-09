@@ -421,19 +421,19 @@ const infoCards = [
 const toolCards = [
   {
     title: "MatataCode (VinciBot)",
-    description: "专为 VinciBot 设计的图形化编程环境",
+    description: "提供AI模型训练、图形化编程和Python文本编程，满足不同年龄段学生的认知水平和学习需求。内置AI、摄像头、乐器等趣味功能。",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuA7wS2Z_qXzRTP6tF_2coEoN0IWmvpTAU4bdSlmJKAiz1srkEqAEe9WkNNeG7kUGBcSYRefbgfTA--0Gg41VsO3gfWghyDCge5RWBqtlJ8Tap3X09uPVy6DNX7GjU0iBbZNhZ6BCExauw4EqAybdtx2iq8V-gmVTXEjus8VPFIkrn3Gq80YiLl_iGh4IOAIkwCHuAxNxtzhYI5xYXnHd2RM63M5DtMpLAdu1ZWEVv-wDXJqCB7dFYW2q-cbW9sS7jht6XWbJx4R",
   },
   {
     title: "MatataCode (Nous)",
-    description: "深度学习与神经科学启蒙工具",
+    description: "面向更高阶的人工智能编程学习平台，深度融合图形化与Python，提供丰富的AI功能体验。支持摄像头、传感器、多感官交互编程玩法。",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuA2nDfl0MzlNFmb-wGI9Y9P1VPvhkxqVzYq6pTsVzUdHr2m_yjjQw0w52hnUSnA3q-8ZMcOEZGm3xaU67d6h2JHgmbBh__fCDFM5VOr13rNcLGSdF-gvEXxxgvbj1pIz-VNpT4LBDJBgSeshC2GOc-IIxdWMTIj_w1U53ORZxGzG-JnitLpJ6cafmb--GjNMvnRcC6Q60HEx167VaCglUWuUnanhrMK2TBIJc-d4iUFZQsJbdm-VLzjJS6NOsU6heNPARptHYMD",
   },
   {
     title: "MatataCode (TaleMap)",
-    description: "将编程与故事创作完美结合",
+    description: "故事地图设计平台，用户可自行创建无限的交互式地图和场景，将编程融入叙事艺术中。",
     image:
       "https://lh3.googleusercontent.com/aida-public/AB6AXuBO_UlMLy0mmxV9Xe__lHEzG0KYL1l2MqvYega_6DPAy0ywDpVrSG6P7tA81o88OSpeZrvDZiJnec08zrUx3FfFOgNp7RLtLiqRKJ71jt89Ggc-60bT_lk05npqf66zUklu8pOsqeIY91vQL9Q3qO0EWM00Ubv7ZAWrHzH4Nya53_5CTHXSlscuy0AzATuR5BhDVoMKp6tlrRdBgep07MzBU5wRQrILV63hmTIwWXFuwOJmvFxdFHSKG0jXBLTuTwcFITDazCiA",
   },

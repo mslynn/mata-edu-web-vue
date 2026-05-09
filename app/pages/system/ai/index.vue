@@ -12,7 +12,7 @@
           }"
         >
           <section
-            v-if="!isCodeAssistantMode"
+            v-if="showBreadcrumb"
             class="ai-assistant-breadcrumb"
             aria-label="面包屑"
           >
@@ -822,14 +822,14 @@
 
           <section v-else-if="isLessonPlanMode" class="ai-assistant-lesson">
             <div class="ai-assistant-lesson__header">
-              <button
+              <!-- <button
                 type="button"
                 class="ai-assistant-lesson__back"
                 @click="exitLessonPlanView"
               >
                 <span class="material-symbols-outlined">arrow_back</span>
                 <span>返回AI助手</span>
-              </button>
+              </button> -->
               <h2 class="ai-assistant-lesson__title">{{ lessonPlanModeTitle }}</h2>
               <div class="ai-assistant-lesson__header-actions">
                 <div
@@ -1297,14 +1297,14 @@
 
           <section v-else-if="isAnalysisMode" class="ai-analysis">
             <div class="ai-assistant-lesson__header">
-              <button
+              <!-- <button
                 type="button"
                 class="ai-assistant-lesson__back"
                 @click="exitAnalysisView"
               >
                 <span class="material-symbols-outlined">arrow_back</span>
                 <span>返回AI助手</span>
-              </button>
+              </button> -->
               <h2 class="ai-assistant-lesson__title">AI学情分析</h2>
               <div class="ai-assistant-lesson__header-actions">
                 <div
@@ -3327,6 +3327,10 @@ const showBreadcrumbCurrent = computed(
   () => assistantCurrentTitle.value !== breadcrumbRootLabel.value
 );
 
+const showBreadcrumb = computed(() => {
+  return isChatMode.value || isLessonPlanMode.value || isAnalysisMode.value || isImageMode.value;
+});
+
 const lessonPlanSummaryText = computed(() => {
   const gradeText = shouldShowLessonGrade.value ? lessonPlanForm.grade || "未选年级" : "无年级";
   const topicText = lessonPlanForm.subject.trim() || "未填主题";
@@ -3967,6 +3971,61 @@ const formatInlineCodeBlocks = (value: string) => {
   return result.join("\n");
 };
 
+const normalizeMarkdownHeadingMarks = (value: string) =>
+  String(value || "").replace(/＃/g, "#");
+
+const normalizeMarkdownInvisibleChars = (value: string) =>
+  String(value || "")
+    .replace(/\u00a0/g, " ")
+    .replace(/[\u200b-\u200d\u2060\ufeff]/g, "");
+
+const normalizeMarkdownControlLines = (value: string) => {
+  const lines = value.split("\n");
+  let inCodeFence = false;
+
+  return lines
+    .map((rawLine) => {
+      const sanitizedLine = normalizeMarkdownInvisibleChars(rawLine);
+      const trimmedLine = sanitizedLine.trim();
+      if (trimmedLine.startsWith("```")) {
+        inCodeFence = !inCodeFence;
+        return sanitizedLine;
+      }
+
+      if (inCodeFence) {
+        return sanitizedLine;
+      }
+
+      const codeWrappedHeadingMatch = sanitizedLine.match(
+        /^(\s*)`([#＃]{1,6})`\s*(.+?)\s*$/u
+      );
+      if (codeWrappedHeadingMatch?.[2] && codeWrappedHeadingMatch[3]?.trim()) {
+        return `${codeWrappedHeadingMatch[1]}${normalizeMarkdownHeadingMarks(
+          codeWrappedHeadingMatch[2]
+        )} ${codeWrappedHeadingMatch[3].trim()}`;
+      }
+
+      const headingMatch = sanitizedLine.match(
+        /^(\s*)[`"'“”‘’]*\s*([#＃]{1,6})\s*(.+?)\s*[`"'“”‘’]*\s*$/u
+      );
+      if (headingMatch?.[2] && headingMatch[3]?.trim()) {
+        return `${headingMatch[1]}${normalizeMarkdownHeadingMarks(
+          headingMatch[2]
+        )} ${headingMatch[3].trim()}`;
+      }
+
+      const dividerMatch = sanitizedLine.match(
+        /^(\s*)[`"'“”‘’]*\s*((?:-{3,}|\*{3,}|_{3,}))\s*[`"'“”‘’]*\s*$/u
+      );
+      if (dividerMatch?.[2]) {
+        return `${dividerMatch[1]}${dividerMatch[2]}`;
+      }
+
+      return sanitizedLine;
+    })
+    .join("\n");
+};
+
 const formatMarkdownSource = (value: string) => {
   const codeBlocks: string[] = [];
   const protectedValue = value.replace(/```[\s\S]*?```/g, (block) => {
@@ -3974,13 +4033,15 @@ const formatMarkdownSource = (value: string) => {
     codeBlocks.push(block);
     return marker;
   });
-  const normalizedValue = formatDensePipeRows(protectedValue.replace(/\r\n/g, "\n"));
+  const normalizedValue = formatDensePipeRows(
+    normalizeMarkdownControlLines(protectedValue.replace(/\r\n/g, "\n"))
+  );
 
   const formattedValue = formatInlineCodeBlocks(
     normalizedValue
     .replace(/\r\n/g, "\n")
-    .replace(/([^\n])\s*(#{1,6})(?=\S)/g, "$1\n\n$2")
-    .replace(/(^|\n)(#{1,6})(\S)/g, "$1$2 $3")
+    .replace(/([^\n])\s*([#＃]{1,6})(?=\S)/g, "$1\n\n$2")
+    .replace(/(^|\n)([#＃]{1,6})(\S)/g, "$1$2 $3")
     .replace(/([：:。；;）)])\s*(\d+\.\s+)/g, "$1\n$2")
     .replace(/([^\n])\s*(\d+\.\s+\*\*[^*]+\*\*:)/g, "$1\n$2")
     .replace(/([^\n])\s*([○•·])\s+/g, "$1\n- ")
@@ -3994,6 +4055,38 @@ const formatMarkdownSource = (value: string) => {
     const index = Number(indexText);
     return codeBlocks[index] || "";
   });
+};
+
+const normalizeRenderedMarkdownHtml = (value: string) => {
+  return value
+    .replace(
+      /<(p|div)>(?:\s|&nbsp;)*(?:<code>)?([#＃]{1,6})(?:<\/code>)?(?:\s|&nbsp;)*([\s\S]*?)<\/\1>/g,
+      (_match, tagName: string, headingMarks: string, headingContent: string) => {
+        const normalizedMarks = normalizeMarkdownHeadingMarks(headingMarks);
+        const level = Math.min(String(normalizedMarks || "").length || 1, 6);
+        const content = String(headingContent || "").trim();
+        if (!content) {
+          return _match;
+        }
+        return `<h${level}>${content}</h${level}>`;
+      }
+    )
+    .replace(
+      /<p>(?:<code>)?([#＃]{1,6})(?:<\/code>)?\s*([\s\S]*?)<\/p>/g,
+      (_match, headingMarks: string, headingContent: string) => {
+        const normalizedMarks = normalizeMarkdownHeadingMarks(headingMarks);
+        const level = Math.min(String(normalizedMarks || "").length || 1, 6);
+        const content = String(headingContent || "").trim();
+        if (!content) {
+          return _match;
+        }
+        return `<h${level}>${content}</h${level}>`;
+      }
+    )
+    .replace(
+      /<p>(?:<code>)?((?:-{3,}|\*{3,}|_{3,}))(?:<\/code>)?\s*<\/p>/g,
+      '<hr class="ai-chat-message__divider" />'
+    );
 };
 
 const renderMarkdown = (value: string) => {
@@ -4092,14 +4185,20 @@ const renderMarkdown = (value: string) => {
 
     flushList();
 
-    const headingMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+    const horizontalRuleMatch = trimmed.match(/^(?:-{3,}|\*{3,}|_{3,})$/);
+    if (horizontalRuleMatch) {
+      htmlParts.push('<hr class="ai-chat-message__divider" />');
+      return;
+    }
+
+    const headingMatch = trimmed.match(/^([#＃]{1,6})\s*(.+)$/);
     if (headingMatch) {
-      const headingLevel = headingMatch[1];
+      const headingLevel = normalizeMarkdownHeadingMarks(headingMatch[1]);
       const headingContent = headingMatch[2];
       if (!headingLevel || !headingContent) {
         return;
       }
-      const level = headingLevel.length;
+      const level = Math.min(headingLevel.length, 6);
       htmlParts.push(`<h${level}>${renderInlineMarkdown(headingContent)}</h${level}>`);
       return;
     }
@@ -4121,7 +4220,7 @@ const renderMarkdown = (value: string) => {
   if (inCodeBlock) {
     flushCodeBlock();
   }
-  return htmlParts.join("");
+  return normalizeRenderedMarkdownHtml(htmlParts.join(""));
 };
 
 const getFormattedChatCopyText = (content: string) =>
@@ -8139,7 +8238,7 @@ const handleLessonPlanSubmit = async () => {
   isImageMode.value = false;
   isChatMode.value = true;
   lessonPlanChatActive.value = true;
-  lessonChatEditorExpanded.value = true;
+  lessonChatEditorExpanded.value = false;
   lessonRequirementTipsVisible.value = false;
   lessonStandardDropdownVisible.value = false;
   chatRequesting.value = true;
@@ -8261,6 +8360,10 @@ const handleLessonPlanSubmit = async () => {
 const sendAiChatMessage = async (messageText: string, file: AiUploadFile | null) => {
   const normalizedText = messageText.trim();
   const normalizedFile = file ? { ...file } : null;
+  const shouldKeepLessonPlanChat = lessonPlanChatActive.value;
+  const effectiveSessionType = shouldKeepLessonPlanChat
+    ? lessonPlanSessionType.value
+    : chatSessionType.value;
 
   if (!normalizedText && !normalizedFile) {
     ElMessage.warning("请输入问题或上传一个附件");
@@ -8273,7 +8376,7 @@ const sendAiChatMessage = async (messageText: string, file: AiUploadFile | null)
   }
 
   isChatMode.value = true;
-  lessonPlanChatActive.value = false;
+  lessonPlanChatActive.value = shouldKeepLessonPlanChat;
   lessonChatEditorExpanded.value = false;
   activeGenerateFileMenuMessageId.value = "";
   chatRequesting.value = true;
@@ -8306,7 +8409,7 @@ const sendAiChatMessage = async (messageText: string, file: AiUploadFile | null)
   try {
     const payload: Record<string, unknown> = {
       sessionId: chatSessionId.value || null,
-      sessionType: chatSessionType.value,
+      sessionType: effectiveSessionType,
       message: normalizedText || "请帮我分析这个附件",
       enableThinking: enableDeepThinking.value,
     };
@@ -9114,6 +9217,12 @@ const handleFeatureClick = (item: AssistantCard) => {
   }
   if (item.key === "image") {
     openImageView();
+    return;
+  }
+  if (item.key === "immersive") {
+    if (import.meta.client) {
+      window.location.href = "https://open.maic.chat/";
+    }
     return;
   }
   ElMessage.info(`${item.title} 功能即将上线`);
@@ -11268,11 +11377,18 @@ onBeforeUnmount(() => {
 }
 
 .ai-chat-message__markdown :deep(ol) {
+  margin: 0 0 10px;
   padding-left: 22px;
 }
 
 .ai-chat-message__markdown :deep(li) {
   margin-bottom: 6px;
+}
+
+.ai-chat-message__markdown :deep(hr) {
+  margin: 14px 0;
+  border: none;
+  border-top: 1px solid #d9e4f5;
 }
 
 .ai-chat-message__markdown :deep(blockquote) {
@@ -11364,6 +11480,7 @@ onBeforeUnmount(() => {
 
 .ai-chat-message__markdown :deep(p:last-child),
 .ai-chat-message__markdown :deep(ul:last-child),
+.ai-chat-message__markdown :deep(ol:last-child),
 .ai-chat-message__markdown :deep(blockquote:last-child),
 .ai-chat-message__code-block:last-child,
 .ai-chat-message__code-block-wrap:last-child {

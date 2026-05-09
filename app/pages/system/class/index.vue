@@ -3926,7 +3926,7 @@ const handleTabChange = (newTab: string) => {
   --class-surface-lowest: #ffffff;
   --class-border: rgba(174, 179, 181, 0.18);
   --class-border-soft: rgba(174, 179, 181, 0.12);
-  --class-shadow: 0 12px 32px rgba(46, 51, 53, 0.06);
+  --class-shadow: none;
   --class-primary: #005bc2;
   --class-primary-dim: #0050ab;
   --class-primary-soft: rgba(0, 91, 194, 0.06);
@@ -3959,7 +3959,7 @@ const handleTabChange = (newTab: string) => {
 }
 
 .class-grade-card {
-  border-radius: 24px;
+  border-radius: 16px;
   border: 1px solid var(--class-border);
   background: var(--class-surface-lowest);
   box-shadow: var(--class-shadow);
@@ -4016,7 +4016,7 @@ const handleTabChange = (newTab: string) => {
 
 .class-card {
   border: 1px solid var(--class-border);
-  border-radius: 24px !important;
+  border-radius: 16px !important;
   background: var(--class-surface-lowest) !important;
   box-shadow: var(--class-shadow);
   padding: 0 !important;
@@ -4210,11 +4210,12 @@ const handleTabChange = (newTab: string) => {
 }
 
 .class-batch-bar {
-  margin: 8px 20px 20px !important;
-  padding: 14px 18px !important;
-  border: 1px solid rgba(164, 193, 255, 0.3) !important;
-  border-radius: 16px;
-  background: #f7fbff !important;
+  margin: 0 20px 0 !important;
+  padding: 14px 0 0 !important;
+  border: none !important;
+  border-top: 1px solid #eef2f6 !important;
+  border-radius: 0;
+  background: transparent !important;
 }
 
 .class-batch-bar__checkbox {
@@ -5267,7 +5268,7 @@ const handleTabChange = (newTab: string) => {
   }
 
   .class-batch-bar {
-    margin: 8px 18px 18px !important;
+    margin: 0 18px 0 !important;
   }
 
   .class-group-card .class-panel-subline {
@@ -5354,7 +5355,7 @@ const handleTabChange = (newTab: string) => {
   }
 
   .class-batch-bar {
-    margin: 8px 12px 12px !important;
+    margin: 0 12px 0 !important;
     flex-wrap: wrap;
     gap: 12px;
   }

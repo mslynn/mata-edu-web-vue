@@ -8,6 +8,16 @@ type SpeechBody = {
   volume?: string;
 };
 
+const normalizeEdgeVoice = (voice?: string) => {
+  const voiceName = voice || "zh-CN-XiaoxiaoNeural";
+  const shortNameMatch = voiceName.match(/^([a-z]{2}-[A-Z]{2})-(.+)$/);
+  if (!shortNameMatch || voiceName.startsWith("Microsoft Server Speech")) {
+    return voiceName;
+  }
+
+  return `Microsoft Server Speech Text to Speech Voice (${shortNameMatch[1]}, ${shortNameMatch[2]})`;
+};
+
 export default defineEventHandler(async (event) => {
   const body = await readBody<SpeechBody>(event);
   const text = String(body.text || "").trim();
@@ -27,7 +37,7 @@ export default defineEventHandler(async (event) => {
   }
 
   try {
-    const result = await new EdgeTTS(text, body.voice || "zh-CN-XiaoxiaoNeural", {
+    const result = await new EdgeTTS(text, normalizeEdgeVoice(body.voice), {
       rate: body.rate || "+0%",
       pitch: body.pitch || "+0Hz",
       volume: body.volume || "+0%",
@@ -39,10 +49,14 @@ export default defineEventHandler(async (event) => {
     setHeader(event, "Cache-Control", "no-store");
 
     return new Uint8Array(audioBuffer);
-  } catch {
+  } catch (error) {
+    console.error("[speech-synthesis] Edge TTS failed:", error);
     throw createError({
       statusCode: 502,
-      statusMessage: "语音合成失败，请稍后重试",
+      statusMessage:
+        error instanceof Error && error.name === "NoAudioReceived"
+          ? "在线中文语音暂不可用，请稍后重试"
+          : "语音合成失败，请稍后重试",
     });
   }
 });

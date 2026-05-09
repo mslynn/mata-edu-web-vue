@@ -586,6 +586,7 @@ import aiCover1 from "~/assets/images/1.svg";
 import aiCover2 from "~/assets/images/2.svg";
 import aiCover3 from "~/assets/images/3.svg";
 import aiCover4 from "~/assets/images/4.svg";
+import heroBannerIllustration from "~/assets/images/banner.svg";
 import { ElMessageBox } from "element-plus";
 import { aiAdmin } from "~/composables/api/ai";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
@@ -792,8 +793,7 @@ type TeacherStatsState = {
   teachHours: number;
 };
 
-const heroIllustration =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAWtSm_7HgEqoCo1Re6s4knjXHIO1T750D26mUjlkWtflEnGZ-aAZfIZbtk6RpZAQCKxgBsdJZ53M_e-W7lCS71gi2RFijS7YoVhKsQIx6ECt_7Q4QTob0NPexqDTtSmmNgE8yhlXCyjYH27l65T3hooUYeQQnUevOWe6YBgjNi6aRFrqtQhX-1_EIjXFkNQ-TyuibshtR5STqoTKSk_SGWd0a_itiWtOkXv-5YmznkjTYI1shfxvQdbmF5-V1skyp0YYA3JnhP";
+const heroIllustration = heroBannerIllustration;
 const heroBackgroundStyle = {
   "--teacher2-hero-art": `url("${heroIllustration}")`,
 };
@@ -1692,21 +1692,21 @@ const toolCards: ToolCard[] = [
     key: "vincibot",
     title: "MatataCode",
     subtitle: "(VinciBot)",
-    desc: "专为 VinciBot 设计的图形化编程环境",
+    desc: "提供AI模型训练、图形化编程和Python文本编程，满足不同年龄段学生的认知水平和学习需求。内置AI、摄像头、乐器等趣味功能。",
     image: tool1Icon,
   },
   {
     key: "nous",
     title: "MatataCode",
     subtitle: "(Nous)",
-    desc: "深度学习与神经科学启蒙工具",
+    desc: "面向更高阶的人工智能编程学习平台，深度融合图形化与Python，提供丰富的AI功能体验。支持摄像头、传感器、多感官交互编程玩法。",
     image: tool2Icon,
   },
   {
     key: "talemap",
     title: "MatataCode",
     subtitle: "(TaleMap)",
-    desc: "将编程与故事创作完美结合",
+    desc: "故事地图设计平台，用户可自行创建无限的交互式地图和场景，将编程融入叙事艺术中。",
     image: tool4Icon,
   },
 ];
@@ -2461,8 +2461,8 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-hero {
-  --hero-art-size: clamp(180px, 12vw, 220px);
-  --hero-art-right: clamp(18px, 1.4vw, 24px);
+  --hero-art-size: clamp(250px, 16vw, 310px);
+  --hero-art-right: clamp(-14px, -0.6vw, 0px);
   position: relative;
   display: block;
   min-height: 380px;
@@ -2627,50 +2627,16 @@ const aiCards: AICard[] = [
   pointer-events: none;
 }
 
-.teacher2-hero__visual::before {
-  content: "";
-  position: absolute;
-  inset: 4%;
-  z-index: 0;
-  border-radius: 999px;
-  background: radial-gradient(
-      circle at 50% 48%,
-      rgba(125, 220, 255, 0.22) 0%,
-      rgba(125, 220, 255, 0.1) 34%,
-      rgba(125, 220, 255, 0) 74%
-    ),
-    radial-gradient(
-      circle at 52% 68%,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0) 58%
-    );
-  filter: blur(14px);
-  pointer-events: none;
-}
-
 .teacher2-hero__visual::after {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: -22px;
   z-index: 1;
-  background: center / contain no-repeat var(--teacher2-hero-art);
-  opacity: 0.86;
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000 0%,
-    #000 54%,
-    rgba(0, 0, 0, 0.82) 70%,
-    transparent 92%
-  );
-  mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000 0%,
-    #000 54%,
-    rgba(0, 0, 0, 0.82) 70%,
-    transparent 92%
-  );
-  filter: brightness(1.08) saturate(1.04) drop-shadow(0 14px 30px rgba(0, 91, 194, 0.12));
+  background: left center / contain no-repeat var(--teacher2-hero-art);
+  filter: drop-shadow(0 14px 30px rgba(0, 91, 194, 0.12));
 }
 
 .teacher2-hero__glow {
@@ -2750,7 +2716,7 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-section {
-  /* margin-bottom: var(--section-gap); */
+  margin-bottom: var(--section-gap);
 }
 
 .teacher2-section--record {
@@ -2824,7 +2790,9 @@ const aiCards: AICard[] = [
   display: flex;
   align-items: center;
   gap: clamp(20px, 1.5vw, 24px);
-  padding: clamp(24px, 1.8vw, 28px);
+  min-height: 150px;
+  height: 150px;
+  padding: 20px 24px;
   border: 1px solid rgba(174, 179, 181, 0.1);
   border-radius: 24px;
   background: #ffffff;
@@ -2838,7 +2806,13 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-tool-card__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
   min-width: 0;
+  flex: 1;
+  align-self: stretch;
 }
 
 .teacher2-tool-card__media {
@@ -2846,8 +2820,8 @@ const aiCards: AICard[] = [
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: clamp(82px, 5.6vw, 92px);
-  height: clamp(82px, 5.6vw, 92px);
+  width: 88px;
+  height: 88px;
   /* border-radius: 24px;
   background: #f2f4f5; */
   transition: background-color 0.2s ease;
@@ -2860,15 +2834,18 @@ const aiCards: AICard[] = [
 .teacher2-tool-card__logo {
   /* width: 80px;
   height: 80px; */
+  width: 88px;
+  height: 88px;
   object-fit: contain;
 }
 
 .teacher2-tool-card__title {
   margin: 0;
   color: #2e3335;
-  font-size: clamp(22px, 1.45vw, 24px);
+  font-size: clamp(18px, 1.28vw, 20px);
   font-weight: 700;
   line-height: 1.1;
+  overflow: hidden;
   transition: color 0.2s ease;
 }
 
@@ -2879,13 +2856,22 @@ const aiCards: AICard[] = [
 
 .teacher2-tool-card__subtitle {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .teacher2-tool-card__desc {
-  margin: 8px 0 0;
+  margin: 0;
   color: #5a6062;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   transition: color 0.2s ease;
 }
 
@@ -3046,7 +3032,7 @@ const aiCards: AICard[] = [
 .teacher2-ai-card__title {
   margin: 0;
   font-size: clamp(20px, 1.35vw, 22px);
-  font-weight: 700;
+  font-weight: 500;
   text-align: center;
 }
 
@@ -3523,6 +3509,9 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-record-grid {
+  --teacher2-record-cover-height: clamp(334px, calc(5.714vw + 248.29px), 358px);
+  --teacher2-record-grid-gap: 8px;
+  --teacher2-record-card-height: clamp(188px, 12.8vw, 204px);
   display: grid;
   grid-template-columns: clamp(248px, 18vw, 280px) minmax(0, 1fr);
   gap: 24px;
@@ -3582,7 +3571,7 @@ const aiCards: AICard[] = [
 
 .teacher2-cover-card {
   position: relative;
-  height: clamp(320px, 22vw, 360px);
+  height: var(--teacher2-record-cover-height);
   overflow: hidden;
   border: 1px solid rgba(174, 179, 181, 0.3);
   border-radius: 24px;
@@ -3595,6 +3584,7 @@ const aiCards: AICard[] = [
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   transition: transform 0.7s ease;
 }
 
@@ -3611,8 +3601,11 @@ const aiCards: AICard[] = [
 .teacher2-lesson-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(16px, 1.35vw, 24px);
-  max-height: clamp(340px, 23vw, 352px);
+  grid-auto-rows: var(--teacher2-record-card-height);
+  gap: var(--teacher2-record-grid-gap);
+  height: var(--teacher2-record-cover-height);
+  max-height: var(--teacher2-record-cover-height);
+  overflow-x: hidden;
   overflow-y: auto;
   align-content: start;
   padding-right: 8px;
@@ -3636,9 +3629,10 @@ const aiCards: AICard[] = [
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(18px, 1.3vw, 24px);
-  height: clamp(212px, 14.5vw, 228px);
-  padding: clamp(18px, 1.4vw, 24px);
+  gap: 12px;
+  height: var(--teacher2-record-card-height);
+  min-height: var(--teacher2-record-card-height);
+  padding: 14px 16px;
   overflow: hidden;
   border: 1px solid rgba(0, 91, 194, 0.7);
   border-radius: 24px;
@@ -3648,9 +3642,9 @@ const aiCards: AICard[] = [
 
 .teacher2-lesson-card__order {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 4px 12px;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
   border-radius: 8px;
   background: rgba(0, 91, 194, 0.1);
   color: #005bc2;
@@ -3661,11 +3655,11 @@ const aiCards: AICard[] = [
 
 .teacher2-lesson-card__status {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 12px;
+  left: 12px;
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
@@ -3698,28 +3692,32 @@ const aiCards: AICard[] = [
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  margin: 38px 0 0;
-  padding: 0 8px;
+  min-height: 32px;
+  margin: 50px 0 0;
+  padding: 0 4px;
   color: #2e3335;
-  font-size: clamp(16px, 1.1vw, 18px);
+  font-size: clamp(14px, 0.95vw, 16px);
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.35;
   text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .teacher2-lesson-card__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   margin-top: auto;
   width: 100%;
 }
 
 .teacher2-lesson-card__button {
-  min-height: 40px;
-  border-radius: 12px;
-  font-size: 13px;
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 
