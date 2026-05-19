@@ -3,10 +3,10 @@
     <div class="face-intro-shell">
       <div class="face-intro-breadcrumb">
         <button type="button" class="face-intro-breadcrumb__link" @click="handleBackToAiCenter">
-          AI实践中心
+          {{ t("faceDemo.aiPracticeCenter") }}
         </button>
         <span>/</span>
-        <span class="face-intro-breadcrumb__current">人脸识别</span>
+        <span class="face-intro-breadcrumb__current">{{ t("faceDemo.faceRecognition") }}</span>
       </div>
 
       <main class="face-intro-stage">
@@ -15,10 +15,10 @@
             <div class="face-intro-copy__stack">
               <div class="face-intro-copy__card">
                 <h1>
-                  <span class="face-intro-copy__title-line face-intro-copy__title-line--accent">人脸识别</span>
+                  <span class="face-intro-copy__title-line face-intro-copy__title-line--accent">{{ t("faceDemo.faceRecognition") }}</span>
                 </h1>
                 <p>
-                  人脸识别是一种基于人工智能和计算机视觉的生物识别技术，通过采集人脸图像并进行检测、特征提取与匹配，实现身份识别或验证。系统可从人脸中提取关键特征并转化为数据，与数据库进行比对完成识别。随着深度学习的发展，其在不同光照、角度等复杂环境下的识别准确率不断提升。
+                  {{ t("faceDemo.faceIntroDesc") }}
                 </p>
               </div>
 
@@ -27,7 +27,7 @@
                 class="face-intro-copy__action"
                 @click="handleStartExperience"
               >
-                <span>立即开始体验</span>
+                <span>{{ t("faceDemo.startExperience") }}</span>
                 <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path
                     d="M5 12h14"
@@ -55,7 +55,7 @@
               <img
                 class="face-intro-visual-card__portrait"
                 src="/face-demo/stitch-hero-main.jpg"
-                alt="人脸识别演示人物"
+                :alt="t('faceDemo.faceRecognitionDemo')"
               />
               <div class="face-intro-visual-card__grid"></div>
               <div class="face-intro-visual-card__scanline"></div>
@@ -92,25 +92,25 @@
                   </svg>
                 </span>
                 <div>
-                  <strong>身份已验证</strong>
-                  <span>准入权限：全校区</span>
+                  <strong>{{ t("faceDemo.identityVerified") }}</strong>
+                  <span>{{ t("faceDemo.accessPermission") }}</span>
                 </div>
               </div>
 
               <div class="face-intro-visual-card__panel">
                 <div class="face-intro-visual-card__panel-head">
                   <div class="face-intro-visual-card__panel-copy">
-                    <span class="face-intro-visual-card__panel-label">生物特征分析</span>
+                    <span class="face-intro-visual-card__panel-label">{{ t("faceDemo.biometricAnalysis") }}</span>
                     <strong>99.8%</strong>
                   </div>
-                  <span class="face-intro-visual-card__panel-side">匹配度</span>
+                  <span class="face-intro-visual-card__panel-side">{{ t("faceDemo.matchRate") }}</span>
                 </div>
                 <div class="face-intro-visual-card__progress">
                   <span></span>
                 </div>
                 <div class="face-intro-visual-card__panel-tags">
-                  <span><i></i>骨骼对齐</span>
-                  <span><i></i>活体检测</span>
+                  <span><i></i>{{ t("faceDemo.skeletonAlignment") }}</span>
+                  <span><i></i>{{ t("faceDemo.livenessDetection") }}</span>
                 </div>
               </div>
 
@@ -135,15 +135,17 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
+
 definePageMeta({
   layout: "sidebar",
 });
 
 useHead({
-  title: "人脸识别体验",
-  htmlAttrs: {
-    lang: "zh-CN",
-  },
+  title: computed(() => t("faceDemo.faceIntroPageTitle")),
+  htmlAttrs: {},
 });
 
 const handleStartExperience = async () => {

@@ -9,7 +9,7 @@
   >
     <div class="semester-modal">
       <div class="semester-modal-header">
-        <h3 class="semester-modal-title">学期设置</h3>
+        <h3 class="semester-modal-title">{{ t("study.homePage.semesterModalTitle") }}</h3>
         <button
           type="button"
           class="semester-modal-close"
@@ -28,7 +28,7 @@
 
       <div class="semester-modal-toolbar">
         <button type="button" class="semester-add-btn" @click="startCreate">
-          +新增
+          {{ t("study.homePage.semesterAdd") }}
         </button>
       </div>
 
@@ -48,20 +48,20 @@
                   class="semester-ghost-btn"
                   @click.stop="startEdit(row.raw)"
                 >
-                  修改
+                  {{ t("study.homePage.semesterEdit") }}
                 </button>
                 <button
                   type="button"
                   class="semester-ghost-btn"
                   @click.stop="openDeleteConfirm(row.raw)"
                 >
-                  删除
+                  {{ t("study.homePage.semesterDelete") }}
                 </button>
               </div>
             </template>
 
             <template #empty>
-              <div class="semester-empty">暂无学期数据</div>
+              <div class="semester-empty">{{ t("study.homePage.semesterEmpty") }}</div>
             </template>
           </MTable>
         </div>
@@ -80,7 +80,7 @@
     <div class="semester-editor">
       <div class="semester-editor-header">
         <h3 class="semester-editor-title">
-          {{ editorMode === "create" ? "添加学期" : "修改学期" }}
+          {{ editorMode === "create" ? t("study.homePage.semesterEditorCreate") : t("study.homePage.semesterEditorEdit") }}
         </h3>
         <button
           type="button"
@@ -103,10 +103,10 @@
           v-model.trim="editingForm.label"
           type="text"
           class="semester-editor-input"
-          placeholder="学期名称"
+          :placeholder="t('study.homePage.semesterNamePlaceholder')"
         >
 
-        <ElConfigProvider :locale="zhCn">
+        <ElConfigProvider :locale="elementLocale">
           <ElDatePicker
             v-model="editingRange"
             type="daterange"
@@ -114,8 +114,8 @@
             format="YYYY-MM-DD"
             date-format="YYYY-MM-DD"
             range-separator="→"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
+            :start-placeholder="t('study.homePage.startDatePlaceholder')"
+            :end-placeholder="t('study.homePage.endDatePlaceholder')"
             :teleported="false"
             class="semester-editor-date"
           />
@@ -123,10 +123,10 @@
 
         <div class="semester-editor-actions">
           <button type="button" class="semester-secondary-btn" @click="cancelEdit">
-            取消
+            {{ t("study.homePage.semesterCancel") }}
           </button>
           <button type="button" class="semester-primary-btn" @click="saveEdit">
-            确定
+            {{ t("study.homePage.semesterConfirm") }}
           </button>
         </div>
       </div>
@@ -143,7 +143,7 @@
   >
     <div class="semester-delete-modal">
       <div class="semester-delete-header">
-        <h3 class="semester-delete-title">确认删除</h3>
+        <h3 class="semester-delete-title">{{ t("study.homePage.semesterDeleteConfirmTitle") }}</h3>
         <button
           type="button"
           class="semester-delete-close"
@@ -162,15 +162,15 @@
 
       <div class="semester-delete-body">
         <p class="semester-delete-text">
-          确定要删除“{{ pendingDeleteItem?.label || "该学期" }}”吗？删除后不可恢复。
+          {{ t("study.homePage.semesterDeleteConfirmText", { name: pendingDeleteItem?.label || t("study.homePage.semesterDeleteFallback") }) }}
         </p>
 
         <div class="semester-delete-actions">
           <button type="button" class="semester-secondary-btn" @click="cancelDelete">
-            取消
+            {{ t("study.homePage.semesterCancel") }}
           </button>
           <button type="button" class="semester-primary-btn" @click="confirmDelete">
-            删除
+            {{ t("study.homePage.semesterDelete") }}
           </button>
         </div>
       </div>
@@ -180,10 +180,15 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { ElConfigProvider, ElDatePicker, ElMessage } from "element-plus";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
+import enLocale from "element-plus/es/locale/lang/en";
 import MModal from "~/components/ui/MModal.vue";
 import MTable from "~/components/ui/MTable.vue";
+
+const { t, locale } = useI18n();
+const elementLocale = computed(() => locale.value === "en" ? enLocale : zhCn);
 
 export interface SemesterItem {
   key: string;
@@ -221,11 +226,11 @@ const pendingDeleteItem = ref<SemesterItem | null>(null);
 const cloneItems = (items: SemesterItem[]) =>
   items.map((item) => ({ ...item }));
 
-const tableColumns = [
-  { key: "label", title: "学期", minWidth: "180px" },
-  { key: "rangeText", title: "时间段", minWidth: "260px" },
-  { key: "operation", title: "操作", width: "180px" },
-];
+const tableColumns = computed(() => [
+  { key: "label", title: t("study.homePage.semesterColumnLabel"), minWidth: "180px" },
+  { key: "rangeText", title: t("study.homePage.semesterColumnRange"), minWidth: "260px" },
+  { key: "operation", title: t("study.homePage.semesterColumnAction"), width: "180px" },
+]);
 
 const tableRows = computed(() =>
   localItems.value.map((item) => ({
@@ -316,7 +321,7 @@ const saveEdit = () => {
 
   localItems.value = [...localItems.value].sort((a, b) => a.start.localeCompare(b.start));
   emit("save", cloneItems(localItems.value));
-  ElMessage.success(editorMode.value === "create" ? "新增成功" : "修改成功");
+  ElMessage.success(editorMode.value === "create" ? t("study.homePage.semesterCreateSuccess") : t("study.homePage.semesterEditSuccess"));
   cancelEdit();
 };
 
@@ -326,7 +331,7 @@ const confirmDelete = () => {
   const { key } = pendingDeleteItem.value;
   localItems.value = localItems.value.filter((item) => item.key !== key);
   emit("save", cloneItems(localItems.value));
-  ElMessage.success("删除成功");
+  ElMessage.success(t("study.homePage.semesterDeleteSuccess"));
 
   if (editingForm.value?.key === key) {
     cancelEdit();
@@ -338,7 +343,7 @@ const confirmDelete = () => {
 const formatRange = (start: string, end: string) => {
   const formatDate = (value: string) => {
     const [year, month, day] = value.split("-");
-    return `${year}年${month}月${day}日`;
+    return t("study.homePage.semesterDateFormat", { year, month, day });
   };
 
   return `${formatDate(start)}-${formatDate(end)}`;

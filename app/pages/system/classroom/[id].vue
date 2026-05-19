@@ -1084,6 +1084,7 @@ import { taskmanagementcenterApi } from "~/composables/api/taskmanagement";
 import { ElMessage } from "~/components/ui";
 import { useI18n } from "vue-i18n";
 import { scoreToStars } from "~/utils/star-rating";
+import StudentManageModal from "../../../../StudentManageModal.vue";
 
 import docIcon from "~/assets/images/doc.png";
 import pptIcon from "~/assets/images/ppt.png";
@@ -1094,7 +1095,7 @@ import pngIcon from "~/assets/images/png.png";
 import mcIcon from "~/assets/images/mc.png";
 import morenIcon from "~/assets/images/moren.png";
 import tool1Cover from "~/assets/images/tool1.png";
-import tool5Cover from "~/assets/images/tool5.png";
+import tool5Cover from "~/assets/images/tool5.svg";
 
 definePageMeta({ layout: "blank" });
 

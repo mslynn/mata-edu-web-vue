@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div
     class="study-center-page"
     :class="{ 'study-center-page--student': isStudentSelfView }"
@@ -36,7 +36,7 @@
 
       <div class="filter-bar">
         <div v-if="!isStudentSelfView" class="filter-group">
-          <span class="filter-label">页面：</span>
+          <span class="filter-label">{{ t("study.homePage.pageLabel") }}</span>
           <div class="filter-control-mselect">
             <img :src="studyMenuIcon" alt="" class="control-icon" />
             <MSelect
@@ -50,7 +50,7 @@
         </div>
 
         <div v-if="!isSchoolPage && !isStudentSelfView" class="filter-group">
-          <span class="filter-label">选择：</span>
+          <span class="filter-label">{{ t("study.homePage.selectLabel") }}</span>
           <div
             v-if="!isCascadePage"
             class="filter-control-mselect filter-control-target-mselect"
@@ -221,7 +221,7 @@
         </div>
 
         <div class="filter-group filter-group-date">
-          <span class="filter-label">时间</span>
+          <span class="filter-label">{{ t("study.homePage.timeLabel") }}</span>
           <MDateRangePicker
             v-model="selectedDateRange"
             :presets="studyDatePresets"
@@ -258,7 +258,7 @@
           <div class="panel-header">
             <div class="panel-title">{{ displayEvaluationTitle }}</div>
             <div class="panel-meta">
-              平均成绩：
+              {{ t("study.homePage.averageScore") }}
               <strong>{{ displayAverageValue }}</strong>
             </div>
           </div>
@@ -273,7 +273,7 @@
                 :options="schoolCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="请选择课程"
+                :placeholder="t('study.homePage.selectCourse')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -286,7 +286,7 @@
                 :options="gradeCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="请选择课程"
+                :placeholder="t('study.homePage.selectCourse')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -299,7 +299,7 @@
                 :options="classCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="请选择课程"
+                :placeholder="t('study.homePage.selectCourse')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -312,7 +312,7 @@
                 :options="studentCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="请选择课程"
+                :placeholder="t('study.homePage.selectCourse')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -333,7 +333,7 @@
           <div
             v-if="activeTab === 'data' && shouldShowAILiteracyChart"
             class="school-ai-radar-panel"
-            :title="`总分：${formatSchoolAILiteracyValue(displayAILiteracyFinalScore)}`"
+            :title="t('study.homePage.totalScore', { score: formatSchoolAILiteracyValue(displayAILiteracyFinalScore) })"
           >
             <VChart
               class="school-ai-radar-chart"
@@ -366,14 +366,14 @@
               <div class="school-teaching-summary">
                 <div class="school-teaching-grid">
                   <div class="school-teaching-metric school-teaching-metric-prepare">
-                    <span class="school-teaching-metric-label">备课次数</span>
+                    <span class="school-teaching-metric-label">{{ t("study.homePage.prepareCount") }}</span>
                     <strong class="school-teaching-metric-value">
                       {{ displayTeachingStats.prepareCount }}
                     </strong>
                   </div>
 
                   <div class="school-teaching-metric school-teaching-metric-teach">
-                    <span class="school-teaching-metric-label">授课次数</span>
+                    <span class="school-teaching-metric-label">{{ t("study.homePage.teachCount") }}</span>
                     <strong class="school-teaching-metric-value">
                       {{ displayTeachingStats.teachCount }}
                     </strong>
@@ -382,9 +382,9 @@
 
                 <div class="school-teaching-duration-card">
                   <div class="school-teaching-duration-head">
-                    <span class="school-teaching-duration-label">累计授课时长</span>
+                    <span class="school-teaching-duration-label">{{ t("study.homePage.totalTeachDuration") }}</span>
                     <span class="school-teaching-duration-minutes">
-                      {{ displayTeachingStats.teachDurationMinutes }} 分钟
+                      {{ displayTeachingStats.teachDurationMinutes }} {{ t("study.homePage.minutes") }}
                     </span>
                   </div>
                   <div class="school-teaching-duration-value">
@@ -393,7 +393,7 @@
                   <div class="school-teaching-comparison">
                     <div class="school-teaching-comparison-row">
                       <div class="school-teaching-comparison-head">
-                        <span>备课</span>
+                        <span>{{ t("study.homePage.prepare") }}</span>
                         <strong>{{ displayTeachingStats.prepareCount }}</strong>
                       </div>
                       <div class="school-teaching-comparison-track">
@@ -406,7 +406,7 @@
 
                     <div class="school-teaching-comparison-row">
                       <div class="school-teaching-comparison-head">
-                        <span>授课</span>
+                        <span>{{ t("study.homePage.teach") }}</span>
                         <strong>{{ displayTeachingStats.teachCount }}</strong>
                       </div>
                       <div class="school-teaching-comparison-track">
@@ -423,15 +423,15 @@
 
             <div v-else class="empty-state">
               <img :src="emptyStateImage" alt="" class="empty-state-image" />
-              <span>数据为空哦~</span>
+              <span>{{ t("study.homePage.empty") }}</span>
             </div>
           </template>
 
           <template v-else-if="activeTab === 'data' && isClassPage">
             <div v-if="hasClassCourseListData" class="school-course-table">
               <div class="school-course-table-head">
-                <span>课程</span>
-                <span>上课时间</span>
+                <span>{{ t("study.homePage.course") }}</span>
+                <span>{{ t("study.homePage.classTime") }}</span>
               </div>
 
               <div class="school-course-list school-course-list-table">
@@ -448,15 +448,15 @@
 
             <div v-else class="empty-state">
               <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t('study.homePage.empty') }}</span>
           </div>
         </template>
 
           <template v-else-if="activeTab === 'data' && isStudentPage">
             <div v-if="hasStudentCourseListData" class="school-course-table">
               <div class="school-course-table-head">
-                <span>课程</span>
-                <span>上课时间</span>
+                <span>{{ t('study.homePage.course') }}</span>
+                <span>{{ t('study.homePage.classTime') }}</span>
               </div>
 
               <div class="school-course-list school-course-list-table">
@@ -473,14 +473,14 @@
 
             <div v-else class="empty-state">
               <img :src="emptyStateImage" alt="" class="empty-state-image" />
-              <span>数据为空哦~</span>
+              <span>{{ t('study.homePage.empty') }}</span>
             </div>
           </template>
 
           <div v-else class="table-wrapper">
             <div class="table-head">
-              <span>课程</span>
-              <span>上课时间</span>
+              <span>{{ t('study.homePage.course') }}</span>
+              <span>{{ t('study.homePage.classTime') }}</span>
             </div>
 
             <div class="table-body">
@@ -520,7 +520,7 @@
                 :options="classProgressCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="请选择课程"
+                :placeholder="t('study.homePage.selectCourse')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -634,7 +634,7 @@
             class="empty-state"
           >
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
 
           <div
@@ -642,7 +642,7 @@
             class="empty-state"
           >
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
 
           <div
@@ -650,7 +650,7 @@
             class="empty-state"
           >
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
 
           <div v-else class="progress-content">
@@ -698,7 +698,7 @@
               "
               class="panel-subtitle"
             >
-              最近 6 次课堂表现
+              {{ t("study.homePage.recentPerformance") }}
             </div>
           </div>
 
@@ -712,13 +712,13 @@
                 :option="schoolWorksCountOption"
                 autoresize
               />
-              <div class="school-works-center-label">总量</div>
+              <div class="school-works-center-label">{{ t("study.homePage.total") }}</div>
               <div class="school-works-center-value">{{ displayWorksCountTotal }}</div>
             </div>
 
             <div v-else class="empty-state">
               <img :src="emptyStateImage" alt="" class="empty-state-image" />
-              <span>数据为空哦~</span>
+              <span>{{ t("study.homePage.empty") }}</span>
             </div>
           </div>
 
@@ -736,7 +736,7 @@
                 :option="schoolWorksCountOption"
                 autoresize
               />
-              <div class="school-works-center-label">总量</div>
+              <div class="school-works-center-label">{{ t("study.homePage.total") }}</div>
               <div class="school-works-center-value">{{ displayWorksCountTotal }}</div>
             </div>
           </div>
@@ -746,7 +746,7 @@
             class="empty-state"
           >
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
 
           <div v-else class="bar-chart">
@@ -787,7 +787,7 @@
                 :options="classCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="选择课程"
+                :placeholder="t('study.homePage.selectCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
               <MSelect
@@ -796,7 +796,7 @@
                 :options="gradeCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="选择课程"
+                :placeholder="t('study.homePage.selectCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
               <MSelect
@@ -805,7 +805,7 @@
                 :options="studentCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
               <MSelect
@@ -814,12 +814,12 @@
                 :options="schoolCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="选择课程"
+                :placeholder="t('study.homePage.selectCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
             <div v-else class="panel-subtitle">
-              按维度统计当前完成情况
+              {{ t("study.homePage.dimensionStats") }}
             </div>
           </div>
 
@@ -858,7 +858,7 @@
             class="empty-state"
           >
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
 
           <div
@@ -866,7 +866,7 @@
             class="empty-state"
           >
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
 
           <div v-else class="progress-list">
@@ -893,14 +893,14 @@
       <div v-if="activeTab === 'data' && isSchoolPage" class="school-extra-grid">
         <section class="panel school-course-panel school-extra-grid-wide">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">授课课程</div>
+            <div class="panel-title">{{ t("study.homePage.teachingCourses") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedSchoolCourseListCourseId"
                 :options="schoolCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="请选择课程"
+                :placeholder="t('study.homePage.selectCourse')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -908,8 +908,8 @@
 
           <div v-if="hasSchoolCourseListData" class="school-course-table">
             <div class="school-course-table-head">
-              <span>课程</span>
-              <span>上课时间</span>
+              <span>{{ t("study.homePage.course") }}</span>
+              <span>{{ t("study.homePage.classTime") }}</span>
             </div>
 
             <div class="school-course-list school-course-list-table">
@@ -926,20 +926,20 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
 
         <section class="panel school-task-panel">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">任务完成情况</div>
+            <div class="panel-title">{{ t("study.homePage.taskCompletion") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedSchoolTaskCourseId"
                 :options="schoolCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -958,20 +958,20 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
 
         <section class="panel school-task-panel">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">任务批改情况</div>
+            <div class="panel-title">{{ t("study.homePage.taskGrading") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedSchoolTaskGradingCourseId"
                 :options="schoolCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -987,7 +987,7 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
       </div>
@@ -995,14 +995,14 @@
       <div v-else-if="activeTab === 'data' && isGradePage" class="school-extra-grid">
         <section class="panel school-course-panel school-extra-grid-wide">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">授课课程</div>
+            <div class="panel-title">{{ t("study.homePage.teachingCourses") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedGradeCourseListCourseId"
                 :options="gradeCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -1010,8 +1010,8 @@
 
           <div v-if="hasGradeCourseListData" class="school-course-table">
             <div class="school-course-table-head">
-              <span>课程</span>
-              <span>上课时间</span>
+              <span>{{ t("study.homePage.course") }}</span>
+              <span>{{ t("study.homePage.classTime") }}</span>
             </div>
 
             <div class="school-course-list school-course-list-table">
@@ -1028,20 +1028,20 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
 
         <section class="panel school-task-panel">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">任务完成情况</div>
+            <div class="panel-title">{{ t("study.homePage.taskCompletion") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedGradeTaskCourseId"
                 :options="gradeCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -1060,20 +1060,20 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
 
         <section class="panel school-task-panel">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">任务批改情况</div>
+            <div class="panel-title">{{ t("study.homePage.taskGrading") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedGradeTaskGradingCourseId"
                 :options="gradeCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -1089,7 +1089,7 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
       </div>
@@ -1097,14 +1097,14 @@
       <div v-else-if="activeTab === 'data' && isClassPage" class="school-extra-grid">
         <section class="panel school-task-panel school-extra-grid-wide">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">任务完成情况</div>
+            <div class="panel-title">{{ t("study.homePage.taskCompletion") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedClassTaskCourseId"
                 :options="classCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -1123,7 +1123,7 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
       </div>
@@ -1131,14 +1131,14 @@
       <div v-else-if="activeTab === 'data' && isStudentPage" class="school-extra-grid">
         <section class="panel school-task-panel school-extra-grid-wide">
           <div class="panel-header panel-header-inline-select">
-            <div class="panel-title">任务完成情况</div>
+            <div class="panel-title">{{ t("study.homePage.taskCompletion") }}</div>
             <div class="toolbar-select-mselect school-task-select">
               <MSelect
                 v-model="selectedStudentTaskCourseId"
                 :options="studentCourseOptions"
                 value-key="value"
                 label-key="label"
-                placeholder="全部课程"
+                :placeholder="t('study.homePage.allCoursePlaceholder')"
                 class="study-filter-select study-panel-select"
               />
             </div>
@@ -1157,7 +1157,7 @@
 
           <div v-else class="empty-state">
             <img :src="emptyStateImage" alt="" class="empty-state-image" />
-            <span>数据为空哦~</span>
+            <span>{{ t("study.homePage.empty") }}</span>
           </div>
         </section>
       </div>
@@ -1168,7 +1168,7 @@
             v-if="showBackToTop"
             type="button"
             class="study-back-top-button"
-            aria-label="回到顶部"
+            :aria-label="t('study.homePage.backToTop')"
             @click="scrollStudyPageToTop"
           >
             <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -1180,7 +1180,7 @@
                 stroke-linejoin="round"
               />
             </svg>
-            <span>回到顶部</span>
+            <span>{{ t("study.homePage.backToTop") }}</span>
           </button>
         </transition>
       </Teleport>
@@ -1227,6 +1227,7 @@ import {
 import SemesterSettingsModal from "~/components/study/SemesterSettingsModal.vue";
 import { studyApi } from "~/composables/api/study";
 import { useAuth } from "~/composables/api/useAuth";
+import { useI18n } from "vue-i18n";
 import dataCenterImage from "~/assets/images/datacenter.png";
 import evaluationImage from "~/assets/images/ceping.png";
 import emptyStateImage from "~/assets/images/datacenter.png";
@@ -1236,6 +1237,8 @@ import trendImage from "~/assets/images/xueqing.png";
 definePageMeta({
   layout: "sidebar",
 });
+
+const { t, locale } = useI18n();
 
 const getStoredStudyUserInfo = () => {
   if (!import.meta.client) return null;
@@ -1513,11 +1516,11 @@ interface DashboardConfig {
   practice: RatioItem[];
 }
 
-const tabs: Array<{ key: DashboardTab; label: string }> = [
-  { key: "data", label: "学情数据" },
-  { key: "report", label: "学情报告" },
-  { key: "aiReport", label: "AI等级测评报告" },
-];
+const tabs = computed<Array<{ key: DashboardTab; label: string }>>(() => [
+  { key: "data", label: t("study.homePage.tabs.data") },
+  { key: "report", label: t("study.homePage.tabs.report") },
+  { key: "aiReport", label: t("study.homePage.tabs.aiReport") },
+]);
 
 const tabShapeConfigs: Record<TabShapeKey, { viewBox: string; path: string }> = {
   start: {
@@ -1536,12 +1539,12 @@ const tabShapeConfigs: Record<TabShapeKey, { viewBox: string; path: string }> = 
   },
 };
 
-const studyPageOptions: OptionItem[] = [
-  { label: "全校数据", value: "school" },
-  { label: "年级数据", value: "grade" },
-  { label: "班级数据", value: "class" },
-  { label: "学生数据", value: "student" },
-];
+const studyPageOptions = computed<OptionItem[]>(() => [
+  { label: t("study.homePage.pageOptions.school"), value: "school" },
+  { label: t("study.homePage.pageOptions.grade"), value: "grade" },
+  { label: t("study.homePage.pageOptions.class"), value: "class" },
+  { label: t("study.homePage.pageOptions.student"), value: "student" },
+]);
 
 // const schoolTargetOptions: OptionItem[] = [
 //   { label: "玛塔实验学校", value: "school-main" },
@@ -1583,12 +1586,12 @@ const currentStudentStudyId = computed(() => {
 });
 const availableStudyPageOptions = computed<OptionItem[]>(() =>
   isStudentSelfView.value
-    ? studyPageOptions.filter((item) => item.value === "student")
+    ? studyPageOptions.value.filter((item) => item.value === "student")
     : isTeacherAccount.value
-      ? studyPageOptions.filter(
+      ? studyPageOptions.value.filter(
           (item) => item.value === "class" || item.value === "student"
         )
-      : studyPageOptions
+      : studyPageOptions.value
 );
 
 if (import.meta.client) {
@@ -1602,11 +1605,11 @@ if (import.meta.client) {
   );
 }
 
-const evaluationScopeOptions: OptionItem[] = [
-  { label: "全部课程", value: "all" },
-  { label: "AI创作", value: "creation" },
-  { label: "AI编程", value: "coding" },
-];
+const evaluationScopeOptions = computed<OptionItem[]>(() => [
+  { label: t("study.homePage.scopeOptions.allCourse"), value: "all" },
+  { label: t("study.homePage.scopeOptions.aiCreation"), value: "creation" },
+  { label: t("study.homePage.scopeOptions.aiCoding"), value: "coding" },
+]);
 
 const dashboards: Record<DashboardTab, DashboardConfig> = {
   data: {
@@ -1746,21 +1749,21 @@ const showSemesterSettingsModal = ref(false);
 const semesterItems = ref<SemesterItem[]>([
   {
     key: "2025-fall",
-    label: "2025秋季学期",
+    label: locale.value === "en" ? "2025 Fall Semester" : "2025秋季学期",
     start: "2025-07-01",
     end: "2026-01-09",
   },
   {
     key: "2026-spring",
-    label: "2026春季学期",
+    label: locale.value === "en" ? "2026 Spring Semester" : "2026春季学期",
     start: "2026-03-01",
     end: "2026-06-30",
   },
 ]);
 
 const studyDatePresets = computed(() => [
-  { key: "all", label: "全部日期", start: "2021-04-27", end: today },
-  { key: "custom", label: "自定义", mode: "custom" as const },
+  { key: "all", label: t("study.homePage.allDates"), start: "2021-04-27", end: today },
+  { key: "custom", label: t("study.homePage.custom"), mode: "custom" as const },
   ...semesterItems.value.map((item) => ({
     key: item.key,
     label: item.label,
@@ -1770,12 +1773,14 @@ const studyDatePresets = computed(() => [
 ]);
 
 const activeTab = ref<DashboardTab>("data");
-const selectedPage = ref(isStudentSelfView.value ? "student" : studyPageOptions[0]?.value || "");
+const selectedPage = ref(
+  isStudentSelfView.value ? "student" : studyPageOptions.value[0]?.value || ""
+);
 const selectedTarget = ref(isStudentSelfView.value ? currentStudentStudyId.value : "");
 const selectedClassGroup = ref("");
 const selectedStudentGrade = ref("");
 const selectedStudentClass = ref("");
-const selectedEvaluationScope = ref(evaluationScopeOptions[0]?.value || "");
+const selectedEvaluationScope = ref(evaluationScopeOptions.value[0]?.value || "");
 const selectedSchoolCourseId = ref(SCHOOL_ALL_COURSE_VALUE);
 const selectedClassCourseId = ref(SCHOOL_ALL_COURSE_VALUE);
 const selectedClassProgressCourseId = ref("");
@@ -2129,19 +2134,19 @@ const formatSchoolOverviewMetricValue = (value?: number) => {
 
 const createSchoolOverviewMetrics = (payload?: StudySchoolOverviewData): MetricItem[] => [
   {
-    label: "学生人数",
+    label: t("study.homePage.metrics.studentCount"),
     value: formatSchoolOverviewMetricValue(payload?.studentCount),
     image: dataCenterImage,
     theme: "theme-blue",
   },
   {
-    label: "创建作品数量",
+    label: t("study.homePage.metrics.worksCount"),
     value: formatSchoolOverviewMetricValue(payload?.worksCount),
     image: evaluationImage,
     theme: "theme-cyan",
   },
   {
-    label: "累计授课次数",
+    label: t("study.homePage.metrics.teachCount"),
     value: formatSchoolOverviewMetricValue(payload?.teachCount),
     image: trendImage,
     theme: "theme-violet",
@@ -2173,19 +2178,19 @@ const formatStudentOverviewRateValue = (value: unknown) => {
 
 const createStudentOverviewMetrics = (payload?: StudySchoolOverviewData): MetricItem[] => [
   {
-    label: "课程成绩",
+    label: t("study.homePage.metrics.courseScore"),
     value: formatStudentOverviewScoreValue(payload),
     image: evaluationImage,
     theme: "theme-blue",
   },
   {
-    label: "创建作品数量",
+    label: t("study.homePage.metrics.worksCount"),
     value: formatSchoolOverviewMetricValue(payload?.worksCount),
     image: dataCenterImage,
     theme: "theme-cyan",
   },
   {
-    label: "任务完成情况",
+    label: t("study.homePage.metrics.taskCompletion"),
     value: formatStudentOverviewRateValue(payload?.taskCompletionRate),
     image: trendImage,
     theme: "theme-violet",
@@ -4020,15 +4025,80 @@ const wrapChartLabel = (value: string, lineLength = 8) => {
   return chunks.join("\n");
 };
 
-const currentDashboard = computed(() => dashboards[activeTab.value]);
+const translateMetric = (metric: MetricItem, label: string): MetricItem => ({
+  ...metric,
+  label,
+});
+
+const currentDashboard = computed<DashboardConfig>(() => {
+  const dashboard = dashboards[activeTab.value];
+
+  if (activeTab.value === "data") {
+    return {
+      ...dashboard,
+      metrics: [
+        translateMetric(dashboard.metrics[0], t("study.homePage.dashboardData.studentCount")),
+        translateMetric(dashboard.metrics[1], t("study.homePage.dashboardData.worksCount")),
+        translateMetric(dashboard.metrics[2], t("study.homePage.dashboardData.teachCountLabel")),
+      ],
+      evaluationTitle: t("study.homePage.dashboardData.evaluationTitle"),
+      emptyText: t("study.homePage.dashboardData.emptyText"),
+      progressTitle: t("study.homePage.dashboardData.progressTitle"),
+      progressFinishedLabel: t("study.homePage.dashboardData.finishedLabel"),
+      progressPendingLabel: t("study.homePage.dashboardData.pendingLabel"),
+      rateLabel: t("study.homePage.dashboardData.completionRate"),
+      courseListTitle: t("study.homePage.dashboardData.courseListTitle"),
+      attendanceTitle: t("study.homePage.dashboardData.attendanceTitle"),
+      practiceTitle: t("study.homePage.dashboardData.practiceTitle"),
+    };
+  }
+
+  if (activeTab.value === "report") {
+    return {
+      ...dashboard,
+      metrics: [
+        translateMetric(dashboard.metrics[0], t("study.homePage.dashboardReport.generatedReport")),
+        translateMetric(dashboard.metrics[1], t("study.homePage.dashboardReport.pendingReport")),
+        translateMetric(dashboard.metrics[2], t("study.homePage.dashboardReport.focusStudents")),
+      ],
+      evaluationTitle: t("study.homePage.dashboardReport.evaluationTitle"),
+      emptyText: t("study.homePage.dashboardReport.emptyText"),
+      progressTitle: t("study.homePage.dashboardReport.progressTitle"),
+      progressFinishedLabel: t("study.homePage.dashboardReport.finishedLabel"),
+      progressPendingLabel: t("study.homePage.dashboardReport.pendingLabel"),
+      rateLabel: t("study.homePage.dashboardReport.coverageRate"),
+      courseListTitle: t("study.homePage.dashboardReport.courseListTitle"),
+      attendanceTitle: t("study.homePage.dashboardReport.attendanceTitle"),
+      practiceTitle: t("study.homePage.dashboardReport.practiceTitle"),
+    };
+  }
+
+  return {
+    ...dashboard,
+    metrics: [
+      translateMetric(dashboard.metrics[0], t("study.homePage.dashboardAiReport.testedStudents")),
+      translateMetric(dashboard.metrics[1], t("study.homePage.dashboardAiReport.averageLevel")),
+      translateMetric(dashboard.metrics[2], t("study.homePage.dashboardAiReport.excellentCount")),
+    ],
+    evaluationTitle: t("study.homePage.dashboardAiReport.evaluationTitle"),
+    emptyText: t("study.homePage.dashboardAiReport.emptyText"),
+    progressTitle: t("study.homePage.dashboardAiReport.progressTitle"),
+    progressFinishedLabel: t("study.homePage.dashboardAiReport.finishedLabel"),
+    progressPendingLabel: t("study.homePage.dashboardAiReport.pendingLabel"),
+    rateLabel: t("study.homePage.dashboardAiReport.completionRate"),
+    courseListTitle: t("study.homePage.dashboardAiReport.courseListTitle"),
+    attendanceTitle: t("study.homePage.dashboardAiReport.attendanceTitle"),
+    practiceTitle: t("study.homePage.dashboardAiReport.practiceTitle"),
+  };
+});
 const isSchoolPage = computed(() => selectedPage.value === "school");
 const isGradePage = computed(() => selectedPage.value === "grade");
 const displayCourseListTitle = computed(() => {
   if (activeTab.value === "data" && (isSchoolPage.value || isGradePage.value)) {
-    return "教学统计";
+    return t("study.homePage.courseListTitle.school");
   }
   if (activeTab.value === "data" && isStudentPage.value) {
-    return "上课课程";
+    return t("study.homePage.courseListTitle.student");
   }
   return currentDashboard.value.courseListTitle;
 });
@@ -4065,16 +4135,16 @@ const schoolTeachingTeachBarWidth = computed(() => {
 });
 const displayEvaluationTitle = computed(() => {
   if (activeTab.value === "data" && isSchoolPage.value) {
-    return "学校AI素养评价";
+    return t("study.homePage.evaluationTitle.school");
   }
   if (activeTab.value === "data" && isGradePage.value) {
-    return "年级AI素养评价";
+    return t("study.homePage.evaluationTitle.grade");
   }
   if (activeTab.value === "data" && isClassPage.value) {
-    return "班级AI素养评价";
+    return t("study.homePage.evaluationTitle.class");
   }
   if (activeTab.value === "data" && isStudentPage.value) {
-    return "学生AI素养评价";
+    return t("study.homePage.evaluationTitle.student");
   }
   return currentDashboard.value.evaluationTitle;
 });
@@ -4254,13 +4324,13 @@ const displayAverageValue = computed(() => {
 });
 const displayProgressTitle = computed(() => {
   if (activeTab.value === "data" && isSchoolPage.value) {
-    return "各年级人数分布";
+    return t("study.homePage.progressTitle.school");
   }
   if (activeTab.value === "data" && isGradePage.value) {
-    return "各班级人数分布";
+    return t("study.homePage.progressTitle.grade");
   }
   if (activeTab.value === "data" && isStudentPage.value) {
-    return "上课统计";
+    return t("study.homePage.progressTitle.student");
   }
   return currentDashboard.value.progressTitle;
 });
@@ -4280,31 +4350,31 @@ const displayProgressPendingCount = computed(() => {
 });
 const displayAttendanceTitle = computed(() => {
   if (activeTab.value === "data" && isSchoolPage.value) {
-    return "各年级创作作品数量";
+    return t("study.homePage.attendanceTitle.school");
   }
   if (activeTab.value === "data" && isGradePage.value) {
-    return "各班级创作作品数量";
+    return t("study.homePage.attendanceTitle.grade");
   }
   if (activeTab.value === "data" && isClassPage.value) {
-    return "学生创建作品数量";
+    return t("study.homePage.attendanceTitle.class");
   }
   if (activeTab.value === "data" && isStudentPage.value) {
-    return "各应用创建数量";
+    return t("study.homePage.attendanceTitle.student");
   }
   return currentDashboard.value.attendanceTitle;
 });
 const displayPracticeTitle = computed(() => {
   if (activeTab.value === "data" && isSchoolPage.value) {
-    return "课堂出勤率";
+    return t("study.homePage.practiceTitle.school");
   }
   if (activeTab.value === "data" && isGradePage.value) {
-    return "课堂出勤率";
+    return t("study.homePage.practiceTitle.grade");
   }
   if (activeTab.value === "data" && isClassPage.value) {
-    return "课堂出勤率";
+    return t("study.homePage.practiceTitle.class");
   }
   if (activeTab.value === "data" && isStudentPage.value) {
-    return "各练习题正确率";
+    return t("study.homePage.practiceTitle.student");
   }
   return currentDashboard.value.practiceTitle;
 });
@@ -5519,7 +5589,7 @@ const ringStyle = computed(() => ({
 
 const getTabShapeKey = (index: number): TabShapeKey => {
   if (index === 0) return "start";
-  if (index === tabs.length - 1) return "end";
+  if (index === tabs.value.length - 1) return "end";
   return "middle";
 };
 
@@ -5833,6 +5903,7 @@ watch(
   [
     activeTab,
     selectedPage,
+    locale,
     () => selectedDateRange.value[0],
     () => selectedDateRange.value[1],
   ],
@@ -5861,6 +5932,7 @@ watch(
     activeTab,
     selectedPage,
     selectedTarget,
+    locale,
     () => selectedDateRange.value[0],
     () => selectedDateRange.value[1],
   ],
@@ -5899,6 +5971,7 @@ watch(
     activeTab,
     selectedPage,
     selectedTarget,
+    locale,
     () => selectedDateRange.value[0],
     () => selectedDateRange.value[1],
   ],
@@ -5930,6 +6003,7 @@ watch(
     activeTab,
     selectedPage,
     selectedTarget,
+    locale,
     () => selectedDateRange.value[0],
     () => selectedDateRange.value[1],
   ],
@@ -8059,3 +8133,4 @@ onUnmounted(() => {
   }
 }
 </style>
+

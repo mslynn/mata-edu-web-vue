@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="960" height="760" viewBox="0 0 960 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="40" x2="840" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F7FBFF"/>
+      <stop offset="1" stop-color="#EEF5FF"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="88" y1="92" x2="872" y2="668" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F6FAFF"/>
+    </linearGradient>
+    <linearGradient id="chip" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ECF7FF"/>
+      <stop offset="1" stop-color="#E5EEFF"/>
+    </linearGradient>
+    <linearGradient id="barA" x1="0" y1="1" x2="0" y2="0">
+      <stop stop-color="#6BD1FF"/>
+      <stop offset="1" stop-color="#005BC2"/>
+    </linearGradient>
+    <linearGradient id="barB" x1="0" y1="1" x2="0" y2="0">
+      <stop stop-color="#9A8BFF"/>
+      <stop offset="1" stop-color="#5B52E6"/>
+    </linearGradient>
+    <filter id="softShadow" x="54" y="60" width="852" height="652" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#7DAAE0" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="960" height="760" rx="40" fill="url(#bg)"/>
+  <g opacity="0.32">
+    <path d="M108 156H852" stroke="#D7E7FF"/>
+    <path d="M108 220H852" stroke="#D7E7FF"/>
+    <path d="M108 284H852" stroke="#D7E7FF"/>
+    <path d="M108 348H852" stroke="#D7E7FF"/>
+    <path d="M108 412H852" stroke="#D7E7FF"/>
+    <path d="M108 476H852" stroke="#D7E7FF"/>
+    <path d="M108 540H852" stroke="#D7E7FF"/>
+    <path d="M108 604H852" stroke="#D7E7FF"/>
+    <path d="M172 92V668" stroke="#D7E7FF"/>
+    <path d="M268 92V668" stroke="#D7E7FF"/>
+    <path d="M364 92V668" stroke="#D7E7FF"/>
+    <path d="M460 92V668" stroke="#D7E7FF"/>
+    <path d="M556 92V668" stroke="#D7E7FF"/>
+    <path d="M652 92V668" stroke="#D7E7FF"/>
+    <path d="M748 92V668" stroke="#D7E7FF"/>
+  </g>
+  <g filter="url(#softShadow)">
+    <rect x="86" y="92" width="788" height="576" rx="34" fill="url(#panel)"/>
+  </g>
+  <rect x="134" y="132" width="236" height="176" rx="24" fill="#FFFFFF" stroke="#D9E6F8"/>
+  <path d="M178 268H328" stroke="#D8E4F6" stroke-width="2"/>
+  <path d="M178 228L210 212L242 168L274 184L306 142" stroke="#4B8EFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="178" cy="228" r="8" fill="#4B8EFF"/>
+  <circle cx="210" cy="212" r="8" fill="#4B8EFF"/>
+  <circle cx="242" cy="168" r="8" fill="#4B8EFF"/>
+  <circle cx="274" cy="184" r="8" fill="#4B8EFF"/>
+  <circle cx="306" cy="142" r="8" fill="#4B8EFF"/>
+  <rect x="612" y="124" width="208" height="194" rx="24" fill="#FFFFFF" stroke="#D9E6F8"/>
+  <rect x="650" y="234" width="26" height="46" rx="13" fill="url(#barA)"/>
+  <rect x="690" y="202" width="26" height="78" rx="13" fill="url(#barB)"/>
+  <rect x="730" y="172" width="26" height="108" rx="13" fill="url(#barA)"/>
+  <rect x="770" y="144" width="26" height="136" rx="13" fill="url(#barB)"/>
+  <g>
+    <rect x="262" y="148" width="430" height="412" rx="40" fill="#F8FCFF" fill-opacity="0.64" stroke="#CFE0FF" stroke-width="3"/>
+    <rect x="308" y="174" width="110" height="54" rx="18" fill="url(#chip)" stroke="#C9DBFF"/>
+    <rect x="534" y="174" width="118" height="54" rx="18" fill="url(#chip)" stroke="#C9DBFF"/>
+    <rect x="292" y="470" width="122" height="54" rx="18" fill="url(#chip)" stroke="#C9DBFF"/>
+    <rect x="542" y="470" width="110" height="54" rx="18" fill="url(#chip)" stroke="#C9DBFF"/>
+    <text x="363" y="209" text-anchor="middle" fill="#6DA9FF" font-size="28" font-family="Arial, sans-serif" font-weight="700">CAT</text>
+    <text x="593" y="209" text-anchor="middle" fill="#8A7BFF" font-size="28" font-family="Arial, sans-serif" font-weight="700">SKETCH</text>
+    <text x="353" y="505" text-anchor="middle" fill="#57B6E5" font-size="28" font-family="Arial, sans-serif" font-weight="700">LINE</text>
+    <text x="597" y="505" text-anchor="middle" fill="#54C3A0" font-size="28" font-family="Arial, sans-serif" font-weight="700">AI</text>
+    <path d="M438 290C426 275 429 252 445 236L465 216L488 246L510 214L533 236C549 252 552 275 541 291" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M450 296C420 318 405 352 405 392V406C405 438 383 466 351 486" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M531 298C568 320 589 354 589 398V418C589 450 610 474 645 490" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M454 341C477 332 503 332 526 341" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M487 344V441" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M488 442C449 447 422 478 420 516" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M490 442C528 448 554 479 556 516" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M454 360L418 354" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M451 380L413 384" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M523 360L560 354" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M525 380L563 384" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M589 399C624 390 652 353 652 313C652 267 618 234 583 236" stroke="#7C7CFF" stroke-width="10" stroke-linecap="round"/>
+    <circle cx="487" cy="397" r="12" fill="#3AD1FF"/>
+  </g>
+</svg>

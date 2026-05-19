@@ -1,18 +1,18 @@
 ﻿<template>
   <div class="tts-workbench-page" :class="workbenchDensityClass">
     <div class="tts-workbench-shell">
-      <nav class="tts-workbench-breadcrumb" aria-label="面包屑">
-        <button type="button" @click="goBackToIntro">AI 实践中心</button>
+      <nav class="tts-workbench-breadcrumb" :aria-label="t('ttsDemo.breadcrumbAria')">
+        <button type="button" @click="goBackToAiCenter">{{ t("ttsDemo.aiPracticeCenter") }}</button>
         <span>/</span>
-        <button type="button" @click="goBackToIntro">语音合成</button>
+        <button type="button" @click="goBackToIntro">{{ t("ttsDemo.speechSynthesis") }}</button>
         <span>/</span>
-        <strong>立即体验</strong>
+        <strong>{{ t("ttsDemo.startExperienceLabel") }}</strong>
       </nav>
 
       <header class="tts-workbench-header">
         <div>
-          <h1>语音合成工作台</h1>
-          <p>将您的文字转化为自然、富有情感的高质量音频流</p>
+          <h1>{{ t("ttsDemo.experienceTitle") }}</h1>
+          <p>{{ t("ttsDemo.experienceSubtitle") }}</p>
         </div>
       </header>
 
@@ -22,20 +22,20 @@
             <textarea
               v-model="demoText"
               maxlength="5000"
-              placeholder="请输入需要转换的文本... 为了获得最佳效果，建议保持段落连贯并使用正确的标点符号。"
+              :placeholder="t('ttsDemo.textareaPlaceholder')"
             ></textarea>
             <div class="tts-text-panel__footer">
-              <span>字符数: {{ demoText.length }} / 5000</span>
+              <span>{{ t("ttsDemo.charCount", { current: demoText.length, max: 5000 }) }}</span>
               <div>
-                <button type="button" @click="clearText">清空</button>
-                <button type="button" @click="triggerTextImport">导入文本</button>
+                <button type="button" @click="clearText">{{ t("ttsDemo.clearText") }}</button>
+                <button type="button" @click="triggerTextImport">{{ t("ttsDemo.importText") }}</button>
               </div>
             </div>
             <input
               ref="textFileInputRef"
               class="tts-text-panel__file"
               type="file"
-              accept=".txt,text/plain"
+              accept=".txt,.md,.text,text/plain,text/markdown"
               @change="handleTextImport"
             />
           </div>
@@ -44,7 +44,7 @@
             <button
               class="tts-player-card__play"
               type="button"
-              :disabled="!speechSupported"
+              :disabled="!canUsePlayer"
               @click="toggleSpeechPlayback"
             >
               {{ playerButtonText }}
@@ -62,13 +62,23 @@
           </div>
 
           <div class="tts-workbench-actions">
-            <button class="tts-workbench-actions__primary" type="button" @click="handleSpeak">
+            <button
+              class="tts-workbench-actions__primary"
+              type="button"
+              :disabled="isPrimaryActionDisabled"
+              @click="handleSpeak"
+            >
               <span>✦</span>
               {{ primaryActionText }}
             </button>
-            <button class="tts-workbench-actions__secondary" type="button" @click="handleDownload">
+            <button
+              class="tts-workbench-actions__secondary"
+              type="button"
+              :disabled="isDownloading"
+              @click="handleDownload"
+            >
               <span>↓</span>
-              下载语音文件
+              {{ downloadButtonText }}
             </button>
           </div>
         </section>
@@ -76,7 +86,7 @@
         <aside class="tts-param-panel">
           <h2>
             <span>⚙</span>
-            语音参数
+            {{ t("ttsDemo.voiceParams") }}
           </h2>
 
           <div v-for="item in parameterItems" :key="item.label" class="tts-param-item">
@@ -108,7 +118,7 @@
         <div class="tts-voice-section__head">
           <h2>
             <span>◉</span>
-            常用音色选择
+            {{ t("ttsDemo.voiceSelection") }}
           </h2>
         </div>
 
@@ -117,7 +127,10 @@
             v-for="voice in voiceItems"
             :key="voice.id"
             class="tts-voice-card"
-            :class="{ 'tts-voice-card--active': voice.active }"
+            :class="{
+              'tts-voice-card--active': voice.active,
+              'tts-voice-card--disabled': !voice.available,
+            }"
             @click="selectVoice(voice.id)"
           >
             <div class="tts-voice-card__avatar" :class="`is-${voice.theme}`">
@@ -125,6 +138,7 @@
             </div>
             <strong>{{ voice.name }}</strong>
             <span>{{ voice.desc }}</span>
+            <em v-if="!voice.available">{{ t("ttsDemo.pendingAccess") }}</em>
           </article>
         </div>
       </section>
@@ -133,17 +147,19 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { ElMessage } from "element-plus";
+import { LOCAL_TTS_VOICES, type LocalTtsVoice } from "~/config/tts";
+
+const { t } = useI18n();
 
 definePageMeta({
   layout: "sidebar",
 });
 
 useHead({
-  title: "语音合成体验",
-  htmlAttrs: {
-    lang: "zh-CN",
-  },
+  title: computed(() => t("ttsDemo.experiencePageTitle")),
+  htmlAttrs: {},
 });
 
 type ParameterItem = {
@@ -167,27 +183,76 @@ type VoiceItem = {
   desc: string;
   icon: string;
   theme: "primary" | "secondary" | "tertiary" | "neutral" | "error";
+  available: boolean;
   active?: boolean;
 };
 
+const VOICE_MAP: Record<string, { edge: string; nativeKeywords: string[] }> = {
+  "warm-female": {
+    edge: "zh-CN-XiaoxiaoNeural",
+    nativeKeywords: ["xiaoxiao", "xiaoyi", "female", "woman", "huihui", "xia"],
+  },
+  "solemn-male": {
+    edge: "zh-CN-YunyangNeural",
+    nativeKeywords: ["yunyang", "yunjian", "male", "man", "kang"],
+  },
+  "lively-child": {
+    edge: "zh-CN-XiaoyiNeural",
+    nativeKeywords: ["xiaoyi", "xiaoxiao", "female", "xia"],
+  },
+  "professional-broadcast": {
+    edge: "zh-CN-YunjianNeural",
+    nativeKeywords: ["yunjian", "yunyang", "male", "man", "kang"],
+  },
+  "soft-narration": {
+    edge: "zh-CN-XiaoxiaoNeural",
+    nativeKeywords: ["xiaoxiao", "xiaoyi", "female", "huihui", "xia"],
+  },
+  "magnetic-male": {
+    edge: "zh-CN-YunxiNeural",
+    nativeKeywords: ["yunxi", "yunjian", "male", "man", "kang"],
+  },
+  "sweet-female": {
+    edge: "zh-CN-XiaoyiNeural",
+    nativeKeywords: ["xiaoyi", "xiaoxiao", "female", "xia"],
+  },
+  "news-broadcast": {
+    edge: "zh-CN-YunyangNeural",
+    nativeKeywords: ["yunyang", "yunjian", "male", "man", "kang"],
+  },
+  audiobook: {
+    edge: "zh-CN-XiaoxiaoNeural",
+    nativeKeywords: ["xiaoxiao", "female", "huihui", "xia"],
+  },
+  "knowledge-explain": {
+    edge: "zh-CN-XiaoxiaoNeural",
+    nativeKeywords: ["xiaoxiao", "female", "huihui", "xia"],
+  },
+};
+
+const fallbackVoice = LOCAL_TTS_VOICES[0] as LocalTtsVoice;
+
 const demoText = ref("");
 const textFileInputRef = ref<HTMLInputElement | null>(null);
-const speechSupported = ref(false);
-const browserVoices = ref<SpeechSynthesisVoice[]>([]);
-const selectedVoiceId = ref("");
+const selectedVoiceId = ref(LOCAL_TTS_VOICES[0]?.id || "");
 const speechRate = ref(1);
 const speechPitch = ref(0);
 const speechVolume = ref(85);
 const isSpeaking = ref(false);
 const isPaused = ref(false);
 const elapsedSeconds = ref(0);
-const estimatedSeconds = ref(30);
+const estimatedSeconds = ref(0);
 const speechProgress = ref(0);
+const hasSpokenOnce = ref(false);
+const isDownloading = ref(false);
+const isGeneratingPreview = ref(false);
+const lastPlayableText = ref("");
+const lastPlayedKey = ref("");
 
 const workbenchWindowWidth = ref(1920);
-let currentUtterance: SpeechSynthesisUtterance | null = null;
 let speechTimer: number | null = null;
-let cancelingSpeech = false;
+let currentAudio: HTMLAudioElement | null = null;
+let currentAudioUrl = "";
 
 const syncWorkbenchWindowWidth = () => {
   if (typeof window === "undefined") return;
@@ -199,174 +264,103 @@ const workbenchDensityClass = computed(() => ({
   "tts-workbench-page--dense": workbenchWindowWidth.value <= 1500,
 }));
 
-const nativePitch = computed(() => Math.max(0, Math.min(2, (speechPitch.value + 10) / 10)));
-const nativeVolume = computed(() => Math.max(0, Math.min(1, speechVolume.value / 100)));
-const selectedVoice = computed(() =>
-  browserVoices.value.find((voice) => getVoiceId(voice) === selectedVoiceId.value) || null
-);
-
 const elapsedTimeText = computed(() => formatSeconds(elapsedSeconds.value));
 const estimatedTimeText = computed(() => formatSeconds(estimatedSeconds.value));
+const selectedVoice = computed<LocalTtsVoice>(
+  () => LOCAL_TTS_VOICES.find((voice) => voice.id === selectedVoiceId.value) || fallbackVoice
+);
+const canUsePlayer = computed(() => Boolean(demoText.value.trim() || lastPlayableText.value));
+const isPrimaryActionDisabled = computed(
+  () => isGeneratingPreview.value || (isSpeaking.value && !isPaused.value)
+);
 const playerButtonText = computed(() => {
   if (isSpeaking.value && !isPaused.value) return "Ⅱ";
   return "▶";
 });
-const primaryActionText = computed(() => (isSpeaking.value ? "重新合成" : "开始合成"));
-
+const primaryActionText = computed(() => {
+  if (isGeneratingPreview.value) return t("ttsDemo.generating");
+  if (isSpeaking.value && !isPaused.value) return t("ttsDemo.playing");
+  return hasSpokenOnce.value ? t("ttsDemo.reSynthesize") : t("ttsDemo.startSynthesize");
+});
+const downloadButtonText = computed(() => (isDownloading.value ? t("ttsDemo.generatingMp3") : t("ttsDemo.downloadVoiceFile")));
 onMounted(() => {
   syncWorkbenchWindowWidth();
   window.addEventListener("resize", syncWorkbenchWindowWidth);
   window.visualViewport?.addEventListener("resize", syncWorkbenchWindowWidth);
-  initBrowserSpeech();
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("resize", syncWorkbenchWindowWidth);
   window.visualViewport?.removeEventListener("resize", syncWorkbenchWindowWidth);
-  if (typeof window !== "undefined" && "speechSynthesis" in window) {
-    window.speechSynthesis.removeEventListener("voiceschanged", syncBrowserVoices);
-    window.speechSynthesis.cancel();
-  }
+  stopAudioPlayback();
   clearSpeechTimer();
 });
 
 const parameterItems = computed<ParameterItem[]>(() => [
   {
     key: "rate",
-    label: "语速 (Speed)",
+    label: t("ttsDemo.speedLabel"),
     icon: "↔",
     value: `${speechRate.value.toFixed(1)}x`,
     rawValue: speechRate.value,
     min: "0.5",
     max: "2",
     step: "0.1",
-    left: "慢 (0.5x)",
-    center: "标准",
-    right: "快 (2.0x)",
+    left: t("ttsDemo.speedSlow"),
+    center: t("ttsDemo.speedNormal"),
+    right: t("ttsDemo.speedFast"),
     theme: "primary",
   },
   {
     key: "pitch",
-    label: "语调 (Pitch)",
+    label: t("ttsDemo.pitchLabel"),
     icon: "≈",
     value: `${speechPitch.value}`,
     rawValue: speechPitch.value,
     min: "-10",
     max: "10",
     step: "1",
-    left: "深沉 (-10)",
-    center: "平衡",
-    right: "高昂 (+10)",
+    left: t("ttsDemo.pitchLow"),
+    center: t("ttsDemo.pitchBalance"),
+    right: t("ttsDemo.pitchHigh"),
     theme: "secondary",
   },
   {
     key: "volume",
-    label: "音量 (Volume)",
+    label: t("ttsDemo.volumeLabel"),
     icon: "♪",
     value: `${speechVolume.value}%`,
     rawValue: speechVolume.value,
     min: "0",
     max: "100",
     step: "5",
-    left: "静音",
-    center: "舒适",
-    right: "响亮",
+    left: t("ttsDemo.volumeMute"),
+    center: t("ttsDemo.volumeComfort"),
+    right: t("ttsDemo.volumeLoud"),
     theme: "tertiary",
   },
 ]);
 
 const voiceItems = computed<VoiceItem[]>(() => {
-  if (!speechSupported.value) {
-    return [
-      {
-        id: "unsupported",
-        name: "不可用",
-        desc: "当前浏览器不支持",
-        icon: "!",
-        theme: "neutral",
-      },
-    ];
-  }
-
-  const chineseVoices = browserVoices.value.filter((voice) =>
-    voice.lang.toLowerCase().startsWith("zh")
-  );
-  const sourceVoices = (chineseVoices.length ? chineseVoices : browserVoices.value).slice(0, 10);
-
-  if (!sourceVoices.length) {
-    return [
-      {
-        id: "default",
-        name: "默认音色",
-        desc: "系统默认",
-        icon: "●",
-        theme: "neutral",
-        active: !selectedVoiceId.value,
-      },
-    ];
-  }
-
-  const themes: VoiceItem["theme"][] = [
-    "primary",
-    "primary",
-    "secondary",
-    "neutral",
-    "secondary",
-    "neutral",
-    "error",
-    "tertiary",
-    "secondary",
-    "primary",
-  ];
-  const icons = ["♀", "♂", "☺", "●", "◌", "◆", "✿", "▣", "☰", "✦"];
-
-  return sourceVoices.map((voice, index) => ({
-    id: getVoiceId(voice),
-    name: formatVoiceName(voice.name),
-    desc: voice.lang || "本地音色",
-    icon: icons[index] || "●",
-    theme: themes[index] || "neutral",
-    active: getVoiceId(voice) === selectedVoiceId.value,
+  return LOCAL_TTS_VOICES.map((voice) => ({
+    id: voice.id,
+    name: voice.name,
+    desc: voice.desc,
+    icon: voice.icon,
+    theme: voice.theme,
+    available: voice.available,
+    active: voice.id === selectedVoiceId.value,
   }));
 });
 
+const getPlayableText = () => demoText.value.trim() || lastPlayableText.value;
+
+const goBackToAiCenter = async () => {
+  await navigateTo("/system/opt");
+};
+
 const goBackToIntro = async () => {
   await navigateTo("/system/opt/tts");
-};
-
-const getVoiceId = (voice: SpeechSynthesisVoice) => voice.voiceURI || `${voice.name}-${voice.lang}`;
-
-const formatVoiceName = (name: string) =>
-  name
-    .replace(/^Microsoft\s+/i, "")
-    .replace(/\s+Online\s+\(Natural\).*$/i, "")
-    .replace(/\s+-\s+Chinese.*$/i, "")
-    .replace(/\s*\(.*?\)\s*$/g, "")
-    .trim()
-    .slice(0, 12) || "本地音色";
-
-const syncBrowserVoices = () => {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
-  const voices = window.speechSynthesis.getVoices();
-  browserVoices.value = voices;
-  if (!selectedVoiceId.value && voices.length) {
-    const preferredVoice =
-      voices.find((voice) => voice.lang.toLowerCase() === "zh-cn") ||
-      voices.find((voice) => voice.lang.toLowerCase().startsWith("zh")) ||
-      voices[0];
-    selectedVoiceId.value = preferredVoice ? getVoiceId(preferredVoice) : "";
-  }
-};
-
-const initBrowserSpeech = () => {
-  if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-    speechSupported.value = false;
-    return;
-  }
-
-  speechSupported.value = true;
-  syncBrowserVoices();
-  window.speechSynthesis.addEventListener("voiceschanged", syncBrowserVoices);
 };
 
 const formatSeconds = (value: number) => {
@@ -374,14 +368,6 @@ const formatSeconds = (value: number) => {
   const minutes = Math.floor(safeValue / 60);
   const seconds = safeValue % 60;
   return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-};
-
-const estimateSpeechSeconds = (text: string) => {
-  const chineseLength = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
-  const latinWordLength = (text.match(/[a-zA-Z0-9]+/g) || []).length;
-  const punctuationPause = (text.match(/[，。！？；,.!?;]/g) || []).length * 0.35;
-  const baseSeconds = chineseLength / 4.2 + latinWordLength / 2.5 + punctuationPause;
-  return Math.max(3, Math.ceil(baseSeconds / speechRate.value));
 };
 
 const clearSpeechTimer = () => {
@@ -405,17 +391,47 @@ const startSpeechTimer = () => {
 
 const resetSpeechState = () => {
   clearSpeechTimer();
-  currentUtterance = null;
   isSpeaking.value = false;
   isPaused.value = false;
 };
 
+const revokeCurrentAudioUrl = () => {
+  if (!currentAudioUrl) return;
+  URL.revokeObjectURL(currentAudioUrl);
+  currentAudioUrl = "";
+};
+
+const stopAudioPlayback = () => {
+  if (currentAudio) {
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio.onplay = null;
+    currentAudio.onpause = null;
+    currentAudio.ontimeupdate = null;
+    currentAudio.onended = null;
+    currentAudio.onerror = null;
+  }
+  currentAudio = null;
+  resetSpeechState();
+};
+
 const clearText = () => {
+  if (isSpeaking.value || isPaused.value) {
+    stopAudioPlayback();
+  }
+  lastPlayableText.value = "";
+  lastPlayedKey.value = "";
+  revokeCurrentAudioUrl();
   demoText.value = "";
 };
 
 const triggerTextImport = () => {
   textFileInputRef.value?.click();
+};
+
+const readTextFileAsUtf8 = async (file: File) => {
+  const buffer = await file.arrayBuffer();
+  return new TextDecoder("utf-8").decode(buffer);
 };
 
 const handleTextImport = async (event: Event) => {
@@ -424,9 +440,34 @@ const handleTextImport = async (event: Event) => {
   if (!file) return;
 
   try {
-    demoText.value = (await file.text()).slice(0, 5000);
+    const lowerName = file.name.toLowerCase();
+    const isTextFile =
+      file.type.startsWith("text/") ||
+      lowerName.endsWith(".txt") ||
+      lowerName.endsWith(".md") ||
+      lowerName.endsWith(".text");
+
+    if (!isTextFile) {
+      ElMessage.warning(t("ttsDemo.onlyTxtSupported"));
+      return;
+    }
+
+    const importedText = (await readTextFileAsUtf8(file)).replace(/\r\n/g, "\n").trim();
+    if (!importedText) {
+      ElMessage.warning(t("ttsDemo.importedEmpty"));
+      return;
+    }
+
+    demoText.value = importedText.slice(0, 5000);
+
+    if (importedText.length > 5000) {
+      ElMessage.warning(t("ttsDemo.importTruncated"));
+      return;
+    }
+
+    ElMessage.success(t("ttsDemo.importSuccess"));
   } catch {
-    ElMessage.error("文本导入失败");
+    ElMessage.error(t("ttsDemo.importFailed"));
   } finally {
     input.value = "";
   }
@@ -444,91 +485,207 @@ const updateParameter = (key: ParameterItem["key"], event: Event) => {
 };
 
 const selectVoice = (id: string) => {
-  if (id === "unsupported") {
-    ElMessage.warning("当前浏览器不支持原生语音合成");
+  const voice = LOCAL_TTS_VOICES.find((voiceItem) => voiceItem.id === id);
+  if (!voice) return;
+
+  if (!voice.available) {
+    ElMessage.warning(t("ttsDemo.voiceNotAvailable", { name: voice.name }));
     return;
   }
-  selectedVoiceId.value = id === "default" ? "" : id;
+
+  selectedVoiceId.value = id;
+  speechRate.value = voice.rate;
+  speechPitch.value = voice.pitch;
+  speechVolume.value = voice.volume;
+
+  if (isSpeaking.value || isPaused.value) {
+    handleSpeak();
+  }
 };
 
-const handleSpeak = () => {
-  if (!speechSupported.value || typeof window === "undefined") {
-    ElMessage.warning("当前浏览器不支持原生语音合成");
-    return;
+const getEdgeVoiceName = () => {
+  return VOICE_MAP[selectedVoice.value.id]?.edge || "zh-CN-XiaoxiaoNeural";
+};
+
+const toEdgeRate = () => {
+  const ratePercent = Math.round((speechRate.value - 1) * 100);
+  return `${ratePercent >= 0 ? "+" : ""}${ratePercent}%`;
+};
+
+const toEdgePitch = () => `${speechPitch.value >= 0 ? "+" : ""}${speechPitch.value}Hz`;
+
+const toEdgeVolume = () => {
+  const volumePercent = Math.round(speechVolume.value - 100);
+  return `${volumePercent >= 0 ? "+" : ""}${volumePercent}%`;
+};
+
+const getSpeechPayload = (text: string) => ({
+  text,
+  voice: getEdgeVoiceName(),
+  rate: toEdgeRate(),
+  pitch: toEdgePitch(),
+  volume: toEdgeVolume(),
+});
+
+const getPlaybackKey = (text: string) => JSON.stringify(getSpeechPayload(text));
+
+const requestSpeechAudio = async (text: string) => {
+  const response = await fetch("/api/speech-synthesis", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(getSpeechPayload(text)),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null);
+    const message =
+      errorBody?.statusMessage || errorBody?.message || response.statusText || t("ttsDemo.speechGenerateFailed");
+    throw new Error(message);
   }
 
-  const text = demoText.value.trim();
-  if (!text) {
-    ElMessage.warning("请先输入要合成的文本");
-    return;
-  }
+  return response.blob();
+};
 
-  cancelingSpeech = true;
-  window.speechSynthesis.cancel();
-  cancelingSpeech = false;
-  resetSpeechState();
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  currentUtterance = utterance;
-  utterance.lang = selectedVoice.value?.lang || "zh-CN";
-  utterance.voice = selectedVoice.value;
-  utterance.rate = speechRate.value;
-  utterance.pitch = nativePitch.value;
-  utterance.volume = nativeVolume.value;
-  elapsedSeconds.value = 0;
-  estimatedSeconds.value = estimateSpeechSeconds(text);
-  speechProgress.value = 0;
-
-  utterance.onstart = () => {
+const bindAudioEvents = (audio: HTMLAudioElement, text: string) => {
+  audio.onplay = () => {
+    currentAudio = audio;
+    lastPlayableText.value = text;
+    hasSpokenOnce.value = true;
     isSpeaking.value = true;
     isPaused.value = false;
     startSpeechTimer();
-  };
-  utterance.onboundary = (event) => {
-    if (!event.charIndex || !text.length) return;
-    speechProgress.value = Math.min(98, (event.charIndex / text.length) * 100);
-  };
-  utterance.onend = () => {
-    if (currentUtterance !== utterance) return;
-    speechProgress.value = 100;
-    elapsedSeconds.value = Math.max(elapsedSeconds.value, estimatedSeconds.value);
-    resetSpeechState();
-  };
-  utterance.onerror = () => {
-    if (currentUtterance !== utterance) return;
-    resetSpeechState();
-    if (!cancelingSpeech) {
-      ElMessage.error("语音播放失败，请更换浏览器或音色后重试");
+    if (!estimatedSeconds.value && Number.isFinite(audio.duration)) {
+      estimatedSeconds.value = Math.max(1, Math.ceil(audio.duration));
     }
   };
-
-  window.speechSynthesis.speak(utterance);
+  audio.onpause = () => {
+    if (!currentAudio) return;
+    if (audio.ended || Math.abs(audio.currentTime) < 0.001) return;
+    isSpeaking.value = false;
+    isPaused.value = true;
+  };
+  audio.ontimeupdate = () => {
+    elapsedSeconds.value = Math.floor(audio.currentTime);
+    const duration = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : estimatedSeconds.value;
+    if (duration > 0) {
+      estimatedSeconds.value = Math.max(1, Math.ceil(duration));
+      speechProgress.value = Math.min(100, (audio.currentTime / duration) * 100);
+    }
+  };
+  audio.onended = () => {
+    speechProgress.value = 100;
+    elapsedSeconds.value = estimatedSeconds.value;
+    isPaused.value = false;
+    isSpeaking.value = false;
+    resetSpeechState();
+  };
+  audio.onerror = () => {
+    currentAudio = null;
+    resetSpeechState();
+    ElMessage.error(t("ttsDemo.playbackFailed"));
+  };
 };
 
-const toggleSpeechPlayback = () => {
-  if (!speechSupported.value || typeof window === "undefined") {
-    ElMessage.warning("当前浏览器不支持原生语音合成");
+const handleSpeak = async () => {
+  if (typeof window === "undefined") return;
+
+  const text = getPlayableText();
+  if (!text) {
+    ElMessage.warning(t("ttsDemo.pleaseInputText"));
     return;
   }
 
-  if (!isSpeaking.value) {
+  const playbackKey = getPlaybackKey(text);
+  isGeneratingPreview.value = true;
+  elapsedSeconds.value = 0;
+  estimatedSeconds.value = Math.max(3, Math.ceil(text.length / 5));
+  speechProgress.value = 0;
+
+  try {
+    if (currentAudio && lastPlayedKey.value === playbackKey) {
+      currentAudio.currentTime = 0;
+      bindAudioEvents(currentAudio, text);
+      await currentAudio.play();
+      return;
+    }
+
+    stopAudioPlayback();
+    revokeCurrentAudioUrl();
+
+    const audioBlob = await requestSpeechAudio(text);
+    const audioUrl = URL.createObjectURL(audioBlob);
+    const audio = new Audio(audioUrl);
+    audio.preload = "auto";
+    currentAudio = audio;
+    currentAudioUrl = audioUrl;
+    lastPlayedKey.value = playbackKey;
+    bindAudioEvents(audio, text);
+    await audio.play();
+  } catch (error) {
+    currentAudio = null;
+    revokeCurrentAudioUrl();
+    resetSpeechState();
+    ElMessage.error(error instanceof Error ? error.message : t("ttsDemo.synthesisFailed"));
+  } finally {
+    isGeneratingPreview.value = false;
+  }
+};
+
+const toggleSpeechPlayback = () => {
+  if (!isSpeaking.value && !hasSpokenOnce.value) {
+    handleSpeak();
+    return;
+  }
+
+  if (!isSpeaking.value && hasSpokenOnce.value) {
+    if (currentAudio && lastPlayedKey.value === getPlaybackKey(getPlayableText())) {
+      currentAudio.currentTime = 0;
+      bindAudioEvents(currentAudio, getPlayableText());
+      currentAudio.play().catch(() => {
+        ElMessage.error(t("ttsDemo.playbackFailed"));
+      });
+      return;
+    }
     handleSpeak();
     return;
   }
 
   if (isPaused.value) {
-    window.speechSynthesis.resume();
-    isPaused.value = false;
-    startSpeechTimer();
-  } else {
-    window.speechSynthesis.pause();
-    isPaused.value = true;
-    clearSpeechTimer();
+    currentAudio?.play().catch(() => {
+      ElMessage.error(t("ttsDemo.playbackFailed"));
+    });
+    return;
   }
+
+  currentAudio?.pause();
 };
 
-const handleDownload = () => {
-  ElMessage.info("浏览器原生语音合成只能播放，不能直接下载音频文件");
+const handleDownload = async () => {
+  const text = demoText.value.trim();
+  if (!text) {
+    ElMessage.warning(t("ttsDemo.downloadNoText"));
+    return;
+  }
+
+  isDownloading.value = true;
+  try {
+    const audioBlob = await requestSpeechAudio(text);
+    const downloadUrl = URL.createObjectURL(audioBlob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = `speech-synthesis-${Date.now()}.mp3`;
+    link.click();
+    window.setTimeout(() => {
+      URL.revokeObjectURL(downloadUrl);
+    }, 1000);
+    ElMessage.success(t("ttsDemo.downloadSuccess"));
+  } catch (error) {
+    ElMessage.error(error instanceof Error ? error.message : t("ttsDemo.downloadFailed"));
+  } finally {
+    isDownloading.value = false;
+  }
 };
 </script>
 
@@ -779,6 +936,7 @@ const handleDownload = () => {
 }
 
 .tts-param-panel {
+  align-self: start;
   padding: 28px;
   border-radius: 24px;
 }
@@ -863,6 +1021,7 @@ const handleDownload = () => {
 
 .tts-voice-section__head {
   display: flex;
+  align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
 }
@@ -874,6 +1033,7 @@ const handleDownload = () => {
 }
 
 .tts-voice-card {
+  position: relative;
   display: flex;
   min-width: 0;
   min-height: 120px;
@@ -888,6 +1048,11 @@ const handleDownload = () => {
 
 .tts-voice-card--active {
   border: 2px solid #005bc4;
+}
+
+.tts-voice-card--disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
 }
 
 .tts-voice-card__avatar {
@@ -914,6 +1079,19 @@ const handleDownload = () => {
 .tts-voice-card span {
   color: #596063;
   font-size: 10px;
+}
+
+.tts-voice-card em {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: rgba(89, 96, 99, 0.1);
+  color: #596063;
+  font-size: 8px;
+  font-style: normal;
+  font-weight: 900;
 }
 
 .is-neutral {
@@ -951,9 +1129,8 @@ const handleDownload = () => {
 }
 
 .tts-workbench-page--compact .tts-param-panel {
-  height: 320px;
-  max-height: 320px;
-  overflow: hidden;
+  height: auto;
+  max-height: none;
   padding: 14px 16px;
 }
 
@@ -1066,9 +1243,8 @@ const handleDownload = () => {
 }
 
 .tts-workbench-page--dense .tts-param-panel {
-  height: 280px;
-  max-height: 280px;
-  overflow: hidden;
+  height: auto;
+  max-height: none;
   padding: 10px 12px;
   border-radius: 16px;
 }
@@ -1118,6 +1294,13 @@ const handleDownload = () => {
   min-height: 42px;
   gap: 0;
   border-radius: 10px;
+}
+
+.tts-workbench-page--dense .tts-voice-card em {
+  top: 2px;
+  right: 3px;
+  padding: 1px 3px;
+  font-size: 6px;
 }
 
 .tts-workbench-page--dense .tts-voice-card__avatar {

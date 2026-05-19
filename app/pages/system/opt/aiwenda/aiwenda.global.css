@@ -1,0 +1,36 @@
+.aiwenda-history-menu-fixed {
+  width: 142px;
+  border: 1px solid #e3eaf2;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.16);
+  padding: 7px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.aiwenda-history-menu__item {
+  height: 34px;
+  border-radius: 8px;
+  color: #4b5563;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 0 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.aiwenda-history-menu__item:hover {
+  background: #f2f6fb;
+}
+
+.aiwenda-history-menu__item.is-danger {
+  color: #e54848;
+}
+
+.aiwenda-history-menu__item .material-symbols-outlined {
+  font-size: 18px;
+}

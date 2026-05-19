@@ -314,10 +314,10 @@
                 <!-- 顶部分类标签 -->
                 <div class="flex items-center gap-[20px] mb-[16px] flex-shrink-0 flex-wrap">
                     <button v-for="tab in libraryTabs" :key="tab.value" :class="[
-                        'min-w-[130px] h-[45px] px-4 rounded-t-[10px] text-sm transition-colors',
+                        'min-w-[120px] h-[45px] px-4 rounded-[10px] text-sm transition-colors',
                         activeLibraryTab === tab.value
                             ? 'bg-[#005BC2] text-white'
-                            : 'bg-white border border-gray-200 border-b-0 text-gray-600 hover:border-[#005BC2] hover:text-[#005BC2]'
+                            : 'bg-white border border-gray-200 text-gray-600 hover:border-[#005BC2] hover:text-[#005BC2]'
                     ]" @click="activeLibraryTab = tab.value">
                         {{ tab.label }}
                     </button>
@@ -325,11 +325,8 @@
 
                 <!-- 内容区 -->
                 <div class="flex-1 bg-white rounded-[24px] overflow-hidden flex flex-col border border-gray-200 shadow-[0_16px_34px_rgba(46,51,53,0.06)]">
-                    <!-- 标题 -->
-                    <h2 class="text-center text-lg font-medium text-gray-800 py-4">{{ $t('growth.libraryResources') }}</h2>
-
                     <!-- 资源卡片列表 -->
-                    <div class="flex-1 overflow-auto px-6 pb-6">
+                    <div class="flex-1 overflow-auto px-6 pt-6 pb-6">
                         <!-- 加载中 -->
                         <div v-if="libraryLoading" class="flex items-center justify-center h-full">
                             <div class="text-gray-400">{{ $t('common.loading') }}...</div>
@@ -339,13 +336,13 @@
                                 <div v-for="item in libraryList" :key="item.id"
                                     class="library-card"
                                     @click="handleLibraryClick(item)">
-                                    <div class="flex items-center justify-center gap-3 mb-3">
+                                    <div class="library-card__header">
                                         <div class="w-10 h-10 rounded flex items-center justify-center flex-shrink-0 overflow-hidden" 
                                             :class="item.iconUrl ? 'bg-transparent' : 'bg-gray-100'">
                                             <img v-if="item.iconUrl" :src="item.iconUrl" class="w-full h-full object-contain text-[10px]" :alt="item.logo" />
                                             <span v-else class="text-xs font-bold text-gray-500">{{ item.logo }}</span>
                                         </div>
-                                        <h3 class="font-medium text-gray-800">{{ item.title }}</h3>
+                                        <h3 class="library-card__title">{{ item.title }}</h3>
                                     </div>
                                     <p class="library-card-desc">{{ item.content }}</p>
                                 </div>
@@ -388,16 +385,6 @@
                         @keyup.enter="libraryPage = jumpPage; loadLibraryList()" />
                     <span class="text-sm text-gray-500">{{ $t('growth.page') }}</span>
                 </div>
-            </div>
-
-            <!-- 右侧内容区 - 教师认证 -->
-            <div v-else-if="activeMenu === 'certification'" class="growth-mode growth-mode--certification">
-                <iframe 
-                    src="https://matatalab.com/en/self-guided-course" 
-                    class="w-full h-full border-0 rounded-[24px] bg-white shadow-[0_16px_34px_rgba(46,51,53,0.06)]"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowfullscreen
-                ></iframe>
             </div>
 
             <!-- 右侧内容区 - 其他（占位） -->
@@ -738,10 +725,12 @@ const getCourseStatusClass = (status: number) => {
 // 处理菜单点击
 const handleMenuClick = (value: string) => {
     if (value === 'certification') {
-        window.open('https://matatalab.com/en/self-guided-course', '_blank')
-    } else {
-        activeMenu.value = value
+        if (import.meta.client) {
+            window.location.href = 'https://matatalab.com/en/self-guided-course'
+        }
+        return
     }
+    activeMenu.value = value
 }
 
 // 跳转发布话题
@@ -1041,7 +1030,7 @@ onUnmounted(() => {
 .growth-page {
     height: calc(100vh - 70px);
     overflow: hidden;
-    background: linear-gradient(180deg, #f4f8ff 0%, #f8fbff 45%, #eef4fb 100%);
+    /* background: linear-gradient(180deg, #f4f8ff 0%, #f8fbff 45%, #eef4fb 100%); */
 }
 
 .growth-shell {
@@ -1119,11 +1108,6 @@ onUnmounted(() => {
     flex-direction: column;
     min-height: 0;
     overflow: auto;
-}
-
-.growth-mode--certification {
-    min-height: 0;
-    overflow: hidden;
 }
 
 .growth-toolbar {
@@ -1361,12 +1345,13 @@ onUnmounted(() => {
     border-radius: 20px;
     border: 1px solid #dbe6f3;
     background: #ffffff;
-    padding: 16px;
+    padding: 18px 20px;
     cursor: pointer;
     transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex-start;
+    gap: 12px;
 }
 
 .library-card:hover {
@@ -1375,7 +1360,31 @@ onUnmounted(() => {
     box-shadow: 0 18px 30px rgba(0, 91, 194, 0.12);
 }
 
+.library-card__header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+    min-width: 0;
+}
+
+.library-card__title {
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.35;
+    color: #1f2f43;
+    word-break: break-word;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .library-card-desc {
+    margin: 0;
     font-size: 14px;
     color: #66788e;
     line-height: 1.5;

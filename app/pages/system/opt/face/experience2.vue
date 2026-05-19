@@ -14,7 +14,7 @@
         <button
           type="button"
           class="page-back-button"
-          aria-label="返回上一页"
+          :aria-label="t('faceDemo.goBackAriaLabel')"
           @click="handleGoBack"
         >
           <svg viewBox="0 0 24 24" class="page-back-button__icon" aria-hidden="true">
@@ -30,11 +30,11 @@
         </button>
         <div class="stitch-face-page__header-copy">
           <div class="stitch-face-page__crumbs">
-            <span>AI 实践中心</span>
+            <span>{{ t("faceDemo.aiPracticeCenter") }}</span>
             <span class="stitch-face-page__crumb-sep">/</span>
-            <span>人脸识别</span>
+            <span>{{ t("faceDemo.faceRecognition") }}</span>
           </div>
-          <h1 class="stitch-face-page__title">人脸数据采集及录入</h1>
+          <h1 class="stitch-face-page__title">{{ t("faceDemo.faceDataCollection") }}</h1>
           <p class="stitch-face-page__subtitle">{{ pageSubtitle }}</p>
         </div>
       </div>
@@ -70,8 +70,8 @@
                     />
                   </svg>
                 </div>
-                <h3 class="mode-card__title">上传本地图片</h3>
-                <p class="mode-card__desc">支持 JPG, PNG 格式<br />可批量选择多张照片</p>
+                <h3 class="mode-card__title">{{ t("faceDemo.uploadLocalImage") }}</h3>
+                <p class="mode-card__desc" v-html="t('faceDemo.uploadFormatHint')"></p>
               </article>
 
               <article
@@ -99,8 +99,8 @@
                     />
                   </svg>
                 </div>
-                <h3 class="mode-card__title">开启摄像头</h3>
-                <p class="mode-card__desc">实时视频捕获<br />AI 自动提取面部特征</p>
+                <h3 class="mode-card__title">{{ t("faceDemo.openCamera") }}</h3>
+                <p class="mode-card__desc" v-html="t('faceDemo.cameraFeatureHint')"></p>
               </article>
             </div>
           </template>
@@ -109,13 +109,13 @@
             <div class="stage-view">
               <div class="stage-view__meta">
                 <span class="stage-view__tag">{{
-                  captureMode === "upload" ? "图片采集" : "摄像头采集"
+                  captureMode === "upload" ? t("faceDemo.imageCapture") : t("faceDemo.cameraCapture")
                 }}</span>
                 <p class="stage-view__note">
                   {{
                     captureMode === "upload"
-                      ? "请上传一张清晰正脸照片，系统会自动提取面部特征"
-                      : "请将面部对准框内，保持光线充足"
+                      ? t("faceDemo.uploadCaptureNote")
+                      : t("faceDemo.cameraCaptureNote")
                   }}
                 </p>
               </div>
@@ -136,7 +136,7 @@
                   v-if="capturePreview"
                   class="media-shell__media"
                   :src="capturePreview"
-                  alt="人脸采集预览"
+                  :alt="t('faceDemo.capturePreviewAlt')"
                 />
 
                 <div
@@ -145,14 +145,14 @@
                 >
                   <strong>{{
                     captureMode === "upload"
-                      ? "请先选择图片"
+                      ? t("faceDemo.pleaseSelectImage")
                       : loadingModels
-                      ? "模型加载中..."
-                      : "正在打开摄像头"
+                      ? t("faceDemo.loadingModelsShort")
+                      : t("faceDemo.openingCamera")
                   }}</strong>
                   <span>{{
                     captureMode === "upload"
-                      ? "支持 JPG、PNG 格式，建议上传单人正脸照片"
+                      ? t("faceDemo.uploadFormatSuggestion")
                       : runtimeNotice
                   }}</span>
                 </div>
@@ -163,9 +163,9 @@
           <template v-else-if="currentStep === 'success'">
             <div class="stage-view stage-view--success">
               <div class="stage-view__meta stage-view__meta--center">
-                <span class="stage-view__tag stage-view__tag--success">录入完成</span>
-                <p class="stage-view__headline">人脸信息已成功录入</p>
-                <p class="stage-view__note">可继续录入更多样本，或直接进入识别阶段</p>
+                <span class="stage-view__tag stage-view__tag--success">{{ t("faceDemo.enrollComplete") }}</span>
+                <p class="stage-view__headline">{{ t("faceDemo.enrollSuccessTitle") }}</p>
+                <p class="stage-view__note">{{ t("faceDemo.enrollSuccessHint") }}</p>
               </div>
 
               <div class="media-shell media-shell--success">
@@ -173,7 +173,7 @@
                   v-if="lastEnrolledPreview"
                   class="media-shell__media"
                   :src="lastEnrolledPreview"
-                  alt="录入成功预览"
+                  :alt="t('faceDemo.enrollSuccessPreviewAlt')"
                 />
               </div>
             </div>
@@ -182,7 +182,7 @@
           <template v-else>
             <div class="stage-view stage-view--recognize">
               <div class="stage-view__meta">
-                <span class="stage-view__tag stage-view__tag--recognize">实时识别</span>
+                <span class="stage-view__tag stage-view__tag--recognize">{{ t("faceDemo.realTimeRecognitionTag") }}</span>
                 <p class="stage-view__headline">{{ assistantBubbleTitle }}</p>
                 <p class="stage-view__note">
                   {{ assistantBubbleDesc || recognitionNotice }}
@@ -204,7 +204,7 @@
 
                 <div v-if="!recognitionVideoReady" class="media-shell__placeholder">
                   <strong>{{
-                    loadingModels ? "模型加载中..." : "正在打开识别摄像头"
+                    loadingModels ? t("faceDemo.loadingModelsShort") : t("faceDemo.openingRecognitionCamera")
                   }}</strong>
                   <span>{{ recognitionNotice }}</span>
                 </div>
@@ -226,7 +226,7 @@
               class="primary-button primary-button--wide"
               @click="handleConfirmName"
             >
-              录入人脸信息
+              {{ t("faceDemo.enrollFaceInfo") }}
             </button>
           </template>
 
@@ -240,9 +240,9 @@
               {{
                 captureMode === "upload"
                   ? capturePreview
-                    ? "重新上传"
-                    : "选择图片"
-                  : "重新拍摄"
+                    ? t("faceDemo.reUpload")
+                    : t("faceDemo.selectImage")
+                  : t("faceDemo.retakePhoto")
               }}
             </button>
             <button
@@ -251,7 +251,7 @@
               :disabled="captureActionDisabled"
               @click="handleEnrollFace"
             >
-              {{ savingProfile ? "录入中..." : "开始录入" }}
+              {{ savingProfile ? t("faceDemo.enrolling") : t("faceDemo.startEnroll") }}
             </button>
           </template>
 
@@ -261,10 +261,10 @@
               class="secondary-button"
               @click="handleContinueEnrollment"
             >
-              继续录入
+              {{ t("faceDemo.continueEnroll") }}
             </button>
             <button type="button" class="primary-button" @click="handleEnterRecognition">
-              去识别
+              {{ t("faceDemo.goRecognize") }}
             </button>
           </template>
 
@@ -274,7 +274,7 @@
               class="primary-button primary-button--wide"
               @click="handleStopRecognition"
             >
-              结束识别
+              {{ t("faceDemo.endRecognitionBtn") }}
             </button>
           </template>
         </div>
@@ -298,12 +298,12 @@
               </svg>
             </div>
             <div>
-              <h3 class="side-card__title">身份标记</h3>
+              <h3 class="side-card__title">{{ t("faceDemo.identityMark") }}</h3>
               <p class="side-card__subtitle">{{ identityHint }}</p>
             </div>
           </div>
 
-          <label class="field-label" for="face-name-input">姓名</label>
+          <label class="field-label" for="face-name-input">{{ t("faceDemo.name") }}</label>
           <input
             v-if="currentStep === 'name'"
             id="face-name-input"
@@ -311,7 +311,7 @@
             class="field-input"
             type="text"
             maxlength="20"
-            placeholder="请输入您的姓名"
+            :placeholder="t('faceDemo.namePlaceholder2')"
             @keydown.enter="handleConfirmName"
           />
           <input
@@ -325,7 +325,7 @@
         </section>
 
         <section class="side-card side-card--list">
-          <h4 class="list-card__label">已录入人脸信息</h4>
+          <h4 class="list-card__label">{{ t("faceDemo.enrolledFaces") }}</h4>
 
           <div v-if="hasVisibleProfiles" class="profile-list">
             <article
@@ -348,8 +348,8 @@
                 <p class="profile-row__desc">
                   {{
                     profile.id === latestProfileId
-                      ? "最近录入的人脸样本"
-                      : "本地识别特征已就绪"
+                      ? t("faceDemo.latestEnrolledSample")
+                      : t("faceDemo.localFeatureReady")
                   }}
                 </p>
                 <div class="profile-row__actions">
@@ -359,7 +359,7 @@
                     :disabled="savingProfile"
                     @click="handleRenameProfile(profile)"
                   >
-                    修改名称
+                    {{ t("faceDemo.renameFace") }}
                   </button>
                   <button
                     type="button"
@@ -367,7 +367,7 @@
                     :disabled="savingProfile"
                     @click="handleReEnrollProfile(profile)"
                   >
-                    重新录入
+                    {{ t("faceDemo.reEnroll") }}
                   </button>
                 </div>
               </div>
@@ -392,10 +392,10 @@
               </svg>
             </div>
             <strong class="profile-empty__title">{{
-              activeIdentityName || "未录入人脸信息"
+              activeIdentityName || t("faceDemo.noFaceEnrolled")
             }}</strong>
             <span class="profile-empty__desc"
-              >完成录入后，这里会显示可用于识别的人脸样本</span
+              >{{ t("faceDemo.emptyProfileHint") }}</span
             >
           </div>
         </section>
@@ -416,9 +416,9 @@
         </svg>
       </div>
       <div>
-        <h4 class="tips-card__title">采集提示</h4>
+        <h4 class="tips-card__title">{{ t("faceDemo.collectionTipTitle") }}</h4>
         <p class="tips-card__desc">
-          建议在光线柔和的环境下采集，人脸正对镜头可获得更精准的特征提取。系统将自动过滤模糊影像。
+          {{ t("faceDemo.collectionTipDesc") }}
         </p>
       </div>
     </section>
@@ -429,19 +429,19 @@
         <div class="completion-dialog__art">
           <img
             :src="finishMascotImage"
-            alt="体验完成机器人"
+            :alt="t('faceDemo.completionMascotAlt')"
             class="completion-dialog__art-image"
           />
         </div>
         <p class="completion-dialog__message">
-          恭喜你完成人脸识别机器人体验，快去探索其他内容吧～
+          {{ t("faceDemo.completionMessage") }}
         </p>
         <button
           type="button"
           class="completion-dialog__button"
           @click="handleRecognitionCompleteConfirm"
         >
-          确定
+          {{ t("faceDemo.confirmBtn") }}
         </button>
       </div>
     </div>
@@ -450,6 +450,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from "vue";
+import { useI18n } from "vue-i18n";
 import { ElMessage, ElMessageBox } from "element-plus";
 import finishMascotImage from "~/assets/images/shizi.png";
 import {
@@ -463,11 +464,13 @@ import type {
 import type { FaceDemoProfile } from "~/composables/useFaceDemoStorage";
 import { useFaceDemoStorage } from "~/composables/useFaceDemoStorage";
 
+const { t } = useI18n();
+
 definePageMeta({ layout: "sidebar" });
 
 useHead({
-  title: "人脸识别机器人",
-  htmlAttrs: { lang: "zh-CN" },
+  title: computed(() => t("faceDemo.exp2PageTitle")),
+  htmlAttrs: {},
 });
 
 type FlowStep = "name" | "capture" | "success" | "recognize";
@@ -493,8 +496,8 @@ const playerName = ref("");
 const lastEnrolledPreview = ref("");
 const capturePreview = ref("");
 const captureError = ref("");
-const runtimeNotice = ref("首次使用会加载本地模型，通常需要几秒。");
-const recognitionNotice = ref("请把面部放进识别区域，我来帮你识别。");
+const runtimeNotice = ref(t("faceDemo.firstUseNotice"));
+const recognitionNotice = ref(t("faceDemo.recognitionPlaceholder"));
 const loadingModels = ref(false);
 const modelsReady = ref(false);
 const savingProfile = ref(false);
@@ -524,10 +527,10 @@ let legacyProfilesWarned = false;
 
 const pageSubtitle = computed(() => {
   if (currentStep.value === "recognize") {
-    return "通过摄像头实时比对当前页面已录入的人脸信息";
+    return t("faceDemo.subtitleRecognize");
   }
 
-  return "通过上传图片或开启摄像头快速完成人脸数据采集";
+  return t("faceDemo.faceDataCollectionDesc");
 });
 
 const activeIdentityName = computed(() => {
@@ -536,14 +539,14 @@ const activeIdentityName = computed(() => {
 
 const identityHint = computed(() => {
   if (currentStep.value === "name") {
-    return "请先完善目标姓名信息";
+    return t("faceDemo.completeNameInfo");
   }
 
   if (currentStep.value === "recognize") {
-    return "当前正在执行实时识别";
+    return t("faceDemo.runningRecognition");
   }
 
-  return "当前采集目标姓名";
+  return t("faceDemo.currentTargetName");
 });
 
 const visibleProfiles = computed(() => {
@@ -581,15 +584,15 @@ const bestMatchedConfidenceText = computed(() => {
 
 const assistantBubbleTitle = computed(() => {
   if (bestDetection.value?.match.profile) {
-    return `你是 ${bestDetection.value.match.profile.name}!`;
+    return t("faceDemo.youAre", { name: bestDetection.value.match.profile.name });
   }
 
-  return "请把脸对准识别框";
+  return t("faceDemo.alignFaceToFrame");
 });
 
 const assistantBubbleDesc = computed(() => {
   if (bestDetection.value?.match.profile) {
-    return `当前识别相似度 ${bestMatchedConfidenceText.value}`;
+    return t("faceDemo.currentSimilarity", { confidence: bestMatchedConfidenceText.value });
   }
 
   return recognitionNotice.value;
@@ -607,8 +610,8 @@ const captureActionDisabled = computed(() => {
 
 const resetRuntimeNotice = () => {
   runtimeNotice.value = modelsReady.value
-    ? "模型准备完成，可以开始录入和识别了。"
-    : "首次使用会加载本地模型，通常需要几秒。";
+    ? t("faceDemo.modelReadyNotice")
+    : t("faceDemo.firstUseNotice");
 };
 
 const readFallbackProfiles = () => {
@@ -702,11 +705,11 @@ const loadProfiles = async () => {
     });
 
     if (hasLegacyProfiles) {
-      runtimeNotice.value = "检测到旧版录入数据，建议清空本地库后重新录入。";
+      runtimeNotice.value = t("faceDemo.legacyDataNotice");
 
       if (!legacyProfilesWarned) {
         legacyProfilesWarned = true;
-        ElMessage.warning("检测到旧版人脸数据，请清空本地库后重新录入");
+        ElMessage.warning(t("faceDemo.legacyDataWarning"));
       }
     } else {
       legacyProfilesWarned = false;
@@ -717,7 +720,7 @@ const loadProfiles = async () => {
     profiles.value = fallbackProfiles;
 
     if (!fallbackProfiles.length) {
-      ElMessage.error("读取本地人脸库失败");
+      ElMessage.error(t("faceDemo.readLocalDbFailed"));
     }
   }
 };
@@ -726,15 +729,15 @@ const ensureRuntimeReady = async () => {
   if (modelsReady.value) return;
 
   loadingModels.value = true;
-  runtimeNotice.value = "正在加载本地模型，请稍等...";
+  runtimeNotice.value = t("faceDemo.loadingModels");
 
   try {
     await ensureReady();
     modelsReady.value = true;
-    runtimeNotice.value = "模型准备完成，可以开始录入和识别了。";
+    runtimeNotice.value = t("faceDemo.modelReadyNotice");
   } catch (error) {
     console.error("加载本地模型失败:", error);
-    runtimeNotice.value = "模型加载失败，请刷新页面后重试。";
+    runtimeNotice.value = t("faceDemo.modelLoadFailed");
     throw error;
   } finally {
     loadingModels.value = false;
@@ -745,7 +748,7 @@ const createImageElement = (dataUrl: string) => {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("图片加载失败"));
+    image.onerror = () => reject(new Error(t("faceDemo.imageLoadFailed")));
     image.src = dataUrl;
   });
 };
@@ -755,7 +758,7 @@ const readFileAsDataUrl = (file: File) => {
     const reader = new FileReader();
 
     reader.onerror = () => {
-      reject(reader.error || new Error("读取图片失败"));
+      reject(reader.error || new Error(t("faceDemo.readFileFailed")));
     };
 
     reader.onload = () => {
@@ -764,7 +767,7 @@ const readFileAsDataUrl = (file: File) => {
         return;
       }
 
-      reject(new Error("读取图片失败"));
+      reject(new Error(t("faceDemo.readFileFailed")));
     };
 
     reader.readAsDataURL(file);
@@ -820,7 +823,7 @@ const createDetectionCanvas = (
       : source.height;
 
   if (!sourceWidth || !sourceHeight) {
-    throw new Error("采集画面尚未准备完成");
+    throw new Error(t("faceDemo.captureFrameNotReady"));
   }
 
   const scale = Math.min(1, maxEdge / Math.max(sourceWidth, sourceHeight));
@@ -830,7 +833,7 @@ const createDetectionCanvas = (
 
   const context = getCanvas2DContext(canvas, true);
   if (!context) {
-    throw new Error("识别画布初始化失败");
+    throw new Error(t("faceDemo.detectCanvasInitFailed"));
   }
 
   context.drawImage(source, 0, 0, canvas.width, canvas.height);
@@ -880,7 +883,7 @@ const persistEnrollmentProfile = async (
 
 const getProfileInitial = (name: string) => {
   const trimmedName = name.trim();
-  return trimmedName ? trimmedName.slice(0, 1).toUpperCase() : "未";
+  return trimmedName ? trimmedName.slice(0, 1).toUpperCase() : t("faceDemo.unknownInitial");
 };
 
 const isPlaceholderAvatar = (avatarDataUrl: string) => {
@@ -907,7 +910,7 @@ const waitForVideoReady = (video: HTMLVideoElement) => {
 
     video.onerror = () => {
       cleanup();
-      reject(new Error("视频流加载失败"));
+      reject(new Error(t("faceDemo.videoStreamFailed")));
     };
   });
 };
@@ -980,7 +983,7 @@ const refreshCameraDevices = async () => {
 
 const startCamera = async (scene: CameraScene) => {
   if (!import.meta.client || !navigator.mediaDevices?.getUserMedia) {
-    throw new Error("当前浏览器不支持摄像头调用");
+    throw new Error(t("faceDemo.browserNotSupportCamera"));
   }
 
   const constraints: MediaStreamConstraints = {
@@ -1007,7 +1010,7 @@ const startCamera = async (scene: CameraScene) => {
   const video = scene === "capture" ? captureVideoRef.value : recognitionVideoRef.value;
 
   if (!video) {
-    throw new Error("摄像头载体未准备完成");
+    throw new Error(t("faceDemo.cameraNotReady"));
   }
 
   video.srcObject = stream;
@@ -1025,7 +1028,7 @@ const startCamera = async (scene: CameraScene) => {
 
 const takeSnapshotFromVideo = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
   if (!video.videoWidth || !video.videoHeight) {
-    throw new Error("摄像头画面尚未准备完成");
+    throw new Error(t("faceDemo.cameraFrameNotReady"));
   }
 
   const maxEdge = 560;
@@ -1035,7 +1038,7 @@ const takeSnapshotFromVideo = (video: HTMLVideoElement, canvas: HTMLCanvasElemen
 
   const context = getCanvas2DContext(canvas, true);
   if (!context) {
-    throw new Error("截图画布初始化失败");
+    throw new Error(t("faceDemo.canvasInitFailed"));
   }
 
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -1063,7 +1066,7 @@ const drawRecognitionOverlay = (detections: RecognitionDetectionWithMatch[]) => 
     const color = isMatched ? "#ff3b30" : "#7ad9ff";
     const label = isMatched
       ? `${item.match.profile?.name}: ${(item.match.confidence * 100).toFixed(2)}%`
-      : "未录入";
+      : t("faceDemo.notEnrolled");
     const boxX = canvas.width - item.box.x - item.box.width;
 
     context.strokeStyle = color;
@@ -1079,7 +1082,7 @@ const startRecognitionLoop = async () => {
 
   stopRecognitionLoop();
   recognitionRunning.value = true;
-  recognitionNotice.value = "正在持续分析画面中的人脸...";
+  recognitionNotice.value = t("faceDemo.analyzingFaces");
 
   const tick = async () => {
     if (!recognitionRunning.value) return;
@@ -1102,20 +1105,20 @@ const startRecognitionLoop = async () => {
       drawRecognitionOverlay(matchedDetections);
 
       if (!matchedDetections.length) {
-        recognitionNotice.value = "暂时没有检测到人脸，请把脸移动到镜头中央。";
+        recognitionNotice.value = t("faceDemo.noFaceDetectedRealtime");
       } else if (matchedDetections.some((item) => item.match.profile)) {
         const names = matchedDetections
           .filter((item) => item.match.profile)
           .map((item) => item.match.profile?.name)
           .filter(Boolean)
           .join("、");
-        recognitionNotice.value = `已识别到：${names}`;
+        recognitionNotice.value = t("faceDemo.recognizedNames", { names });
       } else {
-        recognitionNotice.value = "检测到了人脸，但和当前人脸库还没有匹配上。";
+        recognitionNotice.value = t("faceDemo.faceDetectedNoCurrentMatch");
       }
     } catch (error) {
       console.error("实时识别失败:", error);
-      recognitionNotice.value = "识别过程中出现异常，请重新打开摄像头。";
+      recognitionNotice.value = t("faceDemo.recognitionError");
     } finally {
       recognitionBusy = false;
       if (recognitionRunning.value) {
@@ -1130,7 +1133,7 @@ const startRecognitionLoop = async () => {
 const handleConfirmName = async () => {
   const name = draftName.value.trim();
   if (!name) {
-    ElMessage.warning("请先输入名字");
+    ElMessage.warning(t("faceDemo.pleaseInputName"));
     return;
   }
 
@@ -1144,10 +1147,10 @@ const handleConfirmName = async () => {
   try {
     await ensureRuntimeReady();
     await startCamera("capture");
-    runtimeNotice.value = "摄像头已打开，请保持单人正脸后点击开始录入。";
+    runtimeNotice.value = t("faceDemo.cameraOpenedHint");
   } catch (error: any) {
     console.error("打开摄像头失败:", error);
-    captureError.value = error?.message || "打开摄像头失败";
+    captureError.value = error?.message || t("faceDemo.openCameraFailed");
     ElMessage.error(captureError.value);
   }
 };
@@ -1158,7 +1161,7 @@ const triggerUploadPicker = () => {
 
 const handleSelectUpload = () => {
   if (!draftName.value.trim()) {
-    ElMessage.warning("请先输入名字");
+    ElMessage.warning(t("faceDemo.pleaseInputName"));
     return;
   }
 
@@ -1169,7 +1172,7 @@ const handleSelectUpload = () => {
 
 const handleSelectCamera = async () => {
   if (!draftName.value.trim()) {
-    ElMessage.warning("请先输入名字");
+    ElMessage.warning(t("faceDemo.pleaseInputName"));
     return;
   }
 
@@ -1185,7 +1188,7 @@ const handleUploadChange = async (event: Event) => {
   }
 
   if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
-    ElMessage.warning("仅支持 png、jpg、jpeg 格式");
+    ElMessage.warning(t("faceDemo.onlyPngJpg"));
     input.value = "";
     return;
   }
@@ -1198,10 +1201,10 @@ const handleUploadChange = async (event: Event) => {
     capturePreview.value = await readFileAsDataUrl(file);
     captureError.value = "";
     currentStep.value = "capture";
-    runtimeNotice.value = "图片已加载，请确认照片清晰后开始录入。";
+    runtimeNotice.value = t("faceDemo.imageLoadedHint");
   } catch (error) {
     console.error("读取上传图片失败:", error);
-    captureError.value = "读取上传图片失败";
+    captureError.value = t("faceDemo.readUploadFailed");
     ElMessage.error(captureError.value);
   } finally {
     input.value = "";
@@ -1220,10 +1223,10 @@ const handleRetryCapture = async () => {
   try {
     await ensureRuntimeReady();
     await startCamera("capture");
-    runtimeNotice.value = "摄像头已重新打开，请保持单人正脸后点击开始录入。";
+    runtimeNotice.value = t("faceDemo.cameraReopenedHint");
   } catch (error: any) {
     console.error("重新打开摄像头失败:", error);
-    captureError.value = error?.message || "重新打开摄像头失败";
+    captureError.value = error?.message || t("faceDemo.reopenCameraFailed");
     ElMessage.error(captureError.value);
   }
 };
@@ -1234,7 +1237,7 @@ const handleEnrollFace = async () => {
 
   if (!enrollmentPreview) {
     if (!captureVideoRef.value || !captureCanvasRef.value || !captureVideoReady.value) {
-      ElMessage.warning("请先打开摄像头");
+      ElMessage.warning(t("faceDemo.pleaseOpenCameraFirst"));
       return;
     }
 
@@ -1245,14 +1248,14 @@ const handleEnrollFace = async () => {
       );
       capturePreview.value = enrollmentPreview;
     } catch (error: any) {
-      captureError.value = error?.message || "拍照失败";
+      captureError.value = error?.message || t("faceDemo.takePhotoFailed");
       ElMessage.error(captureError.value);
       return;
     }
   }
 
   if (!enrollmentPreview) {
-    ElMessage.warning("请先准备一张人脸图片");
+    ElMessage.warning(t("faceDemo.prepareFaceImage"));
     return;
   }
 
@@ -1263,7 +1266,7 @@ const handleEnrollFace = async () => {
     await ensureRuntimeReady();
     const enrolledFace = await resolveEnrollmentFace(enrollmentPreview);
     if (!enrolledFace) {
-      throw new Error("没有检测到清晰正脸，请正对镜头并保持单人入镜后重试");
+      throw new Error(t("faceDemo.noClearFaceDetected"));
     }
 
     await persistEnrollmentProfile(
@@ -1285,12 +1288,12 @@ const handleEnrollFace = async () => {
     currentStep.value = "success";
     ElMessage.success(
       isReEnroll
-        ? "重新录入成功，已覆盖本地人脸样本"
-        : "录入成功，已写入当前浏览器本地人脸库"
+        ? t("faceDemo.reEnrollSuccess")
+        : t("faceDemo.enrollSuccess")
     );
   } catch (error: any) {
     console.error("录入人脸失败:", error);
-    captureError.value = resolveErrorMessage(error, "录入人脸失败");
+    captureError.value = resolveErrorMessage(error, t("faceDemo.enrollFaceFailed"));
     ElMessage.error(captureError.value);
   } finally {
     savingProfile.value = false;
@@ -1301,7 +1304,7 @@ const resetToNameStep = (clearName = false) => {
   stopActiveStream();
   showRecognitionCompleteDialog.value = false;
   recognitionDetections.value = [];
-  recognitionNotice.value = "请把面部放进识别区域，我来帮你识别。";
+  recognitionNotice.value = t("faceDemo.recognitionPlaceholder");
   captureMode.value = "camera";
   reEnrollTargetId.value = "";
   capturePreview.value = "";
@@ -1326,12 +1329,12 @@ const handleContinueEnrollment = () => {
 
 const handleRenameProfile = async (profile: FaceDemoProfile) => {
   try {
-    const { value } = await ElMessageBox.prompt("请输入新的姓名", "修改名称", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
+    const { value } = await ElMessageBox.prompt(t("faceDemo.renamePromptMsg"), t("faceDemo.renameFace"), {
+      confirmButtonText: t("faceDemo.confirmBtn"),
+      cancelButtonText: t("faceDemo.cancel"),
       inputValue: profile.name,
       inputPattern: /\S+/,
-      inputErrorMessage: "姓名不能为空",
+      inputErrorMessage: t("faceDemo.nameRequired"),
     });
     const nextName = value.trim();
 
@@ -1353,21 +1356,21 @@ const handleRenameProfile = async (profile: FaceDemoProfile) => {
     }
 
     await loadProfiles();
-    ElMessage.success("名称已更新");
+    ElMessage.success(t("faceDemo.nameUpdated"));
   } catch (error) {
     if (error === "cancel" || error === "close") {
       return;
     }
 
     console.error("修改名称失败:", error);
-    ElMessage.error(resolveErrorMessage(error, "修改名称失败"));
+    ElMessage.error(resolveErrorMessage(error, t("faceDemo.renameFailed")));
   }
 };
 
 const handleReEnrollProfile = async (profile: FaceDemoProfile) => {
   stopActiveStream();
   recognitionDetections.value = [];
-  recognitionNotice.value = "请把面部放进识别区域，我来帮你识别。";
+  recognitionNotice.value = t("faceDemo.recognitionPlaceholder");
   showRecognitionCompleteDialog.value = false;
   captureMode.value = "camera";
   reEnrollTargetId.value = profile.id;
@@ -1380,10 +1383,10 @@ const handleReEnrollProfile = async (profile: FaceDemoProfile) => {
   try {
     await ensureRuntimeReady();
     await startCamera("capture");
-    runtimeNotice.value = `请重新录入 ${profile.name} 的人脸信息。`;
+    runtimeNotice.value = t("faceDemo.reEnrollHint", { name: profile.name });
   } catch (error: any) {
     console.error("重新打开录入摄像头失败:", error);
-    captureError.value = error?.message || "重新打开录入摄像头失败";
+    captureError.value = error?.message || t("faceDemo.reopenCaptureCameraFailed");
     ElMessage.error(captureError.value);
   }
 };
@@ -1392,18 +1395,18 @@ const handleEnterRecognition = async () => {
   await loadProfiles();
 
   if (!profiles.value.length) {
-    ElMessage.warning("请先录入至少一个人脸");
+    ElMessage.warning(t("faceDemo.pleaseEnrollFirst"));
     return;
   }
 
   if (!hasCompatibleProfiles.value) {
-    ElMessage.warning("检测到旧版人脸数据，请先清空本地库后重新录入");
+    ElMessage.warning(t("faceDemo.legacyClearFirst"));
     return;
   }
 
   currentStep.value = "recognize";
   recognitionDetections.value = [];
-  recognitionNotice.value = "正在准备识别摄像头...";
+  recognitionNotice.value = t("faceDemo.preparingRecognitionCamera");
 
   try {
     await ensureRuntimeReady();
@@ -1411,7 +1414,7 @@ const handleEnterRecognition = async () => {
     await startRecognitionLoop();
   } catch (error: any) {
     console.error("进入识别失败:", error);
-    recognitionNotice.value = error?.message || "进入识别失败";
+    recognitionNotice.value = error?.message || t("faceDemo.enterRecognitionFailed");
     ElMessage.error(recognitionNotice.value);
   }
 };
@@ -1419,7 +1422,7 @@ const handleEnterRecognition = async () => {
 const handleStopRecognition = () => {
   stopActiveStream();
   recognitionDetections.value = [];
-  recognitionNotice.value = "请把面部放进识别区域，我来帮你识别。";
+  recognitionNotice.value = t("faceDemo.recognitionPlaceholder");
   showRecognitionCompleteDialog.value = true;
 };
 

@@ -34,9 +34,9 @@ export default defineNuxtConfig({
         { name: 'description', content: 'AI智学云-教育平台' }
       ],
       link: [
-        { rel: 'icon', type: 'image/png', href: '/key.png' },
-        { rel: 'shortcut icon', type: 'image/png', href: '/key.png' },
-        { rel: 'apple-touch-icon', href: '/key.png' }
+        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico' },
+        { rel: 'apple-touch-icon', href: '/favicon.ico' }
       ]
     }
   },

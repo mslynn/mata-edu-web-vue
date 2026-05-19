@@ -1,0 +1,190 @@
+<!DOCTYPE html><html lang="zh-CN" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-effect {
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#a5c1ff",
+                        "on-surface-variant": "#596063",
+                        "on-primary-fixed": "#002659",
+                        "on-tertiary-fixed-variant": "#006544",
+                        "on-tertiary": "#e6ffee",
+                        "surface-dim": "#d3dbdf",
+                        "on-surface": "#2d3337",
+                        "on-tertiary-container": "#005a3c",
+                        "inverse-on-surface": "#9a9d9f",
+                        "tertiary-dim": "#005f40",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#a02d70",
+                        "outline": "#757c7f",
+                        "on-error": "#fff7f6",
+                        "surface-container": "#eaeef1",
+                        "primary-dim": "#004fad",
+                        "tertiary-fixed": "#69f6b8",
+                        "surface-variant": "#dde3e7",
+                        "inverse-primary": "#4d8eff",
+                        "tertiary-fixed-dim": "#58e7ab",
+                        "secondary-fixed": "#ffd8e7",
+                        "tertiary": "#006d4a",
+                        "inverse-surface": "#0b0f10",
+                        "outline-variant": "#acb3b7",
+                        "on-secondary-fixed": "#7b0852",
+                        "on-secondary-container": "#942265",
+                        "error-container": "#f56965",
+                        "tertiary-container": "#69f6b8",
+                        "surface-container-highest": "#dde3e7",
+                        "error-dim": "#70030f",
+                        "secondary-dim": "#952467",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#8fb3ff",
+                        "surface-container-low": "#f1f4f6",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#005bc4",
+                        "on-tertiary-fixed": "#00452d",
+                        "surface-tint": "#005bc4",
+                        "secondary-container": "#ffd8e7",
+                        "on-secondary": "#fff7f8",
+                        "on-background": "#2d3337",
+                        "on-primary-fixed-variant": "#004292",
+                        "primary-fixed": "#a5c1ff",
+                        "on-error-container": "#65000b",
+                        "on-primary-container": "#003a81"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    }
+                }
+            }
+        }
+    </script>
+<style data-stitch-cursor=""></style><style data-stitch-scroll-lock=""></style></head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex flex-col">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
+<div class="flex justify-between items-center h-20 px-12 max-w-[1920px] mx-auto">
+<div class="text-2xl font-display font-bold text-primary tracking-tight">TuringLab</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body text-label-medium" href="#">项目介绍</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1 font-body text-label-medium" href="#">图灵测试</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body text-label-medium" href="#">能力评估</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-body text-label-medium" href="#">学术社区</a>
+</nav>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-2 rounded-full transition-all duration-300">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:bg-surface-container-high p-2 rounded-full transition-all duration-300">help_outline</span>
+<button class="flex-1 px-8 py-4 rounded-full bg-primary text-on-primary font-bold shadow-lg hover:shadow-xl transition-all duration-300 active:scale-95">开始测试</button>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas (Background behind modal) -->
+<main class="flex-grow pt-24 pb-12 px-8 flex flex-col items-center justify-center">
+<div class="max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+<!-- Mock Background Content to give depth -->
+<div class="bg-surface-container-lowest p-8 rounded-lg shadow-sm border border-outline-variant/15 opacity-40">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div>
+<div class="text-sm font-bold text-on-surface">AI Participant #042</div>
+<div class="text-xs text-on-surface-variant">测试进行中...</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="bg-surface-container-low p-4 rounded-lg rounded-tl-none max-w-[80%]">
+<p class="text-sm text-on-surface-variant">你好。关于你刚才提到的意识本质问题，我认为数学模型并不能完全模拟人类的直觉感官。</p>
+</div>
+<div class="bg-primary/5 p-4 rounded-lg rounded-tr-none max-w-[80%] ml-auto text-right">
+<p class="text-sm text-primary">但这是否意味着直觉本身就是一种尚未被公式化的复杂算法？</p>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-8 rounded-lg shadow-sm border border-outline-variant/15 opacity-40">
+<h3 class="text-xl font-bold mb-4">测试实时指标</h3>
+<div class="space-y-6">
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="">逻辑一致性</span>
+<span class="">92%</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full">
+<div class="bg-primary w-[92%] h-full rounded-full"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs mb-2">
+<span class="">情感共鸣度</span>
+<span class="">45%</span>
+</div>
+<div class="w-full bg-surface-container h-2 rounded-full">
+<div class="bg-secondary w-[45%] h-full rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Success Modal Overlay -->
+<div class="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-surface/80 glass-effect">
+<!-- Floating Success Card -->
+<div class="bg-surface-container-lowest w-full max-w-lg rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.08)] border border-outline-variant/10 overflow-hidden relative">
+<!-- Decorative Accent -->
+<div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-[#00A676] to-[#00F5A0]"></div>
+<div class="p-10 flex flex-col items-center text-center">
+<!-- Celebratory Icon (Gold Medal Theme) -->
+<div class="w-32 h-32 mb-8 relative flex items-center justify-center">
+    <div class="absolute inset-0 bg-[#00A676]/10 rounded-full scale-100"></div>
+    <div class="absolute inset-0 bg-[#00A676]/20 rounded-full scale-75"></div>
+    <div class="w-16 h-16 bg-[#00A676] rounded-full flex items-center justify-center text-white shadow-lg z-10">
+        <span class="material-symbols-outlined text-3xl" style="font-variation-settings: &quot;FILL&quot; 1, &quot;wght&quot; 600;">verified</span>
+    </div>
+</div>
+<!-- Text Content -->
+<h2 class="text-[2rem] font-display font-bold text-on-surface tracking-tight mb-4">
+                    恭喜你！成功通过测试。
+                </h2>
+<p class="text-on-surface-variant/80 font-body text-base leading-relaxed max-w-sm mb-2">
+                    在本次测试中，你敏锐地察觉到了机器对话中的逻辑断层。
+                </p>
+<!-- Action Buttons -->
+
+</div>
+<!-- Footer Meta (Subtle Tonal Shift) -->
+<div class="bg-surface-container-low/30 py-6 px-10 flex justify-between items-center text-sm text-on-surface-variant/60 border-t border-outline-variant/5">
+    <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-lg">schedule</span>
+        <span class="">用时: 08:24</span>
+    </div>
+    <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-lg">insights</span>
+        <span class="">识别准确度: 100%</span>
+    </div>
+</div>
+</div>
+</div>
+
+
+</body></html>

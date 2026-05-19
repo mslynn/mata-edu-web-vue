@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_1" data-name="图层 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 950 750">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: none;
+        stroke: #ff884d;
+        stroke-linecap: round;
+        stroke-miterlimit: 10;
+        stroke-width: 20px;
+      }
+
+      .cls-2 {
+        font-family: MLingWaiMedium-SC-GBpc-EUC-H, 'LingWai SC';
+        font-size: 418.39px;
+      }
+
+      .cls-3 {
+        fill: #fff;
+      }
+
+      .cls-4 {
+        fill: #ffd70f;
+      }
+
+      .cls-5 {
+        fill: #ff884d;
+        font-family: Urbanist-SemiBold, Urbanist;
+        font-size: 110px;
+        font-weight: 600;
+      }
+
+      .cls-6 {
+        letter-spacing: -.18em;
+      }
+
+      .cls-7 {
+        letter-spacing: -.03em;
+      }
+    </style>
+  </defs>
+  <rect class="cls-4" width="950" height="750"/>
+  <rect class="cls-3" x="225.04" y="133.15" width="499.92" height="542.84" rx="9.72" ry="9.72" transform="translate(879.57 -70.43) rotate(90)"/>
+  <text class="cls-2" transform="translate(293.95 571.84)"><tspan class="cls-6" x="0" y="0">3</tspan><tspan class="cls-7" x="154.26" y="0">7</tspan></text>
+  <text class="cls-5" transform="translate(429.82 175.21)"><tspan x="0" y="0">37</tspan></text>
+  <g>
+    <path class="cls-1" d="M306.72,217.17h-11.12c-3.87,0-7.01,3.14-7.01,7.01v11.12"/>
+    <path class="cls-1" d="M643.28,590h11.12c3.87,0,7.01-3.14,7.01-7.01v-11.12"/>
+    <path class="cls-1" d="M661.41,235.3v-11.12c0-3.87-3.14-7.01-7.01-7.01h-11.12"/>
+    <path class="cls-1" d="M288.59,571.86v11.12c0,3.87,3.14,7.01,7.01,7.01h11.12"/>
+  </g>
+</svg>

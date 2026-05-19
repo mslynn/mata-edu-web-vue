@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import AiImageHistoryPage from "../ai/aihistory.vue";
+import AiImageHistoryPage from "~/components/ai/AiImageHistoryPage.vue";
 
 definePageMeta({
   layout: "sidebar",

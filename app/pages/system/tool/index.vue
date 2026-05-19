@@ -4,11 +4,11 @@
       <section class="tool-hero-banner">
         <div class="tool-hero-banner__copy">
           <h1 class="tool-hero-banner__title">
-            <span>激发无限创意</span>
-            <span>数字工具赋能智慧教学</span>
+            <span>{{ t("tool.heroTitleLine1") }}</span>
+            <span>{{ t("tool.heroTitleLine2") }}</span>
           </h1>
           <p class="tool-hero-banner__desc">
-            配套智能教具，软硬件结合，探索未来教育的无限可能。为每一个创意提供触手可及的实现路径。
+            {{ t("tool.heroDesc") }}
           </p>
         </div>
 
@@ -80,7 +80,13 @@
 
               <div class="tool-card__body">
                 <h2 class="tool-card__title tool-card__title--featured">
-                  {{ getToolDisplayName(tool.id) }}
+                  {{ getToolTitleParts(tool.id).main }}
+                  <span
+                    v-if="getToolTitleParts(tool.id).subtitle"
+                    class="tool-card__title-subtitle"
+                  >
+                    {{ getToolTitleParts(tool.id).subtitle }}
+                  </span>
                 </h2>
                 <p class="tool-card__desc tool-card__desc--featured">
                   {{ t(tool.descKey) }}
@@ -160,8 +166,8 @@
               <div
                 class="tool-card__compact-icon-inner"
                 :style="{
-                  background: getToolVisualMeta(tool.id).compactBg,
-                  boxShadow: `0 10px 24px ${getToolVisualMeta(tool.id).compactShadow}`,
+                  background: 'transparent',
+                  boxShadow: 'none',
                 }"
               >
                 <img
@@ -173,7 +179,13 @@
             </div>
 
             <h3 class="tool-card__title tool-card__title--compact">
-              {{ getToolDisplayName(tool.id) }}
+              {{ getToolTitleParts(tool.id).main }}
+              <span
+                v-if="getToolTitleParts(tool.id).subtitle"
+                class="tool-card__title-subtitle"
+              >
+                {{ getToolTitleParts(tool.id).subtitle }}
+              </span>
             </h3>
             <p class="tool-card__desc tool-card__desc--compact">{{ t(tool.descKey) }}</p>
 
@@ -308,11 +320,12 @@ import { aiAdmin } from "~/composables/api/ai";
 import { personalcenterApi } from "~/composables/api/personalcenter";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 
-import tool1Icon from "~/assets/images/tool1.png";
-import tool2Icon from "~/assets/images/tool2.png";
-import tool4Icon from "~/assets/images/too4.png";
-import tool3Icon from "~/assets/images/tool3.png";
-import tool5Icon from "~/assets/images/tool5.png";
+import tool1Icon from "~/assets/images/tool1.svg";
+import tool2Icon from "~/assets/images/tool2.svg";
+import tool4Icon from "~/assets/images/too4.svg";
+import tool3Icon from "~/assets/images/tool3.svg";
+import tool5Icon from "~/assets/images/tool5.svg";
+import toolHeroBannerImage from "~/assets/images/xiaoxinxin.svg";
 
 definePageMeta({
   layout: "sidebar",
@@ -394,8 +407,7 @@ interface ToolVisualMeta {
   compactShadow: string;
 }
 
-const toolHeroImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuDk1c_6ZDuQwwgDFOjqPfih4MXVYL3VustVas6xDTBKdfNS0Zbpbmku_25sTY7ETEhkbVdhQRCVBmrjBS3Nqy_2pjyVZ0j-H958SyarZkcdEPk-MTnzqFYg6hs-mF9WXGAihiob6gGjUydnYo4fkhRZJrx2WsjrwLxKOUjFVwBLNSQsdwXPuAd84V6WfZtYypbXnT5Scp0SbTHfj_fwRjcpAQFx8C_E1h_oyqSVeGcUCwRXGOVtp_ZITTbQYw2R9a4OdJ9snShr";
+const toolHeroImage = toolHeroBannerImage;
 
 const toolList: Tool[] = [
   {
@@ -514,6 +526,22 @@ const compactTools = computed(() => toolList.slice(2));
 const getToolVisualMeta = (toolId: string) => TOOL_VISUAL_META[toolId];
 const getToolDisplayName = (toolId: string) =>
   TOOL_VISUAL_META[toolId]?.displayName || toolId;
+const getToolTitleParts = (toolId: string) => {
+  const displayName = getToolDisplayName(toolId).replace(/<br\s*\/?>/gi, " ").trim();
+  const match = displayName.match(/^(.*?)(\s*\([^()]+\))$/);
+
+  if (!match) {
+    return {
+      main: displayName,
+      subtitle: "",
+    };
+  }
+
+  return {
+    main: match[1].trim(),
+    subtitle: match[2].trim(),
+  };
+};
 
 const TOOL_ICON_SVGS = {
   action: {
@@ -1209,20 +1237,23 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 
 .tool-hero-banner__visual {
   position: absolute;
-  right: 0;
+  right: 20px;
   bottom: 0;
-  width: min(60%, 760px);
+  width: min(52%, 680px);
   height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
   pointer-events: none;
 }
 
 .tool-hero-banner__image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: center;
-  mix-blend-mode: screen;
-  opacity: 0.92;
+  object-fit: contain;
+  object-position: right center;
+  mix-blend-mode: normal;
+  opacity: 1;
 }
 
 .tool-grid {
@@ -1274,8 +1305,15 @@ const handleDownloadGooglePlay = (tool: Tool) => {
   flex-shrink: 0;
   width: 160px;
   height: 160px;
-  border-radius: 24px;
-  background: #f2f4f5;
+  border-radius: 0;
+  background: transparent;
+}
+
+.tool-brand-box > img {
+  display: block;
+  width: calc(100% - 20px);
+  height: calc(100% - 20px);
+  object-fit: contain;
 }
 
 .tool-brand-box__inner {
@@ -1307,6 +1345,14 @@ const handleDownloadGooglePlay = (tool: Tool) => {
   color: #2e3335;
   font-family: "Plus Jakarta Sans", "PingFang SC", sans-serif;
   font-weight: 800;
+}
+
+.tool-card__title-subtitle {
+  display: inline;
+}
+
+.tool-card__title--featured .tool-card__title-subtitle {
+  display: block;
 }
 
 .tool-card__title--featured {
@@ -1488,7 +1534,7 @@ const handleDownloadGooglePlay = (tool: Tool) => {
 .tool-card--compact-xplore .tool-card__compact-actions--grid .tool-btn--compact {
   min-height: 80px;
   padding: 10px 8px;
-  font-size: 11px;
+  font-size: 14px;
 }
 
 .tool-card__compact-actions--grid .tool-btn__icon {

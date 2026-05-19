@@ -634,7 +634,7 @@ interface MaterialToolConfig {
   cover: string;
 }
 
-type AiTrainingCategoryKey = "image" | "voice" | "pose" | "gesture";
+type AiTrainingCategoryKey = string;
 
 const props = defineProps<{
   visible: boolean;
@@ -752,12 +752,146 @@ const resourceTabs = [
   { label: "关联素材模型", value: "material" },
 ];
 
-const aiTrainingCategories: CategoryOption[] = [
-  { label: "图像识别", value: "image" },
-  { label: "语音识别", value: "voice" },
-  { label: "姿态识别", value: "pose" },
-  { label: "手势识别", value: "gesture" },
+const AI_PRACTICE_COVER_MAP: Record<string, string> = {
+  aiPainting: "/images/ai-practice/practice-01-eb90e462.svg",
+  aiStory: "/images/ai-practice/practice-02-2aa5c253.svg",
+  aiSong: "/images/ai-practice/practice-03-10ed00a3.svg",
+  aiVideo: "/images/ai-practice/practice-04-71172075.svg",
+  faceRecognition: "/images/ai-practice/practice-06-b311ccf2.svg",
+  imageRecognition: "/images/ai-practice/practice-07-0698f4e2.svg",
+  handwrittenDigit: "/images/ai-practice/practice-08-31ce93c4.svg",
+  doodleRecognition: "/images/ai-practice/practice-09-ed29662c.svg",
+  speechSynthesis: "/images/ai-practice/practice-11-1da4999c.svg",
+  smartQA: "/images/ai-practice/wenda.svg",
+  speechTranscription: "/images/ai-practice/practice-13-8cc3f4df.svg",
+  voiceprintRecognition: "/images/ai-practice/practice-14-6d6e5f8d.svg",
+  poseRecognition: "/images/ai-practice/practice-17-a5b3aeef.svg",
+  gestureRecognition: "/images/ai-practice/practice-18-941e689d.svg",
+  emotionRecognition: "/images/ai-practice/practice-19-ad61f826.svg",
+  mlProcess: "/images/ai-practice/practice-20-9b486d3f.svg",
+  decisionTree: "/images/ai-practice/practice-21-de26116a.svg",
+  bigData: "/images/ai-practice/practice-22-2fa0b7b3.svg",
+  turingTest: "/images/ai-practice/practice-22-2fa0b7b3.svg",
+};
+
+const aiTrainingCategoryConfigs: Array<{
+  label: string;
+  value: AiTrainingCategoryKey;
+  name: string;
+  description: string;
+  cover: string;
+}> = [
+  {
+    label: "图像识别",
+    value: "image",
+    name: "图像分类训练",
+    description: "使用摄像头或上传图片进行图像的分类训练与模型应用。",
+    cover: aiTrainingImageCover,
+  },
+  {
+    label: "语音识别",
+    value: "voice",
+    name: "语音分类模型",
+    description: "使用麦克风进行声音的分类训练与模型应用。",
+    cover: aiTrainingVoiceCover,
+  },
+  {
+    label: "姿态识别",
+    value: "pose",
+    name: "姿态分类模型",
+    description: "使用摄像头或上传图片进行人体姿态训练与模型应用。",
+    cover: aiTrainingPoseCover,
+  },
+  {
+    label: "手势识别",
+    value: "gesture",
+    name: "手势分类模型",
+    description: "使用摄像头或上传图片进行手势训练与模型应用。",
+    cover: aiTrainingGestureCover,
+  },
+  {
+    label: "AI画图",
+    value: "ai_draw",
+    name: "AI画图",
+    description: "基于文本提示快速生成创意图像与视觉内容。",
+    cover: AI_PRACTICE_COVER_MAP.aiPainting,
+  },
+  {
+    label: "AI问答",
+    value: "ai_qa",
+    name: "AI问答",
+    description: "围绕问题内容进行智能理解、问答与知识交互。",
+    cover: AI_PRACTICE_COVER_MAP.smartQA,
+  },
+  {
+    label: "AI讲故事",
+    value: "ai_story",
+    name: "AI讲故事",
+    description: "根据主题生成故事内容，体验 AI 文本创作能力。",
+    cover: AI_PRACTICE_COVER_MAP.aiStory,
+  },
+  {
+    label: "AI歌曲创作",
+    value: "ai_song",
+    name: "AI歌曲创作",
+    description: "结合主题与风格生成歌曲内容与创作体验。",
+    cover: AI_PRACTICE_COVER_MAP.aiSong,
+  },
+  {
+    label: "人脸识别",
+    value: "face_rec",
+    name: "人脸识别",
+    description: "基于图像或摄像头进行人脸识别与特征分析。",
+    cover: AI_PRACTICE_COVER_MAP.faceRecognition,
+  },
+  {
+    label: "手写数字识别",
+    value: "handwritten_digit_rec",
+    name: "手写数字识别",
+    description: "识别单个手写数字，体验经典 MNIST 模型能力。",
+    cover: AI_PRACTICE_COVER_MAP.handwrittenDigit,
+  },
+  {
+    label: "涂鸦识别",
+    value: "doodle_rec",
+    name: "涂鸦识别",
+    description: "识别简笔涂鸦内容，体验轻量视觉分类能力。",
+    cover: AI_PRACTICE_COVER_MAP.doodleRecognition,
+  },
+  {
+    label: "语音合成",
+    value: "speech_synthesis",
+    name: "语音合成",
+    description: "将文本转换为语音，体验 AI 语音合成能力。",
+    cover: AI_PRACTICE_COVER_MAP.speechSynthesis,
+  },
+  {
+    label: "智能问答",
+    value: "intelligent_qa",
+    name: "智能问答",
+    description: "结合知识理解与对话生成，完成智能问答体验。",
+    cover: AI_PRACTICE_COVER_MAP.smartQA,
+  },
+  {
+    label: "情绪识别与反馈",
+    value: "emotion_rec_feedback",
+    name: "情绪识别与反馈",
+    description: "识别情绪状态并给出反馈，体验多模态理解能力。",
+    cover: AI_PRACTICE_COVER_MAP.emotionRecognition,
+  },
+  {
+    label: "图灵测试",
+    value: "turing_test",
+    name: "图灵测试",
+    description: "通过图灵测试活动理解人工智能与人类智能的差异。",
+    cover: AI_PRACTICE_COVER_MAP.turingTest,
+  },
 ];
+
+const aiTrainingCategories: CategoryOption[] = aiTrainingCategoryConfigs.map(({ label, value }) => ({
+  label,
+  value,
+}));
 
 const materialCategories: CategoryOption[] = [
   { label: "图像", value: "image" },
@@ -780,35 +914,22 @@ const AI_TRAINING_CARD_META: Record<
     description: string;
     cover: string;
   }
-> = {
-  image: {
-    name: "图像分类训练",
-    description: "使用摄像头或上传图片进行图像的分类训练与模型应用。",
-    cover: aiTrainingImageCover,
-  },
-  voice: {
-    name: "语音分类模型",
-    description: "使用麦克风进行声音的分类训练与模型应用。",
-    cover: aiTrainingVoiceCover,
-  },
-  pose: {
-    name: "姿态分类模型",
-    description: "使用摄像头或上传图片进行人体姿态训练与模型应用。",
-    cover: aiTrainingPoseCover,
-  },
-  gesture: {
-    name: "手势分类模型",
-    description: "使用摄像头或上传图片进行手势训练与模型应用。",
-    cover: aiTrainingGestureCover,
-  },
-};
+> = Object.fromEntries(
+  aiTrainingCategoryConfigs.map(({ value, name, description, cover }) => [
+    value,
+    { name, description, cover },
+  ])
+) as Record<
+  AiTrainingCategoryKey,
+  {
+    name: string;
+    description: string;
+    cover: string;
+  }
+>;
 
 const getAiTrainingMetaByCategory = (category: string) => {
-  if (category === "image") return AI_TRAINING_CARD_META.image;
-  if (category === "voice") return AI_TRAINING_CARD_META.voice;
-  if (category === "pose") return AI_TRAINING_CARD_META.pose;
-  if (category === "gesture") return AI_TRAINING_CARD_META.gesture;
-  return null;
+  return AI_TRAINING_CARD_META[category] || null;
 };
 
 const displayedCategories = computed(() => {
@@ -817,20 +938,74 @@ const displayedCategories = computed(() => {
     : aiTrainingCategories;
 });
 
+const normalizedChapterId = computed(() => {
+  const value = String(props.chapterId || "").trim();
+  if (!value || value === "undefined" || value === "null") {
+    return "";
+  }
+  return value;
+});
+
 const CURSOR_OPT_TYPE_MAP: Record<string, string> = {
   image: "image_cls",
   voice: "audio_cls",
-  audio: "audio_cls",
   pose: "pose_cls",
   gesture: "gesture_cls",
+  ai_draw: "ai_draw",
+  ai_qa: "ai_qa",
+  ai_story: "ai_story",
+  ai_song: "ai_song",
+  ai_video: "ai_video",
+  face_rec: "face_rec",
+  image_rec: "image_rec",
+  handwritten_digit_rec: "handwritten_digit_rec",
+  doodle_rec: "doodle_rec",
+  speech_synthesis: "speech_synthesis",
+  intelligent_qa: "intelligent_qa",
+  speech_transcription: "speech_transcription",
+  voiceprint_rec: "voiceprint_rec",
+  pose_rec: "pose_rec",
+  gesture_rec: "gesture_rec",
+  emotion_rec_feedback: "emotion_rec_feedback",
+  machine_learning_flow: "machine_learning_flow",
+  decision_tree: "decision_tree",
+  big_data: "big_data",
+  turing_test: "turing_test",
+  audio: "audio_cls",
 };
 
 const getAiTrainingOptTypeByCategory = (category: string) => {
   return CURSOR_OPT_TYPE_MAP[category] || "";
 };
 
+const LEGACY_AI_TRAINING_CATEGORY_BY_OPT_TYPE: Record<string, AiTrainingCategoryKey> = {
+  image_cls: "image",
+  audio_cls: "voice",
+  pose_cls: "pose",
+  gesture_cls: "gesture",
+};
+
 const AI_TOOL_KEY_BY_OPT_TYPE: Record<string, string> = {
-  image_cls: "imageClassModel",
+  ai_draw: "aiPainting",
+  ai_qa: "smartQA",
+  ai_story: "aiStory",
+  ai_song: "aiSong",
+  ai_video: "aiVideo",
+  face_rec: "faceRecognition",
+  image_rec: "imageRecognition",
+  handwritten_digit_rec: "handwrittenDigit",
+  doodle_rec: "doodleRecognition",
+  speech_synthesis: "speechSynthesis",
+  intelligent_qa: "smartQA",
+  speech_transcription: "speechTranscription",
+  voiceprint_rec: "voiceprintRecognition",
+  pose_rec: "poseRecognition",
+  gesture_rec: "gestureRecognition",
+  emotion_rec_feedback: "emotionRecognition",
+  machine_learning_flow: "mlProcess",
+  decision_tree: "decisionTree",
+  big_data: "bigData",
+  turing_test: "turingTest",
   audio_cls: "voiceClassModel",
   pose_cls: "poseClassModel",
   gesture_cls: "gestureClassModel",
@@ -867,48 +1042,16 @@ const MATERIAL_TOOL_CONFIG_MAP: Record<string, MaterialToolConfig> = {
   },
 };
 
-const aiTrainingStaticResources: Resource[] = [
-  {
-    id: "ai-training-image",
-    name: AI_TRAINING_CARD_META.image.name,
-    description: AI_TRAINING_CARD_META.image.description,
-    cover: AI_TRAINING_CARD_META.image.cover,
-    category: "image",
-    type: "aiTraining",
-    isNew: true,
-    linked: false,
-  },
-  {
-    id: "ai-training-voice",
-    name: AI_TRAINING_CARD_META.voice.name,
-    description: AI_TRAINING_CARD_META.voice.description,
-    cover: AI_TRAINING_CARD_META.voice.cover,
-    category: "voice",
-    type: "aiTraining",
-    isNew: true,
-    linked: false,
-  },
-  {
-    id: "ai-training-pose",
-    name: AI_TRAINING_CARD_META.pose.name,
-    description: AI_TRAINING_CARD_META.pose.description,
-    cover: AI_TRAINING_CARD_META.pose.cover,
-    category: "pose",
-    type: "aiTraining",
-    isNew: true,
-    linked: false,
-  },
-  {
-    id: "ai-training-gesture",
-    name: AI_TRAINING_CARD_META.gesture.name,
-    description: AI_TRAINING_CARD_META.gesture.description,
-    cover: AI_TRAINING_CARD_META.gesture.cover,
-    category: "gesture",
-    type: "aiTraining",
-    isNew: true,
-    linked: false,
-  },
-];
+const aiTrainingStaticResources: Resource[] = aiTrainingCategoryConfigs.map((item) => ({
+  id: `ai-training-${item.value}`,
+  name: item.name,
+  description: item.description,
+  cover: item.cover,
+  category: item.value,
+  type: "aiTraining",
+  isNew: true,
+  linked: false,
+}));
 
 const aiTrainingResources = computed(() => {
   return aiTrainingStaticResources.map((resource) => ({
@@ -932,7 +1075,6 @@ const normalizeCategoryForTab = (tab: string, category: string) => {
   }
 
   if (tab === "aiTraining") {
-    if (category === "audio") return "voice";
     return aiTrainingCategories.some((item) => item.value === category)
       ? category
       : "image";
@@ -993,10 +1135,10 @@ const getAiTrainingCover = (category: string, item?: any) => {
   const optType = String(item?.optType || "")
     .trim()
     .toLowerCase();
-  if (optType === "audio_cls") return AI_TRAINING_CARD_META.voice.cover;
-  if (optType === "pose_cls") return AI_TRAINING_CARD_META.pose.cover;
-  if (optType === "gesture_cls") return AI_TRAINING_CARD_META.gesture.cover;
-  if (optType === "image_cls") return AI_TRAINING_CARD_META.image.cover;
+  const legacyCategory = LEGACY_AI_TRAINING_CATEGORY_BY_OPT_TYPE[optType];
+  if (legacyCategory) {
+    return AI_TRAINING_CARD_META[legacyCategory]?.cover || "";
+  }
   return getAiTrainingMetaByCategory(category)?.cover || "";
 };
 
@@ -1004,10 +1146,10 @@ const getAiTrainingDescription = (category: string, item?: any) => {
   const optType = String(item?.optType || "")
     .trim()
     .toLowerCase();
-  if (optType === "audio_cls") return AI_TRAINING_CARD_META.voice.description;
-  if (optType === "pose_cls") return AI_TRAINING_CARD_META.pose.description;
-  if (optType === "gesture_cls") return AI_TRAINING_CARD_META.gesture.description;
-  if (optType === "image_cls") return AI_TRAINING_CARD_META.image.description;
+  const legacyCategory = LEGACY_AI_TRAINING_CATEGORY_BY_OPT_TYPE[optType];
+  if (legacyCategory) {
+    return AI_TRAINING_CARD_META[legacyCategory]?.description || "";
+  }
   return getAiTrainingMetaByCategory(category)?.description || "";
 };
 
@@ -1015,22 +1157,22 @@ const getAiTrainingDefaultName = (category: string, item?: any) => {
   const optType = String(item?.optType || "")
     .trim()
     .toLowerCase();
-  if (optType === "audio_cls") return AI_TRAINING_CARD_META.voice.name;
-  if (optType === "pose_cls") return AI_TRAINING_CARD_META.pose.name;
-  if (optType === "gesture_cls") return AI_TRAINING_CARD_META.gesture.name;
-  if (optType === "image_cls") return AI_TRAINING_CARD_META.image.name;
+  const legacyCategory = LEGACY_AI_TRAINING_CATEGORY_BY_OPT_TYPE[optType];
+  if (legacyCategory) {
+    return AI_TRAINING_CARD_META[legacyCategory]?.name || "-";
+  }
   return getAiTrainingMetaByCategory(category)?.name || "-";
 };
 
 const loadAiTrainingLinkedState = async () => {
-  if (!props.chapterId) {
+  if (!normalizedChapterId.value) {
     aiTrainingLinkedOptTypes.value = [];
     return;
   }
 
   aiTrainingLoading.value = true;
   try {
-    const result = await getCursorOptListNoModel(String(props.chapterId));
+    const result = await getCursorOptListNoModel(normalizedChapterId.value);
     const rows = Array.isArray(result?.rows) ? result.rows : [];
     aiTrainingLinkedOptTypes.value = rows
       .map((item: any) =>
@@ -1123,7 +1265,7 @@ const loadAiTrainingResources = async () => {
     return;
   }
 
-  if (!props.chapterId) {
+  if (!normalizedChapterId.value) {
     cursorResources.value = [];
     return;
   }
@@ -1131,7 +1273,7 @@ const loadAiTrainingResources = async () => {
   aiTrainingLoading.value = true;
   try {
     const result = await getCursorOptList({
-      chapterId: String(props.chapterId),
+      chapterId: normalizedChapterId.value,
       optType,
     });
     const rows = Array.isArray(result?.rows) ? result.rows : [];
@@ -1540,7 +1682,7 @@ const loadWorksList = async (preferredSelectionId = "") => {
   worksLoading.value = true;
   try {
     const result = await getChapterResourceOpusListPage({
-      chapterId: String(props.chapterId || ""),
+      chapterId: normalizedChapterId.value,
       opusType: getWorksOpusTypeParam(),
       pageSize: worksPageSize.value,
       pageNum: worksPageNum.value,
@@ -1607,7 +1749,7 @@ const getWorkClassworkLabel = (work: any) => {
 };
 
 const handleLinkWork = async (work: any) => {
-  if (!props.chapterId) {
+  if (!normalizedChapterId.value) {
     ElMessage.warning("缺少章节ID");
     return;
   }
@@ -1620,7 +1762,7 @@ const handleLinkWork = async (work: any) => {
   try {
     await toggleChapterResource({
       opusId,
-      chapterId: String(props.chapterId),
+      chapterId: normalizedChapterId.value,
       type: 1,
     });
     ElMessage.success("关联成功");
@@ -1641,7 +1783,7 @@ const handleUnlinkWork = async (work: any) => {
   try {
     await toggleChapterResource({
       opusId,
-      chapterId: String(props.chapterId || ""),
+      chapterId: normalizedChapterId.value,
       type: 2,
     });
     ElMessage.success("取消关联成功");
@@ -1802,7 +1944,7 @@ const loadExerciseList = async () => {
   exerciseLoading.value = true;
   try {
     const result = await getExerciseListPage({
-      chapterId: String(props.chapterId || ""),
+      chapterId: normalizedChapterId.value,
       pageSize: exercisePageSize.value,
       pageNum: exercisePageNum.value,
     });
@@ -1854,7 +1996,7 @@ const changeExercisePage = async (page: number) => {
 };
 
 const handleLinkExercise = async (row: any) => {
-  if (!props.chapterId) {
+  if (!normalizedChapterId.value) {
     ElMessage.warning("缺少章节ID");
     return;
   }
@@ -1862,7 +2004,7 @@ const handleLinkExercise = async (row: any) => {
     await api.bindExerciseChapter({
       exerciseId: row.id,
       type: 1,
-      chapterIds: [String(props.chapterId)],
+      chapterIds: [normalizedChapterId.value],
     });
     if (!linkedExerciseIdsState.value.includes(String(row.id))) {
       linkedExerciseIdsState.value.push(String(row.id));
@@ -1877,7 +2019,7 @@ const handleLinkExercise = async (row: any) => {
 };
 
 const handleUnlinkExercise = async (row: any) => {
-  if (!props.chapterId) {
+  if (!normalizedChapterId.value) {
     ElMessage.warning("缺少章节ID");
     return;
   }
@@ -1885,7 +2027,7 @@ const handleUnlinkExercise = async (row: any) => {
     await api.bindExerciseChapter({
       exerciseId: row.id,
       type: 2,
-      chapterIds: [String(props.chapterId)],
+      chapterIds: [normalizedChapterId.value],
     });
     linkedExerciseIdsState.value = linkedExerciseIdsState.value.filter(
       (id) => id !== String(row.id)
@@ -2324,7 +2466,7 @@ const toggleSelect = async (item: Resource) => {
     return;
   }
 
-  if (!props.chapterId) {
+  if (!normalizedChapterId.value) {
     ElMessage.warning("缺少章节ID");
     return;
   }
@@ -2345,7 +2487,7 @@ const toggleSelect = async (item: Resource) => {
     try {
       await toggleChapterOptNoModel({
         optType,
-        chapterId: String(props.chapterId),
+        chapterId: normalizedChapterId.value,
         type: nextLinked ? 1 : 2,
       });
 
@@ -2389,7 +2531,7 @@ const toggleSelect = async (item: Resource) => {
   try {
     await toggleChapterOpt({
       optId,
-      chapterId: String(props.chapterId),
+      chapterId: normalizedChapterId.value,
       type: nextLinked ? 1 : 2,
     });
 
@@ -2797,7 +2939,7 @@ onBeforeUnmount(() => {
 
 .category-filter {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 20px;
   flex-shrink: 0;
 }
@@ -2806,12 +2948,18 @@ onBeforeUnmount(() => {
   font-size: 14px;
   color: #666;
   margin-right: 12px;
+  line-height: 32px;
+  flex-shrink: 0;
 }
 
 .category-tabs {
   display: flex;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
 }
 
 .category-tab {
@@ -2823,6 +2971,8 @@ onBeforeUnmount(() => {
   background: white;
   border: 1px solid transparent;
   color: #666;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .category-tab:hover {

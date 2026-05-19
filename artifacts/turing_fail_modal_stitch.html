@@ -1,0 +1,245 @@
+<!DOCTYPE html><html lang="zh-CN" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>TuringLab - 测试反馈</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#a5c1ff",
+                        "on-surface-variant": "#596063",
+                        "on-primary-fixed": "#002659",
+                        "on-tertiary-fixed-variant": "#006544",
+                        "on-tertiary": "#e6ffee",
+                        "surface-dim": "#d3dbdf",
+                        "on-surface": "#2d3337",
+                        "on-tertiary-container": "#005a3c",
+                        "inverse-on-surface": "#9a9d9f",
+                        "tertiary-dim": "#005f40",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#a02d70",
+                        "outline": "#757c7f",
+                        "on-error": "#fff7f6",
+                        "surface-container": "#eaeef1",
+                        "primary-dim": "#004fad",
+                        "tertiary-fixed": "#69f6b8",
+                        "surface-variant": "#dde3e7",
+                        "inverse-primary": "#4d8eff",
+                        "tertiary-fixed-dim": "#58e7ab",
+                        "secondary-fixed": "#ffd8e7",
+                        "tertiary": "#006d4a",
+                        "inverse-surface": "#0b0f10",
+                        "outline-variant": "#acb3b7",
+                        "on-secondary-fixed": "#7b0852",
+                        "on-secondary-container": "#942265",
+                        "error-container": "#f56965",
+                        "tertiary-container": "#69f6b8",
+                        "surface-container-highest": "#dde3e7",
+                        "error-dim": "#70030f",
+                        "secondary-dim": "#952467",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#8fb3ff",
+                        "surface-container-low": "#f1f4f6",
+                        "surface-container-high": "#e3e9ec",
+                        "error": "#ac3434",
+                        "on-primary": "#f9f8ff",
+                        "secondary": "#a53173",
+                        "secondary-fixed-dim": "#ffc4dd",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#005bc4",
+                        "on-tertiary-fixed": "#00452d",
+                        "surface-tint": "#005bc4",
+                        "secondary-container": "#ffd8e7",
+                        "on-secondary": "#fff7f8",
+                        "on-background": "#2d3337",
+                        "on-primary-fixed-variant": "#004292",
+                        "primary-fixed": "#a5c1ff",
+                        "on-error-container": "#65000b",
+                        "on-primary-container": "#003a81"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .lucid-glass {
+            background: rgba(247, 249, 251, 0.8);
+            backdrop-filter: blur(24px);
+        }
+    </style>
+<style data-stitch-cursor=""></style><style data-stitch-scroll-lock=""></style></head>
+<body class="bg-surface text-on-surface selection:bg-primary-container">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-surface/80 backdrop-blur-xl shadow-sm">
+<nav class="flex justify-between items-center h-20 px-12 max-w-[1920px] mx-auto">
+<div class="text-2xl font-display font-bold text-primary tracking-tight">TuringLab</div>
+<div class="hidden md:flex gap-8 items-center">
+<a class="font-body text-label-medium text-on-surface-variant hover:text-primary transition-colors" href="#">项目介绍</a>
+<a class="font-body text-label-medium text-primary font-bold border-b-2 border-primary pb-1" href="#">图灵测试</a>
+<a class="font-body text-label-medium text-on-surface-variant hover:text-primary transition-colors" href="#">能力评估</a>
+<a class="font-body text-label-medium text-on-surface-variant hover:text-primary transition-colors" href="#">学术社区</a>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 hover:bg-surface-container-high transition-all duration-300 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant">notifications</span>
+</button>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-full font-body text-label-medium active:scale-95 transition-transform shadow-sm">开始测试</button>
+</div>
+</nav>
+</header>
+<!-- SideNavBar (Suppressed on mobile, visible on web as background context) -->
+<aside class="hidden md:flex fixed left-0 top-0 h-full w-72 bg-surface-container py-8 flex-col gap-2 z-40">
+<div class="px-8 mb-8">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">visibility</span>
+</div>
+<div>
+<h2 class="text-xl font-headline font-semibold text-on-surface">智学云</h2>
+<p class="text-xs text-on-surface-variant">图灵测试项目部</p>
+</div>
+</div>
+</div>
+<nav class="flex-1">
+<div class="flex flex-col gap-1">
+<a class="flex items-center gap-4 py-3 px-8 text-on-surface-variant hover:bg-surface-container-high rounded-l-full ml-4 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">info</span>
+<span class="font-body text-label-large">核心概念</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 bg-surface-container-lowest text-primary rounded-l-full ml-4 shadow-sm transition-all duration-200" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">forum</span>
+<span class="font-body text-label-large">对话测试</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 text-on-surface-variant hover:bg-surface-container-high rounded-l-full ml-4 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="font-body text-label-large">特征分析</span>
+</a>
+<a class="flex items-center gap-4 py-3 px-8 text-on-surface-variant hover:bg-surface-container-high rounded-l-full ml-4 transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-body text-label-large">历史里程碑</span>
+</a>
+</div>
+</nav>
+<div class="mt-auto px-4">
+<a class="flex items-center gap-4 py-3 px-8 text-on-surface-variant hover:bg-surface-container-high rounded-l-full transition-transform hover:translate-x-1" href="#">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-body text-label-large">退出</span>
+</a>
+</div>
+</aside>
+<!-- Main Canvas (Blurred Background Content) -->
+<main class="md:ml-72 pt-20 min-h-screen px-8 pb-12 flex flex-col blur-[4px] pointer-events-none">
+<div class="max-w-5xl mx-auto w-full py-12">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="md:col-span-2 space-y-6">
+<div class="bg-surface-container-lowest p-8 rounded-lg shadow-sm border border-outline-variant/10">
+<div class="flex items-start gap-4 mb-8">
+<div class="w-12 h-12 rounded-full bg-surface-container flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined">smart_toy</span>
+</div>
+<div class="bg-surface-container-low p-4 rounded-2xl rounded-tl-none">
+<p class="text-on-surface">你好。你觉得人类在情感理解上是否真的优于目前的硅基生命？</p>
+</div>
+</div>
+<div class="flex items-start justify-end gap-4 mb-8">
+<div class="bg-primary text-on-primary p-4 rounded-2xl rounded-tr-none">
+<p class="">这取决于你如何定义“理解”。我认为人类的共情是基于生物性的化学反应。</p>
+</div>
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container shrink-0">
+<span class="material-symbols-outlined">person</span>
+</div>
+</div>
+</div>
+</div>
+<div class="space-y-6">
+<div class="bg-surface-container-lowest p-6 rounded-lg shadow-sm border border-outline-variant/10">
+<h3 class="font-headline font-semibold text-on-surface mb-4">测试实时参数</h3>
+<div class="space-y-4">
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/3"></div>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-1/2"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- POPUP MODAL OVERLAY -->
+<div class="fixed inset-0 z-[60] flex items-center justify-center p-6 bg-on-surface/20 backdrop-blur-xl">
+<div class="bg-surface-container-lowest w-full max-w-lg rounded-[2.5rem] shadow-[0_40px_80px_rgba(0,0,0,0.08)] border border-outline-variant/10 overflow-hidden relative">
+    <!-- Decorative Accent (Red for Failure) -->
+    <div class="absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-error/60 to-error"></div>
+    <div class="p-10 flex flex-col items-center text-center">
+        <!-- Status Icon Redesign -->
+        <div class="w-32 h-32 mb-8 relative flex items-center justify-center">
+            <div class="absolute inset-0 bg-secondary/10 rounded-full scale-100"></div>
+            <div class="absolute inset-0 bg-secondary/20 rounded-full scale-75"></div>
+            <div class="w-16 h-16 bg-secondary rounded-full flex items-center justify-center text-white shadow-lg z-10">
+                <span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1, 'wght' 600;">sentiment_dissatisfied</span>
+            </div>
+        </div>
+        <!-- Text Content -->
+        <h2 class="text-[2rem] font-display font-bold text-on-surface tracking-tight mb-4">
+            很遗憾，测试未通过
+        </h2>
+        <p class="text-on-surface-variant/80 font-body text-base leading-relaxed mb-10 max-w-sm">
+            该人工智能成功误导了你的判断。别灰心，AI 的进化速度超乎想象，下一次你一定能识破它。
+        </p>
+        <!-- Action Buttons -->
+        
+    </div>
+    <!-- Footer Meta (Standardized) -->
+    <div class="bg-surface-container-low/30 py-6 px-10 flex justify-between items-center text-sm text-on-surface-variant/60 border-t border-outline-variant/5">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">schedule</span>
+            <span class="">用时: 04:12</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-lg">insights</span>
+            <span class="">识别准确度: 0%</span>
+        </div>
+    </div>
+</div>
+</div>
+<!-- Footer (Reduced for focused modal view) -->
+<footer class="md:ml-72 w-full py-12 bg-surface-container-low mt-auto">
+<div class="flex flex-col items-center gap-6 max-w-[1920px] mx-auto text-center px-8">
+<div class="text-lg font-display font-medium text-on-surface-variant">智学云 TuringLab</div>
+<div class="flex gap-6 flex-wrap justify-center">
+<a class="text-on-surface-variant/70 hover:text-on-surface text-label-small font-body transition-opacity" href="#">隐私政策</a>
+<a class="text-on-surface-variant/70 hover:text-on-surface text-label-small font-body transition-opacity" href="#">用户协议</a>
+<a class="text-on-surface-variant/70 hover:text-on-surface text-label-small font-body transition-opacity" href="#">实验室规范</a>
+<a class="text-on-surface-variant/70 hover:text-on-surface text-label-small font-body transition-opacity" href="#">技术文档</a>
+</div>
+<p class="text-on-surface-variant/50 text-label-small font-body">© 2024 智学云 TuringLab. 致力于认知科学与AI教育协同演进.</p>
+</div>
+</footer>
+
+
+</body></html>

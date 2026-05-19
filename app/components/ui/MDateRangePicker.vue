@@ -10,7 +10,7 @@
             :value="inputValue[0]"
             type="text"
             class="m-date-range-input"
-            :placeholder="props.startPlaceholder"
+            :placeholder="props.startPlaceholder || t('study.homePage.startDatePlaceholder')"
             @focus="openPanel('start')"
             @input="handleInputChange(0, $event)"
             @keydown.enter.prevent="commitInputRange"
@@ -18,7 +18,7 @@
           />
         </span>
 
-        <span class="m-date-range-separator">至</span>
+        <span class="m-date-range-separator">{{ dateRangeSeparator }}</span>
 
         <span
           class="m-date-range-input-shell"
@@ -28,7 +28,7 @@
             :value="inputValue[1]"
             type="text"
             class="m-date-range-input"
-            :placeholder="props.endPlaceholder"
+            :placeholder="props.endPlaceholder || t('study.homePage.endDatePlaceholder')"
             @focus="openPanel('end')"
             @input="handleInputChange(1, $event)"
             @keydown.enter.prevent="commitInputRange"
@@ -61,7 +61,7 @@
       :class="{ 'is-single': isSinglePanel }"
       @click="handlePanelClick"
     >
-      <ElConfigProvider :locale="zhCn">
+      <ElConfigProvider :locale="elementLocale">
         <ElDatePickerPanel
           v-model="panelRange"
           class="m-date-range-element-panel"
@@ -106,7 +106,7 @@
                   class="m-date-range-semester"
                   @click="handleSemesterClick"
                 >
-                  {{ semesterActionText }}
+                  {{ semesterActionText || t("study.homePage.semesterSettings") }}
                 </button>
               </div>
             </slot>
@@ -119,9 +119,15 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { ElDatePickerPanel } from "element-plus";
 import dayjs from "dayjs";
 import zhCn from "element-plus/es/locale/lang/zh-cn";
+import en from "element-plus/es/locale/lang/en";
+
+const { t, locale } = useI18n();
+const elementLocale = computed(() => locale.value === "en" ? en : zhCn);
+const dateRangeSeparator = computed(() => t("study.homePage.dateRangeSeparator"));
 
 type DateRangeValue = [string, string];
 type ActiveField = "start" | "end";
@@ -148,10 +154,10 @@ const props = withDefaults(
   {
     presets: () => [],
     disabledDate: undefined,
-    semesterActionText: "学期设置",
+    semesterActionText: undefined,
     showSemesterAction: true,
-    startPlaceholder: "开始日期",
-    endPlaceholder: "结束日期",
+    startPlaceholder: undefined,
+    endPlaceholder: undefined,
   }
 );
 

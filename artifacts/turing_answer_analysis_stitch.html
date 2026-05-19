@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=1920, height=1080" name="viewport"/>
+<title>图灵测试工作台 - TuringLab</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { 
+            font-family: 'Plus Jakarta Sans', 'PingFang SC', sans-serif; 
+            width: 1920px; 
+            margin: 0 auto;
+            background-color: #f7f9fb;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .glass-effect {
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .answer-card:hover .selection-ring {
+            border-color: #005bc4;
+        }
+        input[type="radio"]:checked + label .selection-ring {
+            background-color: #005bc4;
+            border-color: #005bc4;
+        }
+        input[type="radio"]:checked + label .selection-ring::after {
+            content: '';
+            display: block;
+            width: 8px;
+            height: 8px;
+            background-color: white;
+            border-radius: 50%;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary": "#005bc4",
+                        "on-primary": "#f9f8ff",
+                        "primary-container": "#a5c1ff",
+                        "on-primary-container": "#003a81",
+                        "secondary": "#a53173",
+                        "secondary-container": "#ffd8e7",
+                        "on-secondary-container": "#942265",
+                        "tertiary": "#006d4a",
+                        "tertiary-container": "#69f6b8",
+                        "on-tertiary-container": "#005a3c",
+                        "surface": "#f7f9fb",
+                        "on-surface": "#2d3337",
+                        "surface-variant": "#dde3e7",
+                        "on-surface-variant": "#596063",
+                        "background": "#f7f9fb",
+                        "on-background": "#2d3337",
+                        "outline": "#757c7f",
+                        "outline-variant": "#acb3b7",
+                        "surface-container": "#eaeef1",
+                        "surface-container-low": "#f1f4f6",
+                        "surface-container-high": "#e3e9ec",
+                        "surface-container-highest": "#dde3e7",
+                        "surface-container-lowest": "#ffffff",
+                        "error": "#ac3434",
+                        "success-container": "#e6fff4",
+                        "error-container-light": "#fff1f0",
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                },
+            },
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface min-h-screen selection:bg-primary-container">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50 border-r border-slate-100">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg"/>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">home</span>
+<span class="font-medium text-sm">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">group</span>
+<span class="font-medium text-sm">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">menu_book</span>
+<span class="font-medium text-sm">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">construction</span>
+<span class="font-medium text-sm">玛塔工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">psychology</span>
+<span class="font-medium text-sm">AI实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">insights</span>
+<span class="font-medium text-sm">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">trending_up</span>
+<span class="font-medium text-sm">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">emoji_events</span>
+<span class="font-medium text-sm">赛事中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>smart_toy</span>
+<span class="text-sm">AI助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-slate-200">
+<div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm">
+<img alt="张老师" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFpyGDyAPBoTYZAsaphMxDt6u-Fh9vVTZh_-LUH9fAPuQkXx1L8EqFBJ_fNFLMQXqZmfA1ND5eqTL8DJsgnETPZ8i-8Djug9o8_WY4ZebvlKRX01jiQqGAA6CDOic6RmensRUszDteoTqtjaUdr8YA7SCiuw1MlP6sX3cwgamGmdsMfhp6-TXDeTzaM97pcv1i76_BvV-EwAmKqNBGvGLHUVq-y5vSzwOHIbeKJ1vHyrK7dqQCv1GYWerQPjVILCvarqCM5UxZ1js"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">张老师</p>
+<p class="text-[10px] text-slate-500">特级教师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Workspace -->
+<main class="ml-64 min-h-screen flex flex-col">
+<div class="flex-grow max-w-[1600px] mx-auto w-full py-12 flex flex-col gap-8 px-[30px]">
+<nav class="flex items-center gap-2 text-on-surface-variant text-sm mb-2">
+<a class="hover:text-primary transition-colors flex items-center gap-1 font-medium" href="#">
+<span class="material-symbols-outlined text-sm">chevron_left</span>返回
+                </a>
+</nav>
+<!-- Header -->
+<div class="flex justify-between items-center">
+<div>
+<h1 class="text-4xl font-display font-extrabold text-on-surface mt-1">答案解析</h1>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-3">
+<div class="bg-primary/5 px-5 py-3 rounded-2xl border border-primary/10">
+<span class="text-primary font-bold">第 1/5 题</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Question Section -->
+<div class="bg-surface-container-lowest rounded-[2rem] p-10 shadow-sm border border-outline-variant/10">
+<div class="max-w-4xl mx-auto text-center">
+<span class="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold mb-4">提问内容</span>
+<h2 class="text-2xl md:text-3xl font-bold text-on-surface leading-tight">
+                        “如果你能感觉到‘亮度’，那你怎么定义它？是用波长还是用某种情感？”
+                    </h2>
+</div>
+</div>
+<!-- Answers Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 relative">
+<!-- Answer A (Incorrect / AI) -->
+<div class="relative group">
+<label class="answer-card flex flex-col h-full bg-[#fff1f0] rounded-[2rem] p-10 transition-all border-2 border-error/10 shadow-sm min-h-[440px]">
+<div class="flex justify-between items-start mb-8">
+<span class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-xl font-bold text-primary shadow-sm">A</span>
+<span class="bg-error/10 text-error px-3 py-1 rounded-full text-xs font-bold">错误选项</span>
+</div>
+<div class="flex-grow">
+<p class="text-lg text-on-surface leading-relaxed italic">
+                                “对我而言，亮度更多是一种‘信息的清晰度’。就像当你突然理解了一个复杂的数学公式，或者在黑暗中找到了一根蜡烛。它既是物理的，也是认知的。”
+                            </p>
+</div>
+<div class="mt-10 pt-6 border-t border-error/10 flex items-center gap-3">
+<div class="flex items-center justify-center gap-4 w-full">
+<span class="text-base font-bold text-on-surface-variant">这是AI的回答</span>
+<div class="w-8 h-8 rounded-full border-2 border-error flex items-center justify-center">
+<span class="material-symbols-outlined text-error text-xl">close</span>
+</div>
+</div>
+</div>
+</label>
+</div>
+<!-- Answer B (Correct / Human) -->
+<div class="relative group">
+<label class="answer-card flex flex-col h-full bg-[#e6fff4] rounded-[2rem] p-10 transition-all border-2 border-tertiary/10 shadow-sm min-h-[440px]">
+<div class="flex justify-between items-start mb-8">
+<span class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-xl font-bold text-secondary shadow-sm">B</span>
+<span class="bg-tertiary/10 text-tertiary px-3 py-1 rounded-full text-xs font-bold">正确选项</span>
+</div>
+<div class="flex-grow">
+<p class="text-lg text-on-surface leading-relaxed italic">
+                                “亮度是通过视网膜接收到的电磁波强度，通常在400至700纳米之间。但在文学隐喻中，它代表着希望与觉醒。我倾向于将其视为一种可量化的感知指标。”
+                            </p>
+</div>
+<div class="mt-10 pt-6 border-t border-tertiary/10 flex items-center gap-3">
+<div class="flex items-center justify-center gap-4 w-full">
+<span class="text-base font-bold text-on-surface-variant">这是人类的回答</span>
+<div class="w-8 h-8 rounded-full border-2 border-tertiary flex items-center justify-center bg-tertiary">
+<span class="material-symbols-outlined text-white text-xl">check</span>
+</div>
+</div>
+</div>
+</label>
+</div>
+</div>
+<!-- Answer Analysis -->
+<div class="bg-surface-container-lowest rounded-3xl p-10 border border-outline-variant/10 shadow-sm">
+<h3 class="text-xl font-bold text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined">auto_awesome</span>
+                    答案解析
+                </h3>
+<div class="space-y-4 text-on-surface-variant leading-relaxed text-lg">
+<p>
+                        回答 A 展示了更高阶的认知联觉，将物理现象与心理感受相结合，体现了人类特有的情感共鸣和隐喻思考能力。
+                    </p>
+<p>
+                        回答 B 虽然准确描述了物理参数并提到了文学意象，但其结构更倾向于知识性的陈述，缺乏第一人称视角的直觉体验感。通过对比可以发现，人类的回答往往包含更多非线性的、基于生命体验的语义联想。
+                    </p>
+<p class="text-sm border-t border-outline-variant/10 pt-4 text-slate-400">
+                        * 解析基于图灵测试评分标准：情感共鸣度、语义联想深度、第一人称体验感。
+                    </p>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex justify-center pb-12 gap-6">
+<button class="bg-surface-container-highest text-on-surface px-12 py-5 rounded-full font-extrabold text-lg shadow-sm hover:bg-surface-variant transition-all flex items-center gap-3">
+<span class="material-symbols-outlined">refresh</span>
+<span>再试一次</span>
+</button>
+<button class="bg-primary text-on-primary px-12 py-5 rounded-full font-extrabold text-lg shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-3">
+<span>下一题</span>
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+</div>
+</div>
+</main>
+<!-- Side Decoration -->
+<div class="fixed right-0 top-0 h-full w-1.5 bg-gradient-to-b from-primary via-secondary to-tertiary opacity-10 pointer-events-none"></div>
+</body></html>

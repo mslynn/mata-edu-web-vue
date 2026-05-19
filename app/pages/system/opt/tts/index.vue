@@ -1,33 +1,42 @@
 ﻿<template>
   <div class="tts-intro-page">
     <div class="tts-intro-shell">
-      <nav class="tts-intro-breadcrumb" aria-label="面包屑">
+      <nav class="tts-intro-breadcrumb" :aria-label="t('ttsDemo.breadcrumbAria')">
         <button
           type="button"
           class="tts-intro-breadcrumb__link"
           @click="handleBackToAiCenter"
         >
-          AI 实践中心
+          {{ t("ttsDemo.aiPracticeCenter") }}
         </button>
         <span class="tts-intro-breadcrumb__separator">/</span>
-        <span class="tts-intro-breadcrumb__current">语音合成</span>
+        <span class="tts-intro-breadcrumb__current">{{ t("ttsDemo.speechSynthesis") }}</span>
       </nav>
 
       <main class="tts-intro-main">
         <section class="tts-intro-hero">
           <h1>
-            语音合成<span>(TTS)</span>
+            {{ t("ttsDemo.titleTts") }}<span>{{ t("ttsDemo.ttsAbbr") }}</span>
           </h1>
 
           <p>
-            语音合成（TTS）是一种将文字自动转换为语音的人工智能技术，是语音交互与智能教育中的重要基础能力。
-            在教育场景中，TTS 不仅可以帮助学生“听见知识”，还能够通过多语种朗读、情感化表达和个性化语速调节，提升学习体验与理解效率。
+            {{ t("ttsDemo.introDesc") }}
           </p>
 
-          <NuxtLink class="tts-intro-primary" to="/system/opt/tts/experience">
-            <span>立即体验</span>
+          <button
+            class="tts-intro-primary"
+            type="button"
+            :disabled="!canEnterExperience"
+            @click="handleEnterExperience"
+          >
+            <span>{{ primaryButtonText }}</span>
             <span class="tts-intro-primary__arrow">→</span>
-          </NuxtLink>
+          </button>
+
+          <div class="tts-intro-model-status" :class="`is-${localTtsStatus}`">
+            <span class="tts-intro-model-status__dot"></span>
+            <span>{{ modelStatusText }}</span>
+          </div>
         </section>
 
         <section id="tts-workflow" class="tts-intro-workflow">
@@ -54,15 +63,17 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
+
 definePageMeta({
   layout: "sidebar",
 });
 
 useHead({
-  title: "语音合成",
-  htmlAttrs: {
-    lang: "zh-CN",
-  },
+  title: computed(() => t("ttsDemo.pageTitle")),
+  htmlAttrs: {},
 });
 
 type WorkflowStep = {
@@ -72,47 +83,63 @@ type WorkflowStep = {
   theme: "primary" | "secondary" | "tertiary";
 };
 
-const workflowSteps: WorkflowStep[] = [
+const workflowSteps = computed<WorkflowStep[]>(() => [
   {
-    title: "文本预处理",
-    description: "对输入文本进行归一化处理，识别特殊符号、数字及缩写，并进行准确的分词处理。",
+    title: t("ttsDemo.stepTextPreprocessing"),
+    description: t("ttsDemo.stepTextPreprocessingDesc"),
     icon: "≡",
     theme: "primary",
   },
   {
-    title: "特征提取",
-    description: "分析文本的深层语义信息与上下文关系，提取用于语音生成的关键语言学描述特征。",
+    title: t("ttsDemo.stepFeatureExtraction"),
+    description: t("ttsDemo.stepFeatureExtractionDesc"),
     icon: "Y",
     theme: "primary",
   },
   {
-    title: "音素转换",
-    description: "利用发音字典或神经网络模型，将处理后的文本序列精准转换为对应的音素发音符号。",
+    title: t("ttsDemo.stepPhonemeConversion"),
+    description: t("ttsDemo.stepPhonemeConversionDesc"),
     icon: "◎",
     theme: "primary",
   },
   {
-    title: "韵律建模",
-    description: "预测语音的停顿、重音、语调起伏及语速，赋予合成语音自然的人类情感表达。",
+    title: t("ttsDemo.stepProsodyModeling"),
+    description: t("ttsDemo.stepProsodyModelingDesc"),
     icon: "≋",
     theme: "secondary",
   },
   {
-    title: "声学建模",
-    description: "通过神经网络将语言特征映射为声学参数，如梅尔频谱，构建语音信号的基础骨架。",
+    title: t("ttsDemo.stepAcousticModeling"),
+    description: t("ttsDemo.stepAcousticModelingDesc"),
     icon: "♬",
     theme: "tertiary",
   },
   {
-    title: "声码器合成",
-    description: "采用高性能神经声码器将声学参数还原为高质量音频流，输出自然清晰的语音。",
+    title: t("ttsDemo.stepVocoder"),
+    description: t("ttsDemo.stepVocoderDesc"),
     icon: "≈",
     theme: "tertiary",
   },
-];
+]);
+
+const canEnterExperience = computed(() => true);
+const localTtsStatus = ref("ready");
+
+const primaryButtonText = computed(() => {
+  return t("ttsDemo.startExperience");
+});
+
+const modelStatusText = computed(() => {
+  return t("ttsDemo.modelStatusReady");
+});
 
 const handleBackToAiCenter = async () => {
   await navigateTo("/system/opt");
+};
+
+const handleEnterExperience = async () => {
+  if (!canEnterExperience.value) return;
+  await navigateTo("/system/opt/tts/experience");
 };
 </script>
 
@@ -226,23 +253,91 @@ const handleBackToAiCenter = async () => {
   border-radius: 999px;
   background: #005bc2;
   color: #ffffff;
+  border: none;
   font-size: 15px;
   font-weight: 900;
   text-decoration: none;
   box-shadow: 0 18px 38px rgba(0, 91, 194, 0.26);
+  cursor: pointer;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 
-.tts-intro-primary:hover {
+.tts-intro-primary:not(:disabled):hover {
   transform: translateY(-2px);
   box-shadow: 0 22px 44px rgba(0, 91, 194, 0.3);
+}
+
+.tts-intro-primary:disabled {
+  cursor: not-allowed;
+  background: #9aa6b2;
+  opacity: 0.62;
+  box-shadow: none;
 }
 
 .tts-intro-primary__arrow {
   font-size: 24px;
   line-height: 1;
+}
+
+.tts-intro-model-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 30px;
+  margin-top: 12px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  color: #6b7785;
+  font-size: 12px;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+}
+
+.tts-intro-model-status__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #9aa6b2;
+}
+
+.tts-intro-model-status.is-loading .tts-intro-model-status__dot,
+.tts-intro-model-status.is-idle .tts-intro-model-status__dot {
+  background: #005bc2;
+  animation: tts-status-pulse 1.1s ease-in-out infinite;
+}
+
+.tts-intro-model-status.is-ready {
+  color: #047857;
+  background: rgba(209, 250, 229, 0.88);
+}
+
+.tts-intro-model-status.is-ready .tts-intro-model-status__dot {
+  background: #047857;
+}
+
+.tts-intro-model-status.is-error {
+  color: #b91c1c;
+  background: rgba(254, 226, 226, 0.9);
+}
+
+.tts-intro-model-status.is-error .tts-intro-model-status__dot {
+  background: #dc2626;
+}
+
+@keyframes tts-status-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scale(0.9);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
 }
 
 .tts-intro-workflow {

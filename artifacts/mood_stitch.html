@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN" style=""><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lucid Academy - 情绪识别 AI实践中心</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "surface-container": "#eaeef1",
+                        "secondary-dim": "#952467",
+                        "on-surface-variant": "#596063",
+                        "inverse-primary": "#4d8eff",
+                        "inverse-on-surface": "#9a9d9f",
+                        "surface-container-highest": "#dde3e7",
+                        "tertiary-fixed-dim": "#58e7ab",
+                        "on-primary-container": "#003a81",
+                        "on-secondary-fixed-variant": "#a02d70",
+                        "on-tertiary-fixed-variant": "#006544",
+                        "background": "#f7f9fb",
+                        "secondary": "#a53173",
+                        "surface-bright": "#f7f9fb",
+                        "surface-dim": "#d3dbdf",
+                        "tertiary-fixed": "#69f6b8",
+                        "secondary-fixed-dim": "#ffc4dd",
+                        "outline-variant": "#acb3b7",
+                        "error-container": "#f56965",
+                        "on-error-container": "#65000b",
+                        "on-background": "#2d3337",
+                        "secondary-fixed": "#ffd8e7",
+                        "primary-dim": "#004fad",
+                        "surface-variant": "#dde3e7",
+                        "outline": "#757c7f",
+                        "on-tertiary": "#e6ffee",
+                        "secondary-container": "#ffd8e7",
+                        "primary-fixed-dim": "#8fb3ff",
+                        "surface-container-high": "#e3e9ec",
+                        "tertiary": "#006d4a",
+                        "surface-container-low": "#f1f4f6",
+                        "on-secondary": "#fff7f8",
+                        "on-primary": "#f9f8ff",
+                        "on-primary-fixed-variant": "#004292",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-container": "#69f6b8",
+                        "surface": "#f7f9fb",
+                        "primary-container": "#a5c1ff",
+                        "primary-fixed": "#a5c1ff",
+                        "inverse-surface": "#0b0f10",
+                        "error-dim": "#70030f",
+                        "on-tertiary-container": "#005a3c",
+                        "tertiary-dim": "#005f40",
+                        "primary": "#005bc4",
+                        "on-primary-fixed": "#002659",
+                        "surface-tint": "#005bc4",
+                        "error": "#ac3434",
+                        "on-tertiary-fixed": "#00452d",
+                        "on-surface": "#2d3337",
+                        "on-secondary-fixed": "#7b0852",
+                        "on-secondary-container": "#942265",
+                        "on-error": "#fff7f6"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline": ["Plus Jakarta Sans"],
+                        "display": ["Plus Jakarta Sans"],
+                        "body": ["Plus Jakarta Sans"],
+                        "label": ["Plus Jakarta Sans"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', 'PingFang SC', sans-serif; background-color: #f7f9fb; color: #2d3337; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-effect { backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .hero-gradient { background: linear-gradient(135deg, #005bc4 0%, #004fad 100%); }
+        .card-shadow { box-shadow: 0 10px 40px rgba(0, 91, 196, 0.04); }
+    </style>
+<style data-stitch-cursor=""></style><style data-stitch-scroll-lock=""></style><style data-stitch-cursor="">*{cursor:crosshair!important}[contenteditable="true"]:focus,.cursor-text:focus{cursor:text!important}</style><style data-stitch-scroll-lock="">html,body{overflow:hidden!important}</style></head>
+<body class="overflow-x-hidden selection:bg-primary-container">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50 border-r border-slate-100">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg"/>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">home</span>
+<span class="text-sm font-medium">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">group</span>
+<span class="text-sm font-medium">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">menu_book</span>
+<span class="text-sm font-medium">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">construction</span>
+<span class="text-sm font-medium">玛塔工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors group" href="#">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>psychology</span>
+<span class="text-sm">AI实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">insights</span>
+<span class="text-sm font-medium">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">trending_up</span>
+<span class="text-sm font-medium">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">emoji_events</span>
+<span class="text-sm font-medium">赛事中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">smart_toy</span>
+<span class="text-sm font-medium">AI助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-slate-200">
+<div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm">
+<img alt="张老师" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFpyGDyAPBoTYZAsaphMxDt6u-Fh9vVTZh_-LUH9fAPuQkXx1L8EqFBJ_fNFLMQXqZmfA1ND5eqTL8DJsgnETPZ8i-8Djug9o8_WY4ZebvlKRX01jiQqGAA6CDOic6RmensRUszDteoTqtjaUdr8YA7SCiuw1MlP6sX3cwgamGmdsMfhp6-TXDeTzaM97pcv1i76_BvV-EwAmKqNBGvGLHUVq-y5vSzwOHIbeKJ1vHyrK7dqQCv1GYWerQPjVILCvarqCM5UxZ1js"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">张老师</p>
+<p class="text-[10px] text-slate-500">特级教师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen pt-16 pb-20 max-w-[1920px] px-[30px] px-\[30px\]">
+<!-- TopAppBar -->
+<header class="fixed top-0 right-0 w-[calc(100%-16rem)] h-16 glass-effect bg-surface/80 flex justify-between items-center px-8 z-40">
+<div class="flex items-center space-x-2"><span class="text-on-surface-variant font-medium text-sm">AI实践中心</span><span class="material-symbols-outlined text-xs text-on-surface-variant/40 mx-2">chevron_right</span><span class="text-on-surface font-bold text-sm tracking-tight">情绪识别</span></div>
+</header>
+<!-- Page Breadcrumb Spacer -->
+<div class="h-8"></div>
+<!-- Hero Section -->
+<section class="relative bg-primary-container/10 rounded-[2.5rem] overflow-hidden mb-[30px] flex items-center min-h-[520px]">
+<div class="w-1/2 pl-20 pr-8 z-10 relative py-20">
+<h2 class="text-6xl font-extrabold text-on-surface mb-6 tracking-tight leading-tight">
+                    情绪识别 <br/><span class="text-primary/60">Emotion Recognition</span>
+</h2>
+<p class="text-xl text-on-surface-variant mb-12 leading-relaxed max-w-xl">            基于深度卷积神经网络（CNN）与面部表情编码系统（FACS），通过捕获眼周、唇角及眉间动作的细微特征，精准映射出喜悦、愤怒、悲伤、惊恐等核心情绪维度。
+                </p>
+<div class="flex items-center space-x-6">
+<button class="hero-gradient text-on-primary px-10 py-4 rounded-full font-bold flex items-center shadow-lg hover:shadow-primary/20 active:opacity-80 transition-all group text-lg">
+                        立即体验
+                        <span class="material-symbols-outlined ml-2 transition-transform group-hover:translate-x-1">arrow_forward</span>
+</button>
+</div>
+</div>
+<div class="absolute right-[60px] top-1/2 -translate-y-1/2 w-[42%] h-[80%] rounded-[2rem] overflow-hidden shadow-2xl border-4 border-surface-container-lowest">
+<img alt="AI Emotion Recognition Analysis Display" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCq42du1z51lnk_oRECmIIMdGlo8z91HXxYVembnpHDwlCRZ2QJ1ym66y5KBRt_CZpjRCzc8iPehCLXF4ufoLlVsm1MzdnFwt2jysgAiOeUVZc0lqzlge-iKNbLlorsdQb3zY_dq-FKZ7m-jYpFQtcoPmUkqkJ_A_tNNZIEuNbxaMr2ORKTnckj83kmTUBejzxcNZj8yrCuWP1BCReh4YLuhq1ixT1dTbCHLwu3oa-OH5T9Om0u2wMCG-87yOTORC-nPSMqxzeW41U"/>
+</div>
+</section>
+<!-- Optimized Main Content Grid -->
+<div class="grid grid-cols-12 gap-[30px] items-stretch">
+<!-- Left Column: Recognition Depth -->
+<div class="col-span-4">
+<div class="bg-surface-container-lowest rounded-[2rem] h-full card-shadow border border-outline-variant/5 flex flex-col justify-center px-8 px-10 py-6">
+<div class="flex items-center justify-between mb-6">
+<div class="w-14 h-14 bg-primary/5 rounded-[1.25rem] flex items-center justify-center text-primary">
+<span class="material-symbols-outlined text-3xl" style='font-variation-settings: "FILL" 1;'>mood</span>
+</div>
+<span class="text-xs font-bold text-secondary tracking-widest uppercase">Recognition depth</span>
+</div>
+<h3 class="text-6xl font-black text-on-surface tracking-tighter mb-1">8种+</h3>
+<p class="text-on-surface-variant font-medium text-lg mb-8">支持情绪种类</p>
+<div class="flex gap-3 flex-wrap"><span class="px-6 py-3 bg-red-50 text-red-600 font-bold rounded-full text-lg hover:bg-red-600 hover:text-white transition-all cursor-default border border-red-200">愤怒</span><span class="px-6 py-3 bg-stone-50 text-stone-600 font-bold rounded-full text-lg hover:bg-stone-600 hover:text-white transition-all cursor-default border border-stone-200">厌恶</span><span class="px-6 py-3 bg-purple-50 text-purple-600 font-bold rounded-full text-lg hover:bg-purple-600 hover:text-white transition-all cursor-default border border-purple-200">恐惧</span><span class="px-6 py-3 bg-emerald-50 text-emerald-600 font-bold rounded-full text-lg hover:bg-emerald-600 hover:text-white transition-all cursor-default border border-emerald-200">高兴</span><span class="px-6 py-3 bg-sky-50 text-sky-600 font-bold rounded-full text-lg hover:bg-sky-600 hover:text-white transition-all cursor-default border border-sky-200">平静</span><span class="px-6 py-3 bg-indigo-50 text-indigo-600 font-bold rounded-full text-lg hover:bg-indigo-600 hover:text-white transition-all cursor-default border border-indigo-200">伤心</span><span class="px-6 py-3 bg-orange-50 text-orange-600 font-bold rounded-full text-lg hover:bg-orange-600 hover:text-white transition-all cursor-default border border-orange-200">惊讶</span><span class="px-6 py-3 bg-slate-50 text-slate-600 font-bold rounded-full text-lg hover:bg-slate-600 hover:text-white transition-all cursor-default border border-slate-200">困惑</span></div>
+</div>
+</div>
+<!-- Right Column: Application Scenarios -->
+<div class="col-span-8 flex flex-col gap-[30px]">
+<h4 class="text-2xl font-bold text-on-surface px-2">应用场景</h4>
+<div class="grid grid-cols-2 gap-[30px] flex-1">
+<div class="bg-white rounded-[2rem] overflow-hidden card-shadow border border-outline-variant/10 flex flex-col group hover:translate-y-[-4px] transition-all">
+<div class="h-44 bg-primary/5 flex items-center justify-center relative overflow-hidden">
+<span class="material-symbols-outlined text-7xl text-primary/30 group-hover:scale-110 transition-transform duration-500">school</span>
+<div class="absolute bottom-4 left-6 flex items-center gap-2">
+<div class="w-1.5 h-6 bg-primary rounded-full"></div>
+<h5 class="text-xl font-bold text-on-surface">智慧教育</h5>
+</div>
+</div>
+<div class="p-8 flex-1 flex flex-col">
+<p class="text-on-surface-variant leading-relaxed mb-6 text-sm">分析学生课堂专注度与学习情绪，为差异化教学提供科学依据。通过情感反馈辅助调整教学节奏，实现个性化成长。</p>
+</div>
+</div>
+<div class="bg-white rounded-[2rem] overflow-hidden card-shadow border border-outline-variant/10 flex flex-col group hover:translate-y-[-4px] transition-all">
+<div class="h-44 bg-secondary/5 flex items-center justify-center relative overflow-hidden">
+<span class="material-symbols-outlined text-7xl text-secondary/30 group-hover:scale-110 transition-transform duration-500">favorite</span>
+<div class="absolute bottom-4 left-6 flex items-center gap-2">
+<div class="w-1.5 h-6 bg-secondary rounded-full"></div>
+<h5 class="text-xl font-bold text-on-surface">心理健康</h5>
+</div>
+</div>
+<div class="p-8 flex-1 flex flex-col">
+<p class="text-on-surface-variant leading-relaxed mb-6 text-sm">辅助进行压力监测与情感辅导。通过长期情绪趋势追踪，及早发现潜在的心理健康隐忧，构筑校园安全防线。</p>
+</div>
+</div>
+<div class="col-span-2 bg-white rounded-[2rem] overflow-hidden card-shadow border border-outline-variant/10 flex items-stretch group hover:translate-y-[-4px] transition-all">
+<div class="w-1/3 bg-tertiary/5 flex items-center justify-center overflow-hidden">
+<span class="material-symbols-outlined text-8xl text-tertiary/30 group-hover:scale-110 transition-transform duration-500">smart_toy</span>
+</div>
+<div class="w-2/3 p-10 flex flex-col">
+<div class="flex items-center gap-2 mb-4">
+<div class="w-1.5 h-6 bg-tertiary rounded-full"></div>
+<h5 class="text-xl font-bold text-on-surface">智能交互</h5>
+</div>
+<p class="text-on-surface-variant leading-relaxed mb-8 text-base">赋予机器人与 AI 助手感知人类情感的能力，实现更具共情力的人机对话，显著提升交互的真实感与温度，重新定义未来人机关系。</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB for quick interaction -->
+</body></html>

@@ -8,9 +8,9 @@
     <!-- 页面标题 -->
     <div v-if="!embedded" class="page-header">
       <div class="page-header__copy">
-        <h1 class="page-title">探索人工智能的无限可能</h1>
+        <h1 class="page-title">{{ $t("ai.centerHeroTitle") }}</h1>
         <p class="page-header__desc">
-          通过沉浸式的 AI 实践项目，从生成式 AI 到机器学习，全方位构建您的数字化创新能力。
+          {{ $t("ai.centerHeroDesc") }}
         </p>
       </div>
     </div>
@@ -361,7 +361,8 @@
           </div>
         </div>
 
-        <!-- 机器学习 区块 -->
+        <!-- 机器学习 区块已注释 -->
+        <!--
         <div class="section section-highlight">
           <div class="section-header">
             <div class="section-icon-chip section-icon-chip--ml">
@@ -398,7 +399,6 @@
               >
                 <div class="card-cover-wrapper">
                   <img :src="getAICardCover(item)" class="card-cover" alt="" />
-                  <!-- 即将上线 提示 -->
                   <div v-if="isComingSoon(item)" class="coming-soon-overlay">
                     <div class="cs-content">
                       <span class="cs-text">{{ $t("ai.comingSoon") }}</span>
@@ -432,6 +432,7 @@
             </button>
           </div>
         </div>
+        -->
       </template>
     </div>
 
@@ -710,8 +711,9 @@ const aigcItems = ref<AICardItem[]>([
     label: "ai.atQA",
     routePath: "/system/opt/aiwenda",
   },
-  { key: "aiStory", label: "ai.aiStory" },
-  { key: "aiSong", label: "ai.aiSong" },
+  { key: "aiStory", label: "ai.aiStory", routePath: "/system/opt/story" },
+  { key: "aiSong", label: "ai.aiSong", routePath: "/system/opt/music" },
+  // { key: "aiVideo", label: "ai.aiVideo", routePath: "/system/opt/video" },
   { key: "aiVideo", label: "ai.aiVideo" },
 ]);
 
@@ -734,8 +736,16 @@ const visionItems = ref<AICardItem[]>([
     routePath: "/system/ai/material",
   },
 
-  { key: "handwrittenDigit", label: "ai.handwrittenDigit" },
-  { key: "doodleRecognition", label: "ai.doodleRecognition" },
+  {
+    key: "handwrittenDigit",
+    label: "ai.handwrittenDigit",
+    routePath: "/system/opt/handwritten",
+  },
+  {
+    key: "doodleRecognition",
+    label: "ai.doodleRecognition",
+    routePath: "/system/opt/graffiti",
+  },
 ]);
 
 // 语言智能 数据
@@ -751,19 +761,24 @@ const languageItems = ref<AICardItem[]>([
     label: "ai.speechSynthesis",
     routePath: "/system/opt/tts",
   },
-  {
-    key: "smartQA",
-    label: "ai.smartQA",
-    routePath: "/system/opt/aiwenda",
-  },
+  // {
+  //   key: "smartQA",
+  //   label: "ai.smartQA",
+  //   routePath: "/system/opt/aiwenda",
+  // },
   {
     key: "speechTranscription",
     label: "ai.speechTranscription",
-    routePath: "/system/opt/speech-transcription/experience",
+    routePath: "/system/opt/asr",
   },
+  // {
+  //   key: "voiceprintRecognition",
+  //   label: "ai.voiceprintRecognition",
+  // },
   {
-    key: "speechTranscriptionPrinciple",
-    label: "ai.speechTranscriptionPrinciple",
+    key: "turingTest",
+    label: "ai.turingTest",
+    routePath: "/system/opt/turing",
   },
 ]);
 
@@ -783,9 +798,12 @@ const behaviorItems = ref<AICardItem[]>([
     cover: aigcCover2,
   },
   { key: "poseRecognition", label: "ai.poseRecognition" },
-  { key: "gestureRecognition", label: "ai.gestureRecognition" },
-
-  { key: "emotionRecognition", label: "ai.emotionRecognition" },
+  { key: "gestureRecognition", label: "ai.gestureRecognition", routePath: "/system/opt/hand" },
+  {
+    key: "emotionRecognition",
+    label: "ai.emotionRecognition",
+    routePath: "/system/opt/mood",
+  },
 ]);
 
 // 机器学习 数据
@@ -793,55 +811,62 @@ const mlItems = ref<AICardItem[]>([
   { key: "mlProcess", label: "ai.mlProcess" },
   { key: "decisionTree", label: "ai.decisionTree" },
   { key: "bigData", label: "ai.bigData" },
+  // {
+  //   key: "turingTest",
+  //   label: "ai.turingTest",
+  //   routePath: "/system/opt/turing",
+  // },
 ]);
 
 const AI_CARD_COVER_MAP: Record<string, string> = {
   aiPainting:
-    "/images/ai-practice/practice-01-eb90e462.webp",
+    "/images/ai-practice/practice-01-eb90e462.svg",
   aiStory:
-    "/images/ai-practice/practice-02-2aa5c253.webp",
+    "/images/ai-practice/practice-02-2aa5c253.svg",
   aiSong:
-    "/images/ai-practice/practice-03-10ed00a3.webp",
+    "/images/ai-practice/practice-03-10ed00a3.svg",
   aiVideo:
-    "/images/ai-practice/practice-04-71172075.webp",
+    "/images/ai-practice/practice-04-71172075.svg",
   imageClassModel:
-    "/images/ai-practice/practice-05-f6a05d9d.webp",
+    "/images/ai-practice/practice-05-f6a05d9d.svg",
   faceRecognition:
-    "/images/ai-practice/practice-06-b311ccf2.webp",
+    "/images/ai-practice/practice-06-b311ccf2.svg",
   imageRecognition:
-    "/images/ai-practice/practice-07-0698f4e2.webp",
+    "/images/ai-practice/practice-07-0698f4e2.svg",
   handwrittenDigit:
-    "/images/ai-practice/practice-08-31ce93c4.webp",
+    "/images/ai-practice/practice-08-31ce93c4.svg",
   doodleRecognition:
-    "/images/ai-practice/practice-09-ed29662c.webp",
+    "/images/ai-practice/practice-09-ed29662c.svg",
   voiceClassModel:
-    "/images/ai-practice/practice-10-d1a9f616.webp",
+    "/images/ai-practice/practice-10-d1a9f616.svg",
   speechSynthesis:
-    "/images/ai-practice/practice-11-1da4999c.webp",
+    "/images/ai-practice/practice-11-1da4999c.svg",
   atQA:
-    "/images/ai-practice/practice-12-c48396fd.webp",
+    "/images/ai-practice/practice-12-c48396fd.svg",
   smartQA:
-    "/images/ai-practice/practice-12-c48396fd.webp",
+    "/images/ai-practice/wenda.svg",
   speechTranscription:
-    "/images/ai-practice/practice-13-8cc3f4df.webp",
-  speechTranscriptionPrinciple:
-    "/images/ai-practice/practice-14-6d6e5f8d.webp",
+    "/images/ai-practice/practice-13-8cc3f4df.svg",
+  voiceprintRecognition:
+    "/images/ai-practice/practice-14-6d6e5f8d.svg",
   poseClassModel:
-    "/images/ai-practice/practice-15-a0fc8317.webp",
+    "/images/ai-practice/practice-15-a0fc8317.svg",
   gestureClassModel:
-    "/images/ai-practice/practice-16-3c20b186.webp",
+    "/images/ai-practice/practice-16-3c20b186.svg",
   poseRecognition:
-    "/images/ai-practice/practice-17-a5b3aeef.webp",
+    "/images/ai-practice/practice-17-a5b3aeef.svg",
   gestureRecognition:
-    "/images/ai-practice/practice-18-941e689d.webp",
+    "/images/ai-practice/practice-18-941e689d.svg",
   emotionRecognition:
-    "/images/ai-practice/practice-19-ad61f826.webp",
+    "/images/ai-practice/practice-19-ad61f826.svg",
   mlProcess:
-    "/images/ai-practice/practice-20-9b486d3f.webp",
+    "/images/ai-practice/practice-20-9b486d3f.svg",
   decisionTree:
-    "/images/ai-practice/practice-21-de26116a.webp",
+    "/images/ai-practice/practice-21-de26116a.svg",
   bigData:
-    "/images/ai-practice/practice-22-2fa0b7b3.webp",
+    "/images/ai-practice/practice-22-2fa0b7b3.svg",
+  turingTest:
+    "/images/ai-practice/practice-22-2fa0b7b3.svg",
 };
 
 const getAICardCover = (item: AICardItem) =>
@@ -992,16 +1017,23 @@ const pendingIframeMessage = ref<{
 
 const AVAILABLE_AI_CARD_KEYS = new Set([
   "aiPainting",
+  "aiStory",
+  "aiSong",
   "atQA",
-  "smartQA",
   "speechSynthesis",
   "speechTranscription",
+  // "aiVideo",
   "imageClassModel",
   "gestureClassModel",
   "voiceClassModel",
   "poseClassModel",
   "faceRecognition",
   "imageRecognition",
+  "handwrittenDigit",
+  "doodleRecognition",
+  "emotionRecognition",
+  "turingTest",
+  "gestureRecognition",
 ]);
 
 const isComingSoon = (item: AICardItem) => {
@@ -1666,7 +1698,6 @@ const handleIframeMessage = async (event: MessageEvent) => {
 };
 
 const handleCardClick = async (item: AICardItem) => {
-  console.log(item,'************')
   if (isComingSoon(item)) return;
 
   if (item.routePath) {

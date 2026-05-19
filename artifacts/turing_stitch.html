@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=1920, height=1080" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body { 
+            font-family: 'Plus Jakarta Sans', 'PingFang SC', sans-serif; 
+            width: 1920px; 
+            margin: 0 auto;
+            background-color: #f7f9fb;
+            height: 1010px;
+            overflow: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-container": "#a5c1ff",
+                        "on-surface-variant": "#596063",
+                        "on-primary-fixed": "#002659",
+                        "on-tertiary-fixed-variant": "#006544",
+                        "on-tertiary": "#e6ffee",
+                        "surface-dim": "#d3dbdf",
+                        "on-surface": "#2d3337",
+                        "on-tertiary-container": "#005a3c",
+                        "inverse-on-surface": "#9a9d9f",
+                        "tertiary-dim": "#005f40",
+                        "background": "#f7f9fb",
+                        "on-secondary-fixed-variant": "#a02d70",
+                        "outline": "#757c7f",
+                        "on-error": "#fff7f6",
+                        "surface-container": "#eaeef1",
+                        "primary-dim": "#004fad",
+                        "tertiary-fixed": "#69f6b8",
+                        "surface-variant": "#dde3e7",
+                        "inverse-primary": "#4d8eff",
+                        "tertiary-fixed-dim": "#58e7ab",
+                        "secondary-fixed": "#ffd8e7",
+                        "tertiary": "#006d4a",
+                        "inverse-surface": "#0b0f10",
+                        "outline-variant": "#acb3b7",
+                        "on-secondary-fixed": "#7b0852",
+                        "on-secondary-container": "#942265",
+                        "error-container": "#f56965",
+                        "tertiary-container": "#69f6b8",
+                        "surface-container-highest": "#dde3e7",
+                        "error-dim": "#70030f",
+                        "secondary-dim": "#952467",
+                        "surface-bright": "#f7f9fb",
+                        "surface": "#f7f9fb",
+                        "primary-fixed-dim": "#8fb3ff",
+                        "surface-container-low": "#f1f4f6",
+                        "surface-container-high": "#e3e9ec",
+                        "error": "#ac3434",
+                        "on-primary": "#f9f8ff",
+                        "secondary": "#a53173",
+                        "secondary-fixed-dim": "#ffc4dd",
+                        "surface-container-lowest": "#ffffff",
+                        "primary": "#005bc4",
+                        "on-tertiary-fixed": "#00452d",
+                        "surface-tint": "#005bc4",
+                        "secondary-container": "#ffd8e7",
+                        "on-secondary": "#fff7f8",
+                        "on-background": "#2d3337",
+                        "on-primary-fixed-variant": "#004292",
+                        "primary-fixed": "#a5c1ff",
+                        "on-error-container": "#65000b",
+                        "on-primary-container": "#003a81"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
+                        "full": "9999px"
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-hidden">
+<!-- SideNavBar -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#f2f4f5] flex flex-col py-6 px-4 z-50 border-r border-slate-100">
+<div class="mb-8 px-4 flex items-center gap-3">
+<img alt="玛塔创想 AI 智学云" class="h-8 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/ADBb0ug6rIAxaxOMYF5drDyLCHguFyzTM2Vz8pajVfAOv_fvKYsNjrTzXmGKef56f1_f5Ur_Xl4M54gdCnmIHjwbPJB1Wx4i015ttWl5Y10twpAkZ__XlKiEgrfdmr_tZmnezJoednCdbotDQFwKvMDh9rCFdEWU4W7eAtBRYInBfSa1wTgWFHwHcmNVoaO3EyYE3aqKjVLabbXzLtG5iuMsvAkpskHeJLBMGA2Dyd9_YirjmALLweeFd5o2XsiRdXBuPNJ8NzKzAg"/>
+</div>
+<nav class="flex-1 space-y-2">
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">home</span>
+<span class="text-sm font-medium">首页</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">group</span>
+<span class="text-sm font-medium">账号管理</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">menu_book</span>
+<span class="text-sm font-medium">课程中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">construction</span>
+<span class="text-sm font-medium">玛塔工具中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">psychology</span>
+<span class="text-sm font-medium">AI实践中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">insights</span>
+<span class="text-sm font-medium">学情中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">trending_up</span>
+<span class="text-sm font-medium">教师成长中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#2e3335] hover:bg-[#dee3e5] transition-colors group" href="#">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-primary">emoji_events</span>
+<span class="text-sm font-medium">赛事中心</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 rounded-xl text-[#005bc2] font-bold border-r-4 border-[#005bc2] bg-white/50 transition-colors" href="#">
+<span class="material-symbols-outlined" style='font-variation-settings: "FILL" 1;'>smart_toy</span>
+<span class="text-sm">AI助手</span>
+</a>
+</nav>
+<div class="mt-auto px-4 pt-6 border-t border-slate-200">
+<div class="flex items-center gap-3 bg-white p-3 rounded-2xl shadow-sm">
+<img alt="张老师" class="w-10 h-10 rounded-full bg-primary-container object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFpyGDyAPBoTYZAsaphMxDt6u-Fh9vVTZh_-LUH9fAPuQkXx1L8EqFBJ_fNFLMQXqZmfA1ND5eqTL8DJsgnETPZ8i-8Djug9o8_WY4ZebvlKRX01jiQqGAA6CDOic6RmensRUszDteoTqtjaUdr8YA7SCiuw1MlP6sX3cwgamGmdsMfhp6-TXDeTzaM97pcv1i76_BvV-EwAmKqNBGvGLHUVq-y5vSzwOHIbeKJ1vHyrK7dqQCv1GYWerQPjVILCvarqCM5UxZ1js"/>
+<div class="overflow-hidden">
+<p class="text-xs font-bold truncate">张老师</p>
+<p class="text-[10px] text-slate-500">特级教师</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="ml-64 pt-6 pb-12 px-[30px]">
+<div class="mx-auto w-full">
+<!-- Breadcrumb Navigation -->
+<nav class="mb-6 flex items-center gap-2 text-sm text-slate-500 font-medium">
+<span>AI实践中心</span>
+<span class="material-symbols-outlined text-xs">chevron_right</span>
+<span class="text-slate-900">图灵测试</span>
+</nav>
+<!-- Hero Banner -->
+<section class="relative bg-gradient-to-br from-primary to-primary-dim rounded-xl overflow-hidden shadow-lg mb-10 h-[320px] flex items-center px-12 group">
+<!-- Tech Pattern Overlay -->
+<div class="absolute inset-0 opacity-10 pointer-events-none">
+<svg height="100%" width="100%" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="40" id="grid" patternunits="userSpaceOnUse" width="40">
+<path d="M 40 0 L 0 0 0 40" fill="none" stroke="white" stroke-width="1"></path>
+</pattern>
+</defs>
+<rect fill="url(#grid)" height="100%" width="100%"></rect>
+</svg>
+</div>
+<div class="relative z-10 flex items-center gap-10 w-full">
+<div class="w-40 h-40 rounded-full border-4 border-on-primary/30 p-2 overflow-hidden bg-surface-container-lowest/10 backdrop-blur-md shrink-0">
+<img alt="阿兰·图灵头像" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCV2YYYkoh6h35pfFPdfuZZoNIWbD2d_THjHgdOCRHLc7onLhVNa0ilq-CzGED0uNasSCfoFXsuNv3OPa9MxrVCGCOPl39dwnw-xMWH9mdE_YFCwbJjdsnYyJTtJO07gYtm3lQM6KQMcxN8SQxYFYc5TUUFr66bkRrsQqu4QmPEO6vEBH7FMT0gCyQd55EYA37WUtKCEb0kpAMjC6ZK116xlRj8D1ghK16MAKaWVy80PGC2KwwxfjBiq8-Adui14Zs55z7amzI9DM4"/>
+</div>
+<div class="flex-1">
+<h1 class="text-5xl font-display font-extrabold text-on-primary tracking-tight mb-3">图灵测试：机器能思考吗？</h1>
+<p class="text-lg text-primary-container font-light leading-relaxed max-w-2xl">
+                            揭开人工智能最古老且最重要的评估标准。从阿兰·图灵的“模仿游戏”出发，探索认知科学与机器智能的交界处。
+                        </p>
+<button class="mt-6 bg-surface-container-lowest text-primary px-8 py-3 rounded-full font-bold text-base shadow hover:shadow-lg transition-all active:scale-95">立即开始测试</button>
+</div>
+</div>
+</section>
+<!-- Core Concepts -->
+<section>
+<div class="flex items-end justify-between mb-6">
+<div>
+<h2 class="text-2xl font-display font-bold text-on-surface mb-1">核心概念</h2>
+<p class="text-sm text-on-surface-variant">深入理解图灵测试的理论根基与评价维度</p>
+</div>
+</div>
+<div class="grid grid-cols-12 gap-5">
+<!-- Concept Card 1: Imitation Game -->
+<div class="col-span-8 bg-surface-container-lowest p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-outline-variant/10">
+<div class="w-12 h-12 bg-secondary-container rounded-xl flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">extension</span>
+</div>
+<h3 class="text-xl font-display font-bold text-on-surface mb-2">模仿游戏 (Imitation Game)</h3>
+<p class="text-on-surface-variant leading-relaxed text-sm">
+                            最初的图灵测试形式。一个人类询问者通过纯文本渠道与两个参与者（一个人类，一个机器）对话。如果询问者无法可靠地辨别哪个是机器，则机器被认为通过了测试。
+                        </p>
+</div>
+<!-- Concept Card 2: Blind Spots -->
+<div class="col-span-4 bg-tertiary-container/20 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-tertiary/10">
+<div class="w-12 h-12 bg-tertiary-container rounded-xl flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<h3 class="text-xl font-display font-bold text-on-surface mb-2">认知盲点</h3>
+<p class="text-on-surface-variant leading-relaxed text-sm">
+                            探讨行为主义在评估智能时的局限性，以及语言理解与真智能之间的关系。
+                        </p>
+</div>
+<!-- Concept Card 3: Language Fluency -->
+<div class="col-span-4 bg-surface-container-lowest p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-outline-variant/10">
+<div class="w-12 h-12 bg-primary-container/40 rounded-xl flex items-center justify-center mb-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">interpreter_mode</span>
+</div>
+<h3 class="text-lg font-display font-bold text-on-surface mb-2">语言流畅性</h3>
+<p class="text-on-surface-variant leading-relaxed text-sm">
+                            机器如何模拟人类的情绪波动、幽默感和非正式用语。
+                        </p>
+</div>
+<!-- Concept Card 4: AGI Path -->
+<div class="col-span-8 bg-surface-container-lowest p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow border border-outline-variant/10">
+<div class="flex gap-6 items-center h-full">
+<div class="flex-1">
+<h3 class="text-xl font-display font-bold text-on-surface mb-2">通用人工智能 (AGI) 路径</h3>
+<p class="text-on-surface-variant leading-relaxed text-sm">
+                                    现代图灵测试不仅关注对话，还扩展到了视觉理解、逻辑推理和跨领域知识整合，是通往通用人工智能的重要里程碑。
+                                </p>
+</div>
+<div class="w-36 h-24 bg-surface-container-low rounded-xl overflow-hidden shrink-0">
+<img alt="AI模型示意" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAD51J7yWNz4OsSDw2qbzLeHodKHlgI_NTBK1blj0LWPAdoJYxGS2RQnAV4yKSmrMJ9veGMm28y3SdGujqpoQnkXuT4PbP9slz0GLgXs-P47y5PHa2dcc-x6Q24pW4klnZQ8c3_r5FNEdxNaruox_QECoLmDSbAnVUHBOgeq0kWZNqbcmjpepo7BfA8CFhDDUrspARVOi9rn5a8gi1JQ0p1GWj39liVWW6Sp6zP3slPTWLqrVmh0gu4hDl-UA5qp9lEhGDX9w-DOVY"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>

@@ -654,6 +654,22 @@ const currentChapterName = computed(() => {
   return chapter?.name || t('prepare.selectChapter')
 })
 
+const ensureCurrentChapterId = () => {
+  const routeChapterId = route.query.chapterId ? String(route.query.chapterId) : ''
+  if (routeChapterId && chapterList.value.some(c => c.id === routeChapterId)) {
+    currentChapterId.value = routeChapterId
+    return currentChapterId.value
+  }
+
+  if (currentChapterId.value && chapterList.value.some(c => c.id === currentChapterId.value)) {
+    return currentChapterId.value
+  }
+
+  const firstChapterId = chapterList.value[0]?.id || ''
+  currentChapterId.value = firstChapterId
+  return currentChapterId.value
+}
+
 const selectChapter = async (chapter: { id: string; name: string }) => {
   currentChapterId.value = chapter.id
   dropdownOpen.value = false
@@ -1057,10 +1073,14 @@ const handleResourceUploaded = () => {
 }
 
 const openLinkPlatformModal = async () => {
-  if (currentChapterId.value) {
-    await loadChapterResources(currentChapterId.value, 2)
-    await loadChapterResources(currentChapterId.value, 3)
+  const chapterId = ensureCurrentChapterId()
+  if (!chapterId) {
+    ElMessage.warning('缺少章节ID')
+    return
   }
+
+  await loadChapterResources(chapterId, 2)
+  await loadChapterResources(chapterId, 3)
   showLinkModal.value = true
 }
 

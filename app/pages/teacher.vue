@@ -11,11 +11,11 @@
             <article class="teacher2-hero" :style="heroBackgroundStyle">
               <div class="teacher2-hero__copy">
                 <h1 class="teacher2-hero__title">
-                  <span class="teacher2-hero__title-line">欢迎回来，开启今天的</span>
-                  <span class="teacher2-hero__title-line">智慧教学之旅</span>
+                  <span class="teacher2-hero__title-line">{{ t("teacher.homePage.heroTitleLine1") }}</span>
+                  <span class="teacher2-hero__title-line">{{ t("teacher.homePage.heroTitleLine2") }}</span>
                 </h1>
                 <p class="teacher2-hero__desc">
-                  您的 AI 助教已经准备就绪，随时为您提供课程支持。
+                  {{ t("teacher.homePage.heroDesc") }}
                 </p>
 
                 <div class="teacher2-hero__actions">
@@ -67,8 +67,8 @@
           <section class="teacher2-section">
             <div class="teacher2-section__header">
               <div>
-                <h2 class="teacher2-section__title">工具中心</h2>
-                <p class="teacher2-section__subtitle">配套智能教具，激发无限创意</p>
+                <h2 class="teacher2-section__title">{{ t("teacher.mataToolCenter") }}</h2>
+                <p class="teacher2-section__subtitle">{{ t("teacher.homePage.toolSectionSubtitle") }}</p>
               </div>
 
               <button
@@ -76,7 +76,7 @@
                 class="teacher2-section__link"
                 @click="goToToolCenter"
               >
-                <span>查看全部</span>
+                <span>{{ t("teacher.homePage.viewAll") }}</span>
                 <span class="material-symbols-outlined">arrow_forward</span>
               </button>
             </div>
@@ -110,12 +110,12 @@
           <section class="teacher2-section">
             <div class="teacher2-section__header">
               <div>
-                <h2 class="teacher2-section__title">AI 实践中心</h2>
-                <p class="teacher2-section__subtitle">通过机器学习，让机器变得更“聪明”</p>
+                <h2 class="teacher2-section__title">{{ t("teacher.aiPracticeCenter") }}</h2>
+                <p class="teacher2-section__subtitle">{{ t("teacher.homePage.aiSectionSubtitle") }}</p>
               </div>
 
               <button type="button" class="teacher2-section__link" @click="goToAICenter">
-                <span>查看全部</span>
+                <span>{{ t("teacher.homePage.viewAll") }}</span>
                 <span class="material-symbols-outlined">arrow_forward</span>
               </button>
             </div>
@@ -152,9 +152,9 @@
           <section class="teacher2-section teacher2-section--record">
             <div class="teacher2-section__header teacher2-section__header--record">
               <div>
-                <h2 class="teacher2-section__title">授课记录</h2>
+                <h2 class="teacher2-section__title">{{ t("teacher.teachingRecord") }}</h2>
                 <p class="teacher2-section__subtitle">
-                  延续您的教学进度，高效开展后续课程
+                  {{ t("teacher.homePage.recordSectionSubtitle") }}
                 </p>
               </div>
             </div>
@@ -164,7 +164,7 @@
                 <MSelect
                   v-model="selectedClassId"
                   :options="classOptions"
-                  placeholder="暂无班级"
+                  :placeholder="t('teacher.homePage.noClassShort')"
                   :style="classSelectStyle"
                   class="teacher2-custom-select teacher2-custom-select--class"
                   dropdown-class="teacher2-custom-dropdown"
@@ -173,7 +173,7 @@
                 <MSelect
                   v-model="selectedCourseId"
                   :options="courseOptions"
-                  placeholder="暂无课程"
+                  :placeholder="t('teacher.homePage.noCourseShort')"
                   :style="courseSelectStyle"
                   class="teacher2-custom-select teacher2-custom-select--course"
                   dropdown-class="teacher2-custom-dropdown"
@@ -186,7 +186,7 @@
                 @click="handleQuickLoginBtnClick"
               >
                 <span class="material-symbols-outlined">key</span>
-                <span>班级码登录</span>
+                <span>{{ t("teacher.homePage.classCodeLogin") }}</span>
               </button>
             </div>
 
@@ -231,14 +231,14 @@
                       class="teacher2-lesson-card__button teacher2-lesson-card__button--primary"
                       @click="handleLessonTeach(item)"
                     >
-                      去上课
+                      {{ t("teacher.goToClass") }}
                     </button>
                     <button
                       type="button"
                       class="teacher2-lesson-card__button teacher2-lesson-card__button--secondary"
                       @click="handleLessonPrepare(item)"
                     >
-                      去备课
+                      {{ t("teacher.goToPrepare") }}
                     </button>
                   </div>
                 </article>
@@ -290,9 +290,9 @@
             <div class="teacher2-ai-modal__section">
               <div class="teacher2-ai-modal__section-head">
                 <div>
-                  <div class="teacher2-ai-modal__section-title">新建模型</div>
+                  <div class="teacher2-ai-modal__section-title">{{ t("teacher.homePage.newModel") }}</div>
                   <div class="teacher2-ai-modal__section-desc">
-                    创建一个新的 AI 实践模型项目
+                    {{ t("teacher.homePage.newModelDesc") }}
                   </div>
                 </div>
                 <button
@@ -300,31 +300,31 @@
                   class="teacher2-ai-modal__confirm"
                   @click="openAICreateModal"
                 >
-                  新建项目
+                  {{ t("teacher.homePage.newProject") }}
                 </button>
               </div>
             </div>
 
             <div class="teacher2-ai-modal__section">
-              <div
-                class="teacher2-ai-modal__section-head teacher2-ai-modal__section-head--stack"
-              >
-                <div class="teacher2-ai-modal__section-title-row">
-                  <div class="teacher2-ai-modal__section-title">我的模型</div>
+                <div
+                  class="teacher2-ai-modal__section-head teacher2-ai-modal__section-head--stack"
+                >
+                  <div class="teacher2-ai-modal__section-title-row">
+                  <div class="teacher2-ai-modal__section-title">{{ t("teacher.homePage.myModels") }}</div>
                   <span v-if="savedAIModels.length" class="teacher2-ai-modal__count">
                     {{ savedAIModels.length }}
                   </span>
                 </div>
                 <div class="teacher2-ai-modal__section-desc">
-                  可继续编辑已创建的模型项目
+                  {{ t("teacher.homePage.myModelsDesc") }}
                 </div>
               </div>
 
               <div v-if="savedAIModelsLoading" class="teacher2-ai-modal__empty">
-                加载中...
+                {{ t("teacher.homePage.loading") }}
               </div>
               <div v-else-if="!savedAIModels.length" class="teacher2-ai-modal__empty">
-                暂无模型
+                {{ t("teacher.homePage.noModels") }}
               </div>
               <div v-else class="teacher2-ai-model-grid">
                 <article
@@ -338,7 +338,7 @@
                     class="teacher2-ai-model-card__delete"
                     @click.stop="handleDeleteAISavedModel(item)"
                   >
-                    删除
+                    {{ t("teacher.homePage.delete") }}
                   </button>
                   <div class="teacher2-ai-model-card__cover">
                     <img :src="getSavedAIModelCover(item.toolKey)" alt="" />
@@ -360,7 +360,7 @@
               class="teacher2-ai-modal__cancel"
               @click="closeAIModelSelectModal"
             >
-              关闭
+              {{ t("teacher.homePage.close") }}
             </button>
           </div>
         </div>
@@ -370,7 +370,7 @@
         <div class="teacher2-ai-modal__panel" @click.stop>
           <div class="teacher2-ai-modal__header">
             <span class="teacher2-ai-modal__title">
-              新建{{ currentAIModel?.title || "AI 模型" }}
+              {{ t("teacher.homePage.newModelWithName", { name: currentAIModel?.title || t("teacher.homePage.aiModel") }) }}
             </span>
             <button
               type="button"
@@ -383,12 +383,12 @@
 
           <div class="teacher2-ai-modal__body">
             <label class="teacher2-ai-modal__field">
-              <span class="teacher2-ai-modal__label">模型名称</span>
+              <span class="teacher2-ai-modal__label">{{ t("teacher.homePage.modelName") }}</span>
               <input
                 v-model="aiModelName"
                 type="text"
                 class="teacher2-ai-modal__input"
-                placeholder="请输入模型名称"
+                :placeholder="t('teacher.homePage.modelNamePlaceholder')"
                 @keyup.enter="handleAIConfirm"
               />
             </label>
@@ -400,14 +400,14 @@
               class="teacher2-ai-modal__cancel"
               @click="closeAICreateModal"
             >
-              取消
+              {{ t("teacher.homePage.cancel") }}
             </button>
             <button
               type="button"
               class="teacher2-ai-modal__confirm"
               @click="handleAIConfirm"
             >
-              确定
+              {{ t("teacher.homePage.confirm") }}
             </button>
           </div>
         </div>
@@ -420,7 +420,7 @@
       >
         <div class="teacher2-quick-modal__panel" @click.stop>
           <div class="teacher2-quick-modal__header">
-            <span class="teacher2-quick-modal__title">班级码登录</span>
+            <span class="teacher2-quick-modal__title">{{ t("teacher.homePage.classCodeLogin") }}</span>
             <button
               type="button"
               class="teacher2-quick-modal__close"
@@ -431,10 +431,10 @@
           </div>
 
           <div class="teacher2-quick-modal__body">
-            <p class="teacher2-quick-modal__tip">请选择要生成班级码的班级</p>
+            <p class="teacher2-quick-modal__tip">{{ t("teacher.homePage.quickLoginTip") }}</p>
 
             <div v-if="quickLoginLoading" class="teacher2-quick-modal__empty">
-              加载中...
+              {{ t("teacher.homePage.loading") }}
             </div>
             <div v-else class="teacher2-quick-modal__list">
               <button
@@ -454,7 +454,7 @@
                 </span>
               </button>
               <div v-if="!quickLoginClassList.length" class="teacher2-quick-modal__empty">
-                暂无班级
+                {{ t("teacher.homePage.noClassShort") }}
               </div>
             </div>
           </div>
@@ -465,7 +465,7 @@
               class="teacher2-quick-modal__button teacher2-quick-modal__button--ghost"
               @click="showQuickLoginModal = false"
             >
-              取消
+              {{ t("teacher.homePage.cancel") }}
             </button>
             <button
               type="button"
@@ -473,7 +473,7 @@
               :disabled="!selectedQuickLoginClassId"
               @click="handleQuickLoginConfirm"
             >
-              创建
+              {{ t("teacher.homePage.create") }}
             </button>
           </div>
         </div>
@@ -489,7 +489,7 @@
           @click.stop
         >
           <div class="teacher2-quick-modal__header">
-            <span class="teacher2-quick-modal__title">班级码登录</span>
+            <span class="teacher2-quick-modal__title">{{ t("teacher.homePage.classCodeLogin") }}</span>
             <button
               type="button"
               class="teacher2-quick-modal__close"
@@ -500,20 +500,20 @@
           </div>
 
           <div class="teacher2-quick-modal__body teacher2-quick-modal__body--result">
-            <div class="teacher2-quick-modal__result-title">快捷登录方式已生成</div>
+            <div class="teacher2-quick-modal__result-title">{{ t("teacher.homePage.quickLoginGenerated") }}</div>
             <div class="teacher2-quick-modal__result-class">
               {{ quickLoginResultData.className }}
             </div>
             <div class="teacher2-quick-modal__result-expire">
-              有效期至 {{ quickLoginResultData.expirationDate || "-" }}
+              {{ t("teacher.homePage.expireAt") }} {{ quickLoginResultData.expirationDate || "-" }}
             </div>
 
             <div class="teacher2-quick-modal__result-card">
               <div class="teacher2-quick-modal__result-row">
-                班级码：{{ quickLoginResultData.classCode || "-" }}
+                {{ t("teacher.classCode") }}{{ quickLoginResultData.classCode || "-" }}
               </div>
               <div class="teacher2-quick-modal__result-row">
-                统一密码：{{ quickLoginResultData.classCodePwd || "-" }}
+                {{ t("teacher.unifiedPassword") }}{{ quickLoginResultData.classCodePwd || "-" }}
               </div>
               <button
                 type="button"
@@ -521,7 +521,7 @@
                 @click="copyQuickLoginInfo"
               >
                 <span class="material-symbols-outlined">content_copy</span>
-                <span>复制</span>
+                <span>{{ t("teacher.homePage.copy") }}</span>
               </button>
             </div>
           </div>
@@ -532,7 +532,7 @@
               class="teacher2-quick-modal__button teacher2-quick-modal__button--primary"
               @click="goToClassPage"
             >
-              查看登录状态
+              {{ t("teacher.viewLoginStatus") }}
             </button>
           </div>
         </div>
@@ -558,7 +558,7 @@
           <div class="teacher2-iframe-modal__body">
             <div v-if="toolIframeLoading" class="teacher2-iframe-modal__loading">
               <div class="teacher2-iframe-modal__spinner"></div>
-              <span>加载中...</span>
+              <span>{{ t("teacher.homePage.loading") }}</span>
             </div>
 
             <iframe
@@ -586,6 +586,7 @@ import aiCover1 from "~/assets/images/1.svg";
 import aiCover2 from "~/assets/images/2.svg";
 import aiCover3 from "~/assets/images/3.svg";
 import aiCover4 from "~/assets/images/4.svg";
+import heroBannerIllustration from "~/assets/images/banner.svg";
 import { ElMessageBox } from "element-plus";
 import { aiAdmin } from "~/composables/api/ai";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
@@ -655,6 +656,12 @@ const {
 } = useIframeFileBridge();
 
 onMounted(async () => {
+  void loadTeacherStats();
+  void loadTeachList();
+  void refreshQuickLoginInfo();
+});
+
+watch(locale, () => {
   void loadTeacherStats();
   void loadTeachList();
   void refreshQuickLoginInfo();
@@ -792,8 +799,7 @@ type TeacherStatsState = {
   teachHours: number;
 };
 
-const heroIllustration =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuAWtSm_7HgEqoCo1Re6s4knjXHIO1T750D26mUjlkWtflEnGZ-aAZfIZbtk6RpZAQCKxgBsdJZ53M_e-W7lCS71gi2RFijS7YoVhKsQIx6ECt_7Q4QTob0NPexqDTtSmmNgE8yhlXCyjYH27l65T3hooUYeQQnUevOWe6YBgjNi6aRFrqtQhX-1_EIjXFkNQ-TyuibshtR5STqoTKSk_SGWd0a_itiWtOkXv-5YmznkjTYI1shfxvQdbmF5-V1skyp0YYA3JnhP";
+const heroIllustration = heroBannerIllustration;
 const heroBackgroundStyle = {
   "--teacher2-hero-art": `url("${heroIllustration}")`,
 };
@@ -872,36 +878,36 @@ const loadTeacherStats = async () => {
   }
 };
 
-const heroActions: HeroAction[] = [
-  { key: "teach", label: "去上课", icon: "play_circle", primary: true },
-  { key: "prepare", label: "去备课", icon: "edit_note" },
-  { key: "task", label: "任务管理", icon: "assignment" },
-];
+const heroActions = computed<HeroAction[]>(() => [
+  { key: "teach", label: t("teacher.goToClass"), icon: "play_circle", primary: true },
+  { key: "prepare", label: t("teacher.goToPrepare"), icon: "edit_note" },
+  { key: "task", label: t("teacher.homePage.taskManagement"), icon: "assignment" },
+]);
 
 const statCards = computed<StatCard[]>(() => [
   {
-    label: "班级数",
+    label: t("teacher.classCount"),
     value: String(teacherStatsState.value.classCount),
     icon: "groups",
     background: "#E4DFFF",
     color: "#5948D3",
   },
   {
-    label: "授课课时",
+    label: t("teacher.teachingHours"),
     value: String(teacherStatsState.value.teachHours),
     icon: "history_edu",
     background: "#A4C1FF",
     color: "#005BC2",
   },
   {
-    label: "提交作品数",
+    label: t("teacher.submittedWorks"),
     value: String(teacherStatsState.value.opusCount),
     icon: "palette",
     background: "#FFA44F",
     color: "#904E00",
   },
   {
-    label: "学生人数",
+    label: t("teacher.studentCount"),
     value: String(teacherStatsState.value.studentCount),
     icon: "person_pin",
     background: "rgba(245, 105, 101, 0.2)",
@@ -968,7 +974,9 @@ const buildTeacherClassroomUrl = (info: {
   return `/system/classroom/${info.chapterId}?classId=${info.classId}&className=${className}&courseId=${info.courseId}&from=teacher${autoQuickLoginQuery}`;
 };
 
-const ongoingClassroomBlockedMessage = "需先结束当前课程才能开始新的课程";
+const ongoingClassroomBlockedMessage = computed(() =>
+  t("teacher.homePage.ongoingClassroomBlockedMessage")
+);
 const TEACHER_QUICK_LOGIN_STORAGE_KEY = "teacher_quick_login_info";
 
 const verifyOngoingClassroom = async () => {
@@ -1021,7 +1029,7 @@ const ensureNoOngoingClassroomBeforeStart = async (target: {
     return false;
   }
 
-  ElMessage.error(ongoingClassroomBlockedMessage);
+  ElMessage.error(ongoingClassroomBlockedMessage.value);
   return false;
 };
 
@@ -1188,11 +1196,11 @@ const buildAdaptiveSelectStyle = (
 };
 
 const classSelectStyle = computed(() =>
-  buildAdaptiveSelectStyle(classOptions.value, "暂无班级", 180, 240)
+  buildAdaptiveSelectStyle(classOptions.value, t("teacher.homePage.noClassShort"), 180, 240)
 );
 
 const courseSelectStyle = computed(() =>
-  buildAdaptiveSelectStyle(courseOptions.value, "暂无课程", 220, 360)
+  buildAdaptiveSelectStyle(courseOptions.value, t("teacher.homePage.noCourseShort"), 220, 360)
 );
 
 const selectedClassName = computed(() => {
@@ -1221,7 +1229,7 @@ const recordLessonCover = computed(() => {
 });
 
 const recordLessonCoverAlt = computed(() => {
-  return selectedCourse.value?.courseName || "课程封面大图";
+  return selectedCourse.value?.courseName || t("teacher.homePage.courseCoverAlt");
 });
 
 const normalizeRecordLessonTitle = (name: string) => {
@@ -1263,18 +1271,18 @@ const loadChapterList = async () => {
 
 const getLessonStatusText = (chapter: ChapterItem) => {
   if (chapter.teachStatus === 1) {
-    return "上课中";
+    return t("teacher.ongoing");
   }
 
   if (chapter.teachStatus === 2 && chapter.isLatestTeach === 1) {
-    return "上节课";
+    return t("teacher.lastClass");
   }
 
   if (chapter.teachStatus === 2) {
-    return "已结束";
+    return t("teacher.ended");
   }
 
-  return "未开始";
+  return t("teacher.notStarted");
 };
 
 const getLessonStatusVariant = (chapter: ChapterItem): LessonCard["status"] => {
@@ -1296,7 +1304,7 @@ const getLessonStatusVariant = (chapter: ChapterItem): LessonCard["status"] => {
 const lessonCards = computed<LessonCard[]>(() => {
   return chapterList.value.map((chapter, index) => ({
     chapterId: chapter.chapterId,
-    order: `${String(index + 1).padStart(2, "0")} 课`,
+    order: `${String(index + 1).padStart(2, "0")} ${t("teacher.homePage.lessonUnit")}`,
     title: normalizeRecordLessonTitle(chapter.chapterName),
     statusText: getLessonStatusText(chapter),
     status: getLessonStatusVariant(chapter),
@@ -1307,32 +1315,32 @@ const lessonCards = computed<LessonCard[]>(() => {
 const recordEmptyState = computed<RecordEmptyState | null>(() => {
   if (teachListLoading.value) {
     return {
-      title: "正在加载授课记录",
-      description: "请稍候，我们正在同步您的班级与课程信息。",
+      title: t("teacher.homePage.loadingTeachingRecord"),
+      description: t("teacher.homePage.loadingTeachingRecordDesc"),
       icon: "hourglass_top",
     };
   }
 
   if (!classOptions.value.length) {
     return {
-      title: "暂无班级",
-      description: "当前还没有可用的授课班级，待分配班级后会在这里显示。",
+      title: t("teacher.homePage.noClassShort"),
+      description: t("teacher.homePage.noClassDesc"),
       icon: "groups",
     };
   }
 
   if (!courseOptions.value.length) {
     return {
-      title: "暂无课程",
-      description: "当前班级下还没有可用课程，关联课程后即可查看授课记录。",
+      title: t("teacher.homePage.noCourseShort"),
+      description: t("teacher.homePage.noCourseDesc"),
       icon: "menu_book",
     };
   }
 
   if (!lessonCards.value.length) {
     return {
-      title: "暂无授课记录",
-      description: "当前课程还没有章节授课记录，开始上课后会在这里展示进度。",
+      title: t("teacher.noTeachingRecord"),
+      description: t("teacher.homePage.noTeachingRecordDesc"),
       icon: "history_edu",
     };
   }
@@ -1459,19 +1467,19 @@ const handleQuickLoginConfirm = async () => {
     showQuickLoginResultModal.value = true;
   } catch (error) {
     console.error("teacher2 创建快捷登录失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "创建失败");
+    ElMessage.error(error instanceof Error ? error.message : t("teacher.homePage.createFailed"));
   }
 };
 
 const copyQuickLoginInfo = async () => {
-  const text = `班级码：${quickLoginResultData.value.classCode}\n统一密码：${quickLoginResultData.value.classCodePwd}`;
+  const text = `${t("teacher.classCode")}${quickLoginResultData.value.classCode}\n${t("teacher.unifiedPassword")}${quickLoginResultData.value.classCodePwd}`;
 
   try {
     await navigator.clipboard.writeText(text);
-    ElMessage.success("已复制");
+    ElMessage.success(t("teacher.copied"));
   } catch (error) {
     console.error("teacher2 复制班级码失败:", error);
-    ElMessage.error("复制失败");
+    ElMessage.error(t("teacher.homePage.copyFailed"));
   }
 };
 
@@ -1687,29 +1695,29 @@ const handleStartClassConfirm = async (data: {
   }
 };
 
-const toolCards: ToolCard[] = [
+const toolCards = computed<ToolCard[]>(() => [
   {
     key: "vincibot",
     title: "MatataCode",
     subtitle: "(VinciBot)",
-    desc: "专为 VinciBot 设计的图形化编程环境",
+    desc: t("teacher.homePage.tools.vincibotDesc"),
     image: tool1Icon,
   },
   {
     key: "nous",
     title: "MatataCode",
     subtitle: "(Nous)",
-    desc: "深度学习与神经科学启蒙工具",
+    desc: t("teacher.homePage.tools.nousDesc"),
     image: tool2Icon,
   },
   {
     key: "talemap",
     title: "MatataCode",
     subtitle: "(TaleMap)",
-    desc: "将编程与故事创作完美结合",
+    desc: t("teacher.homePage.tools.talemapDesc"),
     image: tool4Icon,
   },
-];
+]);
 
 const showToolIframeModal = ref(false);
 const currentToolUrl = ref("");
@@ -1745,7 +1753,7 @@ const getAiToolAccessToken = async () => {
     "";
 
   if (!accessToken) {
-    throw new Error("获取AI工具Token失败");
+    throw new Error(t("teacher.homePage.getAiToolTokenFailed"));
   }
 
   return accessToken;
@@ -1789,37 +1797,37 @@ const handleOpenTool = (toolId: ToolCard["key"]) => {
     showToolIframeModal.value = true;
   })().catch((error) => {
     console.error("teacher2 获取工具SSO登录信息失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "获取工具Token失败");
+    ElMessage.error(error instanceof Error ? error.message : t("teacher.homePage.getAiToolTokenFailed"));
   });
 };
 
 const parseToolIframeMessageData = parseMessageData;
 const toToolZipFile = (payload: unknown) => toZipFile(payload);
 const uploadToolProjectFileToOSS = async (file: File) =>
-  uploadFileToOSS(file, "上传模型文件失败");
+  uploadFileToOSS(file, t("teacher.homePage.uploadModelFileFailed"));
 
-const teacherAIItems: Record<TeacherAIKey, TeacherAICardItem> = {
+const teacherAIItems = computed<Record<TeacherAIKey, TeacherAICardItem>>(() => ({
   imageClassModel: {
     key: "imageClassModel",
-    title: "图像分类训练",
+    title: t("teacher.homePage.aiCards.imageClassModel"),
     image: aiCover1,
   },
   gestureClassModel: {
     key: "gestureClassModel",
-    title: "手势分类训练",
+    title: t("teacher.homePage.aiCards.gestureClassModel"),
     image: aiCover2,
   },
   voiceClassModel: {
     key: "voiceClassModel",
-    title: "语音分类训练",
+    title: t("teacher.homePage.aiCards.voiceClassModel"),
     image: aiCover3,
   },
   poseClassModel: {
     key: "poseClassModel",
-    title: "姿态分类训练",
+    title: t("teacher.homePage.aiCards.poseClassModel"),
     image: aiCover4,
   },
-};
+}));
 
 const showAIModelSelectModal = ref(false);
 const showAICreateModal = ref(false);
@@ -1862,7 +1870,7 @@ const getCurrentUserId = () => {
 };
 
 const getSavedAIModelCover = (toolKey: TeacherAIKey) => {
-  return teacherAIItems[toolKey]?.image || aiCover1;
+  return teacherAIItems.value[toolKey]?.image || aiCover1;
 };
 
 const formatSavedAIModelTime = (timestamp: number) => {
@@ -2032,7 +2040,7 @@ const openTeacherAIIframe = async (
 };
 
 const handleOpenAIModal = (key: TeacherAIKey) => {
-  currentAIModel.value = teacherAIItems[key] || null;
+  currentAIModel.value = teacherAIItems.value[key] || null;
   aiModelName.value = "";
   savedAIModels.value = [];
   showAIModelSelectModal.value = true;
@@ -2075,7 +2083,7 @@ const handleAIConfirm = async () => {
 
   const trimmedName = aiModelName.value.trim();
   if (!trimmedName) {
-    ElMessage.warning("请输入模型名称");
+    ElMessage.warning(t("teacher.homePage.modelNameRequired"));
     return;
   }
 
@@ -2099,7 +2107,7 @@ const handleOpenAISavedModel = async (item: SavedAITeacherModelListItem) => {
     if (!cachedFile) {
       const remoteFile = await downloadTeacherAIModelZipFile(item);
       if (!remoteFile) {
-        ElMessage.error("模型文件不存在");
+        ElMessage.error(t("teacher.homePage.modelFileMissing"));
         return;
       }
 
@@ -2111,15 +2119,18 @@ const handleOpenAISavedModel = async (item: SavedAITeacherModelListItem) => {
     await openTeacherAIIframe(currentAIModel.value, item.name, item.id);
   } catch (error) {
     console.error("teacher2 读取AI模型文件失败:", error);
-    ElMessage.error("加载模型失败");
+    ElMessage.error(t("teacher.homePage.loadModelFailed"));
   }
 };
 
 const handleDeleteAISavedModel = async (item: SavedAITeacherModelListItem) => {
   try {
-    await ElMessageBox.confirm(`确认删除模型“${item.name}”吗？`, "提示", {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
+    await ElMessageBox.confirm(
+      t("teacher.homePage.deleteModelConfirm", { name: item.name }),
+      t("teacher.homePage.prompt"),
+      {
+      confirmButtonText: t("teacher.homePage.confirm"),
+      cancelButtonText: t("teacher.homePage.cancel"),
       type: "warning",
     });
   } catch {
@@ -2139,10 +2150,10 @@ const handleDeleteAISavedModel = async (item: SavedAITeacherModelListItem) => {
     const cacheKey = getTeacherAICacheKey(item.toolKey, item.id);
     savedProjectZipCache.delete(cacheKey);
     savedAIModels.value = savedAIModels.value.filter((model) => model.id !== item.id);
-    ElMessage.success("删除成功");
+    ElMessage.success(t("teacher.homePage.deleteSuccess"));
   } catch (error) {
     console.error("teacher2 删除AI模型失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "删除失败");
+    ElMessage.error(error instanceof Error ? error.message : t("teacher.homePage.deleteFailed"));
   }
 };
 
@@ -2219,7 +2230,7 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
 
   try {
     if (!currentAIModel.value) {
-      throw new Error("当前AI模型上下文不存在");
+      throw new Error(t("teacher.homePage.aiModelContextMissing"));
     }
 
     const previousCacheKey = currentToolCacheKey.value;
@@ -2248,7 +2259,7 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
       uploadFile.name.replace(/\.[^.]+$/, "");
 
     if (!uploadResult?.ossId || !userId || !optType) {
-      throw new Error("保存模型参数不完整");
+      throw new Error(t("teacher.homePage.saveModelParamsIncomplete"));
     }
 
     let finalModelId = currentEditingAIModelId.value || `${Date.now()}`;
@@ -2283,10 +2294,14 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
 
     isEditingAITeacherModel.value = true;
     await loadSavedAIModels();
-    ElMessage.success(saveMode === "edit" ? "编辑成功" : "创建成功");
+    ElMessage.success(
+      saveMode === "edit"
+        ? t("teacher.homePage.editSuccess")
+        : t("teacher.homePage.createSuccess")
+    );
   } catch (error) {
     console.error("teacher2 AI中心保存模型失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "保存失败");
+    ElMessage.error(error instanceof Error ? error.message : t("teacher.homePage.saveFailed"));
   }
 };
 
@@ -2313,36 +2328,36 @@ const closeToolIframeModal = () => {
   }
 };
 
-const aiCards: AICard[] = [
+const aiCards = computed<AICard[]>(() => [
   {
     key: "imageClassModel",
-    title: "图像分类训练",
+    title: t("teacher.homePage.aiCards.imageClassModel"),
     image: aiCover1,
     background: "#E4DFFF",
     overlay: "linear-gradient(180deg, transparent 0%, rgba(89, 72, 211, 0.4) 100%)",
   },
   {
     key: "gestureClassModel",
-    title: "手势分类训练",
+    title: t("teacher.homePage.aiCards.gestureClassModel"),
     image: aiCover2,
     background: "#A4C1FF",
     overlay: "linear-gradient(180deg, transparent 0%, rgba(0, 91, 194, 0.4) 100%)",
   },
   {
     key: "voiceClassModel",
-    title: "语音分类训练",
+    title: t("teacher.homePage.aiCards.voiceClassModel"),
     image: aiCover3,
     background: "#FFA44F",
     overlay: "linear-gradient(180deg, transparent 0%, rgba(144, 78, 0, 0.4) 100%)",
   },
   {
     key: "poseClassModel",
-    title: "姿态分类训练",
+    title: t("teacher.homePage.aiCards.poseClassModel"),
     image: aiCover4,
     background: "#F56965",
     overlay: "linear-gradient(180deg, transparent 0%, rgba(172, 52, 52, 0.4) 100%)",
   },
-];
+]);
 </script>
 
 <style scoped>
@@ -2461,8 +2476,8 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-hero {
-  --hero-art-size: clamp(180px, 12vw, 220px);
-  --hero-art-right: clamp(18px, 1.4vw, 24px);
+  --hero-art-size: clamp(250px, 16vw, 310px);
+  --hero-art-right: clamp(-14px, -0.6vw, 0px);
   position: relative;
   display: block;
   min-height: 380px;
@@ -2627,50 +2642,16 @@ const aiCards: AICard[] = [
   pointer-events: none;
 }
 
-.teacher2-hero__visual::before {
-  content: "";
-  position: absolute;
-  inset: 4%;
-  z-index: 0;
-  border-radius: 999px;
-  background: radial-gradient(
-      circle at 50% 48%,
-      rgba(125, 220, 255, 0.22) 0%,
-      rgba(125, 220, 255, 0.1) 34%,
-      rgba(125, 220, 255, 0) 74%
-    ),
-    radial-gradient(
-      circle at 52% 68%,
-      rgba(255, 255, 255, 0.1) 0%,
-      rgba(255, 255, 255, 0) 58%
-    );
-  filter: blur(14px);
-  pointer-events: none;
-}
-
 .teacher2-hero__visual::after {
   content: "";
   position: absolute;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: -22px;
   z-index: 1;
-  background: center / contain no-repeat var(--teacher2-hero-art);
-  opacity: 0.86;
-  mix-blend-mode: screen;
-  -webkit-mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000 0%,
-    #000 54%,
-    rgba(0, 0, 0, 0.82) 70%,
-    transparent 92%
-  );
-  mask-image: radial-gradient(
-    circle at 50% 50%,
-    #000 0%,
-    #000 54%,
-    rgba(0, 0, 0, 0.82) 70%,
-    transparent 92%
-  );
-  filter: brightness(1.08) saturate(1.04) drop-shadow(0 14px 30px rgba(0, 91, 194, 0.12));
+  background: left center / contain no-repeat var(--teacher2-hero-art);
+  filter: drop-shadow(0 14px 30px rgba(0, 91, 194, 0.12));
 }
 
 .teacher2-hero__glow {
@@ -2750,7 +2731,7 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-section {
-  /* margin-bottom: var(--section-gap); */
+  margin-bottom: var(--section-gap);
 }
 
 .teacher2-section--record {
@@ -2824,7 +2805,9 @@ const aiCards: AICard[] = [
   display: flex;
   align-items: center;
   gap: clamp(20px, 1.5vw, 24px);
-  padding: clamp(24px, 1.8vw, 28px);
+  min-height: 150px;
+  height: 150px;
+  padding: 20px 24px;
   border: 1px solid rgba(174, 179, 181, 0.1);
   border-radius: 24px;
   background: #ffffff;
@@ -2838,7 +2821,13 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-tool-card__content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
   min-width: 0;
+  flex: 1;
+  align-self: stretch;
 }
 
 .teacher2-tool-card__media {
@@ -2846,8 +2835,8 @@ const aiCards: AICard[] = [
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: clamp(82px, 5.6vw, 92px);
-  height: clamp(82px, 5.6vw, 92px);
+  width: 88px;
+  height: 88px;
   /* border-radius: 24px;
   background: #f2f4f5; */
   transition: background-color 0.2s ease;
@@ -2860,15 +2849,18 @@ const aiCards: AICard[] = [
 .teacher2-tool-card__logo {
   /* width: 80px;
   height: 80px; */
+  width: 88px;
+  height: 88px;
   object-fit: contain;
 }
 
 .teacher2-tool-card__title {
   margin: 0;
   color: #2e3335;
-  font-size: clamp(22px, 1.45vw, 24px);
+  font-size: clamp(18px, 1.28vw, 20px);
   font-weight: 700;
   line-height: 1.1;
+  overflow: hidden;
   transition: color 0.2s ease;
 }
 
@@ -2879,13 +2871,22 @@ const aiCards: AICard[] = [
 
 .teacher2-tool-card__subtitle {
   display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: inherit;
+  line-height: inherit;
 }
 
 .teacher2-tool-card__desc {
-  margin: 8px 0 0;
+  margin: 0;
   color: #5a6062;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
+  line-height: 1.4;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   transition: color 0.2s ease;
 }
 
@@ -3046,7 +3047,7 @@ const aiCards: AICard[] = [
 .teacher2-ai-card__title {
   margin: 0;
   font-size: clamp(20px, 1.35vw, 22px);
-  font-weight: 700;
+  font-weight: 500;
   text-align: center;
 }
 
@@ -3523,6 +3524,9 @@ const aiCards: AICard[] = [
 }
 
 .teacher2-record-grid {
+  --teacher2-record-cover-height: clamp(334px, calc(5.714vw + 248.29px), 358px);
+  --teacher2-record-grid-gap: 8px;
+  --teacher2-record-card-height: clamp(188px, 12.8vw, 204px);
   display: grid;
   grid-template-columns: clamp(248px, 18vw, 280px) minmax(0, 1fr);
   gap: 24px;
@@ -3582,7 +3586,7 @@ const aiCards: AICard[] = [
 
 .teacher2-cover-card {
   position: relative;
-  height: clamp(320px, 22vw, 360px);
+  height: var(--teacher2-record-cover-height);
   overflow: hidden;
   border: 1px solid rgba(174, 179, 181, 0.3);
   border-radius: 24px;
@@ -3595,6 +3599,7 @@ const aiCards: AICard[] = [
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center top;
   transition: transform 0.7s ease;
 }
 
@@ -3611,8 +3616,11 @@ const aiCards: AICard[] = [
 .teacher2-lesson-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: clamp(16px, 1.35vw, 24px);
-  max-height: clamp(340px, 23vw, 352px);
+  grid-auto-rows: var(--teacher2-record-card-height);
+  gap: var(--teacher2-record-grid-gap);
+  height: var(--teacher2-record-cover-height);
+  max-height: var(--teacher2-record-cover-height);
+  overflow-x: hidden;
   overflow-y: auto;
   align-content: start;
   padding-right: 8px;
@@ -3636,9 +3644,10 @@ const aiCards: AICard[] = [
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: clamp(18px, 1.3vw, 24px);
-  height: clamp(212px, 14.5vw, 228px);
-  padding: clamp(18px, 1.4vw, 24px);
+  gap: 12px;
+  height: var(--teacher2-record-card-height);
+  min-height: var(--teacher2-record-card-height);
+  padding: 14px 16px;
   overflow: hidden;
   border: 1px solid rgba(0, 91, 194, 0.7);
   border-radius: 24px;
@@ -3648,9 +3657,9 @@ const aiCards: AICard[] = [
 
 .teacher2-lesson-card__order {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 4px 12px;
+  top: 12px;
+  right: 12px;
+  padding: 4px 10px;
   border-radius: 8px;
   background: rgba(0, 91, 194, 0.1);
   color: #005bc2;
@@ -3661,11 +3670,11 @@ const aiCards: AICard[] = [
 
 .teacher2-lesson-card__status {
   position: absolute;
-  top: 16px;
-  left: 16px;
+  top: 12px;
+  left: 12px;
   display: inline-flex;
   align-items: center;
-  padding: 4px 12px;
+  padding: 4px 10px;
   border-radius: 999px;
   font-size: 10px;
   font-weight: 700;
@@ -3698,28 +3707,32 @@ const aiCards: AICard[] = [
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 40px;
-  margin: 38px 0 0;
-  padding: 0 8px;
+  min-height: 32px;
+  margin: 50px 0 0;
+  padding: 0 4px;
   color: #2e3335;
-  font-size: clamp(16px, 1.1vw, 18px);
+  font-size: clamp(14px, 0.95vw, 16px);
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.35;
   text-align: center;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
 }
 
 .teacher2-lesson-card__actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 10px;
   margin-top: auto;
   width: 100%;
 }
 
 .teacher2-lesson-card__button {
-  min-height: 40px;
-  border-radius: 12px;
-  font-size: 13px;
+  min-height: 36px;
+  border-radius: 10px;
+  font-size: 12px;
   font-weight: 700;
 }
 

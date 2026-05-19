@@ -22,6 +22,22 @@
       </button>
     </nav>
 
+    <!-- 语言切换（测试用） -->
+    <div class="teacher2-lang-switch">
+      <button
+        type="button"
+        class="teacher2-lang-btn"
+        :class="{ 'is-active': currentLocale === 'zh' }"
+        @click="switchLocale('zh')"
+      >中文</button>
+      <button
+        type="button"
+        class="teacher2-lang-btn"
+        :class="{ 'is-active': currentLocale === 'en' }"
+        @click="switchLocale('en')"
+      >EN</button>
+    </div>
+
     <div class="teacher2-profile-wrap">
       <div ref="profileDropdownRef" class="teacher2-profile-entry">
         <button
@@ -56,21 +72,21 @@
               class="teacher2-profile-dropdown__item"
               @click="handleModuleSwitch"
             >
-              模块切换
+              {{ t('sidebar.moduleSwitch') }}
             </button>
             <button
               type="button"
               class="teacher2-profile-dropdown__item"
               @click="handleProfile"
             >
-              个人中心
+              {{ t('sidebar.personalCenter') }}
             </button>
             <button
               type="button"
               class="teacher2-profile-dropdown__item teacher2-profile-dropdown__item--danger"
               @click="handleLogout"
             >
-              退出登录
+              {{ t('sidebar.logout') }}
             </button>
           </div>
         </Transition>
@@ -80,6 +96,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import brandLogoImage from "~/assets/newimages/logo.svg";
 import teacherAvatarImage from "~/assets/newimages/user.png";
 import { ElMessageBox } from "element-plus";
@@ -107,6 +124,13 @@ type OngoingClassroomInfo = {
 
 const route = useRoute();
 const router = useRouter();
+const { $i18n } = useNuxtApp();
+const { t } = useI18n();
+const currentLocale = computed(() => $i18n.locale.value);
+const switchLocale = (lang: 'zh' | 'en') => {
+  $i18n.locale.value = lang;
+  localStorage.setItem('locale', lang);
+};
 const { user, logout } = useAuth();
 const { menuItems, loadMenus } = useTeacherNav();
 const { endClass, stopQuickLogin, getTeacherStatus } = useTeacher();
@@ -128,45 +152,45 @@ useHead({
   ],
 });
 
-const fallbackNavItems: NavItem[] = [
-  { label: "首页", fallbackIcon: "home", path: "/teacher" },
+const fallbackNavItems = computed<NavItem[]>(() => [
+  { label: t('sidebar.home'), fallbackIcon: "home", path: "/teacher" },
   {
-    label: "班级管理",
+    label: t('sidebar.classManagement'),
     fallbackIcon: "group",
     path: "/system/class",
   },
   {
-    label: "课程中心",
+    label: t('sidebar.courseCenter'),
     fallbackIcon: "menu_book",
     path: "/system/course",
   },
   {
-    label: "玛塔工具中心",
+    label: t('sidebar.toolCenter'),
     fallbackIcon: "construction",
     path: "/system/tool",
   },
   {
-    label: "AI实践中心",
+    label: t('sidebar.aiPracticeCenter'),
     fallbackIcon: "psychology",
     path: "/system/opt",
   },
   {
-    label: "学情中心",
+    label: t('sidebar.learningCenter'),
     fallbackIcon: "insights",
     path: "/system/study",
   },
   {
-    label: "教师成长中心",
+    label: t('sidebar.teacherGrowthCenter'),
     fallbackIcon: "trending_up",
     path: "/system/growth",
   },
   {
-    label: "赛事中心",
+    label: t('sidebar.competitionCenter'),
     fallbackIcon: "emoji_events",
     path: "/system/event",
   },
-  { label: "AI助手", fallbackIcon: "smart_toy", path: "/system/ai" },
-];
+  { label: t('sidebar.aiAssistant'), fallbackIcon: "smart_toy", path: "/system/ai" },
+]);
 
 const implementedSidebarPaths = [
   "/teacher",
@@ -267,15 +291,33 @@ const resolveSidebarIconGlyph = (item: NavItem) => {
   return resolveSidebarIcon(label, path);
 };
 
+const sidebarLabelMap: Record<string, string> = {
+  "首页": "sidebar.home",
+  "班级管理": "sidebar.classManagement",
+  "课程中心": "sidebar.courseCenter",
+  "玛塔工具中心": "sidebar.toolCenter",
+  "AI实践中心": "sidebar.aiPracticeCenter",
+  "学情中心": "sidebar.learningCenter",
+  "教师成长中心": "sidebar.teacherGrowthCenter",
+  "赛事中心": "sidebar.competitionCenter",
+  "AI助手": "sidebar.aiAssistant",
+  "AI 助手": "sidebar.aiAssistant",
+};
+
+const resolveSidebarLabel = (label: string) => {
+  const key = sidebarLabelMap[label];
+  return key ? t(key) : label;
+};
+
 const sidebarNavItems = computed<NavItem[]>(() => {
   if (!menuItems.value.length) {
-    return fallbackNavItems;
+    return fallbackNavItems.value;
   }
 
   return menuItems.value.map((item) => {
     const path = normalizeSidebarPath(item.label, item.path);
     return {
-      label: item.label,
+      label: resolveSidebarLabel(item.label),
       path,
       activeMenu: item.activeMenu,
       externalUrl: item.externalUrl,
@@ -284,6 +326,10 @@ const sidebarNavItems = computed<NavItem[]>(() => {
       fallbackIcon: resolveSidebarIcon(item.label, path),
     };
   });
+});
+
+watch(currentLocale, () => {
+  void loadMenus(true);
 });
 
 const showModuleSwitch = computed(() => {
@@ -298,12 +344,12 @@ const teacherDisplayName = computed(() => {
     user.value?.nickname ||
     user.value?.nick_name ||
     user.value?.user_name ||
-    "用户"
+    t('sidebar.user')
   );
 });
 
 const teacherDisplayRole = computed(() => {
-  return user.value?.roleName || user.value?.role_name || "教师";
+  return user.value?.roleName || user.value?.role_name || t('sidebar.teacher');
 });
 
 const resolvedTeacherAvatar = computed(() => {
@@ -727,6 +773,38 @@ onBeforeUnmount(() => {
   margin: 2px 0 0;
   font-size: 9px;
   color: #5a6062;
+}
+
+.teacher2-lang-switch {
+  display: flex;
+  gap: 4px;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.teacher2-lang-btn {
+  flex: 1;
+  border: 1px solid #dee3e5;
+  border-radius: 8px;
+  background: transparent;
+  padding: 6px 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: #5a6062;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.teacher2-lang-btn:hover {
+  border-color: #005bc2;
+  color: #005bc2;
+}
+
+.teacher2-lang-btn.is-active {
+  background: #005bc2;
+  border-color: #005bc2;
+  color: #fff;
+  font-weight: 600;
 }
 
 @media (min-width: 1536px) {

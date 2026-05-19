@@ -1,60 +1,56 @@
 <template>
   <div class="object-recognition-page">
     <div class="object-recognition-shell">
-      <nav class="object-recognition-breadcrumb" aria-label="面包屑">
+      <nav class="object-recognition-breadcrumb" :aria-label="t('objectRecognition.breadcrumbAria')">
         <button
           type="button"
           class="object-recognition-breadcrumb__link"
           @click="handleBackToAiCenter"
         >
-          AI 实践中心
+          {{ t("objectRecognition.aiPracticeCenter") }}
         </button>
         <span class="object-recognition-breadcrumb__separator">/</span>
-        <span class="object-recognition-breadcrumb__current">物品识别</span>
+        <span class="object-recognition-breadcrumb__current">{{ t("objectRecognition.objectRecognition") }}</span>
       </nav>
 
       <main class="object-recognition-main">
         <section class="object-recognition-hero">
           <div class="object-recognition-hero__intro">
             <div class="object-recognition-hero__copy">
-              <h1>物品识别</h1>
+              <h1>{{ t("objectRecognition.introTitle") }}</h1>
               <p>
-                基于人工智能与计算机视觉技术的应用，通过对图像或视频中的物体进行特征提取与分析，
-                实现对物品类别的自动判断与识别。其核心依赖于深度学习模型，尤其是卷积神经网络，
-                能够准确识别日常生活中的各类物体。
+                {{ t("objectRecognition.introDesc1") }}
               </p>
               <p>
-                该技术广泛应用于智能安防、无人零售、自动驾驶、教育互动等场景，
-                不仅提升了信息处理效率，也为智能化应用提供了重要支撑。
+                {{ t("objectRecognition.introDesc2") }}
               </p>
 
               <NuxtLink
                 to="/system/ai/material/experience"
                 class="object-recognition-primary"
               >
-                立即体验
+                {{ t("objectRecognition.startExperience") }}
               </NuxtLink>
             </div>
 
-            <div class="object-recognition-hero__visual" aria-label="物品识别示意图">
+            <div class="object-recognition-hero__visual" :aria-label="t('objectRecognition.visualAriaLabel')">
               <div class="object-recognition-image-card">
                 <img
                   src="/images/ai-practice/practice-23-7c2c96bc.webp"
-                  alt="物品识别镜头示意图"
+                  :alt="t('objectRecognition.introImageAlt')"
                 />
               </div>
             </div>
           </div>
 
           <aside class="object-recognition-match-card">
-            <h2>模型匹配与分类</h2>
+            <h2>{{ t("objectRecognition.matchAndClassification") }}</h2>
             <p>
-              提取的特征将与本地预训练模型进行比对，
-              通过概率计算确定模型已支持物品的类别与属性。
+              {{ t("objectRecognition.matchDesc") }}
             </p>
             <div class="object-recognition-meter">
               <div class="object-recognition-meter__head">
-                <span>匹配相似度</span>
+                <span>{{ t("objectRecognition.matchSimilarity") }}</span>
                 <strong>96%</strong>
               </div>
               <div class="object-recognition-meter__track">
@@ -67,8 +63,8 @@
         <section class="object-recognition-workflow">
           <div class="object-recognition-section-head">
             <div>
-              <h2>工作流程</h2>
-              <p>从样本采集到模型推理，帮助学生理解图像识别的完整链路。</p>
+              <h2>{{ t("objectRecognition.workflowTitle") }}</h2>
+              <p>{{ t("objectRecognition.workflowDesc") }}</p>
             </div>
           </div>
 
@@ -97,43 +93,42 @@
 </template>
 
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
+
+const { t } = useI18n();
+
 definePageMeta({
   layout: "sidebar",
 });
 
 useHead({
-  title: "物品识别体验",
-  htmlAttrs: {
-    lang: "zh-CN",
-  },
+  title: computed(() => t("objectRecognition.pageTitle")),
+  htmlAttrs: {},
 });
 
-const workflowSteps = [
+const workflowSteps = computed(() => [
   {
     index: "01",
-    title: "数据采集",
-    description:
-      "支持高精图像采集，对各类物品进行多维度特征标注与分类管理，为模型提供高质量训练样本。",
+    title: t("objectRecognition.stepDataCollection"),
+    description: t("objectRecognition.stepDataCollectionDesc"),
     image:
       "/images/ai-practice/practice-24-488ee045.webp",
   },
   {
     index: "02",
-    title: "模型训练",
-    description:
-      "基于已采集的数据集，利用卷积神经网络架构训练深度学习模型，实现对物品特征的精准提取。",
+    title: t("objectRecognition.stepModelTraining"),
+    description: t("objectRecognition.stepModelTrainingDesc"),
     image:
       "/images/ai-practice/practice-25-9df2aa4e.webp",
   },
   {
     index: "03",
-    title: "识别结果",
-    description:
-      "即时通过本地模型进行匹配，输出已支持物品的名称及其对应的置信度评分。",
+    title: t("objectRecognition.stepRecognitionResult"),
+    description: t("objectRecognition.stepRecognitionResultDesc"),
     image:
       "/images/ai-practice/practice-26-48d56026.webp",
   },
-];
+]);
 
 const handleBackToAiCenter = async () => {
   await navigateTo("/system/opt");

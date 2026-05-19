@@ -482,13 +482,13 @@
               <template v-else>
                 <img
                   v-if="uploadForm.workFileName"
-                  src="~/assets/images/tool3.png"
+                  src="~/assets/images/tool3.svg"
                   alt=""
                   class="preview-image full"
                 />
                 <img
                   v-else
-                  src="~/assets/images/tool3.png"
+                  src="~/assets/images/tool3.svg"
                   alt=""
                   class="preview-image full"
                   style="opacity: 0.5"
@@ -544,7 +544,7 @@
                   </div>
                 </div>
                 <template v-if="uploadForm.workFileName">
-                  <img src="~/assets/images/tool3.png" alt="" class="file-preview-img" />
+                  <img src="~/assets/images/tool3.svg" alt="" class="file-preview-img" />
                   <div class="file-overlay">
                     <svg
                       viewBox="0 0 24 24"
@@ -661,7 +661,7 @@
                     muted
                     playsinline
                   ></video>
-                  <img v-else src="~/assets/images/tool3.png" alt="" class="file-preview-img" />
+                  <img v-else src="~/assets/images/tool3.svg" alt="" class="file-preview-img" />
                   <div class="file-overlay">
                     <svg
                       viewBox="0 0 24 24"

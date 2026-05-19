@@ -712,14 +712,14 @@
     <div
       v-if="showTaskAiIframeModal"
       class="iframe-modal-overlay"
-      @click.self="closeTaskAiIframeModal"
+      @click.self="handleCloseTaskAiModal"
     >
       <div class="iframe-modal-container">
         <div class="iframe-modal-header">
           <span class="iframe-modal-title">{{
             currentTaskAiProjectName || selectedTask?.taskName || "AI Model"
           }}</span>
-          <button class="iframe-close-btn" @click="closeTaskAiIframeModal">
+          <button class="iframe-close-btn" @click="handleCloseTaskAiModal">
             <svg
               width="20"
               height="20"
@@ -738,7 +738,22 @@
             <div class="loading-spinner"></div>
             <span class="loading-text">加载中...</span>
           </div>
+          <AiImageTaskWorkbench
+            v-if="currentTaskAiToolKey === 'aiPainting' && !taskAiIframeLoading"
+            embedded
+            :selected-session-id="currentTaskAiSelectedSessionId"
+            @generate-start="handleAiPaintingGenerateStart"
+            @open-history-gallery="openTaskAiHistoryGallery"
+            @session-loaded="handleAiPaintingSessionLoaded"
+            @generated="handleAiPaintingGenerated"
+          />
+          <AiQaTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'smartQA' && !taskAiIframeLoading"
+            embedded
+            @chat-session-ready="handleAiQaSessionReady"
+          />
           <iframe
+            v-else
             ref="taskAiIframeRef"
             :src="currentTaskAiUrl"
             class="tool-iframe"
@@ -749,6 +764,34 @@
             @load="onTaskAiIframeLoad"
           />
         </div>
+        <div
+          v-if="currentTaskAiToolKey === 'aiPainting' || currentTaskAiToolKey === 'smartQA'"
+          class="iframe-modal-footer iframe-modal-footer--ai-painting"
+        >
+          <span class="iframe-modal-footer__hint">{{ taskAiSubmitHint }}</span>
+          <button
+            class="iframe-submit-btn"
+            :disabled="currentTaskAiToolKey === 'aiPainting' ? !canSubmitTaskAiPainting : !canSubmitTaskAiQa"
+            @click="currentTaskAiToolKey === 'aiPainting' ? submitAiPaintingTask() : submitAiQaTask()"
+          >
+            {{ submittingTaskAi ? "提交中..." : "提交任务" }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      v-if="showTaskAiHistoryGallery"
+      class="iframe-modal-overlay iframe-modal-overlay--gallery"
+      @click.self="closeTaskAiHistoryGallery"
+    >
+      <div class="iframe-modal-container iframe-modal-container--gallery">
+        <AiImageHistoryPage
+          embedded
+          :selected-session-id="currentTaskAiGeneratedPayload?.sessionId || currentTaskAiOptId"
+          @close="closeTaskAiHistoryGallery"
+          @select="handleTaskAiHistorySelect"
+        />
       </div>
     </div>
 
@@ -940,6 +983,9 @@ import { aiAdmin } from "~/composables/api/ai";
 import { personalcenterApi } from "~/composables/api/personalcenter";
 import { student } from "~/composables/api/student";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
+import AiImageTaskWorkbench from "~/components/ai/AiImageTaskWorkbench.vue";
+import AiImageHistoryPage from "~/components/ai/AiImageHistoryPage.vue";
+import AiQaTaskWorkbench from "~/components/ai/AiQaTaskWorkbench.vue";
 import StudentTaskAnswerModal from "~/components/student/StudentTaskAnswerModal.vue";
 import StarRating from "~/components/ui/StarRating.vue";
 import { normalizeRatePercent, percentToStars, scoreToStars } from "~/utils/star-rating";
@@ -991,6 +1037,12 @@ interface TaskGroup {
   items: TaskItem[];
 }
 
+interface GeneratedAiPaintingPayload {
+  sessionId: string;
+  imageUrls: string[];
+  prompt: string;
+}
+
 type SubmissionAssetTab = "project" | "video" | "image";
 
 const route = useRoute();
@@ -1040,9 +1092,14 @@ const currentTaskAiProjectName = ref("");
 const currentTaskAiOptType = ref("");
 const currentTaskAiOptId = ref("");
 const currentTaskAiTaskId = ref("");
+const currentTaskAiToolKey = ref("");
 const currentTaskAiFile = ref<File | null>(null);
+const currentTaskAiGeneratedPayload = ref<GeneratedAiPaintingPayload | null>(null);
+const currentTaskAiSelectedSessionId = ref("");
+const currentTaskAiChatSessionId = ref("");
 const taskAiIframeRef = ref<HTMLIFrameElement | null>(null);
 const submittingTaskAi = ref(false);
+const showTaskAiHistoryGallery = ref(false);
 const showToolIframeModal = ref(false);
 const currentToolUrl = ref("");
 const currentToolName = ref("");
@@ -1075,6 +1132,43 @@ const recordedVideoChunks = ref<BlobPart[]>([]);
 const videoRecordInputRef = ref<HTMLInputElement | null>(null);
 const videoUploadInputRef = ref<HTMLInputElement | null>(null);
 const imageCaptureInputRef = ref<HTMLInputElement | null>(null);
+
+const canSubmitTaskAiPainting = computed(() => {
+  return (
+    currentTaskAiToolKey.value === "aiPainting" &&
+    !submittingTaskAi.value &&
+    Array.isArray(currentTaskAiGeneratedPayload.value?.imageUrls) &&
+    currentTaskAiGeneratedPayload.value!.imageUrls.length > 0
+  );
+});
+
+const canSubmitTaskAiQa = computed(() => {
+  return (
+    currentTaskAiToolKey.value === "smartQA" &&
+    !submittingTaskAi.value &&
+    Boolean(String(currentTaskAiChatSessionId.value || "").trim())
+  );
+});
+
+const taskAiSubmitHint = computed(() => {
+  if (currentTaskAiToolKey.value === "smartQA") {
+    if (submittingTaskAi.value) {
+      return "正在提交 AI 问答任务...";
+    }
+    if (currentTaskAiChatSessionId.value) {
+      return "已完成 AI 问答，确认无误后点击右侧提交任务";
+    }
+    return "请先完成 AI 问答，再提交任务";
+  }
+  const imageCount = currentTaskAiGeneratedPayload.value?.imageUrls.length || 0;
+  if (submittingTaskAi.value) {
+    return "正在上传生成图片并提交任务...";
+  }
+  if (imageCount > 0) {
+    return `已生成 ${imageCount} 张图片，确认无误后点击右侧提交任务`;
+  }
+  return "请先完成 AI 画图，生成图片后再提交任务";
+});
 const imageUploadInputRef = ref<HTMLInputElement | null>(null);
 const showHistoryOpusModal = ref(false);
 const historyOpusLoading = ref(false);
@@ -1213,6 +1307,8 @@ const firstNonEmptyString = (...values: any[]) => {
 };
 
 const TASK_AI_TOOL_KEY_MAP: Record<string, string> = {
+  ai_draw: "aiPainting",
+  ai_qa: "smartQA",
   image_cls: "imageClassModel",
   gesture_cls: "gestureClassModel",
   audio_cls: "voiceClassModel",
@@ -1220,6 +1316,8 @@ const TASK_AI_TOOL_KEY_MAP: Record<string, string> = {
 };
 
 const TASK_AI_TYPE_MAP: Record<string, number> = {
+  aiPainting: 7,
+  smartQA: 1,
   imageClassModel: 1,
   gestureClassModel: 2,
   voiceClassModel: 3,
@@ -1231,6 +1329,8 @@ const normalizeStudentAiTaskOptType = (value: unknown) => {
     .trim()
     .toLowerCase();
   const typeMap: Record<string, string> = {
+    ai_draw: "ai_draw",
+    ai_qa: "ai_qa",
     image_cls: "image_cls",
     audio_cls: "audio_cls",
     pose_cls: "pose_cls",
@@ -1241,6 +1341,8 @@ const normalizeStudentAiTaskOptType = (value: unknown) => {
     pose: "pose_cls",
     hand: "gesture_cls",
     gesture: "gesture_cls",
+    aipainting: "ai_draw",
+    smartqa: "ai_qa",
   };
 
   return typeMap[normalizedValue] || "";
@@ -2389,14 +2491,31 @@ const downloadStudentToolZipFile = (zipFile: File) => {
 
 const closeTaskAiIframeModal = () => {
   showTaskAiIframeModal.value = false;
+  showTaskAiHistoryGallery.value = false;
   taskAiIframeLoading.value = true;
   currentTaskAiUrl.value = "";
   currentTaskAiProjectName.value = "";
   currentTaskAiOptType.value = "";
   currentTaskAiOptId.value = "";
   currentTaskAiTaskId.value = "";
+  currentTaskAiToolKey.value = "";
   currentTaskAiFile.value = null;
+  currentTaskAiGeneratedPayload.value = null;
+  currentTaskAiSelectedSessionId.value = "";
+  currentTaskAiChatSessionId.value = "";
   submittingTaskAi.value = false;
+};
+
+const handleCloseTaskAiModal = () => {
+  closeTaskAiIframeModal();
+};
+
+const openTaskAiHistoryGallery = () => {
+  showTaskAiHistoryGallery.value = true;
+};
+
+const closeTaskAiHistoryGallery = () => {
+  showTaskAiHistoryGallery.value = false;
 };
 
 const onTaskAiIframeLoad = () => {
@@ -2405,6 +2524,219 @@ const onTaskAiIframeLoad = () => {
   window.setTimeout(() => {
     void postCurrentAiFileToIframe();
   }, 300);
+};
+
+const handleAiPaintingGenerateStart = () => {
+  currentTaskAiGeneratedPayload.value = null;
+  currentTaskAiSelectedSessionId.value = "";
+};
+
+const handleAiQaSessionReady = (payload: { sessionId: string }) => {
+  currentTaskAiChatSessionId.value = String(payload.sessionId || "").trim();
+};
+
+const handleTaskAiHistorySelect = (item: {
+  sessionId: string;
+  imageUrl: string;
+  content: string;
+}) => {
+  const sessionId = String(item?.sessionId || "").trim();
+  if (sessionId) {
+    currentTaskAiOptId.value = sessionId;
+    currentTaskAiSelectedSessionId.value = sessionId;
+  }
+  if (item?.content) {
+    currentTaskAiProjectName.value = String(item.content).trim();
+  }
+  closeTaskAiHistoryGallery();
+};
+
+const handleAiPaintingSessionLoaded = (payload: {
+  sessionId: string;
+  imageUrls: string[];
+  prompt: string;
+}) => {
+  currentTaskAiGeneratedPayload.value = {
+    sessionId: String(payload.sessionId || "").trim(),
+    imageUrls: Array.isArray(payload.imageUrls)
+      ? payload.imageUrls.map((item) => String(item || "").trim()).filter(Boolean)
+      : [],
+    prompt: String(payload.prompt || "").trim(),
+  };
+  if (payload.sessionId) {
+    currentTaskAiOptId.value = String(payload.sessionId).trim();
+  }
+  if (payload.prompt) {
+    currentTaskAiProjectName.value = String(payload.prompt).trim();
+  }
+  ElMessage.success("已载入画廊作品，可直接提交任务");
+};
+
+const buildAiPaintingImageProxyUrl = (url: string) => {
+  const normalizedUrl = String(url || "").trim();
+  if (!normalizedUrl) return "";
+  if (
+    normalizedUrl.startsWith("data:") ||
+    normalizedUrl.startsWith("blob:") ||
+    normalizedUrl.startsWith("/")
+  ) {
+    return normalizedUrl;
+  }
+  if (/^https?:\/\//i.test(normalizedUrl)) {
+    return `/api/ai-image-proxy?url=${encodeURIComponent(normalizedUrl)}`;
+  }
+  return normalizedUrl;
+};
+
+const resolveAiPaintingImageExtension = (url: string, mimeType = "") => {
+  const normalizedMimeType = String(mimeType || "").trim().toLowerCase();
+  if (normalizedMimeType === "image/jpeg") return "jpg";
+  if (normalizedMimeType === "image/webp") return "webp";
+  if (normalizedMimeType === "image/gif") return "gif";
+  if (normalizedMimeType === "image/bmp") return "bmp";
+  if (normalizedMimeType === "image/svg+xml") return "svg";
+  if (normalizedMimeType === "image/png") return "png";
+
+  const pathname = String(url || "").split("?")[0] || "";
+  const extension = pathname.split(".").pop()?.toLowerCase() || "";
+  return extension || "png";
+};
+
+const downloadAiPaintingImageFile = async (url: string, index: number) => {
+  const targetUrl = buildAiPaintingImageProxyUrl(url);
+  if (!targetUrl) {
+    throw new Error("生成图片地址无效");
+  }
+
+  const response = await fetch(targetUrl);
+  if (!response.ok) {
+    throw new Error(`下载生成图片失败: ${response.status}`);
+  }
+
+  const blob = await response.blob();
+  const extension = resolveAiPaintingImageExtension(url, blob.type);
+  const fileName = `ai-painting-task-${Date.now()}-${index + 1}.${extension}`;
+  return new File([blob], fileName, {
+    type: blob.type || "image/png",
+    lastModified: Date.now(),
+  });
+};
+
+const handleAiPaintingGenerated = async (payload: {
+  sessionId: string;
+  imageUrls: string[];
+  prompt: string;
+}) => {
+  if (!currentTaskAiTaskId.value) {
+    return;
+  }
+
+  const nextImageUrls = Array.isArray(payload.imageUrls)
+    ? payload.imageUrls.map((item) => String(item || "").trim()).filter(Boolean)
+    : [];
+  currentTaskAiProjectName.value = payload.prompt || currentTaskAiProjectName.value;
+  if (payload.sessionId) {
+    currentTaskAiOptId.value = payload.sessionId;
+  }
+  currentTaskAiGeneratedPayload.value = {
+    sessionId: String(payload.sessionId || "").trim(),
+    imageUrls: nextImageUrls,
+    prompt: String(payload.prompt || "").trim(),
+  };
+  if (nextImageUrls.length > 0) {
+    ElMessage.success("图片生成完成，请点击提交任务");
+  }
+};
+
+const submitAiPaintingTask = async () => {
+  if (!currentTaskAiTaskId.value) {
+    ElMessage.warning("当前任务缺少提交标识");
+    return;
+  }
+
+  const payload = currentTaskAiGeneratedPayload.value;
+  const imageUrls = Array.isArray(payload?.imageUrls) ? payload.imageUrls : [];
+  if (imageUrls.length === 0) {
+    ElMessage.warning("请先生成图片");
+    return;
+  }
+
+  if (submittingTaskAi.value) {
+    return;
+  }
+
+  submittingTaskAi.value = true;
+  try {
+    const uploadResults = await Promise.all(
+      imageUrls.map(async (url, index) => {
+        const imageFile = await downloadAiPaintingImageFile(url, index);
+        return uploadOSS(imageFile);
+      })
+    );
+    const picOssIds = uploadResults
+      .map((item: any) => String(item?.ossId || "").trim())
+      .filter(Boolean);
+
+    if (picOssIds.length === 0) {
+      throw new Error("生成图片上传失败");
+    }
+
+    await studentSubmitTask({
+      taskId: currentTaskAiTaskId.value,
+      opusName:
+        String(payload?.prompt || "").trim() ||
+        currentTaskAiProjectName.value ||
+        selectedTask.value?.taskName,
+      picOssIds: picOssIds.join(","),
+    });
+
+    if (currentChapterId.value) {
+      await loadTaskList(currentChapterId.value);
+    }
+    ElMessage.success("任务提交成功");
+    closeTaskAiIframeModal();
+    emit("updated");
+  } catch (error) {
+    console.error("提交 AI 画图任务失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "提交 AI 画图任务失败");
+  } finally {
+    submittingTaskAi.value = false;
+  }
+};
+
+const submitAiQaTask = async () => {
+  if (!currentTaskAiTaskId.value) {
+    ElMessage.warning("当前任务缺少提交标识");
+    return;
+  }
+
+  if (!currentTaskAiChatSessionId.value) {
+    ElMessage.warning("请先完成 AI 问答");
+    return;
+  }
+
+  if (submittingTaskAi.value) {
+    return;
+  }
+
+  submittingTaskAi.value = true;
+  try {
+    await studentSubmitTask({
+      taskId: currentTaskAiTaskId.value,
+    });
+
+    if (currentChapterId.value) {
+      await loadTaskList(currentChapterId.value);
+    }
+    ElMessage.success("任务提交成功");
+    closeTaskAiIframeModal();
+    emit("updated");
+  } catch (error) {
+    console.error("提交 AI 问答任务失败:", error);
+    ElMessage.error(error instanceof Error ? error.message : "提交 AI 问答任务失败");
+  } finally {
+    submittingTaskAi.value = false;
+  }
 };
 
 const closeToolIframeModal = () => {
@@ -2454,6 +2786,7 @@ const openStudentAiTask = async (task: any, startData?: any) => {
   const taskUrl = firstNonEmptyString(task?.raw?.taskUrl, startData?.taskUrl);
 
   currentTaskAiProjectName.value = projectName;
+  currentTaskAiToolKey.value = toolKey;
   currentTaskAiOptType.value = optType;
   currentTaskAiOptId.value = taskUrl ? resolveStudentAiTaskOptId(task, startData) : "";
   currentTaskAiTaskId.value = firstNonEmptyString(
@@ -2462,6 +2795,24 @@ const openStudentAiTask = async (task: any, startData?: any) => {
     task?.raw?.taskID,
     task?.taskId
   );
+  currentTaskAiGeneratedPayload.value = null;
+  currentTaskAiSelectedSessionId.value = "";
+  currentTaskAiChatSessionId.value = "";
+  if (toolKey === "aiPainting") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "smartQA") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+
   currentTaskAiFile.value = taskUrl
     ? await downloadStudentAiTaskFile(task, startData)
     : null;
@@ -3426,7 +3777,7 @@ watch(
 
 .iframe-modal-container {
   width: 95vw;
-  height: 90vh;
+  height: 94vh;
   max-width: 1400px;
   background: #ffffff;
   border-radius: 16px;
@@ -3473,6 +3824,58 @@ watch(
 .iframe-modal-body {
   flex: 1;
   position: relative;
+  min-height: 0;
+}
+
+.iframe-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid #eef2f7;
+  background: #ffffff;
+}
+
+.iframe-modal-footer--ai-painting {
+  box-shadow: 0 -8px 24px rgba(15, 23, 42, 0.04);
+}
+
+.iframe-modal-footer__hint {
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.iframe-submit-btn {
+  flex-shrink: 0;
+  min-width: 140px;
+  height: 42px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ffae2b 0%, #ff9900 100%);
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  box-shadow: 0 10px 24px rgba(255, 153, 0, 0.22);
+}
+
+.iframe-submit-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(255, 153, 0, 0.28);
+}
+
+.iframe-submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+  box-shadow: none;
 }
 
 .tool-iframe {

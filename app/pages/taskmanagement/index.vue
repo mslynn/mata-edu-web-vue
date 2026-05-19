@@ -1365,7 +1365,7 @@ import { taskmanagementcenterApi } from "~/composables/api/taskmanagement";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import { scoreToStars } from "~/utils/star-rating";
 import tool1Cover from "~/assets/images/tool1.png";
-import tool5Cover from "~/assets/images/tool5.png";
+import tool5Cover from "~/assets/images/tool5.svg";
 const { t, locale } = useI18n();
 const router = useRouter();
 const runtimeConfig = useRuntimeConfig();

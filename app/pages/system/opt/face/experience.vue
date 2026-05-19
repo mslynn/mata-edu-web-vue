@@ -9,9 +9,9 @@
         :class="{ 'face-demo-shell--wide': currentStep === 'method' }"
       >
         <div v-if="currentStep === 'intro'" class="face-demo-breadcrumb">
-          控制台
+          {{ $t('faceDemo.console') }}
           <span>/</span>
-          <span class="face-demo-breadcrumb__current">ai实践中心</span>
+          <span class="face-demo-breadcrumb__current">{{ $t('faceDemo.aiPracticeCenter') }}</span>
         </div>
 
         <main
@@ -21,17 +21,16 @@
           <section v-if="currentStep === 'intro'" class="scene scene--intro">
             <div class="intro-copy">
               <div class="intro-copy__stack">
-                <span class="intro-copy__eyebrow">视觉智能系统</span>
+                <span class="intro-copy__eyebrow">{{ $t('faceDemo.visualIntelligence') }}</span>
                 <div class="intro-copy__card">
                   <h2>
-                    <span class="intro-copy__title-line">开启智慧校园的</span>
+                    <span class="intro-copy__title-line">{{ $t('faceDemo.heroTitle1') }}</span>
                     <span class="intro-copy__title-line intro-copy__title-line--accent"
-                      >非感官视觉门户</span
+                      >{{ $t('faceDemo.heroTitle2') }}</span
                     >
                   </h2>
                   <p>
-                    基于最先进的深度学习算法，实现毫秒级响应的学生识别与管理。为您打造无感考勤、
-                    安全门禁、课堂参与度分析等全场景智能闭环。
+                    {{ $t('faceDemo.heroDesc') }}
                   </p>
                 </div>
 
@@ -41,7 +40,7 @@
                   :disabled="savingProfile"
                   @click="handleStartExperience"
                 >
-                  <span>立即开始体验</span>
+                  <span>{{ $t('faceDemo.startExperience') }}</span>
                   <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path
                       d="M5 12h14"
@@ -69,7 +68,7 @@
                 <img
                   class="intro-visual-card__portrait"
                   src="/face-demo/stitch-hero-main.jpg"
-                  alt="人脸识别演示人物"
+                  :alt="$t('faceDemo.faceRecognitionDemo')"
                 />
                 <div class="intro-visual-card__grid"></div>
                 <div class="intro-visual-card__scanline"></div>
@@ -106,25 +105,25 @@
                     </svg>
                   </span>
                   <div>
-                    <strong>身份已验证</strong>
-                    <span>准入权限：全校区</span>
+                    <strong>{{ $t('faceDemo.identityVerified') }}</strong>
+                    <span>{{ $t('faceDemo.accessPermission') }}</span>
                   </div>
                 </div>
 
                 <div class="intro-visual-card__panel">
                   <div class="intro-visual-card__panel-head">
                     <div class="intro-visual-card__panel-copy">
-                      <span class="intro-visual-card__panel-label">生物特征分析</span>
+                      <span class="intro-visual-card__panel-label">{{ $t('faceDemo.biometricAnalysis') }}</span>
                       <strong>99.8%</strong>
                     </div>
-                    <span class="intro-visual-card__panel-side">匹配度</span>
+                    <span class="intro-visual-card__panel-side">{{ $t('faceDemo.matchRate') }}</span>
                   </div>
                   <div class="intro-visual-card__progress">
                     <span></span>
                   </div>
                   <div class="intro-visual-card__panel-tags">
-                    <span><i></i>骨骼对齐</span>
-                    <span><i></i>活体检测</span>
+                    <span><i></i>{{ $t('faceDemo.skeletonAlignment') }}</span>
+                    <span><i></i>{{ $t('faceDemo.livenessDetection') }}</span>
                   </div>
                 </div>
 
@@ -155,12 +154,12 @@
                 <div class="campus-stage__roof"></div>
                 <div class="campus-stage__flagpole"></div>
                 <div class="campus-stage__flag"></div>
-                <div class="campus-stage__sign">AI 学校</div>
+                <div class="campus-stage__sign">{{ $t('faceDemo.aiSchool') }}</div>
               </div>
               <img
                 class="campus-stage__robot"
                 src="/stitch/ceshi2/03-robot-mascot.png"
-                alt="机器人"
+                :alt="$t('faceDemo.robot')"
               />
 
               <div class="campus-stage__panel">
@@ -192,14 +191,14 @@
                         </svg>
                       </span>
                       <div class="name-side-panel__identity-copy">
-                        <h2>身份标记</h2>
-                        <p>请完善目标姓名信息</p>
+                        <h2>{{ $t('faceDemo.identityMark') }}</h2>
+                        <p>{{ $t('faceDemo.completeNameInfo') }}</p>
                       </div>
                     </div>
 
                     <div class="name-side-panel__field">
                       <label class="name-side-panel__label" for="face-demo-name-input">
-                        姓名
+                        {{ $t('faceDemo.name') }}
                       </label>
                       <div class="name-side-panel__input-shell">
                         <input
@@ -208,7 +207,7 @@
                           class="name-side-panel__input"
                           type="text"
                           maxlength="20"
-                          placeholder="请输入学生或人员姓名"
+                          :placeholder="$t('faceDemo.namePlaceholder')"
                           @keydown.enter="handleConfirmName"
                         />
                       </div>
@@ -220,28 +219,28 @@
                         class="secondary-button"
                         @click="handleReturnHome"
                       >
-                        返回
+                        {{ $t('faceDemo.back') }}
                       </button>
                       <button
                         type="button"
                         class="primary-button"
                         @click="handleConfirmName"
                       >
-                        确定
+                        {{ $t('faceDemo.confirm') }}
                       </button>
                     </div>
                   </div>
 
                   <div class="name-side-panel__card name-side-panel__card--records">
                     <div class="name-side-panel__records-head">
-                      <h3>已录入人脸信息</h3>
+                      <h3>{{ $t('faceDemo.enrolledFaces') }}</h3>
                       <button
                         v-if="profiles.length"
                         type="button"
                         class="name-side-panel__text-action"
                         @click="handleClearProfiles"
                       >
-                        清空
+                        {{ $t('faceDemo.clear') }}
                       </button>
                     </div>
 
@@ -268,7 +267,7 @@
                             type="button"
                             class="name-side-panel__record-action name-side-panel__record-action--edit"
                             disabled
-                            title="重新录入"
+                            :title="$t('faceDemo.reEnroll')"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                               <path
@@ -289,8 +288,8 @@
                           <button
                             type="button"
                             class="name-side-panel__record-action name-side-panel__record-action--delete"
-                            :aria-label="'删除' + profile.name"
-                            title="删除当前人脸"
+                            :aria-label="$t('faceDemo.deletePrefix') + ' ' + profile.name"
+                            :title="$t('faceDemo.deleteCurrentFace')"
                             @click="handleDeleteProfile(profile.id)"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -362,15 +361,15 @@
                           </div>
                         </div>
                         <div class="name-side-panel__record-copy">
-                          <strong>未命名目标 01</strong>
-                          <span>等待输入姓名...</span>
+                          <strong>{{ $t('faceDemo.unnamedTarget') }} 01</strong>
+                          <span>{{ $t('faceDemo.waitingForName') }}</span>
                         </div>
                         <div class="name-side-panel__record-actions">
                           <button
                             type="button"
                             class="name-side-panel__record-action name-side-panel__record-action--edit"
                             disabled
-                            title="重新录入"
+                            :title="$t('faceDemo.reEnroll')"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                               <path
@@ -392,7 +391,7 @@
                             type="button"
                             class="name-side-panel__record-action name-side-panel__record-action--delete"
                             disabled
-                            title="删除"
+                            :title="$t('faceDemo.delete')"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                               <path
@@ -448,12 +447,12 @@
               <div class="method-scene__header">
                 <div class="method-scene__header-copy">
                   <nav class="method-scene__breadcrumb">
-                    <span>AI 实践中心</span>
+                    <span>{{ $t('faceDemo.aiPracticeCenter') }}</span>
                     <span class="method-scene__breadcrumb-separator">/</span>
-                    <span class="method-scene__breadcrumb-current">人脸识别</span>
+                    <span class="method-scene__breadcrumb-current">{{ $t('faceDemo.faceRecognition') }}</span>
                   </nav>
-                  <h2>人脸数据采集及录入</h2>
-                  <p>通过上传图片或开启摄像头快速完成人脸数据采集</p>
+                  <h2>{{ $t('faceDemo.faceDataCollection') }}</h2>
+                  <p>{{ $t('faceDemo.faceDataCollectionDesc') }}</p>
                 </div>
 
                 <div class="method-scene__header-actions">
@@ -462,21 +461,21 @@
                     class="secondary-button"
                     @click="handleReturnHome"
                   >
-                    返回首页
+                    {{ $t('faceDemo.backToHome') }}
                   </button>
                   <button
                     type="button"
                     class="secondary-button"
                     @click="currentStep = 'name'"
                   >
-                    上一步
+                    {{ $t('faceDemo.prevStep') }}
                   </button>
                   <button
                     type="button"
                     class="secondary-button"
                     @click="handleToggleFullscreen"
                   >
-                    全屏
+                    {{ $t('faceDemo.fullscreen') }}
                   </button>
                 </div>
               </div>
@@ -485,7 +484,7 @@
                 <div class="method-scene__stage">
                   <div class="method-scene__board">
                     <p class="method-scene__greeting">
-                      {{ playerName }}，你好，下面请选择你的人脸录入方式吧
+                      {{ $t('faceDemo.greetingMsg', { name: playerName }) }}
                     </p>
 
                     <div class="method-grid">
@@ -527,8 +526,8 @@
                           </svg>
                         </div>
                         <div class="method-card__copy">
-                          <strong>上传本地图片</strong>
-                          <span>支持 JPG、PNG 格式，可批量选择本地清晰人脸照片</span>
+                          <strong>{{ $t('faceDemo.uploadLocalImage') }}</strong>
+                          <span>{{ $t('faceDemo.uploadLocalImageDesc') }}</span>
                         </div>
                       </button>
 
@@ -573,8 +572,8 @@
                           </svg>
                         </div>
                         <div class="method-card__copy">
-                          <strong>开启摄像头</strong>
-                          <span>实时视频捕获，适合现场快速采集和即时提取面部特征</span>
+                          <strong>{{ $t('faceDemo.openCamera') }}</strong>
+                          <span>{{ $t('faceDemo.openCameraDesc') }}</span>
                         </div>
                       </button>
                     </div>
@@ -587,7 +586,7 @@
                       :disabled="!profiles.length"
                       @click="handleEnterRecognition"
                     >
-                      直接进入识别
+                      {{ $t('faceDemo.directRecognition') }}
                     </button>
                   </div>
                 </div>
@@ -620,22 +619,22 @@
                         </svg>
                       </span>
                       <div class="method-panel__identity-copy">
-                        <h3>身份标记</h3>
-                        <p>请完善目标姓名信息</p>
+                        <h3>{{ $t('faceDemo.identityMark') }}</h3>
+                        <p>{{ $t('faceDemo.completeNameInfo') }}</p>
                       </div>
                     </div>
 
                     <div class="method-panel__field">
                       <div class="method-panel__field-head">
                         <label class="method-panel__label" for="face-demo-method-name">
-                          姓名
+                          {{ $t('faceDemo.name') }}
                         </label>
                         <button
                           type="button"
                           class="method-panel__text-action"
                           @click="handleOpenNameStep"
                         >
-                          重新填写
+                          {{ $t('faceDemo.refillName') }}
                         </button>
                       </div>
                       <div class="method-panel__input-shell">
@@ -645,7 +644,7 @@
                           :value="playerName"
                           type="text"
                           readonly
-                          placeholder="请输入您的姓名"
+                          :placeholder="$t('faceDemo.namePlaceholder2')"
                         />
                       </div>
                     </div>
@@ -653,14 +652,14 @@
 
                   <div class="method-panel__card method-panel__card--records">
                     <div class="method-panel__records-head">
-                      <h4>已录入人脸信息</h4>
+                      <h4>{{ $t('faceDemo.enrolledFaces') }}</h4>
                       <button
                         v-if="profiles.length"
                         type="button"
                         class="method-panel__text-action"
                         @click="handleClearProfiles"
                       >
-                        清空
+                        {{ $t('faceDemo.clear') }}
                       </button>
                     </div>
 
@@ -686,7 +685,7 @@
                             type="button"
                             class="method-panel__record-action method-panel__record-action--edit"
                             disabled
-                            title="重新录入"
+                            :title="$t('faceDemo.reEnroll')"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                               <path
@@ -707,8 +706,8 @@
                           <button
                             type="button"
                             class="method-panel__record-action method-panel__record-action--delete"
-                            :aria-label="'删除' + profile.name"
-                            title="删除当前人脸"
+                            :aria-label="$t('faceDemo.deletePrefix') + ' ' + profile.name"
+                            :title="$t('faceDemo.deleteCurrentFace')"
                             @click="handleDeleteProfile(profile.id)"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -781,15 +780,15 @@
                           </div>
                         </div>
                         <div class="method-panel__record-copy">
-                          <strong>未命名目标 01</strong>
-                          <span>等待输入姓名...</span>
+                          <strong>{{ $t('faceDemo.unnamedTarget') }}</strong>
+                          <span>{{ $t('faceDemo.waitingForName') }}</span>
                         </div>
                         <div class="method-panel__record-actions">
                           <button
                             type="button"
                             class="method-panel__record-action method-panel__record-action--edit"
                             disabled
-                            title="重新录入"
+                            :title="$t('faceDemo.reEnroll')"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                               <path
@@ -811,7 +810,7 @@
                             type="button"
                             class="method-panel__record-action method-panel__record-action--delete"
                             disabled
-                            title="删除"
+                            :title="$t('faceDemo.delete')"
                           >
                             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
                               <path
@@ -880,9 +879,9 @@
                   </svg>
                 </span>
                 <div>
-                  <h5>采集提示</h5>
+                  <h5>{{ $t('faceDemo.collectionTipTitle') }}</h5>
                   <p>
-                    建议在光线柔和的环境下采集，人脸正对镜头可获得更精准的特征提取。系统将自动过滤模糊影像。
+                    {{ $t('faceDemo.collectionTipDesc') }}
                   </p>
                 </div>
               </div>
@@ -893,7 +892,7 @@
             <div class="capture-scene">
               <div class="capture-scene__header">
                 <div>
-                  <p class="capture-scene__eyebrow">{{ playerName }} 的人脸录入</p>
+                  <p class="capture-scene__eyebrow">{{ $t('faceDemo.faceEnrollOf', { name: playerName }) }}</p>
                   <h2>{{ captureStepTitle }}</h2>
                   <p class="capture-scene__desc">{{ captureStepDesc }}</p>
                 </div>
@@ -904,14 +903,14 @@
                     class="secondary-button"
                     @click="handleBackToMethod"
                   >
-                    切换方式
+                    {{ $t('faceDemo.switchMethod') }}
                   </button>
                   <button
                     type="button"
                     class="secondary-button"
                     @click="handleReturnHome"
                   >
-                    回首页
+                    {{ $t('faceDemo.goHome') }}
                   </button>
                 </div>
               </div>
@@ -938,7 +937,7 @@
                         'capture-preview__media--mirrored': captureMode === 'camera',
                       }"
                       :src="capturePreview"
-                      alt="录入预览"
+                      :alt="$t('faceDemo.enrollPreview')"
                     />
 
                     <div v-else class="capture-preview__placeholder">
@@ -968,16 +967,16 @@
                           />
                         </svg>
                       </div>
-                      <strong>等待录入素材</strong>
+                      <strong>{{ $t('faceDemo.waitingForMaterial') }}</strong>
                       <span>{{
                         captureMode === "camera"
-                          ? "先打开摄像头，再点击拍照"
-                          : "上传一张清晰正脸照片"
+                          ? $t('faceDemo.cameraHint')
+                          : $t('faceDemo.uploadHint')
                       }}</span>
                     </div>
 
                     <div class="capture-preview__guide">
-                      请尽量保持单人正脸、光线充足、无遮挡
+                      {{ $t('faceDemo.captureGuide') }}
                     </div>
                   </div>
 
@@ -986,14 +985,14 @@
 
                 <aside class="capture-panel">
                   <div class="status-card">
-                    <span class="status-card__label">运行状态</span>
+                    <span class="status-card__label">{{ $t('faceDemo.runStatus') }}</span>
                     <strong>{{ modelStatusText }}</strong>
                     <p>{{ runtimeNotice }}</p>
                   </div>
 
                   <div v-if="captureMode === 'camera'" class="capture-panel__group">
                     <label class="capture-panel__label" for="face-demo-camera"
-                      >摄像头</label
+                      >{{ $t('faceDemo.camera') }}</label
                     >
                     <select
                       id="face-demo-camera"
@@ -1005,7 +1004,7 @@
                         :key="device.deviceId"
                         :value="device.deviceId"
                       >
-                        {{ device.label || "未命名摄像头" }}
+                        {{ device.label || $t('faceDemo.unnamedCamera') }}
                       </option>
                     </select>
                   </div>
@@ -1018,7 +1017,7 @@
                       :disabled="loadingModels"
                       @click="handleOpenCaptureCamera"
                     >
-                      {{ captureVideoReady ? "重新打开摄像头" : "打开摄像头" }}
+                      {{ captureVideoReady ? $t('faceDemo.reopenCamera') : $t('faceDemo.openCameraBtn') }}
                     </button>
 
                     <button
@@ -1028,7 +1027,7 @@
                       :disabled="!captureVideoReady"
                       @click="handleTakeSnapshot"
                     >
-                      拍照
+                      {{ $t('faceDemo.takePhoto') }}
                     </button>
 
                     <button
@@ -1037,7 +1036,7 @@
                       class="secondary-button"
                       @click="triggerUploadPicker"
                     >
-                      选择本地图片
+                      {{ $t('faceDemo.selectLocalImage') }}
                     </button>
 
                     <button
@@ -1046,7 +1045,7 @@
                       class="secondary-button"
                       @click="handleResetCapturePreview"
                     >
-                      重来一次
+                      {{ $t('faceDemo.tryAgain') }}
                     </button>
 
                     <button
@@ -1057,10 +1056,10 @@
                     >
                       {{
                         savingProfile
-                          ? "录入中..."
+                          ? $t('faceDemo.enrolling')
                           : captureMode === "camera" && !capturePreview
-                          ? "拍照并录入"
-                          : "开始录入"
+                          ? $t('faceDemo.takePhotoAndEnroll')
+                          : $t('faceDemo.startEnroll')
                       }}
                     </button>
                   </div>
@@ -1070,11 +1069,11 @@
                   </p>
 
                   <div class="capture-panel__tips">
-                    <strong>录入建议</strong>
+                    <strong>{{ $t('faceDemo.enrollTipsTitle') }}</strong>
                     <ul>
-                      <li>一次画面里只保留一个人脸</li>
-                      <li>尽量正对镜头，不要强逆光</li>
-                      <li>建议每个人录一张最清晰的头像</li>
+                      <li>{{ $t('faceDemo.enrollTip1') }}</li>
+                      <li>{{ $t('faceDemo.enrollTip2') }}</li>
+                      <li>{{ $t('faceDemo.enrollTip3') }}</li>
                     </ul>
                   </div>
                 </aside>
@@ -1094,7 +1093,7 @@
             <div class="recognition-scene">
               <div class="recognition-scene__header">
                 <div>
-                  <p class="capture-scene__eyebrow">实时识别中</p>
+                  <p class="capture-scene__eyebrow">{{ $t('faceDemo.realTimeRecognition') }}</p>
                   <h2>{{ recognitionHeadline }}</h2>
                   <p class="capture-scene__desc">{{ recognitionSubline }}</p>
                 </div>
@@ -1105,14 +1104,14 @@
                     class="secondary-button"
                     @click="handleRestartRecognition"
                   >
-                    重新打开摄像头
+                    {{ $t('faceDemo.reopenCamera') }}
                   </button>
                   <button
                     type="button"
                     class="secondary-button"
                     @click="handleReturnHome"
                   >
-                    结束识别
+                    {{ $t('faceDemo.endRecognition') }}
                   </button>
                 </div>
               </div>
@@ -1139,7 +1138,7 @@
                       <img
                         class="assistant-panel__robot"
                         src="/stitch/ceshi2/03-robot-mascot.png"
-                        alt="机器人"
+                        :alt="$t('faceDemo.robot')"
                       />
                       <div class="assistant-panel__bubble">
                         <strong>{{ assistantBubbleTitle }}</strong>
@@ -1158,15 +1157,15 @@
 
                 <div class="recognition-board__status">
                   <div class="status-chip">
-                    <span class="status-chip__label">已录入</span>
-                    <strong>{{ profiles.length }} 人</strong>
+                    <span class="status-chip__label">{{ $t('faceDemo.enrolled') }}</span>
+                    <strong>{{ $t('faceDemo.profilesUnit', { count: profiles.length }) }}</strong>
                   </div>
                   <div class="status-chip">
-                    <span class="status-chip__label">当前匹配</span>
+                    <span class="status-chip__label">{{ $t('faceDemo.currentMatch') }}</span>
                     <strong>{{ bestMatchedName }}</strong>
                   </div>
                   <div class="status-chip">
-                    <span class="status-chip__label">最高置信度</span>
+                    <span class="status-chip__label">{{ $t('faceDemo.highestConfidence') }}</span>
                     <strong>{{ bestMatchedConfidence }}</strong>
                   </div>
                 </div>
@@ -1180,7 +1179,7 @@
           class="face-demo-toolbar"
         >
           <div class="face-demo-toolbar__profiles">
-            <span class="face-demo-toolbar__title">已录入的人脸</span>
+            <span class="face-demo-toolbar__title">{{ $t('faceDemo.enrolledFacesToolbar') }}</span>
 
             <div v-if="profiles.length" class="face-demo-toolbar__profile-list">
               <article v-for="profile in profiles" :key="profile.id" class="profile-chip">
@@ -1198,17 +1197,17 @@
                   class="profile-chip__delete"
                   @click="handleDeleteProfile(profile.id)"
                 >
-                  删除
+                  {{ $t('faceDemo.delete') }}
                 </button>
               </article>
             </div>
 
-            <p v-else class="face-demo-toolbar__empty">还没有录入任何人脸</p>
+            <p v-else class="face-demo-toolbar__empty">{{ $t('faceDemo.noFacesEnrolled') }}</p>
           </div>
 
           <div class="face-demo-toolbar__actions">
             <button type="button" class="toolbar-button" @click="handleReturnHome">
-              首页
+              {{ $t('faceDemo.home') }}
             </button>
             <button
               type="button"
@@ -1216,7 +1215,7 @@
               :disabled="!profiles.length"
               @click="handleEnterRecognition"
             >
-              识别
+              {{ $t('faceDemo.recognize') }}
             </button>
             <button
               type="button"
@@ -1224,10 +1223,10 @@
               :disabled="!profiles.length"
               @click="handleOpenNameStep"
             >
-              录入新人
+              {{ $t('faceDemo.enrollNewPerson') }}
             </button>
             <button type="button" class="toolbar-button" @click="handleToggleFullscreen">
-              全屏
+              {{ $t('faceDemo.fullscreen') }}
             </button>
             <button
               type="button"
@@ -1235,7 +1234,7 @@
               :disabled="!profiles.length"
               @click="handleClearProfiles"
             >
-              清空本地库
+              {{ $t('faceDemo.clearLocalDb') }}
             </button>
           </div>
         </footer>
@@ -1246,6 +1245,7 @@
 
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useI18n } from "vue-i18n";
 import { ElMessage } from "element-plus";
 import type {
   FaceDemoDetection,
@@ -1263,7 +1263,7 @@ definePageMeta({
 });
 
 useHead({
-  title: "人脸识别机器人 Demo",
+  title: computed(() => t('faceDemo.pageTitle')),
   htmlAttrs: {
     lang: "zh-CN",
   },
@@ -1282,6 +1282,7 @@ type RecognitionDetectionWithMatch = FaceDemoDetection & {
   match: FaceDemoMatchResult;
 };
 
+const { t } = useI18n();
 const { listProfiles, saveProfile, removeProfile, clearProfiles } = useFaceDemoStorage();
 const { ensureReady, detectAllFaces, matchDescriptor } = useFaceApiDemo();
 const route = useRoute();
@@ -1292,8 +1293,8 @@ const playerName = ref("");
 const captureMode = ref<CaptureMode>("camera");
 const capturePreview = ref("");
 const captureError = ref("");
-const runtimeNotice = ref("首次使用会加载本地模型，通常需要几秒。");
-const recognitionNotice = ref("打开摄像头后会自动开始识别。");
+const runtimeNotice = ref(t('faceDemo.firstUseNotice'));
+const recognitionNotice = ref(t('faceDemo.cameraAutoRecognize'));
 const loadingModels = ref(false);
 const modelsReady = ref(false);
 const savingProfile = ref(false);
@@ -1333,28 +1334,28 @@ const resolveDemoStep = (value: unknown): DemoStep => {
 
 const resetRuntimeNotice = () => {
   runtimeNotice.value = modelsReady.value
-    ? "模型准备完成，可以开始录入和识别了。"
-    : "首次使用会加载本地模型，通常需要几秒。";
+    ? t('faceDemo.modelReadyNotice')
+    : t('faceDemo.firstUseNotice');
 };
 
 const modelStatusText = computed(() => {
   if (loadingModels.value) {
-    return "模型加载中";
+    return t('faceDemo.modelLoading');
   }
 
-  return modelsReady.value ? "本地模型已就绪" : "等待初始化";
+  return modelsReady.value ? t('faceDemo.modelReady') : t('faceDemo.waitingInit');
 });
 
 const captureStepTitle = computed(() => {
   return captureMode.value === "camera"
-    ? "请将面部对准画面，保持光线充足"
-    : "请上传一张清晰的正脸照片";
+    ? t('faceDemo.captureStepTitleCamera')
+    : t('faceDemo.captureStepTitleUpload');
 });
 
 const captureStepDesc = computed(() => {
   return captureMode.value === "camera"
-    ? "打开摄像头后点击“拍照”，确认画面清晰后再录入。"
-    : "上传成功后会先做一次人脸检测，必须保证图中只有一个人。";
+    ? t('faceDemo.captureStepDescCamera')
+    : t('faceDemo.captureStepDescUpload');
 });
 
 const recognitionVideoShellStyle = computed(() => {
@@ -1388,7 +1389,7 @@ const bestDetection = computed(() => {
 });
 
 const bestMatchedName = computed(() => {
-  return bestDetection.value?.match.profile?.name || "未匹配到";
+  return bestDetection.value?.match.profile?.name || t('faceDemo.noMatch');
 });
 
 const bestMatchedConfidence = computed(() => {
@@ -1398,40 +1399,40 @@ const bestMatchedConfidence = computed(() => {
 
 const recognitionHeadline = computed(() => {
   if (bestDetection.value?.match.profile) {
-    return `你好，${bestDetection.value.match.profile.name}`;
+    return t('faceDemo.helloName', { name: bestDetection.value.match.profile.name });
   }
 
   if (!profiles.value.length) {
-    return "请先录入至少一个人脸";
+    return t('faceDemo.pleaseEnrollFirst');
   }
 
   if (!hasCompatibleProfiles.value) {
-    return "请清空旧数据后重新录入";
+    return t('faceDemo.clearOldDataFirst');
   }
 
   if (!recognitionDetections.value.length) {
-    return "请把面部移动到画面中";
+    return t('faceDemo.moveFaceToCenter');
   }
 
-  return "检测到人脸，但还没有匹配上";
+  return t('faceDemo.faceDetectedNoMatch');
 });
 
 const recognitionSubline = computed(() => {
   if (bestDetection.value?.match.profile) {
     const distance = bestDetection.value.match.distance.toFixed(3);
-    return `本地比对成功，当前距离值 ${distance}，可以继续移动测试。`;
+    return t('faceDemo.localMatchSuccess', { distance });
   }
 
   if (profiles.value.length && !hasCompatibleProfiles.value) {
-    return "当前浏览器里还是旧版人脸数据，和现在的识别引擎不兼容。";
+    return t('faceDemo.legacyDataIncompatible');
   }
 
-  return "识别只会和当前浏览器里已录入的人脸做比对。";
+  return t('faceDemo.recognitionLocalOnly');
 });
 
 const assistantBubbleTitle = computed(() => {
   if (bestDetection.value?.match.profile) {
-    return `你是 ${bestDetection.value.match.profile.name}!`;
+    return t('faceDemo.youAre', { name: bestDetection.value.match.profile.name });
   }
 
   return recognitionHeadline.value;
@@ -1446,7 +1447,7 @@ const assistantBubbleDesc = computed(() => {
 });
 
 const assistantActionLabel = computed(() => {
-  return bestDetection.value?.match.profile ? "结束识别" : "再录入一个人";
+  return bestDetection.value?.match.profile ? t('faceDemo.endRecognition') : t('faceDemo.enrollAnother');
 });
 
 const loadProfiles = async () => {
@@ -1458,11 +1459,11 @@ const loadProfiles = async () => {
     });
 
     if (hasLegacyProfiles) {
-      runtimeNotice.value = "检测到旧版录入数据，建议清空本地库后重新录入。";
+      runtimeNotice.value = t('faceDemo.legacyDataNotice');
 
       if (!legacyProfilesWarned) {
         legacyProfilesWarned = true;
-        ElMessage.warning("检测到旧版人脸数据，请清空本地库后重新录入");
+        ElMessage.warning(t('faceDemo.legacyDataWarning'));
       }
     } else {
       legacyProfilesWarned = false;
@@ -1470,7 +1471,7 @@ const loadProfiles = async () => {
     }
   } catch (error) {
     console.error("读取本地人脸库失败:", error);
-    ElMessage.error("读取本地人脸库失败");
+    ElMessage.error(t('faceDemo.readLocalDbFailed'));
   }
 };
 
@@ -1480,15 +1481,15 @@ const ensureRuntimeReady = async () => {
   }
 
   loadingModels.value = true;
-  runtimeNotice.value = "正在加载本地模型，请稍等...";
+  runtimeNotice.value = t('faceDemo.loadingModels');
 
   try {
     await ensureReady();
     modelsReady.value = true;
-    runtimeNotice.value = "模型准备完成，可以开始录入和识别了。";
+    runtimeNotice.value = t('faceDemo.modelReadyNotice');
   } catch (error) {
     console.error("加载本地模型失败:", error);
-    runtimeNotice.value = "模型加载失败，请刷新页面后重试。";
+    runtimeNotice.value = t('faceDemo.modelLoadFailed');
     throw error;
   } finally {
     loadingModels.value = false;
@@ -1500,7 +1501,7 @@ const readFileAsDataUrl = (file: File) => {
     const reader = new FileReader();
 
     reader.onerror = () => {
-      reject(reader.error || new Error("读取文件失败"));
+      reject(reader.error || new Error(t('faceDemo.readFileFailed')));
     };
 
     reader.onload = () => {
@@ -1509,7 +1510,7 @@ const readFileAsDataUrl = (file: File) => {
         return;
       }
 
-      reject(new Error("读取文件失败"));
+      reject(new Error(t('faceDemo.readFileFailed')));
     };
 
     reader.readAsDataURL(file);
@@ -1520,7 +1521,7 @@ const createImageElement = (dataUrl: string) => {
   return new Promise<HTMLImageElement>((resolve, reject) => {
     const image = new Image();
     image.onload = () => resolve(image);
-    image.onerror = () => reject(new Error("图片加载失败"));
+    image.onerror = () => reject(new Error(t('faceDemo.imageLoadFailed')));
     image.src = dataUrl;
   });
 };
@@ -1545,7 +1546,7 @@ const waitForVideoReady = (video: HTMLVideoElement) => {
 
     video.onerror = () => {
       cleanup();
-      reject(new Error("视频流加载失败"));
+      reject(new Error(t('faceDemo.videoStreamFailed')));
     };
   });
 };
@@ -1630,7 +1631,7 @@ const refreshCameraDevices = async () => {
 
 const startCamera = async (scene: CameraScene) => {
   if (!import.meta.client || !navigator.mediaDevices?.getUserMedia) {
-    throw new Error("当前浏览器不支持摄像头调用");
+    throw new Error(t('faceDemo.browserNotSupportCamera'));
   }
 
   const constraints: MediaStreamConstraints = {
@@ -1660,7 +1661,7 @@ const startCamera = async (scene: CameraScene) => {
     scene === "capture" ? captureVideoRef.value : recognitionVideoRef.value;
 
   if (!targetVideo) {
-    throw new Error("摄像头载体未准备完成");
+    throw new Error(t('faceDemo.cameraNotReady'));
   }
 
   targetVideo.srcObject = stream;
@@ -1702,7 +1703,7 @@ const drawRecognitionOverlay = (detections: RecognitionDetectionWithMatch[]) => 
     const color = isMatched ? "#ff5b2e" : "#7ad9ff";
     const label = isMatched
       ? `${item.match.profile?.name} ${Math.round(item.match.confidence * 100)}%`
-      : "未录入";
+      : t('faceDemo.notEnrolled');
     const mirroredBoxX = canvas.width - item.box.x - item.box.width;
 
     context.strokeStyle = color;
@@ -1727,7 +1728,7 @@ const startRecognitionLoop = async () => {
 
   stopRecognitionLoop();
   recognitionRunning.value = true;
-  recognitionNotice.value = "正在持续分析画面中的人脸...";
+  recognitionNotice.value = t('faceDemo.analyzingFaces');
 
   const tick = async () => {
     if (!recognitionRunning.value) {
@@ -1752,7 +1753,7 @@ const startRecognitionLoop = async () => {
       drawRecognitionOverlay(matchedDetections);
 
       if (!matchedDetections.length) {
-        recognitionNotice.value = "请将面部放到镜头中央区域。";
+        recognitionNotice.value = t('faceDemo.moveFaceToCenterArea');
       } else if (matchedDetections.some((item) => item.match.profile)) {
         const names = matchedDetections
           .filter((item) => item.match.profile)
@@ -1760,13 +1761,13 @@ const startRecognitionLoop = async () => {
           .filter(Boolean)
           .join("、");
 
-        recognitionNotice.value = `已识别到：${names}`;
+        recognitionNotice.value = t('faceDemo.recognizedNames', { names });
       } else {
-        recognitionNotice.value = "检测到了人脸，但和本地人脸库还没有匹配上。";
+        recognitionNotice.value = t('faceDemo.faceDetectedNoLocalMatch');
       }
     } catch (error) {
       console.error("实时识别失败:", error);
-      recognitionNotice.value = "识别过程中出现异常，请重新打开摄像头。";
+      recognitionNotice.value = t('faceDemo.recognitionError');
     } finally {
       recognitionBusy = false;
 
@@ -1781,7 +1782,7 @@ const startRecognitionLoop = async () => {
 
 const takeSnapshotFromVideo = (video: HTMLVideoElement, canvas: HTMLCanvasElement) => {
   if (!video.videoWidth || !video.videoHeight) {
-    throw new Error("摄像头画面尚未准备完成");
+    throw new Error(t('faceDemo.cameraFrameNotReady'));
   }
 
   canvas.width = video.videoWidth;
@@ -1789,7 +1790,7 @@ const takeSnapshotFromVideo = (video: HTMLVideoElement, canvas: HTMLCanvasElemen
 
   const context = canvas.getContext("2d");
   if (!context) {
-    throw new Error("截图画布初始化失败");
+    throw new Error(t('faceDemo.canvasInitFailed'));
   }
 
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -1815,7 +1816,7 @@ const handleConfirmName = () => {
   const name = draftName.value.trim();
 
   if (!name) {
-    ElMessage.warning("请先输入名字");
+    ElMessage.warning(t('faceDemo.pleaseInputName'));
     return;
   }
 
@@ -1846,7 +1847,7 @@ const handleSelectMethod = async (mode: CaptureMode) => {
     }
   } catch (error: any) {
     console.error("初始化录入环境失败:", error);
-    ElMessage.error(error?.message || "初始化录入环境失败");
+    ElMessage.error(error?.message || t('faceDemo.initEnvFailed'));
   }
 };
 
@@ -1858,14 +1859,14 @@ const handleOpenCaptureCamera = async () => {
     await startCamera("capture");
   } catch (error: any) {
     console.error("打开摄像头失败:", error);
-    captureError.value = error?.message || "打开摄像头失败";
+    captureError.value = error?.message || t('faceDemo.openCameraFailed');
     ElMessage.error(captureError.value);
   }
 };
 
 const handleTakeSnapshot = () => {
   if (!captureVideoRef.value || !captureCanvasRef.value || !captureVideoReady.value) {
-    ElMessage.warning("请先打开摄像头");
+    ElMessage.warning(t('faceDemo.pleaseOpenCameraFirst'));
     return;
   }
 
@@ -1876,7 +1877,7 @@ const handleTakeSnapshot = () => {
     );
     captureError.value = "";
   } catch (error: any) {
-    captureError.value = error?.message || "拍照失败";
+    captureError.value = error?.message || t('faceDemo.takePhotoFailed');
     ElMessage.error(captureError.value);
   }
 };
@@ -1894,7 +1895,7 @@ const handleUploadChange = async (event: Event) => {
   }
 
   if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
-    ElMessage.warning("仅支持 png、jpg、jpeg 格式");
+    ElMessage.warning(t('faceDemo.onlyPngJpg'));
     input.value = "";
     return;
   }
@@ -1904,7 +1905,7 @@ const handleUploadChange = async (event: Event) => {
     captureError.value = "";
   } catch (error) {
     console.error("读取上传图片失败:", error);
-    captureError.value = "读取上传图片失败";
+    captureError.value = t('faceDemo.readUploadFailed');
     ElMessage.error(captureError.value);
   } finally {
     input.value = "";
@@ -1925,7 +1926,7 @@ const handleEnrollFace = async () => {
 
   if (!enrollmentPreview && captureMode.value === "camera") {
     if (!captureVideoRef.value || !captureCanvasRef.value || !captureVideoReady.value) {
-      ElMessage.warning("请先打开摄像头");
+      ElMessage.warning(t('faceDemo.pleaseOpenCameraFirst'));
       return;
     }
 
@@ -1936,14 +1937,14 @@ const handleEnrollFace = async () => {
       );
       capturePreview.value = enrollmentPreview;
     } catch (error: any) {
-      captureError.value = error?.message || "拍照失败";
+      captureError.value = error?.message || t('faceDemo.takePhotoFailed');
       ElMessage.error(captureError.value);
       return;
     }
   }
 
   if (!enrollmentPreview) {
-    ElMessage.warning("请先准备一张人脸图片");
+    ElMessage.warning(t('faceDemo.prepareFaceImage'));
     return;
   }
 
@@ -1965,17 +1966,17 @@ const handleEnrollFace = async () => {
     }
 
     if (!allFaces.length) {
-      throw new Error("没有检测到人脸，请把整张脸放进画面中央，再试一张更清晰的正脸图");
+      throw new Error(t('faceDemo.noFaceDetected'));
     }
 
     if (allFaces.length > 1) {
-      throw new Error("检测到多个人脸，请只保留一个人再录入");
+      throw new Error(t('faceDemo.multipleFacesDetected'));
     }
 
     const enrolledFace = allFaces[0];
 
     if (!enrolledFace) {
-      throw new Error("当前人脸数据不可用，请重新录入");
+      throw new Error(t('faceDemo.faceDataUnavailable'));
     }
 
     const profile: FaceDemoProfile = {
@@ -1991,12 +1992,12 @@ const handleEnrollFace = async () => {
     await loadProfiles();
 
     capturePreview.value = "";
-    ElMessage.success("录入成功，已写入当前浏览器本地人脸库");
+    ElMessage.success(t('faceDemo.enrollSuccess'));
 
     await handleEnterRecognition();
   } catch (error: any) {
     console.error("录入人脸失败:", error);
-    captureError.value = error?.message || "录入人脸失败";
+    captureError.value = error?.message || t('faceDemo.enrollFaceFailed');
     ElMessage.error(captureError.value);
   } finally {
     savingProfile.value = false;
@@ -2005,18 +2006,18 @@ const handleEnrollFace = async () => {
 
 const handleEnterRecognition = async () => {
   if (!profiles.value.length) {
-    ElMessage.warning("请先录入至少一个人脸");
+    ElMessage.warning(t('faceDemo.pleaseEnrollFirst'));
     return;
   }
 
   if (!hasCompatibleProfiles.value) {
-    ElMessage.warning("检测到旧版人脸数据，请先清空本地库后重新录入");
+    ElMessage.warning(t('faceDemo.legacyClearFirst'));
     return;
   }
 
   currentStep.value = "recognize";
   recognitionDetections.value = [];
-  recognitionNotice.value = "正在准备摄像头...";
+  recognitionNotice.value = t('faceDemo.preparingCamera');
 
   try {
     await ensureRuntimeReady();
@@ -2024,8 +2025,8 @@ const handleEnterRecognition = async () => {
     await startRecognitionLoop();
   } catch (error: any) {
     console.error("进入识别失败:", error);
-    ElMessage.error(error?.message || "进入识别失败");
-    recognitionNotice.value = error?.message || "进入识别失败";
+    ElMessage.error(error?.message || t('faceDemo.enterRecognitionFailed'));
+    recognitionNotice.value = error?.message || t('faceDemo.enterRecognitionFailed');
   }
 };
 
@@ -2035,7 +2036,7 @@ const handleRestartRecognition = async () => {
     await startRecognitionLoop();
   } catch (error: any) {
     console.error("重新打开识别失败:", error);
-    ElMessage.error(error?.message || "重新打开识别失败");
+    ElMessage.error(error?.message || t('faceDemo.restartRecognitionFailed'));
   }
 };
 
@@ -2049,7 +2050,7 @@ const handleDeleteProfile = async (id: string) => {
     }
   } catch (error) {
     console.error("删除本地人脸失败:", error);
-    ElMessage.error("删除本地人脸失败");
+    ElMessage.error(t('faceDemo.deleteLocalFaceFailed'));
   }
 };
 
@@ -2058,7 +2059,7 @@ const handleClearProfiles = async () => {
     return;
   }
 
-  if (!window.confirm("确认清空当前浏览器中的全部人脸数据吗？")) {
+  if (!window.confirm(t('faceDemo.clearConfirm'))) {
     return;
   }
 
@@ -2067,10 +2068,10 @@ const handleClearProfiles = async () => {
     await loadProfiles();
     resetRuntimeNotice();
     handleReturnHome();
-    ElMessage.success("本地人脸库已清空");
+    ElMessage.success(t('faceDemo.localDbCleared'));
   } catch (error) {
     console.error("清空本地人脸库失败:", error);
-    ElMessage.error("清空本地人脸库失败");
+    ElMessage.error(t('faceDemo.clearLocalDbFailed'));
   }
 };
 
@@ -2088,7 +2089,7 @@ const handleToggleFullscreen = async () => {
     await document.exitFullscreen();
   } catch (error) {
     console.error("切换全屏失败:", error);
-    ElMessage.error("切换全屏失败");
+    ElMessage.error(t('faceDemo.toggleFullscreenFailed'));
   }
 };
 
@@ -2098,7 +2099,7 @@ const handleReturnHome = () => {
   captureError.value = "";
   recognitionDetections.value = [];
   currentStep.value = "name";
-  recognitionNotice.value = "打开摄像头后会自动开始识别。";
+  recognitionNotice.value = t('faceDemo.cameraAutoRecognize');
   void navigateTo("/system/ai/face", { replace: true });
 };
 

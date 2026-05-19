@@ -61,6 +61,16 @@
                         dropdown-class="course-status-filter__dropdown"
                     />
                 </div>
+
+                <div class="course-status-filter">
+                    <span class="course-status-filter__label">课程学段:</span>
+                    <MSelect
+                        v-model="courseStage"
+                        :options="stageOptions"
+                        class="course-status-filter__select"
+                        dropdown-class="course-status-filter__dropdown"
+                    />
+                </div>
             </div>
 
             <div class="course-filter-strip">
@@ -408,7 +418,16 @@ watch(activeCategory, (newVal) => {
 
 // 筛选
 const courseStatus = ref('')
+const courseStage = ref('')
 const searchKeyword = ref('')
+
+const stageOptions = [
+    { label: '全部', value: '' },
+    { label: '幼儿园', value: '幼儿园' },
+    { label: '小学', value: '小学' },
+    { label: '初中', value: '初中' },
+    { label: '高中', value: '高中' },
+]
 
 // 创建课程弹窗
 const showCreateModal = ref(false)
@@ -602,6 +621,7 @@ interface Course {
     coursePermission?: number // 0=仅自己可见，1=全校老师可见
     chapters?: { id: number; name: string }[]
     cover?: string // 课程封面
+    courseStageLabels?: string
 }
 
 // 课程列表数据
@@ -612,6 +632,7 @@ let searchTimer: ReturnType<typeof setTimeout> | null = null
 
 const filteredCourseList = computed(() => {
     const keyword = debouncedSearchKeyword.value.trim().toLowerCase()
+    const stage = courseStage.value
     return courseList.value.filter((course) => {
         const matchStatus =
             !courseStatus.value || activeCategory.value === 'custom' || activeCategory.value === 'shared'
@@ -626,7 +647,14 @@ const filteredCourseList = computed(() => {
                 course.createByName
             ].some((field) => String(field || '').toLowerCase().includes(keyword))
 
-        return matchStatus && matchKeyword
+        const matchStage = !stage
+            ? true
+            : String(course.courseStageLabels || '')
+                .split(',')
+                .map((s) => s.trim())
+                .includes(stage)
+
+        return matchStatus && matchKeyword && matchStage
     })
 })
 
@@ -736,6 +764,7 @@ const loadCourseList = async () => {
                     isOwner, // 是否是自己创建的
                     canAdd: !isOwner, // 不是自己创建的才能添加
                     coursePermission: Number.isFinite(permissionValue) ? permissionValue : 0,
+                    courseStageLabels: typeof item.courseStageLabels === 'string' ? item.courseStageLabels : '',
                 }
             })
             courseList.value = nextCourseList
@@ -782,9 +811,9 @@ watch(searchKeyword, () => {
     min-height: 100%;
     min-width: 0;
     overflow: visible;
-    background:
+    /* background:
         radial-gradient(circle at top left, rgba(164, 193, 255, 0.14), transparent 28%),
-        linear-gradient(180deg, #f8f9fa 0%, #f4f8ff 100%);
+        linear-gradient(180deg, #f8f9fa 0%, #f4f8ff 100%); */
     color: #191b23;
     font-family: 'Manrope', 'PingFang SC', sans-serif;
 }
@@ -794,7 +823,7 @@ watch(searchKeyword, () => {
     min-width: 0;
     min-height: 100%;
     margin: 0;
-    padding: 24px clamp(20px, 2vw, 40px) 40px;
+    padding: 14px clamp(20px, 0vw, 40px) 40px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -879,10 +908,11 @@ watch(searchKeyword, () => {
     flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 18px;
+    padding: 0;
 }
 
 .course-search {
-    width: 384px;
+    width: 420px;
     max-width: 100%;
 }
 
@@ -896,19 +926,23 @@ watch(searchKeyword, () => {
     display: inline-flex;
     align-items: center;
     gap: 10px;
-    height: 48px;
-    padding: 0;
+    min-height: 48px;
+    padding: 0 16px;
+    border: 1px solid rgba(212, 221, 236, 0.92);
+    border-radius: 16px;
+    background: rgba(248, 250, 253, 0.96);
+    box-shadow: 0 4px 12px rgba(80, 103, 136, 0.05);
 }
 
 .course-status-filter__label {
-    color: #667080;
+    color: #5c6880;
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     white-space: nowrap;
 }
 
 .course-status-filter__select {
-    width: 164px;
+    width: 90px;
 }
 
 .course-filter-strip {
@@ -1242,26 +1276,31 @@ watch(searchKeyword, () => {
     height: 48px !important;
     border: 0 !important;
     border-radius: 14px !important;
-    background: #f2f4f5 !important;
+    background: rgba(248, 250, 253, 0.96) !important;
     padding: 0 40px 0 42px !important;
     color: #191b23 !important;
     font-size: 14px !important;
-    box-shadow: inset 0 0 0 1px transparent !important;
+    box-shadow:
+        0 4px 12px rgba(80, 103, 136, 0.05),
+        inset 0 0 0 1px rgba(212, 221, 236, 0.95) !important;
 }
 
 :deep(.course-search__input > input::placeholder) {
-    color: #7a8090 !important;
+    color: #7d8799 !important;
 }
 
 :deep(.course-search__input > input:focus) {
     border: 0 !important;
     background: #ffffff !important;
-    box-shadow: 0 0 0 2px rgba(0, 86, 196, 0.12), inset 0 0 0 1px rgba(0, 86, 196, 0.4) !important;
+    box-shadow:
+        0 0 0 2px rgba(0, 86, 196, 0.12),
+        0 10px 24px rgba(79, 117, 255, 0.1),
+        inset 0 0 0 1px rgba(0, 86, 196, 0.42) !important;
 }
 
 :deep(.course-search__input > .absolute:first-child) {
     left: 14px !important;
-    color: #7a8090 !important;
+    color: #6f7b90 !important;
 }
 
 :deep(.course-search__input > button) {
@@ -1292,11 +1331,18 @@ watch(searchKeyword, () => {
 }
 
 :global(.course-status-filter__dropdown) {
-    min-width: 180px !important;
+    min-width: 110px !important;
+    max-height: none !important;
+    overflow: visible !important;
     border: 1px solid rgba(194, 198, 215, 0.7) !important;
     border-radius: 12px !important;
     box-shadow: 0 18px 36px rgba(25, 27, 35, 0.12) !important;
-    padding: 8px 0 !important;
+    padding: 6px 0 !important;
+}
+
+:global(.course-status-filter__dropdown > div.py-1) {
+    max-height: none !important;
+    overflow: visible !important;
 }
 
 :global(.course-status-filter__dropdown > div.py-1 > div) {

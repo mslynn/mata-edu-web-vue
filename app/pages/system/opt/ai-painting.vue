@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import AiAssistantImagePage from "../ai/index.vue";
+import AiAssistantImagePage from "~/components/ai/AiAssistantImagePage.vue";
 
 definePageMeta({
   layout: false,

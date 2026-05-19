@@ -1,24 +1,24 @@
 <template>
   <div class="object-workbench-page">
     <main class="object-workbench-shell">
-      <nav class="object-workbench-breadcrumb" aria-label="面包屑">
-        <button type="button" @click="handleBackToIntro">物品识别</button>
+      <nav class="object-workbench-breadcrumb" :aria-label="t('objectRecognition.breadcrumbAria')">
+        <button type="button" @click="handleBackToIntro">{{ t("objectRecognition.objectRecognition") }}</button>
         <span>/</span>
-        <button type="button" @click="handleBackToAiPractice">AI 实践中心</button>
+        <button type="button" @click="handleBackToAiPractice">{{ t("objectRecognition.aiPracticeCenter") }}</button>
       </nav>
 
-      <section class="object-workbench-upload" aria-label="上传方式">
+      <section class="object-workbench-upload" :aria-label="t('objectRecognition.uploadAriaLabel')">
         <label class="object-workbench-upload__button">
           <input type="file" accept="image/*" @change="handleLocalUpload" />
-          <span>本地上传</span>
+          <span>{{ t("objectRecognition.localUpload") }}</span>
         </label>
         <button type="button" class="object-workbench-upload__button" @click="openCameraModal">
-          <span>拍摄上传</span>
+          <span>{{ t("objectRecognition.cameraUpload") }}</span>
         </button>
       </section>
 
       <section class="object-workbench-content">
-        <aside class="object-workbench-materials" aria-label="素材列表">
+        <aside class="object-workbench-materials" :aria-label="t('objectRecognition.materialListAriaLabel')">
           <div class="object-workbench-thumb-grid">
             <button
               v-for="(item, index) in materialItems"
@@ -29,12 +29,12 @@
               @click="selectImage(index)"
             >
               <img :src="item.url" :alt="item.name" />
-              <span v-if="index === selectedIndex">当前选择</span>
+              <span v-if="index === selectedIndex">{{ t("objectRecognition.currentSelection") }}</span>
             </button>
           </div>
         </aside>
 
-        <section class="object-workbench-preview" aria-label="识别预览">
+        <section class="object-workbench-preview" :aria-label="t('objectRecognition.recognitionPreviewAriaLabel')">
           <div class="object-workbench-preview__image">
             <img ref="previewImageRef" :src="currentImage.url" :alt="currentImage.name" />
           </div>
@@ -43,20 +43,20 @@
           </button>
         </section>
 
-        <aside class="object-workbench-result" aria-label="识别结果">
+        <aside class="object-workbench-result" :aria-label="t('objectRecognition.resultAriaLabel')">
           <div class="object-workbench-result__head">
             <div>
               <span>RESULT</span>
-              <h1>识别结果窗口</h1>
+              <h1>{{ t("objectRecognition.resultWindowTitle") }}</h1>
             </div>
             <span v-if="hasDetected" class="object-workbench-result__count">
-              检测到 {{ detectedObjects.length }} 个物体
+              {{ t("objectRecognition.detectedCount", { count: detectedObjects.length }) }}
             </span>
           </div>
 
           <div v-if="!hasDetected" class="object-workbench-empty">
             <div class="object-workbench-empty__image" aria-hidden="true"></div>
-            <p>快快开始检测体验模型吧</p>
+            <p>{{ t("objectRecognition.emptyHint") }}</p>
           </div>
 
           <template v-else>
@@ -64,13 +64,13 @@
               {{ detectionError }}
             </p>
             <div v-if="primaryDetection" class="object-workbench-result__block">
-              <p>识别结果：</p>
+              <p>{{ t("objectRecognition.recognitionResultLabel") }}</p>
               <strong>{{ primaryDetection.name }}</strong>
-              <span>分类：{{ primaryDetection.name }} / {{ primaryDetection.category }}</span>
+              <span>{{ t("objectRecognition.categoryLabel", { name: primaryDetection.name, category: primaryDetection.category }) }}</span>
             </div>
 
             <div v-if="primaryDetection" class="object-workbench-result__block">
-              <p>置信度：</p>
+              <p>{{ t("objectRecognition.confidenceLabel") }}</p>
               <strong class="object-workbench-result__score">{{ primaryDetection.confidence }}</strong>
               <div class="object-workbench-progress">
                 <i :style="{ width: primaryDetection.confidence }"></i>
@@ -78,11 +78,11 @@
             </div>
 
             <div v-if="!primaryDetection" class="object-workbench-empty object-workbench-empty--small">
-              <p>暂未识别到物品</p>
+              <p>{{ t("objectRecognition.noObjectDetected") }}</p>
             </div>
 
             <div v-if="secondaryDetections.length" class="object-workbench-matches">
-              <h2>其他匹配：</h2>
+              <h2>{{ t("objectRecognition.otherMatches") }}</h2>
               <div v-for="item in secondaryDetections" :key="item.name" class="object-workbench-match">
                 <span>{{ item.name }}</span>
                 <strong>{{ item.confidence }}</strong>
@@ -97,8 +97,8 @@
     <div v-if="cameraVisible" class="object-camera-modal" role="dialog" aria-modal="true">
       <div class="object-camera-panel">
         <header class="object-camera-panel__head">
-          <h2>拍摄上传</h2>
-          <button type="button" @click="closeCameraModal">关闭</button>
+          <h2>{{ t("objectRecognition.cameraModalTitle") }}</h2>
+          <button type="button" @click="closeCameraModal">{{ t("objectRecognition.closeBtn") }}</button>
         </header>
         <div class="object-camera-panel__body">
           <video ref="cameraVideoRef" autoplay playsinline muted></video>
@@ -106,10 +106,10 @@
         </div>
         <footer class="object-camera-panel__foot">
           <button type="button" class="object-camera-cancel" @click="closeCameraModal">
-            取消
+            {{ t("objectRecognition.cancelBtn") }}
           </button>
           <button type="button" class="object-camera-shot" :disabled="Boolean(cameraError)" @click="capturePhoto">
-            拍照使用
+            {{ t("objectRecognition.captureAndUse") }}
           </button>
         </footer>
       </div>
@@ -120,6 +120,7 @@
 <script setup lang="ts">
 import type { ObjectDetection } from "@tensorflow-models/coco-ssd";
 import type { MobileNet } from "@tensorflow-models/mobilenet";
+import { useI18n } from "vue-i18n";
 import { ElMessage } from "element-plus";
 import {
   IMAGE_CLASSIFICATION_CONFIDENCE_THRESHOLD,
@@ -140,15 +141,15 @@ type DetectionResult = {
   confidence: string;
 };
 
+const { t } = useI18n();
+
 definePageMeta({
   layout: "sidebar",
 });
 
 useHead({
-  title: "物品识别工作台",
-  htmlAttrs: {
-    lang: "zh-CN",
-  },
+  title: computed(() => t("objectRecognition.workbenchTitle")),
+  htmlAttrs: {},
 });
 
 const selectedIndex = ref(0);
@@ -178,8 +179,8 @@ const currentImage = computed(() => materialItems.value[selectedIndex.value] || 
 const primaryDetection = computed(() => detectedObjects.value[0] || null);
 const secondaryDetections = computed(() => detectedObjects.value.slice(1, 4));
 const detectButtonText = computed(() => {
-  if (isDetecting.value) return "识别中...";
-  return hasDetected.value ? "重新检测" : "开始智能识别";
+  if (isDetecting.value) return t("objectRecognition.detecting");
+  return hasDetected.value ? t("objectRecognition.reDetect") : t("objectRecognition.startDetect");
 });
 
 const selectImage = (index: number) => {
@@ -193,7 +194,7 @@ const addUploadedImage = (file: File, source: "upload" | "camera") => {
   const url = URL.createObjectURL(file);
   materialItems.value.unshift({
     id: `${source}-${Date.now()}`,
-    name: file.name || "上传图片",
+    name: file.name || t("objectRecognition.uploadedImage"),
     url,
     file,
   });
@@ -227,7 +228,7 @@ const openCameraModal = async () => {
   await nextTick();
 
   if (!navigator.mediaDevices?.getUserMedia) {
-    cameraError.value = "当前浏览器不支持摄像头调用";
+    cameraError.value = t("objectRecognition.browserNotSupportCamera");
     return;
   }
 
@@ -241,7 +242,7 @@ const openCameraModal = async () => {
     }
   } catch (error) {
     console.error("打开摄像头失败:", error);
-    cameraError.value = "无法打开摄像头，请检查浏览器权限";
+    cameraError.value = t("objectRecognition.openCameraFailed");
   }
 };
 
@@ -253,7 +254,7 @@ const closeCameraModal = () => {
 const capturePhoto = () => {
   const video = cameraVideoRef.value;
   if (!video || !video.videoWidth || !video.videoHeight) {
-    cameraError.value = "摄像头画面未准备好，请稍后再试";
+    cameraError.value = t("objectRecognition.cameraNotReady");
     return;
   }
 
@@ -262,14 +263,14 @@ const capturePhoto = () => {
   canvas.height = video.videoHeight;
   const context = canvas.getContext("2d");
   if (!context) {
-    cameraError.value = "拍照失败，请重试";
+    cameraError.value = t("objectRecognition.captureFailed");
     return;
   }
 
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   canvas.toBlob((blob) => {
     if (!blob) {
-      cameraError.value = "拍照失败，请重试";
+      cameraError.value = t("objectRecognition.captureFailed");
       return;
     }
     const file = new File([blob], `capture-${Date.now()}.png`, { type: "image/png" });
@@ -280,7 +281,7 @@ const capturePhoto = () => {
 
 const loadObjectDetectionModel = async () => {
   if (!import.meta.client) {
-    throw new Error("物品识别仅支持在浏览器环境运行");
+    throw new Error(t("objectRecognition.onlyBrowserSupported"));
   }
   if (!objectDetectionModel) {
     await import("@tensorflow/tfjs");
@@ -292,7 +293,7 @@ const loadObjectDetectionModel = async () => {
 
 const loadImageClassificationModel = async () => {
   if (!import.meta.client) {
-    throw new Error("物品识别仅支持在浏览器环境运行");
+    throw new Error(t("objectRecognition.onlyBrowserSupported"));
   }
   if (!imageClassificationModel) {
     await import("@tensorflow/tfjs");
@@ -306,7 +307,7 @@ const waitForPreviewImage = async () => {
   await nextTick();
   const imageElement = previewImageRef.value;
   if (!imageElement) {
-    throw new Error("识别图片未准备好");
+    throw new Error(t("objectRecognition.previewNotReady"));
   }
   if (imageElement.complete && imageElement.naturalWidth > 0) {
     return imageElement;
@@ -314,7 +315,7 @@ const waitForPreviewImage = async () => {
 
   return await new Promise<HTMLImageElement>((resolve, reject) => {
     imageElement.onload = () => resolve(imageElement);
-    imageElement.onerror = () => reject(new Error("图片加载失败，无法识别"));
+    imageElement.onerror = () => reject(new Error(t("objectRecognition.imageLoadFailed")));
   });
 };
 
@@ -376,12 +377,12 @@ const handleDetect = async () => {
       ? objectDetectionResults
       : await detectByImageClassification(imageElement);
     if (!detectedObjects.value.length) {
-      ElMessage.warning("无法识别");
+      ElMessage.warning(t("objectRecognition.cannotRecognize"));
     }
     hasDetected.value = true;
   } catch (error) {
     console.error("TFJS 物品识别失败:", error);
-    detectionError.value = error instanceof Error ? error.message : "识别失败，请稍后重试";
+    detectionError.value = error instanceof Error ? error.message : t("objectRecognition.detectFailed");
     detectedObjects.value = [];
     hasDetected.value = true;
   } finally {
