@@ -147,6 +147,66 @@
                 </div>
               </div>
             </div>
+
+            <div v-if="suggestedQuestions.length && !chatRequesting" class="aiwenda-suggestions">
+              <p class="aiwenda-suggestions__label">您还可以这样问：</p>
+              <button
+                v-for="(q, i) in suggestedQuestions"
+                :key="i"
+                type="button"
+                class="aiwenda-suggestions__item"
+                @click="composerText = q; void handleSendMessage()"
+              >
+                {{ q }}
+              </button>
+            </div>
+          </div>
+
+          <div v-if="showScrollUp || showScrollDown" class="aiwenda-scroll-btns">
+            <button v-if="showScrollUp" type="button" class="aiwenda-scroll-btn" title="回到顶部" @click="scrollChatToTop">
+              <span class="material-symbols-outlined">arrow_upward</span>
+            </button>
+            <button v-if="showScrollDown" type="button" class="aiwenda-scroll-btn" title="回到底部" @click="scrollChatToBottom">
+              <span class="material-symbols-outlined">arrow_downward</span>
+            </button>
+          </div>
+
+          <div v-if="chatRequesting" class="aiwenda-stop-wrap">
+            <button type="button" class="aiwenda-stop-btn" @click="handleStopChat">
+              <span class="material-symbols-outlined">pause_circle</span>
+              停止回答
+            </button>
+          </div>
+
+          <div class="aiwenda-toolbar">
+            <button
+              v-if="lastAssistantMessage && !chatRequesting"
+              type="button"
+              class="aiwenda-toolbar__btn is-retry"
+              @click="retryMessage(lastAssistantMessage!)"
+            >
+              <span class="material-symbols-outlined">refresh</span>
+              重新回答
+            </button>
+            <div
+              class="aiwenda-quota-wrap"
+              @mouseenter="showQuotaPopover = true; loadQuotaInfo()"
+              @mouseleave="showQuotaPopover = false"
+            >
+              <button type="button" class="aiwenda-toolbar__btn">
+                <span class="material-symbols-outlined">bolt</span>
+                额度详情
+              </button>
+              <div v-if="showQuotaPopover" class="aiwenda-quota-popover">
+                <div v-if="!quotaItems.length" class="aiwenda-quota-popover__row">
+                  <span>暂无额度信息</span>
+                </div>
+                <div v-for="item in quotaItems" :key="item.name" class="aiwenda-quota-popover__row">
+                  <span>{{ item.name }}</span>
+                  <strong>{{ item.limit }}</strong>
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="aiwenda-composer">
