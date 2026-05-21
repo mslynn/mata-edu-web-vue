@@ -133,17 +133,6 @@ const modelStatusText = computed(() => {
   return t("ttsDemo.modelStatusReady");
 });
 
-const canEnterExperience = computed(() => true);
-const localTtsStatus = ref("ready");
-
-const primaryButtonText = computed(() => {
-  return "立即体验";
-});
-
-const modelStatusText = computed(() => {
-  return "在线试听与在线 MP3 下载已就绪。";
-});
-
 const handleBackToAiCenter = async () => {
   await navigateTo("/system/opt");
 };
