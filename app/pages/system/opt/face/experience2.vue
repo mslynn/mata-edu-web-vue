@@ -1,5 +1,5 @@
 <template>
-  <div class="stitch-face-page">
+  <div class="stitch-face-page" :class="{ 'stitch-face-page--embedded': embedded }">
     <canvas ref="captureCanvasRef" class="hidden"></canvas>
     <input
       ref="uploadInputRef"
@@ -9,7 +9,7 @@
       @change="handleUploadChange"
     />
 
-    <header class="stitch-face-page__header">
+    <header v-if="!embedded" class="stitch-face-page__header">
       <div class="stitch-face-page__header-top">
         <button
           type="button"
@@ -464,7 +464,21 @@ import type {
 import type { FaceDemoProfile } from "~/composables/useFaceDemoStorage";
 import { useFaceDemoStorage } from "~/composables/useFaceDemoStorage";
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+  }>(),
+  {
+    embedded: false,
+  }
+);
+
+const emit = defineEmits<{
+  (event: "completed"): void;
+}>();
+
 const { t } = useI18n();
+const embedded = computed(() => props.embedded);
 
 definePageMeta({ layout: "sidebar" });
 
@@ -1437,6 +1451,10 @@ const handleRecognitionCompleteConfirm = async () => {
   capturePreview.value = "";
   captureError.value = "";
   currentStep.value = "name";
+  emit("completed");
+  if (embedded.value) {
+    return;
+  }
   await navigateTo("/system/ai/face", { replace: true });
 };
 
@@ -1447,6 +1465,10 @@ const handleGoBack = async () => {
   }
 
   stopActiveStream();
+
+  if (embedded.value) {
+    return;
+  }
 
   if (import.meta.client && window.history.length > 1) {
     window.history.back();
@@ -1492,6 +1514,11 @@ onBeforeUnmount(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.stitch-face-page--embedded {
+  height: 100%;
+  padding: 20px 20px 16px;
 }
 
 .page-back-button {

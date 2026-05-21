@@ -1,14 +1,12 @@
 <template>
-  <AiAssistantImagePage
-    :force-chat-mode="embedded"
-    :reset-chat-mode-on-mount="embedded"
-    :task-chat-embed="embedded"
+  <AiWendaTaskWorkbench
+    :embedded="embedded"
     @chat-session-ready="handleChatSessionReady"
   />
 </template>
 
 <script setup lang="ts">
-import AiAssistantImagePage from "~/components/ai/AiAssistantImagePage.vue";
+import AiWendaTaskWorkbench from "~/components/ai/AiWendaTaskWorkbench.vue";
 
 withDefaults(
   defineProps<{

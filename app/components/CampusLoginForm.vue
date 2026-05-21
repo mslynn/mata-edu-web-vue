@@ -2,6 +2,7 @@
   <div class="h-full flex flex-col login-form">
     <!-- 账号输入 -->
     <div class="form-field">
+      <label class="form-field-label">{{ t('auth.username') }}</label>
       <div :class="[
         'flex items-center input-line px-4 py-3 bg-white',
         errors.username && 'has-error'
@@ -22,6 +23,7 @@
 
     <!-- 密码输入 -->
     <div class="form-field">
+      <label class="form-field-label">{{ t('auth.password') }}</label>
       <div :class="[
         'flex items-center input-line px-4 py-3 bg-white relative',
         errors.password && 'has-error'
@@ -60,7 +62,7 @@
 
     <!-- 忘记密码链接 -->
     <div class="text-right mb-6">
-      <a href="#" class="text-gray-400 text-xs hover:text-[#e8a063] no-underline" @click.prevent="emit('forgot-password')">{{ t('auth.forgotPassword') }}</a>
+      <a href="#" class="text-gray-400 text-xs hover:text-[#0f67ff] no-underline" @click.prevent="emit('forgot-password')">{{ t('auth.forgotPassword') }}</a>
     </div>
   </div>
 </template>

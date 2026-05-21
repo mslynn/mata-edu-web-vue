@@ -10,7 +10,7 @@
       {{ t('auth.campusLogin') }}
       <span 
         :class="[
-          'absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-in-out',
+          'absolute bottom-0 h-0.5 bg-[#0f67ff] transition-all duration-300 ease-in-out',
           modelValue === 'campus' ? 'left-0 right-0 opacity-100' : 'left-1/2 right-1/2 opacity-0'
         ]"
       ></span>
@@ -25,7 +25,7 @@
       {{ t('auth.phoneLogin') }}
       <span 
         :class="[
-          'absolute bottom-0 h-0.5 bg-primary transition-all duration-300 ease-in-out',
+          'absolute bottom-0 h-0.5 bg-[#0f67ff] transition-all duration-300 ease-in-out',
           modelValue === 'phonenumber' ? 'left-0 right-0 opacity-100' : 'left-1/2 right-1/2 opacity-0'
         ]"
       ></span>

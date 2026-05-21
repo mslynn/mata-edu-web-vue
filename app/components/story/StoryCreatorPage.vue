@@ -1,7 +1,12 @@
 <template>
-  <div ref="storyPageRef" class="story-page" :style="pageAdaptiveStyle">
+  <div
+    ref="storyPageRef"
+    class="story-page"
+    :class="{ 'story-page--embedded': embedded }"
+    :style="pageAdaptiveStyle"
+  >
     <div class="story-shell">
-      <header class="story-header">
+      <header v-if="!embedded" class="story-header">
         <div class="story-breadcrumb">
           <button
             type="button"
@@ -265,9 +270,25 @@
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { aiAdmin } from "~/composables/api/ai";
+import { resolveStoryBookshelfCover } from "~/utils/storyBookshelfCover";
+
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+  }>(),
+  {
+    embedded: false,
+  }
+);
+
+const emit = defineEmits<{
+  (event: "generated", payload: { bookId: string }): void;
+  (event: "open-book", payload: { bookId: string }): void;
+}>();
 
 const { t } = useI18n();
-const { creatBook, getBookList } = aiAdmin();
+const { creatBook, getBookList, createAiChatChapters } = aiAdmin();
+const embedded = computed(() => props.embedded);
 
 useHead({
   title: computed(() => t("story.heroTitle")),
@@ -471,6 +492,49 @@ const resolveCreatedBookId = (payload: unknown) => {
   return "";
 };
 
+const resolveGeneratedChapterId = (payload: unknown) => {
+  if (!payload || typeof payload !== "object") return "";
+
+  const record = payload as Record<string, unknown>;
+  const candidateKeys = ["chapterId", "chapter_id", "id"];
+
+  for (const key of candidateKeys) {
+    const value = String(record[key] ?? "").trim();
+    if (value) {
+      return value;
+    }
+  }
+
+  return "";
+};
+
+const extractGeneratedStoryResult = (payload: unknown) => {
+  if (!payload || typeof payload !== "object") {
+    return {
+      content: String(payload || "").trim(),
+      chapterId: "",
+    };
+  }
+
+  const record = payload as Record<string, unknown>;
+  const nestedPayload =
+    (record.data && typeof record.data === "object"
+      ? record.data
+      : record) as Record<string, unknown>;
+  const content = String(
+    record.text ||
+      nestedPayload.content ||
+      nestedPayload.storyContent ||
+      nestedPayload.chapterContent ||
+      "",
+  ).trim();
+
+  return {
+    content,
+    chapterId: resolveGeneratedChapterId(nestedPayload) || resolveGeneratedChapterId(record),
+  };
+};
+
 const handleOpenBookshelf = () => {
   showBookshelfModal.value = true;
   void fetchBookshelfList();
@@ -529,13 +593,14 @@ const normalizeBookshelfList = (rows: unknown): BookshelfItem[] => {
     .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
     .map((item, index) => {
       const rowMap = createLowerCaseMap(item);
+      const title = String(pickByKeys(rowMap, ["title", "bookTitle", "name"]) || "未命名故事").trim();
       return {
         id: String(pickByKeys(rowMap, ["bookId", "book_id", "id"]) || `book-${index}`).trim(),
-        title: String(pickByKeys(rowMap, ["title", "bookTitle", "name"]) || "未命名故事").trim(),
+        title,
         date: formatBookshelfDate(
           pickByKeys(rowMap, ["createTime", "createdAt", "updateTime", "updatedAt", "time"])
         ),
-        coverUrl: String(pickByKeys(rowMap, ["coverUrl", "cover", "cover_url"]) || "").trim(),
+        coverUrl: resolveStoryBookshelfCover(item, index, title),
       };
     });
 };
@@ -563,9 +628,7 @@ const fetchBookshelfList = async () => {
 };
 
 const getBookshelfCoverStyle = (book: BookshelfItem) => ({
-  background: book.coverUrl
-    ? undefined
-    : "linear-gradient(180deg, #dbe8ff 0%, #88a7e8 52%, #3c5ea8 100%)",
+  background: undefined,
   backgroundImage: book.coverUrl ? `url(${book.coverUrl})` : undefined,
   backgroundSize: "cover",
   backgroundPosition: "center",
@@ -576,6 +639,10 @@ const handleOpenBookshelfBook = async (book: BookshelfItem) => {
 
   try {
     closeBookshelfModal();
+    if (embedded.value) {
+      emit("open-book", { bookId: book.id });
+      return;
+    }
     await router.push({
       path: "/system/opt/story/storyreading",
       query: {
@@ -636,17 +703,38 @@ const handleGenerate = async () => {
     if (!bookId) {
       throw new Error("创建故事书成功，但未返回 bookId");
     }
+
+    let generatedContent = "";
+    const generateResponse = await createAiChatChapters(
+      {
+        bookId,
+        enableThinking: false,
+      },
+      {
+        onChunk: (_payload, fullText) => {
+          generatedContent = fullText;
+        },
+      },
+    );
+    const generatedResult = extractGeneratedStoryResult(generateResponse);
+    generatedContent = generatedResult.content || generatedContent;
+
     if (typeof window !== "undefined") {
       window.sessionStorage.setItem(
         STORY_DRAFT_STORAGE_KEY,
         JSON.stringify({
           ...payload,
           bookId,
-          chapterId: "",
-          generatedContent: "",
-          pendingGenerate: true,
+          chapterId: generatedResult.chapterId,
+          generatedContent,
+          pendingGenerate: false,
         } satisfies StoryDraftPayload),
       );
+    }
+
+    if (embedded.value) {
+      emit("generated", { bookId });
+      return;
     }
 
     await router.push({
@@ -741,6 +829,20 @@ onBeforeUnmount(() => {
   background: #f7f9fb;
   color: #2d3337;
   font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.story-page--embedded {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.story-page--embedded .story-shell {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  padding: 20px 20px 28px;
 }
 
 .story-shell {

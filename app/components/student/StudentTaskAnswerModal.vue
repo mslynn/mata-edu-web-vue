@@ -276,6 +276,20 @@ import { ElMessage, ElMessageBox } from "element-plus";
 import { student, type StudentTaskAnswer } from "~/composables/api/student";
 import { taskmanagementcenterApi } from "~/composables/api/taskmanagement";
 import StarRating from "~/components/ui/StarRating.vue";
+
+const STUDENT_TASK_ANSWER_MESSAGE_Z_INDEX = 2400;
+
+const showSuccessMessage = (message: string) =>
+  ElMessage({ message, type: "success", zIndex: STUDENT_TASK_ANSWER_MESSAGE_Z_INDEX });
+
+const showWarningMessage = (message: string) =>
+  ElMessage({ message, type: "warning", zIndex: STUDENT_TASK_ANSWER_MESSAGE_Z_INDEX });
+
+const showConfirmDialog = (
+  message: string,
+  title: string,
+  options: Record<string, unknown> = {},
+) => ElMessageBox.confirm(message, title, { ...options, zIndex: STUDENT_TASK_ANSWER_MESSAGE_Z_INDEX });
 import { normalizeRatePercent, percentToStars, scoreToStars } from "~/utils/star-rating";
 
 interface QuestionOption {
@@ -968,19 +982,19 @@ const handleSubmit = async () => {
 
   const submitTargetId = resolveSubmitTargetId();
   if (props.evaluationId && !String(props.evaluationId).trim()) {
-    ElMessage.warning("当前测评缺少提交标识");
+    showWarningMessage("当前测评缺少提交标识");
     return;
   }
 
   if (!props.evaluationId && !submitTargetId) {
-    ElMessage.warning("任务ID缺失");
+    showWarningMessage("任务ID缺失");
     return;
   }
 
   const incompleteCount = getIncompleteQuestionCount();
   if (incompleteCount > 0) {
     try {
-      await ElMessageBox.confirm("您还没有答完，是否确定要提交？", "提示", {
+      await showConfirmDialog("您还没有答完，是否确定要提交？", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
         closeOnClickModal: false,
@@ -1005,7 +1019,7 @@ const handleSubmit = async () => {
         answers,
       });
     }
-    ElMessage.success("提交成功");
+    showSuccessMessage("提交成功");
     emit("submitted");
     closeModal();
   } catch (error: any) {

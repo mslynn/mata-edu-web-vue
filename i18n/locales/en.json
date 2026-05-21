@@ -100,6 +100,40 @@
     "pageTitle": "Your personal AI learning and creative toolbox",
     "poseClassification": "Posture Classification Training",
     "poseRecognition": "Pose Recognition",
+    "poseIntroPage": {
+      "pageTitle": "Pose Recognition",
+      "breadcrumbLabel": "Breadcrumb navigation",
+      "breadcrumbCurrent": "Pose Recognition",
+      "heroBadge": "COMPUTER VISION AI",
+      "heroTitle": "Pose Recognition",
+      "heroDesc": "Precisely detect and track 17 core human keypoints to build a live motion skeleton in real time. It is widely used in sports teaching analysis, dance assessment, and rehabilitation monitoring to make body movement digital and visible.",
+      "startButton": "Try Now",
+      "startSoon": "The pose recognition experience is being connected.",
+      "scenariosTitle": "Application Scenarios",
+      "cards": {
+        "teaching": {
+          "tag": "Sport Analysis",
+          "title": "Sports Motion Correction",
+          "desc": "Analyze movements such as long jump, running, or shooting in real time and help teachers provide more scientific posture improvement guidance through angle-based evaluation."
+        },
+        "sports": {
+          "tag": "Art Education",
+          "title": "Dance Teaching Assessment",
+          "desc": "Compare student movement against standard dance poses from expert instructors, and digitally evaluate balance, extension, and rhythm for more standardized dance teaching."
+        },
+        "performance": {
+          "tag": "Medical Care",
+          "title": "Rehabilitation Training Monitoring",
+          "desc": "Monitor patient range of motion, automatically record training frequency and movement compliance, and assist doctors in evaluating recovery progress."
+        }
+      },
+      "images": {
+        "heroAlt": "Pose recognition hero visual",
+        "classroomAlt": "Sports motion correction scene",
+        "sportsAlt": "Dance teaching assessment scene",
+        "performanceAlt": "Rehabilitation training monitoring scene"
+      }
+    },
     "atQA": "AT Q&A",
     "smartQA": "Intelligent Q&A",
     "speechSynthesis": "Speech Synthesis",
@@ -2641,9 +2675,19 @@
       "aiAnswer": "This is the AI answer",
       "humanAnswer": "This is the human answer",
       "nextQuestion": "Next Question",
-      "desc1": "Answer A demonstrates a higher level of cognitive synesthesia by combining physical phenomena with emotional perception, reflecting the uniquely human ability for empathy and metaphorical thinking.",
-      "desc2": "Answer B accurately states the physical parameters and even references literary imagery, but it remains more informational and lacks the intuitive first-person sense of lived experience. In comparison, human responses usually contain more nonlinear associations rooted in life experience.",
-      "note": "* Analysis is based on Turing Test criteria: emotional resonance, semantic association depth, and first-person experiential quality."
+      "yourChoice": "Your Choice",
+      "notAnswered": "Not answered",
+      "questionLabel": "Question {index}",
+      "summaryAccuracy": "Recognition Accuracy",
+      "summaryDuration": "Duration",
+      "summaryScore": "Correct Answers",
+      "scoreFormat": "{correct}/{total}",
+      "tryAgain": "Try Again",
+      "backToIntro": "Back to Intro",
+      "intro": "Let's go through the answer analysis together!",
+      "analysisPrefix": "Analysis: ",
+      "prev": "Previous",
+      "next": "Next"
     },
     "result": {
       "successTitle": "Congratulations! You passed the test.",
@@ -2655,7 +2699,13 @@
       "confirm": "Got it",
       "viewAnalysis": "View Analysis",
       "nextQuestion": "Next Question"
-    }
+    },
+    "loading": "Loading questions...",
+    "loadFailed": "Failed to load questions, please try again later",
+    "retry": "Reload",
+    "empty": "No Turing test questions available",
+    "submitting": "Submitting...",
+    "submitFailed": "Submission failed, please try again later"
   },
   "moodPage": {
     "breadcrumbAria": "Breadcrumb",
@@ -2924,5 +2974,132 @@
     "stopRecognitionFirst": "Please stop current recognition before switching language.",
     "microphoneIndexLabel": "Microphone {index}",
     "recordTranscribeDone": "Recording transcription complete"
+  },
+  "poseExperience": {
+    "pageTitle": "Pose Recognition - Experience",
+    "aiPracticeCenter": "AI Practice Center",
+    "poseRecognition": "Pose Recognition",
+    "experience": "Experience",
+    "mergedBadge": "Recognition and Learning Combined",
+    "mergedDesc": "This page merges recognition and learning, so you can collect poses while detecting them in real time.",
+    "cameraLabel": "Camera",
+    "cameraPlaceholder": "Please select a camera",
+    "cameraOption": "Camera {index}",
+    "openCameraHint": "Click the button below to turn on the camera",
+    "modelLoading": "Model loading...",
+    "openCamera": "Turn On Camera",
+    "captureAndLearn": "Capture and Start Learning",
+    "closeCamera": "Turn Off Camera",
+    "resultTitle": "Recognition Result",
+    "customPoseMatch": "Custom Pose (Match {score}%)",
+    "confidence": "Confidence",
+    "keypoints": "Keypoints",
+    "waitingPose": "Waiting for pose detection...",
+    "supportedPoses": "Supported Poses",
+    "learnedLibrary": "Learned Pose Library ({count})",
+    "emptyLibraryTitle": "No pose has been learned yet",
+    "emptyLibraryDesc": "After turning on the camera, strike a pose and click “Capture and Start Learning”.",
+    "clearAll": "Clear All",
+    "namingTitle": "Name This Pose",
+    "namingPlaceholder": "Enter a pose name, for example: Raise Hand",
+    "poseList": {
+      "handsUp": "Raise Both Hands",
+      "leftHandUp": "Raise Left Hand",
+      "rightHandUp": "Raise Right Hand",
+      "tPose": "T Pose",
+      "handsOnHips": "Hands on Hips",
+      "armsFolded": "Arms Folded",
+      "squat": "Squat",
+      "stand": "Stand"
+    },
+    "errors": {
+      "cameraPermission": "Unable to open the camera. Please check whether browser camera permission is allowed.",
+      "cameraNotFound": "No available camera was detected. Please check the device connection.",
+      "cameraUnreadable": "Camera startup failed. The current video source is unreadable or already in use{detail}.",
+      "cameraAborted": "Camera startup was interrupted. Please try again.",
+      "cameraUnavailable": "Unable to access the camera.",
+      "browserUnsupported": "The current browser does not support camera access.",
+      "videoNotReady": "The camera container is not ready.",
+      "canvasNotReady": "The canvas container is not ready."
+    }
+  },
+  "gestureIntroPage": {
+    "pageTitle": "Gesture Recognition",
+    "aiPracticeCenter": "AI Practice Center",
+    "currentPage": "Gesture Recognition",
+    "heroBadge": "COMPUTER VISION AI",
+    "heroTitle": "Gesture Recognition",
+    "heroDesc": "Powered by advanced hand feature extraction algorithms, the system tracks 21 hand keypoints in real time. It supports custom gesture learning and multi-hand detection, delivering precise visual feedback for classroom interaction.",
+    "startExperience": "Try Now",
+    "heroImageAlt": "Hand landmark detection hero visual",
+    "scenariosTitle": "Application Scenarios",
+    "scenes": {
+      "interaction": {
+        "tag": "Interaction",
+        "title": "Smart Courseware Control",
+        "desc": "Teachers no longer need to rely on a mouse or clicker. By waving in the air, they can turn pages, zoom, and annotate key content more naturally during class."
+      },
+      "accessibility": {
+        "tag": "Accessibility",
+        "title": "Sign Language Assistance",
+        "desc": "Bring technology into special education. Convert sign language into text or speech in real time and build a more accessible communication bridge."
+      },
+      "virtualLab": {
+        "tag": "Virtual Lab",
+        "title": "Virtual Experiment Interaction",
+        "desc": "In virtual laboratories, natural gestures can simulate delicate actions such as grabbing tools or pouring liquid, offering immersive operation without expensive equipment."
+      }
+    },
+    "images": {
+      "interactionAlt": "Smart courseware control scene",
+      "accessibilityAlt": "Sign language assistance scene",
+      "virtualLabAlt": "Virtual experiment interaction scene"
+    }
+  },
+  "gestureExperience": {
+    "pageTitle": "Gesture Recognition - Experience",
+    "aiPracticeCenter": "AI Practice Center",
+    "gestureRecognition": "Gesture Recognition",
+    "experience": "Experience",
+    "mergedBadge": "Recognition and Learning Combined",
+    "mergedDesc": "This page merges recognition and learning, so you can collect gestures while detecting them in real time.",
+    "cameraLabel": "Camera",
+    "cameraPlaceholder": "Please select a camera",
+    "cameraOption": "Camera {index}",
+    "openCameraHint": "Click the button below to turn on the camera",
+    "modelLoading": "Model loading...",
+    "openCamera": "Turn On Camera",
+    "captureAndLearn": "Capture and Start Learning",
+    "closeCamera": "Turn Off Camera",
+    "resultTitle": "Recognition Result",
+    "customGestureMatch": "Custom Gesture (Match {score}%)",
+    "confidence": "Confidence",
+    "fingerCount": "Finger Count",
+    "waitingGesture": "Waiting for gesture detection...",
+    "supportedGestures": "Supported Gestures",
+    "learnedLibrary": "Learned Gesture Library ({count})",
+    "emptyLibraryTitle": "No gesture has been learned yet",
+    "emptyLibraryDesc": "After turning on the camera, make a gesture and click “Capture and Start Learning”.",
+    "clearAll": "Clear All",
+    "namingTitle": "Name This Gesture",
+    "namingPlaceholder": "Enter a gesture name, for example: Victory Sign",
+    "gestureList": {
+      "fist": "Fist",
+      "openPalm": "Open Palm",
+      "vSign": "V Sign",
+      "thumbsUp": "Thumbs Up",
+      "pointing": "Pointing",
+      "rock": "Rock"
+    },
+    "errors": {
+      "cameraPermission": "Unable to open the camera. Please check whether browser camera permission is allowed.",
+      "cameraNotFound": "No available camera was detected. Please check the device connection.",
+      "cameraUnreadable": "Camera startup failed. The current video source is unreadable or already in use{detail}.",
+      "cameraAborted": "Camera startup was interrupted. Please try again.",
+      "cameraUnavailable": "Unable to access the camera.",
+      "browserUnsupported": "The current browser does not support camera access.",
+      "videoNotReady": "The camera container is not ready.",
+      "canvasNotReady": "The canvas container is not ready."
+    }
   }
 }

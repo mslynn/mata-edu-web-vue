@@ -1,7 +1,13 @@
 <template>
-  <div ref="workbenchPageRef" class="graffiti-workbench-page" :style="pageAdaptiveStyle">
+  <div
+    ref="workbenchPageRef"
+    class="graffiti-workbench-page"
+    :class="{ 'graffiti-workbench-page--embedded': embedded }"
+    :style="pageAdaptiveStyle"
+  >
     <main class="graffiti-workbench-shell">
       <nav
+        v-if="!embedded"
         class="graffiti-workbench-breadcrumb"
         :aria-label="t('graffitiWorkbench.breadcrumbAria')"
       >
@@ -127,6 +133,15 @@ import { useI18n } from "vue-i18n";
 import { getStroke } from "perfect-freehand";
 import { useDoodleRecognizer } from "~/composables/graffiti/useDoodleRecognizer";
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+  }>(),
+  {
+    embedded: false,
+  }
+);
+
 definePageMeta({
   layout: "sidebar",
 });
@@ -141,6 +156,7 @@ type ProbabilityItem = {
 
 const router = useRouter();
 const { t, locale } = useI18n();
+const embedded = computed(() => props.embedded);
 const workbenchPageRef = ref<HTMLElement | null>(null);
 const canvasBoardRef = ref<HTMLDivElement | null>(null);
 const workbenchLayoutWidth = ref(1360);
@@ -442,6 +458,9 @@ const predictionLabel = computed(() =>
 );
 
 const handleBackToSpot = async () => {
+  if (embedded.value) {
+    return;
+  }
   await router.push("/system/opt/graffiti/spot");
 };
 
@@ -523,6 +542,12 @@ onBeforeUnmount(() => {
   background: #f8fafc;
   color: #2d3337;
   overflow: hidden;
+}
+
+.graffiti-workbench-page--embedded {
+  min-height: 0;
+  height: 100%;
+  padding: 20px 20px 16px;
 }
 
 .graffiti-workbench-shell {

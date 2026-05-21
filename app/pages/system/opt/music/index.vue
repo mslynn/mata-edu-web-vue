@@ -1,7 +1,12 @@
 <template>
-  <div ref="musicPageRef" class="music-page" :style="pageAdaptiveStyle">
+  <div
+    ref="musicPageRef"
+    class="music-page"
+    :class="{ 'music-page--embedded': embedded }"
+    :style="pageAdaptiveStyle"
+  >
     <div class="music-shell">
-      <nav class="music-breadcrumb" :aria-label="t('music.breadcrumbLabel')">
+      <nav v-if="!embedded" class="music-breadcrumb" :aria-label="t('music.breadcrumbLabel')">
         <button type="button" class="music-breadcrumb__link" @click="handleBackToAiCenter">
           {{ t("music.aiPracticeCenter") }}
         </button>
@@ -142,9 +147,48 @@ import { useI18n } from "vue-i18n";
 import { aiAdmin } from "~/composables/api/ai";
 import { ElMessage } from "element-plus";
 import MusicGenerationWorkspace from "~/components/music/MusicGenerationWorkspace.vue";
+import musicCover10 from "~/assets/fengmain/screen10.png";
+import musicCover11 from "~/assets/fengmain/screen11.png";
+import musicCover12 from "~/assets/fengmain/screen12.png";
+import musicCover13 from "~/assets/fengmain/screen13.png";
+import musicCover14 from "~/assets/fengmain/screen14.png";
+import musicCover15 from "~/assets/fengmain/screen15.png";
+import musicCover16 from "~/assets/fengmain/screen16.png";
+import musicCover17 from "~/assets/fengmain/screen17.png";
+import musicCover18 from "~/assets/fengmain/screen18.png";
+import musicCover19 from "~/assets/fengmain/screen19.png";
+
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+  }>(),
+  {
+    embedded: false,
+  }
+);
+
+interface MusicWorkItem {
+  songId?: string;
+  taskId?: string;
+  title: string;
+  badge?: string;
+  style: string;
+  date: string;
+  accent: string;
+  cover: string;
+  audioUrl?: string;
+  lyricsContent?: string;
+  taskStatus?: string;
+}
+
+const emit = defineEmits<{
+  (event: "open-player", payload: { work: MusicWorkItem }): void;
+  (event: "song-ready", payload: { songId: string; work: MusicWorkItem | null }): void;
+}>();
 
 const { t } = useI18n();
 const { getSongOptions, creatSongLyrics, creatSongTask, getSongTasks, getSongList, getSongDetail } = aiAdmin();
+const embedded = computed(() => props.embedded);
 
 definePageMeta({
   layout: "sidebar",
@@ -175,20 +219,6 @@ let musicPageResizeObserver: ResizeObserver | null = null;
 const musicLayoutWidth = ref(1360);
 const showWorksModal = ref(false);
 
-interface MusicWorkItem {
-  songId?: string;
-  taskId?: string;
-  title: string;
-  badge?: string;
-  style: string;
-  date: string;
-  accent: string;
-  cover: string;
-  audioUrl?: string;
-  lyricsContent?: string;
-  taskStatus?: string;
-}
-
 interface MusicOption {
   key: string;
   label: string;
@@ -204,6 +234,18 @@ const latestSongTaskId = ref("");
 const selectedStyle = ref("pop");
 const selectedEmotion = ref("happy");
 const selectedScene = ref("fitness");
+const musicCoverPool = [
+  musicCover10,
+  musicCover11,
+  musicCover12,
+  musicCover13,
+  musicCover14,
+  musicCover15,
+  musicCover16,
+  musicCover17,
+  musicCover18,
+  musicCover19,
+];
 
 const promptTags = computed(() => [t("music.tagRetroFuturism"), t("music.tagMorningCafe"), t("music.tagDeepSeaDive")]);
 const fallbackStyleOptions = computed<MusicOption[]>(() => [
@@ -375,6 +417,43 @@ const resolveSongAssetUrl = (record: Record<string, unknown>, keys: string[]) =>
   return "";
 };
 
+const getStableCoverIndex = (seed: string) => {
+  let hash = 0;
+  for (let index = 0; index < seed.length; index += 1) {
+    hash = (hash * 31 + seed.charCodeAt(index)) >>> 0;
+  }
+  return hash % musicCoverPool.length;
+};
+
+const resolveLocalMusicCover = (
+  record: Record<string, unknown>,
+  index: number,
+  title: string,
+) => {
+  const seed = String(
+    record.songId ??
+    record.taskId ??
+    record.id ??
+    title ??
+    index,
+  ).trim();
+  return musicCoverPool[getStableCoverIndex(seed || String(index))];
+};
+
+const resolveMusicWorkCover = (
+  record: Record<string, unknown>,
+  index: number,
+  title: string,
+) => {
+  return resolveSongAssetUrl(record, [
+    "coverUrl",
+    "cover",
+    "picUrl",
+    "imageUrl",
+    "posterUrl",
+  ]) || resolveLocalMusicCover(record, index, title);
+};
+
 const normalizeSongWorkItem = (payload: unknown, index = 0): MusicWorkItem | null => {
   if (!payload || typeof payload !== "object") return null;
   const record = payload as Record<string, unknown>;
@@ -395,13 +474,7 @@ const normalizeSongWorkItem = (payload: unknown, index = 0): MusicWorkItem | nul
     record.songStyle ??
     "POP",
   ).trim().toUpperCase();
-  const cover = resolveSongAssetUrl(record, [
-    "coverUrl",
-    "cover",
-    "picUrl",
-    "imageUrl",
-    "posterUrl",
-  ]) || "/images/ai-practice/practice-23-7c2c96bc.webp";
+  const cover = resolveMusicWorkCover(record, index, title);
 
   return {
     songId: String(record.songId ?? record.id ?? "").trim() || undefined,
@@ -484,6 +557,9 @@ const pageAdaptiveStyle = computed(() => ({
 }));
 
 const handleBackToAiCenter = async () => {
+  if (embedded.value) {
+    return;
+  }
   await navigateTo("/system/opt");
 };
 
@@ -636,6 +712,12 @@ const pollSongTaskUntilFinished = async (taskId: string, initialSongId?: string)
         "",
       ).trim();
       songGenerateHint.value = "歌曲生成完成";
+      const matchedWork =
+        musicWorksState.value.find((item) => item.songId === nextSongId) || null;
+      emit("song-ready", { songId: nextSongId, work: matchedWork });
+      if (embedded.value) {
+        return taskPayload;
+      }
       if (nextSongId) {
         await navigateTo({
           path: "/system/opt/music/player",
@@ -716,6 +798,13 @@ const handleGenerate = async () => {
 
     if (isSongTaskCompleted(taskStatus)) {
       await loadSongWorks();
+      const matchedWork =
+        musicWorksState.value.find((item) => item.songId === songId) || null;
+      emit("song-ready", { songId, work: matchedWork });
+      if (embedded.value) {
+        ElMessage.success("歌曲生成完成");
+        return;
+      }
       if (songId) {
         await navigateTo({
           path: "/system/opt/music/player",
@@ -759,16 +848,35 @@ const openPlayer = async (work: MusicWorkItem) => {
       ? detail as Record<string, unknown>
       : null;
 
+    const payload: MusicWorkItem = {
+      ...work,
+      songId: work.songId || "",
+      title: String(record?.title ?? record?.songTitle ?? work.title ?? "").trim(),
+      badge: String(record?.taskStatus ?? record?.status ?? work.badge ?? "").trim(),
+      style: String(record?.styleTag ?? record?.style ?? work.style ?? "").trim(),
+      date: String(record?.createTime ?? record?.createdAt ?? work.date ?? "").trim(),
+      accent: work.accent,
+      cover: record ? resolveMusicWorkCover(record, 0, work.title) : work.cover,
+      audioUrl: String(record?.audioUrl ?? record?.songUrl ?? record?.fileUrl ?? work.audioUrl ?? "").trim(),
+      lyricsContent: String(record?.lyricsContent ?? record?.lyrics ?? work.lyricsContent ?? "").trim(),
+      taskStatus: String(record?.taskStatus ?? record?.status ?? work.taskStatus ?? "").trim(),
+    };
+
+    if (embedded.value) {
+      emit("open-player", { work: payload });
+      return;
+    }
+
     await navigateTo({
       path: "/system/opt/music/player",
       query: {
-        songId: work.songId || "",
-        title: String(record?.title ?? record?.songTitle ?? work.title ?? "").trim(),
-        badge: String(record?.taskStatus ?? record?.status ?? work.badge ?? "").trim(),
-        style: String(record?.styleTag ?? record?.style ?? work.style ?? "").trim(),
-        date: String(record?.createTime ?? record?.createdAt ?? work.date ?? "").trim(),
-        accent: work.accent,
-        cover: String(record?.coverUrl ?? record?.cover ?? work.cover ?? "").trim(),
+        songId: payload.songId || "",
+        title: payload.title,
+        badge: payload.badge || "",
+        style: payload.style,
+        date: payload.date,
+        accent: payload.accent,
+        cover: payload.cover,
       },
     });
   } catch (error) {
@@ -855,6 +963,18 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 88% 8%, rgba(165, 193, 255, 0.26), transparent 20%),
     #f7f9fb;
   font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.music-page--embedded {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.music-page--embedded .music-shell {
+  width: 100%;
+  min-width: 0;
+  padding: 20px 20px 36px;
 }
 
 .music-shell {

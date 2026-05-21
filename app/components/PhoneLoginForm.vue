@@ -2,6 +2,7 @@
   <div class="h-full flex flex-col login-form">
     <!-- 手机号输入 -->
     <div class="form-field">
+      <label class="form-field-label">手机号</label>
       <div :class="[
         'flex items-center input-line px-4 py-3 bg-white',
         errors.phone && 'has-error'
@@ -28,6 +29,7 @@
 
     <!-- 验证码输入 -->
     <div class="form-field">
+      <label class="form-field-label">验证码</label>
       <div :class="[
         'flex items-center input-line px-4 py-3 bg-white',
         errors.code && 'has-error'
@@ -46,7 +48,7 @@
           class="send-code-btn"
           :class="[
             { 'is-counting': countdown > 0 },
-            'bg-primary text-white'
+            'bg-[#0f67ff] text-white'
           ]"
           :disabled="countdown > 0 || isSendingCode" 
           @click="handleSendCode"
@@ -59,7 +61,7 @@
 
     <!-- 密码登录链接 - 右对齐，和上面按钮对齐 -->
     <div class="text-right mb-6 px-4">
-      <a href="#" class="text-gray-400 text-xs hover:text-[#e8a063] no-underline" @click.prevent="handleTogglePasswordLogin">{{ t('auth.passwordLogin') }}</a>
+      <a href="#" class="text-gray-400 text-xs hover:text-[#0f67ff] no-underline" @click.prevent="handleTogglePasswordLogin">{{ t('auth.passwordLogin') }}</a>
     </div>
 
     <CloudflareTurnstileDialog

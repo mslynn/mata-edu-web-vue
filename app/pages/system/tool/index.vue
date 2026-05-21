@@ -13,17 +13,17 @@
         </div>
 
         <div class="tool-hero-banner__visual" aria-hidden="true">
-          <img
-            :src="toolHeroImage"
-            alt=""
-            class="tool-hero-banner__image"
-          />
+          <img :src="toolHeroImage" alt="" class="tool-hero-banner__image" />
         </div>
       </section>
 
       <div class="tool-grid tool-grid--featured">
         <template v-if="pageLoading">
-          <div v-for="i in 2" :key="`featured-${i}`" class="tool-card tool-card--featured">
+          <div
+            v-for="i in 2"
+            :key="`featured-${i}`"
+            class="tool-card tool-card--featured"
+          >
             <el-skeleton animated :rows="0">
               <template #template>
                 <div class="tool-card__featured-inner">
@@ -69,7 +69,10 @@
           >
             <div class="tool-card__featured-inner">
               <div class="tool-brand-box">
-                 <img :src="getToolVisualMeta(tool.id).featuredLogo" :alt="getToolDisplayName(tool.id)" />
+                <img
+                  :src="getToolVisualMeta(tool.id).featuredLogo"
+                  :alt="getToolDisplayName(tool.id)"
+                />
                 <!-- <div
                   class="tool-brand-box__inner"
                 
@@ -270,9 +273,9 @@
           <div class="iframe-modal-header">
             <div class="iframe-modal-copy">
               <span class="iframe-modal-title">{{ currentToolName }}</span>
-              <span class="iframe-modal-desc">
+              <!-- <span class="iframe-modal-desc">
                 工具内容保持原有交互逻辑，仅更新当前容器界面样式。
-              </span>
+              </span> -->
             </div>
 
             <button class="iframe-close-btn" @click="closeIframeModal">
@@ -446,7 +449,8 @@ const toolList: Tool[] = [
     appStoreKey: "tool.downloadTheAppStore",
     googlePlayKey: "tool.downloadTheGooglePlay",
     appStoreUrl: "https://apps.apple.com/us/app/matatacode/id1448969038",
-    googlePlayUrl: "https://play.google.com/store/apps/details?id=com.matatalab.matatacode",
+    googlePlayUrl:
+      "https://play.google.com/store/apps/details?id=com.matatalab.matatacode",
   },
   {
     id: "talemap",
@@ -527,7 +531,9 @@ const getToolVisualMeta = (toolId: string) => TOOL_VISUAL_META[toolId];
 const getToolDisplayName = (toolId: string) =>
   TOOL_VISUAL_META[toolId]?.displayName || toolId;
 const getToolTitleParts = (toolId: string) => {
-  const displayName = getToolDisplayName(toolId).replace(/<br\s*\/?>/gi, " ").trim();
+  const displayName = getToolDisplayName(toolId)
+    .replace(/<br\s*\/?>/gi, " ")
+    .trim();
   const match = displayName.match(/^(.*?)(\s*\([^()]+\))$/);
 
   if (!match) {
@@ -609,7 +615,9 @@ const getToolCenterLayoutWidth = () => {
   const outerWidth = window.outerWidth || 0;
   const innerWidth = window.innerWidth || 0;
   const referenceWidth = outerWidth || innerWidth || clientWidth || 1360;
-  const visibleWidthCandidates = [clientWidth, pageClientWidth].filter(width => width > 0);
+  const visibleWidthCandidates = [clientWidth, pageClientWidth].filter(
+    (width) => width > 0
+  );
   const visibleWidth = visibleWidthCandidates.length
     ? Math.min(...visibleWidthCandidates)
     : referenceWidth;
@@ -1474,10 +1482,7 @@ const handleDownloadGooglePlay = (tool: Tool) => {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    color 0.2s ease,
-    transform 0.2s ease,
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease,
     box-shadow 0.2s ease;
 }
 

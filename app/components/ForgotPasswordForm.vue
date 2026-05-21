@@ -1,8 +1,5 @@
 <template>
   <div class="h-full flex flex-col login-form">
-    <!-- 标题 -->
-    <h2 class="text-center text-base text-[#808080] mb-6">{{ t('auth.resetPassword') }}</h2>
-
     <!-- 手机号输入 -->
     <div class="form-field">
       <div :class="[
@@ -47,7 +44,7 @@
           class="send-code-btn"
           :class="[
             { 'is-counting': countdown > 0 },
-            'bg-primary text-white'
+            'bg-[#0f67ff] text-white'
           ]"
           :disabled="countdown > 0 || isSendingCode" 
           @click="handleSendCode"
@@ -136,7 +133,7 @@
 
     <!-- 提交按钮 -->
     <button 
-      class="w-full py-3 mt-4 bg-[#FFA54D] border border-solid border-gray-300 rounded-[40px] text-white text-base font-medium cursor-pointer transition-colors"
+      class="w-full py-3 mt-4 bg-[#0f67ff] border border-solid border-[#0f67ff] rounded-[40px] text-white text-base font-medium cursor-pointer transition-colors hover:bg-[#0d61dd]"
       @click="handleSubmit"
     >
       {{ t('auth.submit') }}

@@ -1,23 +1,25 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config  'http://192.168.0.63:8001'  ws://192.168.0.54:8001/resource/websocket
 
-// 根据环境直接设置 API 地址
-const apiBaseUrl = process.env.NODE_ENV === 'production'
+// 根据环境设置默认地址，并允许通过 .env 覆盖
+const apiBaseUrl = process.env.NUXT_PUBLIC_API_BASE_URL || (process.env.NODE_ENV === 'production'
   ? 'https://test-gateway.matatastudio.com'
-  : 'http://192.168.0.145:8001'
+  : 'http://192.168.0.145:8001')
 
 // 预览服务地址
 
-const previewBaseUrl = process.env.NODE_ENV === 'production'
+const previewBaseUrl = process.env.NUXT_PUBLIC_PREVIEW_BASE_URL || (process.env.NODE_ENV === 'production'
   ? 'https://edu-view.matatastudio.com'
-  : 'https://edu-view.matatastudio.com'
+  : 'https://edu-view.matatastudio.com')
 
 //编程平台iframe地址 
-// const toolCreateBaseUrl = process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/' ws://192.168.0.60:8001/resource/websocket
+const toolCreateBaseUrl = process.env.NUXT_PUBLIC_TOOL_CREATE_URL || (process.env.NODE_ENV === 'production'
+  ? 'https://pre.matatalab.com/'
+  : 'http://192.168.0.199:8601/')
 
 //websocket通信
-const signalingUrl = process.env.NODE_ENV === 'production'
+const signalingUrl = process.env.NUXT_PUBLIC_SIGNALING_URL || (process.env.NODE_ENV === 'production'
   ? 'wss://test-gateway.matatastudio.com/resource/websocket'
-  : 'ws://192.168.0.24:8001/resource/websocket'
+  : 'ws://192.168.0.24:8001/resource/websocket')
 
 
 
@@ -34,9 +36,9 @@ export default defineNuxtConfig({
         { name: 'description', content: 'AI智学云-教育平台' }
       ],
       link: [
-        { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'shortcut icon', type: 'image/x-icon', href: '/favicon.ico' },
-        { rel: 'apple-touch-icon', href: '/favicon.ico' }
+        { rel: 'icon', type: 'image/x-icon', href: '/5.svg' },
+        { rel: 'shortcut icon', type: 'image/x-icon', href: '/5.svg' },
+        { rel: 'apple-touch-icon', href: '/5.svg' }
       ]
     }
   },
@@ -55,9 +57,8 @@ export default defineNuxtConfig({
       // 预览服务地址
       previewBaseUrl: previewBaseUrl || 'https://edu-view.matatastudio.com',
       // 工具中心创建地址
-      //  toolCreateBaseUrl,
-      vincibotCreateUrl: process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/',
-      nousCreateUrl: process.env.NUXT_PUBLIC_TOOL_CREATE_URL || 'http://192.168.0.199:8601/',
+      vincibotCreateUrl: toolCreateBaseUrl,
+      nousCreateUrl: toolCreateBaseUrl,
       // WebRTC 信令服务器地址
       signalingUrl: signalingUrl || 'ws://192.168.0.60:8001/resource/websocket',
       // Cloudflare Turnstile 站点公钥

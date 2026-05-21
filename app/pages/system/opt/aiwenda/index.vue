@@ -1003,7 +1003,7 @@ const loadQuotaInfo = async () => {
       .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
       .map((item) => ({
         name: String(item.quotaName || item.name || t("aiwenda.unknown")),
-        limit: String(item.userLimit ?? item.limit ?? 0),
+        limit: String(item.teacherLimit ?? item.userLimit ?? item.limit ?? 0),
       }));
   } catch {
     // 静默处理

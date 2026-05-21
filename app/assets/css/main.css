@@ -8,11 +8,30 @@
   transition: opacity 0.15s ease-out;
 }
 
+.el-message {
+  z-index: 99999 !important;
+  top: 16px !important;
+}
+
+.el-overlay,
+.el-message-box__wrapper {
+  z-index: 99998 !important;
+}
+
 /* 通用登录表单样式 */
 .login-form .form-field {
   position: relative;
   margin-bottom: 6px;
   padding-bottom: 18px;
+}
+
+.login-form .form-field-label {
+  display: block;
+  margin: 0 0 8px 2px;
+  color: #1b2b46;
+  font-size: 12px;
+  line-height: 1;
+  font-weight: 700;
 }
 
 /* 输入框底部线条 - 从 icon 位置开始 */
@@ -139,17 +158,17 @@
 }
 
 .country-option:hover {
-  background-color: #fff7f0;
-  color: #e8a063;
+  background-color: #f4f8ff;
+  color: #0f67ff;
 }
 
 .country-option.active {
-  background-color: #FFA54D;
+  background-color: #0f67ff;
   color: white;
 }
 
 .country-option.active:hover {
-  background-color: #ff9933;
+  background-color: #0d61dd;
 }
 
 /* 下拉框动画 */
@@ -213,8 +232,8 @@
 }
 
 .send-code-btn:hover:not(:disabled) {
-  /* border-color: #e8a063;
-  color: #e8a063; */
+  /* border-color: #0f67ff;
+  color: #0f67ff; */
 }
 
 .send-code-btn:disabled {
@@ -232,6 +251,14 @@
   width: 100%;
   max-width: 400px;
   margin: 0 auto;
+}
+
+.trial-account-form > h2 {
+  margin: 0 0 12px;
+  color: #7a86a0;
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 500;
 }
 
 .trial-account-form .form-item {
@@ -354,13 +381,13 @@
 }
 
 .trial-account-form .select-option:hover {
-  background-color: #fff7f0;
-  color: #e8a063;
+  background-color: #f4f8ff;
+  color: #0f67ff;
 }
 
 .trial-account-form .select-option.active {
-  background-color: #fff7f0;
-  color: #e8a063;
+  background-color: #f4f8ff;
+  color: #0f67ff;
 }
 
 /* 多选下拉框滚动 */
@@ -401,8 +428,8 @@
 }
 
 .trial-account-form .checkbox.checked {
-  background-color: #FFA54D;
-  border-color: #FFA54D;
+  background-color: #0f67ff;
+  border-color: #0f67ff;
 }
 
 .trial-account-form .checkbox.checked::after {
@@ -427,19 +454,19 @@
   width: 100%;
   padding: 10px;
   margin-top: 8px;
-  background: linear-gradient(135deg, #FFA54D 0%, #FF9933 100%);
+  background: linear-gradient(135deg, #0f67ff 0%, #2371ec 100%);
   border: none;
   border-radius: 25px;
   font-size: 14px;
   color: white;
   cursor: pointer;
   transition: all 0.3s ease;
-  box-shadow: 0 4px 12px rgba(255, 165, 77, 0.3);
+  box-shadow: 0 4px 12px rgba(15, 103, 255, 0.24);
 }
 
 .trial-account-form .submit-btn:hover {
-  background: linear-gradient(135deg, #FF9933 0%, #FF8800 100%);
-  box-shadow: 0 6px 16px rgba(255, 165, 77, 0.4);
+  background: linear-gradient(135deg, #0d61dd 0%, #1d6be7 100%);
+  box-shadow: 0 6px 16px rgba(15, 103, 255, 0.32);
   transform: translateY(-2px);
 }
 
@@ -462,7 +489,7 @@
 }
 
 .trial-account-form .el-select-custom .el-input__wrapper.is-focus {
-  box-shadow: 0 0 0 1px #FFA54D inset;
+  box-shadow: 0 0 0 1px #0f67ff inset;
 }
 
 .trial-account-form .el-select-custom .el-input__inner {
@@ -476,28 +503,28 @@
 
 /* Element Plus 多选标签样式 */
 .el-select__tags .el-tag {
-  background-color: #fff7f0;
-  border-color: #FFA54D;
-  color: #FFA54D;
+  background-color: #f4f8ff;
+  border-color: #0f67ff;
+  color: #0f67ff;
 }
 
 .el-select__tags .el-tag .el-tag__close {
-  color: #FFA54D;
+  color: #0f67ff;
 }
 
 .el-select__tags .el-tag .el-tag__close:hover {
-  background-color: #FFA54D;
+  background-color: #0f67ff;
   color: white;
 }
 
 /* Element Plus 下拉选项样式 */
 .el-select-dropdown__item.selected {
-  color: #FFA54D;
+  color: #0f67ff;
   font-weight: normal;
 }
 
 .el-select-dropdown__item:hover {
-  background-color: #fff7f0;
+  background-color: #f4f8ff;
 }
 
 /* Element Plus Select 错误状态 */
@@ -509,18 +536,18 @@
 .trial-account-form .trial-send-code-btn {
   margin-left: 8px;
   min-width: 88px;
-  border: 1px solid #FFA54D;
+  border: 1px solid #0f67ff;
   border-radius: 16px;
   padding: 4px 10px;
-  color: #FFA54D;
-  background: #fff7f0;
+  color: #0f67ff;
+  background: #f4f8ff;
   font-size: 12px;
   line-height: 1.2;
 }
 
 .trial-account-form .trial-send-code-btn.is-counting {
-  border-color: #FFA54D;
+  border-color: #0f67ff;
   color: #ffffff;
-  background: #FFA54D;
+  background: #0f67ff;
 }
 

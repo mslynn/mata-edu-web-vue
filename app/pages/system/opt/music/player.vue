@@ -1,5 +1,10 @@
 <template>
-  <div ref="playerPageRef" class="music-player-page" :style="pageAdaptiveStyle">
+  <div
+    ref="playerPageRef"
+    class="music-player-page"
+    :class="{ 'music-player-page--embedded': embedded }"
+    :style="pageAdaptiveStyle"
+  >
     <div class="music-player-shell">
       <main class="music-player-canvas">
         <div class="music-player-bg">
@@ -189,6 +194,22 @@ import { aiAdmin } from "~/composables/api/ai";
 import { useHttp } from "~/composables/api/useHttp";
 import { ElMessage, ElMessageBox } from "element-plus";
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+    work?: Partial<MusicPlayerWorkItem> | null;
+  }>(),
+  {
+    embedded: false,
+    work: null,
+  }
+);
+
+const emit = defineEmits<{
+  (event: "back"): void;
+  (event: "deleted"): void;
+}>();
+
 const { t } = useI18n();
 const { getSongDetail, deleteSong } = aiAdmin();
 
@@ -268,6 +289,7 @@ const defaultWorks = computed<MusicPlayerWorkItem[]>(() => [
 ]);
 
 const route = useRoute();
+const embedded = computed(() => props.embedded);
 const playerPageRef = ref<HTMLElement | null>(null);
 const audioRef = ref<HTMLAudioElement | null>(null);
 let playerPageResizeObserver: ResizeObserver | null = null;
@@ -283,6 +305,52 @@ const durationSeconds = ref(252);
 const currentTimeSeconds = ref(165);
 
 const queryWork = computed<MusicPlayerWorkItem | null>(() => {
+  if (embedded.value && props.work) {
+    return {
+      songId:
+        typeof props.work.songId === "string" && props.work.songId.trim()
+          ? props.work.songId.trim()
+          : undefined,
+      ossId:
+        typeof props.work.ossId === "string" && props.work.ossId.trim()
+          ? props.work.ossId.trim()
+          : undefined,
+      title:
+        typeof props.work.title === "string" && props.work.title.trim()
+          ? props.work.title.trim()
+          : defaultWorks.value[0]?.title || "",
+      badge:
+        typeof props.work.badge === "string" && props.work.badge.trim()
+          ? props.work.badge.trim()
+          : t("music.badgeCompleted"),
+      style:
+        typeof props.work.style === "string" && props.work.style.trim()
+          ? props.work.style.trim()
+          : "POP",
+      date:
+        typeof props.work.date === "string" && props.work.date.trim()
+          ? props.work.date.trim()
+          : "2026. 05. 20",
+      accent:
+        typeof props.work.accent === "string" && props.work.accent.trim()
+          ? props.work.accent.trim()
+          : "#005bc2",
+      cover:
+        typeof props.work.cover === "string" && props.work.cover.trim()
+          ? props.work.cover.trim()
+          : "/images/ai-practice/practice-23-7c2c96bc.webp",
+      audioUrl:
+        typeof props.work.audioUrl === "string" && props.work.audioUrl.trim()
+          ? props.work.audioUrl.trim()
+          : undefined,
+      lyricsContent:
+        typeof props.work.lyricsContent === "string" &&
+        props.work.lyricsContent.trim()
+          ? props.work.lyricsContent.trim()
+          : undefined,
+    };
+  }
+
   const title = typeof route.query.title === "string" ? route.query.title : "";
   if (!title) return null;
 
@@ -420,6 +488,10 @@ function getLyricClass(index: number) {
 }
 
 const handleBack = async () => {
+  if (embedded.value) {
+    emit("back");
+    return;
+  }
   await navigateTo("/system/opt/music");
 };
 
@@ -475,6 +547,11 @@ const handleDeleteSong = async () => {
     });
     await deleteSong(songId);
     ElMessage.success("删除成功");
+    emit("deleted");
+    if (embedded.value) {
+      emit("back");
+      return;
+    }
     await navigateTo("/system/opt/music");
   } catch (error) {
     if (error === "cancel") return;
@@ -484,7 +561,11 @@ const handleDeleteSong = async () => {
 };
 
 const loadSongDetail = async () => {
-  const songId = typeof route.query.songId === "string" ? route.query.songId : "";
+  const songId = embedded.value
+    ? String(props.work?.songId || "").trim()
+    : typeof route.query.songId === "string"
+      ? route.query.songId
+      : "";
   if (!songId) return;
 
   try {
@@ -615,7 +696,7 @@ watch(
 );
 
 watch(
-  () => route.query.songId,
+  () => (embedded.value ? props.work?.songId : route.query.songId),
   () => {
     void loadSongDetail();
   },
@@ -693,6 +774,11 @@ onBeforeUnmount(() => {
     radial-gradient(circle at 92% 80%, rgba(255, 230, 241, 0.48), transparent 28%),
     linear-gradient(135deg, #f4f8ff 0%, #fbfcff 44%, #fffafc 100%);
   font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.music-player-page--embedded {
+  height: 100%;
+  min-height: 720px;
 }
 
 .music-player-shell {

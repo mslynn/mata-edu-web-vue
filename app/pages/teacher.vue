@@ -3524,11 +3524,12 @@ const aiCards = computed<AICard[]>(() => [
 }
 
 .teacher2-record-grid {
-  --teacher2-record-cover-height: clamp(334px, calc(5.714vw + 248.29px), 358px);
+  --teacher2-record-cover-size: clamp(248px, 18vw, 280px);
   --teacher2-record-grid-gap: 8px;
-  --teacher2-record-card-height: clamp(188px, 12.8vw, 204px);
+  --teacher2-record-card-height: clamp(150px, 10vw, 164px);
+  --teacher2-record-list-height: calc(var(--teacher2-record-card-height) * 2 + var(--teacher2-record-grid-gap));
   display: grid;
-  grid-template-columns: clamp(248px, 18vw, 280px) minmax(0, 1fr);
+  grid-template-columns: var(--teacher2-record-cover-size) minmax(0, 1fr);
   gap: 24px;
   align-items: start;
 }
@@ -3586,7 +3587,8 @@ const aiCards = computed<AICard[]>(() => [
 
 .teacher2-cover-card {
   position: relative;
-  height: var(--teacher2-record-cover-height);
+  aspect-ratio: 1 / 1;
+  width: 100%;
   overflow: hidden;
   border: 1px solid rgba(174, 179, 181, 0.3);
   border-radius: 24px;
@@ -3599,7 +3601,7 @@ const aiCards = computed<AICard[]>(() => [
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center center;
   transition: transform 0.7s ease;
 }
 
@@ -3618,8 +3620,8 @@ const aiCards = computed<AICard[]>(() => [
   grid-template-columns: repeat(4, minmax(0, 1fr));
   grid-auto-rows: var(--teacher2-record-card-height);
   gap: var(--teacher2-record-grid-gap);
-  height: var(--teacher2-record-cover-height);
-  max-height: var(--teacher2-record-cover-height);
+  height: var(--teacher2-record-list-height);
+  max-height: var(--teacher2-record-list-height);
   overflow-x: hidden;
   overflow-y: auto;
   align-content: start;

@@ -2,10 +2,13 @@
   <div
     ref="workbenchPageRef"
     class="handwritten-workbench-page"
-    :class="{ 'handwritten-workbench-page--compact': isCompactWorkbenchLayout }"
+    :class="{
+      'handwritten-workbench-page--compact': isCompactWorkbenchLayout,
+      'handwritten-workbench-page--embedded': embedded,
+    }"
     :style="pageAdaptiveStyle"
   >
-    <div class="page-header">
+    <div v-if="!embedded" class="page-header">
       <nav class="workbench-breadcrumb" aria-label="breadcrumb">
         <button
           type="button"
@@ -199,6 +202,15 @@ import { useI18n } from "vue-i18n";
 import { ElMessage } from "element-plus";
 import { useMnistRecognizer } from "~/composables/handwritten/useMnistRecognizer";
 
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+  }>(),
+  {
+    embedded: false,
+  }
+);
+
 definePageMeta({
   layout: "sidebar",
 });
@@ -207,6 +219,7 @@ type WorkbenchMode = "draw" | "upload" | "camera";
 
 const router = useRouter();
 const { t } = useI18n();
+const embedded = computed(() => props.embedded);
 const workbenchPageRef = ref<HTMLElement | null>(null);
 const drawCanvasRef = ref<HTMLCanvasElement | null>(null);
 const uploadInputRef = ref<HTMLInputElement | null>(null);
@@ -447,6 +460,9 @@ const runRecognition = async () => {
 };
 
 const handleBack = async () => {
+  if (embedded.value) {
+    return;
+  }
   await router.push("/system/opt/handwritten");
 };
 
@@ -522,6 +538,12 @@ onUnmounted(() => {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.handwritten-workbench-page--embedded {
+  height: 100%;
+  min-height: 0;
+  padding: 20px 20px 16px;
 }
 
 .page-header,

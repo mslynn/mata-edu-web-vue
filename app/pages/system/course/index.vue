@@ -1,4 +1,4 @@
-<template>
+    <template>
     <div ref="coursePageRef" class="course-page" :style="courseAdaptiveStyle">
         <!-- 创建/编辑课程弹窗 -->
         <CreateCourseModal v-model="showCreateModal" :edit-data="editCourseData" @confirm="handleCreateCourse" />
@@ -1039,7 +1039,7 @@ watch(searchKeyword, () => {
 .course-cover {
     position: relative;
     overflow: hidden;
-    aspect-ratio: 3 / 4;
+    aspect-ratio: 1 / 1;
     background: linear-gradient(180deg, #dce7f7 0%, #edf2fb 100%);
 }
 

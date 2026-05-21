@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2026-03-11 15:16:56
- * @LastEditTime: 2026-05-18 16:45:57
+ * @LastEditTime: 2026-05-20 16:53:14
  * @LastEditors: lynn
  * @Description: In User Settings Edit
  * @FilePath: \mata-edu-web\app\composables\api\ai.ts
@@ -1032,6 +1032,14 @@ export const aiAdmin = () => {
           throw new Error(errorMessage || "生成故事章节失败");
         }
 
+        if (typeof payload === "object" && payload !== null) {
+          const payloadRecord = payload as Record<string, unknown>;
+          const code = Number(payloadRecord.code);
+          if (Number.isFinite(code) && code !== 200) {
+            throw new Error(String(payloadRecord.msg || payloadRecord.message || "生成故事章节失败"));
+          }
+        }
+
         lastPayload = payload;
         eventChunks.push(payload);
         const nextText = resolveAiStreamText(payload);
@@ -1498,7 +1506,7 @@ export const aiAdmin = () => {
     }
   };
   //查询歌曲任务
-    const getSongTasks = async (taskId: string) => {
+  const getSongTasks = async (taskId: string) => {
     try {
       const response = await http.get(`/system/opt/song/tasks/${taskId}`);
       if (response.code !== 200) {
@@ -1510,7 +1518,7 @@ export const aiAdmin = () => {
     }
   };
   //查询我的音乐作品
-    const getSongList = async (data: {
+  const getSongList = async (data: {
     pageSize?: string;
     pageNum?: string;
     orderByColumn?: string;
@@ -1531,7 +1539,7 @@ export const aiAdmin = () => {
   };
 
   //查询音乐作品详情
-    const getSongDetail = async (songId: string) => {
+  const getSongDetail = async (songId: string) => {
     try {
       const response = await http.get(`/system/opt/song/works/${songId}`);
       if (response.code !== 200) {
@@ -1543,11 +1551,44 @@ export const aiAdmin = () => {
     }
   };
   //删除音乐作品
-    const deleteSong = async (songId: string) => {
+  const deleteSong = async (songId: string) => {
     try {
       const response = await http.del(`/system/opt/song/works/${songId}`);
       if (response.code !== 200) {
         throw new Error(response.msg || "删除音乐作品失败");
+      }
+      return response.data;
+    } catch (error: any) {
+      throw error;
+    }
+  };
+
+  //图灵测试
+  //获取图灵测试题目
+  const getTuringQuestions = async () => {
+    try {
+      const response = await http.get("/system/opt/turing/questions");
+      if (response.code !== 200) {
+        throw new Error(response.msg || "查询图灵测试题目失败");
+      }
+      return resolveAiApiResponseData(response);
+    } catch (error: any) {
+      throw error;
+    }
+  };
+  //提交图灵测试答案
+  const submitTuringAnswers = async (data: {
+    answers: [
+      {
+        questionId: string;
+        humanOptionCode: string;
+      },
+    ];
+  }) => {
+    try {
+      const response = await http.post("/system/opt/turing/submit", data);
+      if (response.code !== 200) {
+        throw new Error(response.msg || "提交图灵测试答案失败");
       }
       return response.data;
     } catch (error: any) {
@@ -1607,6 +1648,7 @@ export const aiAdmin = () => {
     getSongList,
     getSongDetail,
     deleteSong,
-    
+    getTuringQuestions,
+    submitTuringAnswers,
   };
 };

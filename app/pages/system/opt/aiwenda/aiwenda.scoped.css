@@ -1029,7 +1029,7 @@
 }
 
 .aiwenda-role-dialog-mask {
-  z-index: 1000;
+  z-index: 2300;
 }
 
 .aiwenda-role-dialog-mask > .aiwenda-dialog-backdrop {
@@ -1170,7 +1170,7 @@
 }
 
 .aiwenda-config-dialog-mask {
-  z-index: 1100;
+  z-index: 2310;
 }
 
 .aiwenda-config-dialog-mask > .aiwenda-dialog-backdrop {

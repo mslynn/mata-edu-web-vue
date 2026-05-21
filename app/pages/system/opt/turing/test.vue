@@ -80,6 +80,22 @@ const pageAdaptiveStyle = computed(() => ({
   "--turing-test-shell-width": turingTestShellWidth.value,
 }));
 
+const scrollTuringTestPageToTop = () => {
+  if (typeof window === "undefined") return;
+
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+
+  const sidebarShell = document.querySelector(".sidebar-shell");
+  if (sidebarShell instanceof HTMLElement) {
+    sidebarShell.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
+  const sidebarContent = document.querySelector(".sidebar-shell-content");
+  if (sidebarContent instanceof HTMLElement) {
+    sidebarContent.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+};
+
 const handleBackToTuringIntro = async () => {
   await router.push("/system/opt/turing");
 };
@@ -91,6 +107,10 @@ const handleBackToAiCenter = async () => {
 onMounted(() => {
   if (typeof window === "undefined") return;
 
+  nextTick(() => {
+    scrollTuringTestPageToTop();
+  });
+
   syncTuringTestLayoutWidth();
   window.addEventListener("resize", syncTuringTestLayoutWidth, { passive: true });
 
@@ -100,6 +120,12 @@ onMounted(() => {
     });
     turingTestResizeObserver.observe(turingTestPageRef.value);
   }
+});
+
+onActivated(() => {
+  nextTick(() => {
+    scrollTuringTestPageToTop();
+  });
 });
 
 onBeforeUnmount(() => {

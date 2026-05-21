@@ -2,6 +2,7 @@
   <div class="h-full flex flex-col login-form">
       <!-- 班级码输入 -->
       <div class="form-field">
+        <label class="form-field-label">班级码</label>
         <div :class="[
           'flex items-center input-line px-4 py-3 bg-white',
           errors.classCode && 'has-error'
@@ -20,6 +21,7 @@
 
       <!-- 密码输入 -->
       <div class="form-field">
+        <label class="form-field-label">{{ t('auth.password') }}</label>
         <div :class="[
           'flex items-center input-line px-4 py-3 bg-white relative',
           errors.classPassword && 'has-error'

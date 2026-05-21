@@ -101,14 +101,14 @@ onUnmounted(() => {
 }
 
 .language-switcher:hover {
-  border-color: #FF9900;
-  box-shadow: 0 4px 12px rgba(255, 153, 0, 0.12);
+  border-color: #0f67ff;
+  box-shadow: 0 4px 12px rgba(15, 103, 255, 0.12);
 }
 
 .globe-icon {
   width: 18px;
   height: 18px;
-  color: #FF9900;
+  color: #0f67ff;
   flex-shrink: 0;
 }
 
@@ -138,7 +138,7 @@ onUnmounted(() => {
 }
 
 .language-switcher:hover .arrow-icon {
-  color: #FF9900;
+  color: #0f67ff;
 }
 
 /* 下拉菜单 */
@@ -169,12 +169,12 @@ onUnmounted(() => {
 }
 
 .dropdown-item:hover {
-  background: #FFF8F0;
+  background: #f4f8ff;
 }
 
 .dropdown-item.active {
-  background: linear-gradient(135deg, #FFF4E6 0%, #FFECDA 100%);
-  color: #FF9900;
+  background: linear-gradient(135deg, #edf4ff 0%, #dceaff 100%);
+  color: #0f67ff;
   font-weight: 500;
 }
 
@@ -187,7 +187,7 @@ onUnmounted(() => {
   width: 16px;
   height: 16px;
   margin-left: auto;
-  color: #FF9900;
+  color: #0f67ff;
 }
 
 /* 下拉动画 */

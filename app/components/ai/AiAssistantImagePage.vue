@@ -6618,6 +6618,14 @@ const startNewChat = (sessionType: 1 | 5 | 6 | 7 = 1) => {
   if (isStreamingReply.value) {
     stopAiReply();
   }
+  if (sessionType === 6) {
+    chatRequesting.value = false;
+    isStreamingReply.value = false;
+    activeChatAbortController.value = null;
+    chatSessionType.value = 6;
+    openAnalysisView();
+    return;
+  }
   // 保持留在对话窗口，仅清空会话上下文开启新一轮问答
   isLessonPlanMode.value = false;
   isAnalysisMode.value = false;
@@ -7821,13 +7829,8 @@ const buildAnalysisFormData = () => {
     startDate: String(startDate || "").trim(),
     endDate: String(endDate || "").trim(),
     classIds: analysisForm.selectedClassIds
-      .map((item) => {
-        const normalized = String(item || "").trim();
-        if (!normalized) return "";
-        const numericValue = Number(normalized);
-        return Number.isNaN(numericValue) ? normalized : numericValue;
-      })
-      .filter((item) => item !== ""),
+      .map((item) => String(item || "").trim())
+      .filter(Boolean),
     special: analysisForm.specialRequirement.trim(),
   });
 };
@@ -8677,7 +8680,7 @@ const normalizeAiQuotaDetail = (rows: unknown): QuotaDetailItem[] => {
         quotaName: toCountText(
           pickByKeys(rowMap, ["quotaName", "name", "label", "quotaCode"])
         ),
-        userLimit: toCountText(pickByKeys(rowMap, ["userLimit"])),
+        userLimit: toCountText(pickByKeys(rowMap, ["teacherLimit", "userLimit", "limit"])),
       };
     })
     .map((item) => ({

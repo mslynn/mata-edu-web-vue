@@ -3,81 +3,88 @@
     <div class="hand-exp-shell">
       <div class="hand-exp-breadcrumb">
         <button type="button" class="hand-exp-breadcrumb__link" @click="goTo('/system/opt')">
-          AI 实践中心
+          {{ t("gestureExperience.aiPracticeCenter") }}
         </button>
         <span>/</span>
         <button type="button" class="hand-exp-breadcrumb__link" @click="goTo('/system/opt/hand')">
-          手势识别
+          {{ t("gestureExperience.gestureRecognition") }}
         </button>
         <span>/</span>
-        <span class="hand-exp-breadcrumb__current">体验</span>
+        <span class="hand-exp-breadcrumb__current">{{ t("gestureExperience.experience") }}</span>
       </div>
 
       <main class="hand-exp-main">
-        <div class="hand-exp-workbench">
-          <div class="hand-exp-mode-merged">
-            <span class="hand-exp-mode-merged__badge">识别与学习一体化</span>
-            <p class="hand-exp-mode-merged__desc">当前页面已合并识别与学习功能，可一边识别一边采集手势。</p>
-          </div>
+        <div class="hand-exp-content">
+          <div class="hand-exp-topbar">
+            <div class="hand-exp-mode-merged">
+              <span class="hand-exp-mode-merged__badge">{{ t("gestureExperience.mergedBadge") }}</span>
+              <p class="hand-exp-mode-merged__desc">{{ t("gestureExperience.mergedDesc") }}</p>
+            </div>
 
-          <div v-if="cameraDeviceOptions.length > 1" class="hand-exp-camera-select">
-            <span class="hand-exp-camera-select__label">摄像头</span>
-            <MSelect
-              v-model="selectedDeviceId"
-              :options="cameraDeviceOptions"
-              placeholder="请选择摄像头"
-              @change="handleCameraDeviceChange"
-            />
-          </div>
-
-          <div class="hand-exp-media">
-            <video ref="videoRef" class="hand-exp-media__video" autoplay playsinline muted></video>
-            <canvas ref="canvasRef" class="hand-exp-media__canvas"></canvas>
-            <div v-if="!cameraActive" class="hand-exp-media__placeholder">
-              <svg viewBox="0 0 24 24" fill="none" width="48" height="48">
-                <path d="M15.75 10.5l4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9.75a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 14.25 5.25H4.5A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25z" stroke="#6d7eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              <p>点击下方按钮开启摄像头</p>
+            <div v-if="cameraDeviceOptions.length > 1" class="hand-exp-camera-select">
+              <span class="hand-exp-camera-select__label">{{ t("gestureExperience.cameraLabel") }}</span>
+              <MSelect
+                v-model="selectedDeviceId"
+                :options="cameraDeviceOptions"
+                :placeholder="t('gestureExperience.cameraPlaceholder')"
+                @change="handleCameraDeviceChange"
+              />
             </div>
           </div>
 
-          <div class="hand-exp-controls">
-            <button
-              v-if="!cameraActive"
-              class="hand-exp-controls__btn hand-exp-controls__btn--primary"
-              :disabled="modelLoading"
-              @click="startCamera"
-            >
-              {{ modelLoading ? '模型加载中...' : '开启摄像头' }}
-            </button>
-            <template v-else>
-              <button
-                class="hand-exp-controls__btn hand-exp-controls__btn--capture"
-                :disabled="!currentGesture"
-                @click="captureGesture"
-              >
-                <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
-                  <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+          <div
+            class="hand-exp-workbench"
+            :class="{ 'hand-exp-workbench--idle': !cameraActive }"
+          >
+            <div class="hand-exp-media">
+              <video ref="videoRef" class="hand-exp-media__video" autoplay playsinline muted></video>
+              <canvas ref="canvasRef" class="hand-exp-media__canvas"></canvas>
+              <div v-if="!cameraActive" class="hand-exp-media__placeholder">
+                <svg viewBox="0 0 24 24" fill="none" width="48" height="48">
+                  <path d="M15.75 10.5l4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9.75a2.25 2.25 0 0 0 2.25-2.25v-9A2.25 2.25 0 0 0 14.25 5.25H4.5A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25z" stroke="#6d7eff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                拍照并开始学习
-              </button>
+                <p>{{ t("gestureExperience.openCameraHint") }}</p>
+              </div>
+            </div>
+
+            <div class="hand-exp-controls">
               <button
-                class="hand-exp-controls__btn hand-exp-controls__btn--danger"
-                @click="handleStopCamera"
+                v-if="!cameraActive"
+                class="hand-exp-controls__btn hand-exp-controls__btn--primary"
+                :disabled="modelLoading"
+                @click="startCamera"
               >
-                关闭摄像头
+                {{ modelLoading ? t("gestureExperience.modelLoading") : t("gestureExperience.openCamera") }}
               </button>
-            </template>
+              <template v-else>
+                <button
+                  class="hand-exp-controls__btn hand-exp-controls__btn--capture"
+                  :disabled="!currentGesture"
+                  @click="captureGesture"
+                >
+                  <svg viewBox="0 0 24 24" fill="none" width="18" height="18">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="13" r="4" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                  {{ t("gestureExperience.captureAndLearn") }}
+                </button>
+                <button
+                  class="hand-exp-controls__btn hand-exp-controls__btn--danger"
+                  @click="handleStopCamera"
+                >
+                  {{ t("gestureExperience.closeCamera") }}
+                </button>
+              </template>
+            </div>
           </div>
         </div>
 
         <aside class="hand-exp-sidebar">
           <div class="hand-exp-result-card">
-            <h3 class="hand-exp-result-card__title">识别结果</h3>
+            <h3 class="hand-exp-result-card__title">{{ t("gestureExperience.resultTitle") }}</h3>
             <div v-if="matchedLearnedGesture" class="hand-exp-result-card__body">
               <div class="hand-exp-result-card__gesture-name">{{ matchedLearnedGesture.name }}</div>
-              <div class="hand-exp-result-card__gesture-en">自定义手势 (匹配度 {{ (matchedLearnedGesture.score * 100).toFixed(0) }}%)</div>
+              <div class="hand-exp-result-card__gesture-en">{{ t("gestureExperience.customGestureMatch", { score: (matchedLearnedGesture.score * 100).toFixed(0) }) }}</div>
               <div class="hand-exp-result-card__thumb">
                 <img :src="matchedLearnedGesture.thumbnail" alt="" />
               </div>
@@ -87,11 +94,11 @@
               <div class="hand-exp-result-card__gesture-en">{{ currentGesture.name }}</div>
               <div class="hand-exp-result-card__meta">
                 <div class="hand-exp-result-card__meta-item">
-                  <span class="hand-exp-result-card__meta-label">置信度</span>
+                  <span class="hand-exp-result-card__meta-label">{{ t("gestureExperience.confidence") }}</span>
                   <span class="hand-exp-result-card__meta-value">{{ (currentGesture.confidence * 100).toFixed(1) }}%</span>
                 </div>
                 <div class="hand-exp-result-card__meta-item">
-                  <span class="hand-exp-result-card__meta-label">手指数量</span>
+                  <span class="hand-exp-result-card__meta-label">{{ t("gestureExperience.fingerCount") }}</span>
                   <span class="hand-exp-result-card__meta-value">{{ currentGesture.fingerCount }}</span>
                 </div>
               </div>
@@ -100,24 +107,24 @@
               </div>
             </div>
             <div v-else class="hand-exp-result-card__empty">
-              <span>等待检测手势...</span>
+              <span>{{ t("gestureExperience.waitingGesture") }}</span>
             </div>
           </div>
 
           <div class="hand-exp-guide-card">
-            <h3 class="hand-exp-guide-card__title">支持的手势</h3>
+            <h3 class="hand-exp-guide-card__title">{{ t("gestureExperience.supportedGestures") }}</h3>
             <div class="hand-exp-guide-card__list">
-              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">✊</span><span>握拳</span></div>
-              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">✋</span><span>张开手掌</span></div>
-              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">✌️</span><span>比V</span></div>
-              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">👍</span><span>竖大拇指</span></div>
-              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">☝️</span><span>指向</span></div>
-              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">🤟</span><span>摇滚</span></div>
+              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">✊</span><span>{{ t("gestureExperience.gestureList.fist") }}</span></div>
+              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">✋</span><span>{{ t("gestureExperience.gestureList.openPalm") }}</span></div>
+              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">✌️</span><span>{{ t("gestureExperience.gestureList.vSign") }}</span></div>
+              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">👍</span><span>{{ t("gestureExperience.gestureList.thumbsUp") }}</span></div>
+              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">☝️</span><span>{{ t("gestureExperience.gestureList.pointing") }}</span></div>
+              <div class="hand-exp-guide-card__item"><span class="hand-exp-guide-card__emoji">🤟</span><span>{{ t("gestureExperience.gestureList.rock") }}</span></div>
             </div>
           </div>
 
           <div class="hand-exp-learn-card">
-            <h3 class="hand-exp-learn-card__title">已学习的手势库 ({{ learnedGestures.length }})</h3>
+            <h3 class="hand-exp-learn-card__title">{{ t("gestureExperience.learnedLibrary", { count: learnedGestures.length }) }}</h3>
             <div v-if="learnedGestures.length > 0" class="hand-exp-learn-card__grid">
               <div
                 v-for="(g, idx) in learnedGestures"
@@ -132,14 +139,14 @@
               </div>
             </div>
             <div v-else class="hand-exp-learn-card__empty">
-              <p>还没有学习任何手势</p>
-              <p>开启摄像头后，摆出手势并点击「拍照并开始学习」</p>
+              <p>{{ t("gestureExperience.emptyLibraryTitle") }}</p>
+              <p>{{ t("gestureExperience.emptyLibraryDesc") }}</p>
             </div>
             <button
               v-if="learnedGestures.length > 0"
               class="hand-exp-learn-card__clear"
               @click="clearAllGestures"
-            >清空全部</button>
+            >{{ t("gestureExperience.clearAll") }}</button>
           </div>
 
           <div v-if="gestureError" class="hand-exp-error-card">
@@ -151,20 +158,20 @@
 
     <div v-if="showNamingModal" class="hand-exp-modal-mask" @click.self="showNamingModal = false">
       <div class="hand-exp-modal">
-        <h3>为这个手势命名</h3>
+        <h3>{{ t("gestureExperience.namingTitle") }}</h3>
         <div class="hand-exp-modal__preview">
           <img :src="capturedThumbnail" alt="" />
         </div>
         <input
           v-model="gestureName"
           class="hand-exp-modal__input"
-          placeholder="输入手势名称，如：剪刀手"
+          :placeholder="t('gestureExperience.namingPlaceholder')"
           maxlength="10"
           @keyup.enter="confirmLearn"
         />
         <div class="hand-exp-modal__actions">
-          <button class="hand-exp-modal__btn hand-exp-modal__btn--confirm" @click="confirmLearn">确定</button>
-          <button class="hand-exp-modal__btn hand-exp-modal__btn--cancel" @click="showNamingModal = false">取消</button>
+          <button class="hand-exp-modal__btn hand-exp-modal__btn--confirm" @click="confirmLearn">{{ t("common.confirm") }}</button>
+          <button class="hand-exp-modal__btn hand-exp-modal__btn--cancel" @click="showNamingModal = false">{{ t("common.cancel") }}</button>
         </div>
       </div>
     </div>
@@ -173,9 +180,11 @@
 
 <script setup lang="ts">
 import { useHandGesture, type HandLandmark } from "~/composables/useHandGesture";
+import { useI18n } from "vue-i18n";
 
 definePageMeta({ layout: "sidebar" });
-useHead({ title: "手势识别 - 体验" });
+const { t } = useI18n();
+useHead(() => ({ title: t("gestureExperience.pageTitle") }));
 
 const router = useRouter();
 function goTo(path: string) { router.push(path); }
@@ -205,7 +214,7 @@ const selectedDeviceId = ref<string | number | null>("");
 const cameraDeviceOptions = computed(() =>
   cameraDevices.value.map((device, index) => ({
     value: device.deviceId,
-    label: device.label || `摄像头 ${index + 1}`,
+    label: device.label || t("gestureExperience.cameraOption", { index: index + 1 }),
   })),
 );
 
@@ -398,11 +407,11 @@ function normalizeCameraError(error: unknown) {
         : "";
 
   if (errorName === "NotAllowedError" || errorName === "PermissionDeniedError") {
-    return "无法打开摄像头，请检查浏览器摄像头权限是否已允许";
+    return t("gestureExperience.errors.cameraPermission");
   }
 
   if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
-    return "未检测到可用摄像头，请检查设备连接";
+    return t("gestureExperience.errors.cameraNotFound");
   }
 
   if (errorName === "NotReadableError" || errorName === "TrackStartError") {
@@ -410,18 +419,18 @@ function normalizeCameraError(error: unknown) {
       error instanceof Error && error.message
         ? `（${error.message}）`
         : "";
-    return `摄像头启动失败，当前视频源不可读或正被占用${detail}`;
+    return t("gestureExperience.errors.cameraUnreadable", { detail });
   }
 
   if (errorName === "AbortError") {
-    return "摄像头启动被中断，请重试一次";
+    return t("gestureExperience.errors.cameraAborted");
   }
 
   if (error instanceof Error && error.message) {
     return error.message;
   }
 
-  return "无法访问摄像头";
+  return t("gestureExperience.errors.cameraUnavailable");
 }
 
 async function requestCameraStream() {
@@ -499,7 +508,7 @@ async function requestCameraStream() {
     }
   }
 
-  throw lastError ?? new Error("无法访问摄像头");
+  throw lastError ?? new Error(t("gestureExperience.errors.cameraUnavailable"));
 }
 
 async function startCamera() {
@@ -512,7 +521,7 @@ async function startCamera() {
     if (gestureError.value) return;
 
     if (!import.meta.client || !navigator.mediaDevices?.getUserMedia) {
-      throw new Error("当前浏览器不支持摄像头调用");
+      throw new Error(t("gestureExperience.errors.browserUnsupported"));
     }
 
     await stopCamera({ preserveStream: true });
@@ -525,14 +534,14 @@ async function startCamera() {
     await nextTick();
 
     if (!videoRef.value) {
-      throw new Error("摄像头载体未准备完成");
+      throw new Error(t("gestureExperience.errors.videoNotReady"));
     }
 
     videoRef.value.srcObject = stream;
     await waitForVideoReady(videoRef.value);
 
     if (!canvasRef.value) {
-      throw new Error("画布载体未准备完成");
+      throw new Error(t("gestureExperience.errors.canvasNotReady"));
     }
 
     canvasRef.value.width = videoRef.value.videoWidth;
@@ -641,6 +650,21 @@ onUnmounted(() => {
   min-height: 0;
   display: flex;
   gap: 24px;
+  align-items: flex-start;
+}
+
+.hand-exp-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hand-exp-topbar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .hand-exp-workbench {
@@ -649,6 +673,10 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.hand-exp-workbench--idle {
+  align-self: stretch;
 }
 
 .hand-exp-mode-merged {
@@ -698,6 +726,10 @@ onUnmounted(() => {
   overflow: hidden;
   background: #0a0f1e;
   border: 1px solid rgba(79, 117, 255, 0.15);
+}
+
+.hand-exp-workbench--idle .hand-exp-media {
+  min-height: 560px;
 }
 
 .hand-exp-media__video {
@@ -788,7 +820,7 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  overflow-y: auto;
+  margin-top: 74px;
 }
 
 .hand-exp-result-card,
@@ -1054,7 +1086,15 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .hand-exp-main { flex-direction: column; }
+  .hand-exp-main {
+    flex-direction: column;
+  }
+  .hand-exp-content {
+    gap: 12px;
+  }
+  .hand-exp-sidebar {
+    margin-top: 0;
+  }
   .hand-exp-sidebar { width: 100%; }
 }
 </style>

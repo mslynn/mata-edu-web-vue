@@ -1,8 +1,13 @@
 <template>
-  <div ref="storyReadingPageRef" class="story-reading-page" :style="pageAdaptiveStyle">
+  <div
+    ref="storyReadingPageRef"
+    class="story-reading-page"
+    :class="{ 'story-reading-page--embedded': embedded }"
+    :style="pageAdaptiveStyle"
+  >
     <div class="story-reading-shell">
       <main class="story-reading-canvas">
-        <header class="story-reading-header">
+        <header v-if="!embedded" class="story-reading-header">
           <div class="story-reading-breadcrumb">
             <button
               type="button"
@@ -404,6 +409,25 @@
 import { ElMessage } from "element-plus";
 import { useI18n } from "vue-i18n";
 import { aiAdmin } from "~/composables/api/ai";
+import { resolveStoryBookshelfCover } from "~/utils/storyBookshelfCover";
+
+const props = withDefaults(
+  defineProps<{
+    embedded?: boolean;
+    bookId?: string;
+    chapterId?: string;
+  }>(),
+  {
+    embedded: false,
+    bookId: "",
+    chapterId: "",
+  }
+);
+
+const emit = defineEmits<{
+  (event: "back-edit"): void;
+  (event: "open-book", payload: { bookId: string }): void;
+}>();
 
 const { t } = useI18n();
 const { getBookDetail, createAiChatChapters, reviseAiChatChapters, continueAiChatChapters, getBookVersions, getBookVersionsDetail, exportBookVersionsDetail, getBookList, applyBookVersionsDetail } = aiAdmin();
@@ -488,6 +512,7 @@ const CRYSTAL_IMAGE =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCjLZ-h-zWvk881bdNyDYNOmK_gwdWGGt7sWkuN8wXqYTmvd9VckUWHRAKxLwE1VTr3uNndk3f1-6R2673-y2kl43YNiaWq39sRFxZeBSJMlNJtRnqXFuuSuLMAk9EvuoiVXESjZOr8jDbvRYmuR5dzN8RgVhXMK5UsTRUUc-ls0U1tB9K-1m7z1OiN-zVOdsF8ICGRlrSbL5s7yPGse8xXWHUdYQ3l-HVKgEficzENRw1ofukvcAqncRxL1OZVmnrLzfD4SpuL1SQ";
 
 const router = useRouter();
+const embedded = computed(() => props.embedded);
 const storyReadingPageRef = ref<HTMLElement | null>(null);
 let storyReadingResizeObserver: ResizeObserver | null = null;
 let storyReadingScrollResetTimer: ReturnType<typeof setTimeout> | null = null;
@@ -808,13 +833,14 @@ const normalizeBookshelfList = (rows: unknown): BookshelfItem[] => {
     .filter((item): item is Record<string, unknown> => !!item && typeof item === "object")
     .map((item, index) => {
       const rowMap = createLowerCaseMap(item);
+      const title = String(pickByKeys(rowMap, ["title", "bookTitle", "name"]) || "未命名故事").trim();
       return {
         id: String(pickByKeys(rowMap, ["bookId", "book_id", "id"]) || `book-${index}`).trim(),
-        title: String(pickByKeys(rowMap, ["title", "bookTitle", "name"]) || "未命名故事").trim(),
+        title,
         date: formatHistoryDate(
           pickByKeys(rowMap, ["createTime", "createdAt", "updateTime", "updatedAt", "time"])
         ),
-        coverUrl: String(pickByKeys(rowMap, ["coverUrl", "cover", "cover_url"]) || "").trim(),
+        coverUrl: resolveStoryBookshelfCover(item, index, title),
       };
     });
 };
@@ -832,7 +858,9 @@ const resolveVersionDetailContent = (payload: unknown) => {
 };
 
 const loadBookDetail = async (targetBookId?: string) => {
-  const bookId = String(targetBookId || route.query.bookId || storyDraft.value.bookId || "").trim();
+  const bookId = String(
+    targetBookId || props.bookId || route.query.bookId || storyDraft.value.bookId || ""
+  ).trim();
   if (!bookId) return;
 
   try {
@@ -888,13 +916,17 @@ const handleOpenBookshelfBook = async (book: BookshelfItem) => {
   if (!book.id) return;
 
   try {
-    if (typeof window !== "undefined") {
+    if (!embedded.value && typeof window !== "undefined") {
       const nextUrl = new URL(window.location.href);
       nextUrl.searchParams.set("bookId", book.id);
       window.history.replaceState({}, "", nextUrl.toString());
     }
 
     closeBookshelfModal();
+    if (embedded.value) {
+      emit("open-book", { bookId: book.id });
+      return;
+    }
     storyDraft.value = {
       ...storyDraft.value,
       bookId: book.id,
@@ -1006,7 +1038,7 @@ const extractStoryStreamResult = (payload: unknown) => {
 };
 
 const startStoryGeneration = async () => {
-  const bookId = String(route.query.bookId || storyDraft.value.bookId || "").trim();
+  const bookId = String(props.bookId || route.query.bookId || storyDraft.value.bookId || "").trim();
   if (!bookId || !isStoryGenerating.value) return;
   if (storyChapterAbortController) return;
 
@@ -1077,7 +1109,7 @@ const syncEditingStoryContent = () => {
 };
 
 const loadBookVersions = async () => {
-  const bookId = String(route.query.bookId || storyDraft.value.bookId || "").trim();
+  const bookId = String(props.bookId || route.query.bookId || storyDraft.value.bookId || "").trim();
   if (!bookId) {
     editHistoryRecords.value = [];
     return;
@@ -1161,19 +1193,25 @@ const scrollStoryReadingToTop = () => {
 };
 
 const goToAICenter = () => {
+  if (embedded.value) {
+    emit("back-edit");
+    return;
+  }
   router.push("/system/opt");
 };
 
 const getBookCoverStyle = (book: BookshelfItem) => ({
-  background: book.coverUrl
-    ? undefined
-    : "linear-gradient(180deg, #dbe8ff 0%, #88a7e8 52%, #3c5ea8 100%)",
+  background: undefined,
   backgroundImage: book.coverUrl ? `url(${book.coverUrl})` : undefined,
   backgroundSize: "cover",
   backgroundPosition: "center",
 });
 
 const handleBackEdit = () => {
+  if (embedded.value) {
+    emit("back-edit");
+    return;
+  }
   router.push("/system/opt/story");
 };
 
@@ -1263,7 +1301,7 @@ const handleContinueChapter = async () => {
     return;
   }
 
-  const chapterId = String(storyDraft.value.chapterId || route.query.chapterId || "").trim();
+  const chapterId = String(storyDraft.value.chapterId || props.chapterId || route.query.chapterId || "").trim();
   if (!chapterId) {
     ElMessage.warning("当前故事缺少章节信息，暂时无法续写");
     return;
@@ -1338,7 +1376,7 @@ const confirmEditStory = () => {
 };
 
 const handleApplyEditVersion = async () => {
-  const chapterId = String(storyDraft.value.chapterId || route.query.chapterId || "").trim();
+  const chapterId = String(storyDraft.value.chapterId || props.chapterId || route.query.chapterId || "").trim();
   const sourceVersionId = String(activeEditVersionId.value || "").trim();
   const content = editingStoryContent.value.trim();
 
@@ -1347,7 +1385,7 @@ const handleApplyEditVersion = async () => {
     return;
   }
 
-  const bookId = String(route.query.bookId || storyDraft.value.bookId || "").trim();
+  const bookId = String(props.bookId || route.query.bookId || storyDraft.value.bookId || "").trim();
 
   if (!bookId) {
     ElMessage.warning("当前故事缺少书籍信息，暂时无法应用修改");
@@ -1385,14 +1423,14 @@ const handleApplyEditVersion = async () => {
 
 const handleReviseStory = async () => {
   const optimizePrompt = editStoryPrompt.value.trim();
-  const chapterId = String(storyDraft.value.chapterId || route.query.chapterId || "").trim();
+  const chapterId = String(storyDraft.value.chapterId || props.chapterId || route.query.chapterId || "").trim();
 
   if (!optimizePrompt) {
     ElMessage.warning(t("story.inputEditDescFirst"));
     return;
   }
 
-  const bookId = String(route.query.bookId || storyDraft.value.bookId || "").trim();
+  const bookId = String(props.bookId || route.query.bookId || storyDraft.value.bookId || "").trim();
 
   if (!bookId) {
     ElMessage.warning("当前故事缺少书籍信息，暂时无法智能优化");
@@ -1432,7 +1470,7 @@ const handleReviseStory = async () => {
 };
 
 const handleSelectHistoryVersion = async (record: EditHistoryRecord) => {
-  const bookId = String(route.query.bookId || storyDraft.value.bookId || "").trim();
+  const bookId = String(props.bookId || route.query.bookId || storyDraft.value.bookId || "").trim();
   const versionId = String(record.versionId || record.id || "").trim();
   if (!bookId || !versionId) return;
 
@@ -1450,7 +1488,7 @@ const handleSelectHistoryVersion = async (record: EditHistoryRecord) => {
 };
 
 const handleDownloadBook = async () => {
-  const bookId = String(route.query.bookId || storyDraft.value.bookId || "").trim();
+  const bookId = String(props.bookId || route.query.bookId || storyDraft.value.bookId || "").trim();
   if (!bookId) {
     ElMessage.warning("当前故事缺少图书信息，暂时无法下载");
     return;
@@ -1580,6 +1618,18 @@ onBeforeUnmount(() => {
     linear-gradient(180deg, #f6f9fd 0%, #f9fbfe 100%);
   color: #12304f;
   font-family: "Plus Jakarta Sans", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+.story-reading-page--embedded {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+}
+
+.story-reading-page--embedded .story-reading-shell {
+  width: 100%;
+  min-width: 0;
 }
 
 .story-reading-page::-webkit-scrollbar {

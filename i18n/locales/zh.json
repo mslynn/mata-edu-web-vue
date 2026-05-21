@@ -970,7 +970,7 @@
     "voiceClassModel": "语音分类训练",
     "voiceClassModelDesc": "使用麦克风进行声音的分类训练与模型应用；",
     "poseClassModel": "姿态分类训练",
-    "poseClassModelDesc": "使用摄像头或上传图片进行手势训练与模型应用；",
+    "poseClassModelDesc": "使用摄像头或上传图片进行人体姿态训练与模型应用；",
     "use": "使用",
     "faceRecognition": "人脸识别",
     "imageRecognition": "图像识别",
@@ -1054,6 +1054,40 @@
     "speechTranscription": "语音转写体验",
     "voiceprintRecognition": "声纹识别",
     "poseRecognition": "姿态识别",
+    "poseIntroPage": {
+      "pageTitle": "姿态识别",
+      "breadcrumbLabel": "面包屑导航",
+      "breadcrumbCurrent": "姿态识别",
+      "heroBadge": "COMPUTER VISION AI",
+      "heroTitle": "姿态识别",
+      "heroDesc": "精准检测并追踪人体 17 个核心关键点，实时构建人体动作骨架。广泛应用于体育教学分析、舞蹈评估与康复监测，让肢体动作数字化、可视化。",
+      "startButton": "立即体验",
+      "startSoon": "姿态识别体验能力正在接入中",
+      "scenariosTitle": "应用场景",
+      "cards": {
+        "teaching": {
+          "tag": "Sport Analysis",
+          "title": "体育动作纠正",
+          "desc": "实时分析学生跳远、跑步或投篮动作，通过角度计算辅助教师给出科学的姿态改进意见。"
+        },
+        "sports": {
+          "tag": "Art Education",
+          "title": "舞蹈教学评估",
+          "desc": "对比名师标准舞姿，数字化评估学生的平衡性、延展性与节奏感，实现舞蹈教学标准化。"
+        },
+        "performance": {
+          "tag": "Medical Care",
+          "title": "康复训练监测",
+          "desc": "监测康复患者的肢体活动度（ROM），自动记录训练频次与动作合规性，辅助医生评估恢复情况。"
+        }
+      },
+      "images": {
+        "heroAlt": "姿态识别主视觉",
+        "classroomAlt": "体育动作纠正场景",
+        "sportsAlt": "舞蹈教学评估场景",
+        "performanceAlt": "康复训练监测场景"
+      }
+    },
     "gestureRecognition": "手势识别",
     "poseClassification": "姿态分类训练",
     "gestureClassification": "手势分类训练",
@@ -2650,9 +2684,19 @@
       "aiAnswer": "这是AI的回答",
       "humanAnswer": "这是人类的回答",
       "nextQuestion": "下一题",
-      "desc1": "回答 A 展示了更高阶的认知联觉，将物理现象与心理感受相结合，体现了人类特有的情感共鸣和隐喻思考能力。",
-      "desc2": "回答 B 虽然准确描述了物理参数并提到了文学意象，但其结构更倾向于知识性的陈述，缺乏第一人称视角的直觉体验感。通过对比可以发现，人类的回答往往包含更多非线性的、基于生命体验的语义联想。",
-      "note": "* 解析基于图灵测试评分标准：情感共鸣度、语义联想深度、第一人称体验感。"
+      "yourChoice": "你的选择",
+      "notAnswered": "未作答",
+      "questionLabel": "第 {index} 题",
+      "summaryAccuracy": "识别准确率",
+      "summaryDuration": "用时",
+      "summaryScore": "答对题数",
+      "scoreFormat": "{correct}/{total}",
+      "tryAgain": "再来一次",
+      "backToIntro": "返回介绍页",
+      "intro": "接下来让我们一起查看一下「答案解析」吧！",
+      "analysisPrefix": "答案解析：",
+      "prev": "上一题",
+      "next": "下一题"
     },
     "result": {
       "successTitle": "恭喜你！成功通过测试。",
@@ -2664,7 +2708,13 @@
       "confirm": "知道了",
       "viewAnalysis": "查看解析",
       "nextQuestion": "下一题"
-    }
+    },
+    "loading": "正在加载题目...",
+    "loadFailed": "题目加载失败，请稍后重试",
+    "retry": "重新加载",
+    "empty": "暂无图灵测试题目",
+    "submitting": "正在提交...",
+    "submitFailed": "提交失败，请稍后重试"
   },
   "moodPage": {
     "breadcrumbAria": "面包屑",
@@ -2933,5 +2983,132 @@
     "stopRecognitionFirst": "请先停止当前识别，再切换语种",
     "microphoneIndexLabel": "麦克风 {index}",
     "recordTranscribeDone": "录音转写完成"
+  },
+  "poseExperience": {
+    "pageTitle": "姿态识别 - 体验",
+    "aiPracticeCenter": "AI 实践中心",
+    "poseRecognition": "姿态识别",
+    "experience": "体验",
+    "mergedBadge": "识别与学习一体化",
+    "mergedDesc": "当前页面已合并识别与学习功能，可一边识别一边采集姿态。",
+    "cameraLabel": "摄像头",
+    "cameraPlaceholder": "请选择摄像头",
+    "cameraOption": "摄像头 {index}",
+    "openCameraHint": "点击下方按钮开启摄像头",
+    "modelLoading": "模型加载中...",
+    "openCamera": "开启摄像头",
+    "captureAndLearn": "拍照并开始学习",
+    "closeCamera": "关闭摄像头",
+    "resultTitle": "识别结果",
+    "customPoseMatch": "自定义姿态（匹配度 {score}%）",
+    "confidence": "置信度",
+    "keypoints": "关键点",
+    "waitingPose": "等待检测姿态...",
+    "supportedPoses": "支持的姿态",
+    "learnedLibrary": "已学习的姿态库 ({count})",
+    "emptyLibraryTitle": "还没有学习任何姿态",
+    "emptyLibraryDesc": "开启摄像头后，摆出姿态并点击「拍照并开始学习」",
+    "clearAll": "清空全部",
+    "namingTitle": "为这个姿态命名",
+    "namingPlaceholder": "输入姿态名称，如：举手",
+    "poseList": {
+      "handsUp": "双手举起",
+      "leftHandUp": "举起左手",
+      "rightHandUp": "举起右手",
+      "tPose": "T 字姿势",
+      "handsOnHips": "叉腰",
+      "armsFolded": "抱胸",
+      "squat": "深蹲",
+      "stand": "站立"
+    },
+    "errors": {
+      "cameraPermission": "无法打开摄像头，请检查浏览器摄像头权限是否已允许",
+      "cameraNotFound": "未检测到可用摄像头，请检查设备连接",
+      "cameraUnreadable": "摄像头启动失败，当前视频源不可读或正被占用{detail}",
+      "cameraAborted": "摄像头启动被中断，请重试一次",
+      "cameraUnavailable": "无法访问摄像头",
+      "browserUnsupported": "当前浏览器不支持摄像头调用",
+      "videoNotReady": "摄像头载体未准备完成",
+      "canvasNotReady": "画布载体未准备完成"
+    }
+  },
+  "gestureIntroPage": {
+    "pageTitle": "手势识别",
+    "aiPracticeCenter": "AI 实践中心",
+    "currentPage": "手势识别",
+    "heroBadge": "COMPUTER VISION AI",
+    "heroTitle": "手势识别",
+    "heroDesc": "基于领先的手部特征提取算法，实时追踪 21 个手部关键点。支持自定义手势学习与多手掌检测，为教学互动提供精准的视觉反馈。",
+    "startExperience": "立即体验",
+    "heroImageAlt": "手部关键点识别主视觉",
+    "scenariosTitle": "应用场景",
+    "scenes": {
+      "interaction": {
+        "tag": "Interaction",
+        "title": "智能课件控制",
+        "desc": "老师无需受限于鼠标和翻页笔，通过凌空挥动即可实现课件翻页、缩放与重点标注，提升课堂讲解的连贯性。"
+      },
+      "accessibility": {
+        "tag": "Accessibility",
+        "title": "手语识别辅助",
+        "desc": "为特殊教育提供科技赋能。实时将手语转化为文字或语音，搭建起无障碍沟通的桥梁，让爱与科技同行。"
+      },
+      "virtualLab": {
+        "tag": "Virtual Lab",
+        "title": "虚拟实验交互",
+        "desc": "在虚拟实验室中，通过自然手势模拟抓取、倾倒药剂等精细动作。无需昂贵器材，也能获得身临其境的操作体验。"
+      }
+    },
+    "images": {
+      "interactionAlt": "智能课件控制场景",
+      "accessibilityAlt": "手语识别辅助场景",
+      "virtualLabAlt": "虚拟实验交互场景"
+    }
+  },
+  "gestureExperience": {
+    "pageTitle": "手势识别 - 体验",
+    "aiPracticeCenter": "AI 实践中心",
+    "gestureRecognition": "手势识别",
+    "experience": "体验",
+    "mergedBadge": "识别与学习一体化",
+    "mergedDesc": "当前页面已合并识别与学习功能，可一边识别一边采集手势。",
+    "cameraLabel": "摄像头",
+    "cameraPlaceholder": "请选择摄像头",
+    "cameraOption": "摄像头 {index}",
+    "openCameraHint": "点击下方按钮开启摄像头",
+    "modelLoading": "模型加载中...",
+    "openCamera": "开启摄像头",
+    "captureAndLearn": "拍照并开始学习",
+    "closeCamera": "关闭摄像头",
+    "resultTitle": "识别结果",
+    "customGestureMatch": "自定义手势（匹配度 {score}%）",
+    "confidence": "置信度",
+    "fingerCount": "手指数量",
+    "waitingGesture": "等待检测手势...",
+    "supportedGestures": "支持的手势",
+    "learnedLibrary": "已学习的手势库 ({count})",
+    "emptyLibraryTitle": "还没有学习任何手势",
+    "emptyLibraryDesc": "开启摄像头后，摆出手势并点击「拍照并开始学习」",
+    "clearAll": "清空全部",
+    "namingTitle": "为这个手势命名",
+    "namingPlaceholder": "输入手势名称，如：剪刀手",
+    "gestureList": {
+      "fist": "握拳",
+      "openPalm": "张开手掌",
+      "vSign": "比V",
+      "thumbsUp": "竖大拇指",
+      "pointing": "指向",
+      "rock": "摇滚"
+    },
+    "errors": {
+      "cameraPermission": "无法打开摄像头，请检查浏览器摄像头权限是否已允许",
+      "cameraNotFound": "未检测到可用摄像头，请检查设备连接",
+      "cameraUnreadable": "摄像头启动失败，当前视频源不可读或正被占用{detail}",
+      "cameraAborted": "摄像头启动被中断，请重试一次",
+      "cameraUnavailable": "无法访问摄像头",
+      "browserUnsupported": "当前浏览器不支持摄像头调用",
+      "videoNotReady": "摄像头载体未准备完成",
+      "canvasNotReady": "画布载体未准备完成"
+    }
   }
 }

@@ -713,8 +713,6 @@ const aigcItems = ref<AICardItem[]>([
   },
   { key: "aiStory", label: "ai.aiStory", routePath: "/system/opt/story" },
   { key: "aiSong", label: "ai.aiSong", routePath: "/system/opt/music" },
-  // { key: "aiVideo", label: "ai.aiVideo", routePath: "/system/opt/video" },
-  { key: "aiVideo", label: "ai.aiVideo" },
 ]);
 
 // 视觉智能 数据
@@ -797,7 +795,7 @@ const behaviorItems = ref<AICardItem[]>([
     desc: "ai.gestureClassModelDesc",
     cover: aigcCover2,
   },
-  { key: "poseRecognition", label: "ai.poseRecognition" },
+  { key: "poseRecognition", label: "ai.poseRecognition", routePath: "/system/opt/pose" },
   { key: "gestureRecognition", label: "ai.gestureRecognition", routePath: "/system/opt/hand" },
   {
     key: "emotionRecognition",
@@ -820,45 +818,45 @@ const mlItems = ref<AICardItem[]>([
 
 const AI_CARD_COVER_MAP: Record<string, string> = {
   aiPainting:
-    "/images/ai-practice/practice-01-eb90e462.svg",
+    "/images/ai-practice/huatu.png",
   aiStory:
-    "/images/ai-practice/practice-02-2aa5c253.svg",
+    "/images/ai-practice/gushi.png",
   aiSong:
-    "/images/ai-practice/practice-03-10ed00a3.svg",
+    "/images/ai-practice/gequ.png",
   aiVideo:
     "/images/ai-practice/practice-04-71172075.svg",
   imageClassModel:
-    "/images/ai-practice/practice-05-f6a05d9d.svg",
+    "/images/ai-practice/tuxiang.png",
   faceRecognition:
-    "/images/ai-practice/practice-06-b311ccf2.svg",
+    "/images/ai-practice/renlian.png",
   imageRecognition:
-    "/images/ai-practice/practice-07-0698f4e2.svg",
+    "/images/ai-practice/shibie.png",
   handwrittenDigit:
-    "/images/ai-practice/practice-08-31ce93c4.svg",
+    "/images/ai-practice/shuzi.png",
   doodleRecognition:
-    "/images/ai-practice/practice-09-ed29662c.svg",
+    "/images/ai-practice/tuya.png",
   voiceClassModel:
-    "/images/ai-practice/practice-10-d1a9f616.svg",
+    "/images/ai-practice/yuyin.png",
   speechSynthesis:
-    "/images/ai-practice/practice-11-1da4999c.svg",
+    "/images/ai-practice/yuyinhecheng.png",
   atQA:
-    "/images/ai-practice/practice-12-c48396fd.svg",
+    "/images/ai-practice/screen.png",
   smartQA:
     "/images/ai-practice/wenda.svg",
   speechTranscription:
-    "/images/ai-practice/practice-13-8cc3f4df.svg",
+    "/images/ai-practice/zhuanxie.png",
   voiceprintRecognition:
-    "/images/ai-practice/practice-14-6d6e5f8d.svg",
+    "/images/ai-practice/tulin.png",
   poseClassModel:
-    "/images/ai-practice/practice-15-a0fc8317.svg",
+    "/images/ai-practice/zitai.png",
   gestureClassModel:
-    "/images/ai-practice/practice-16-3c20b186.svg",
+    "/images/ai-practice/shoushi.png",
   poseRecognition:
-    "/images/ai-practice/practice-17-a5b3aeef.svg",
+    "/images/ai-practice/zitaishibie.png",
   gestureRecognition:
-    "/images/ai-practice/practice-18-941e689d.svg",
+    "/images/ai-practice/shoushishibie.png",
   emotionRecognition:
-    "/images/ai-practice/practice-19-ad61f826.svg",
+    "/images/ai-practice/qingxu.png",
   mlProcess:
     "/images/ai-practice/practice-20-9b486d3f.svg",
   decisionTree:
@@ -866,7 +864,7 @@ const AI_CARD_COVER_MAP: Record<string, string> = {
   bigData:
     "/images/ai-practice/practice-22-2fa0b7b3.svg",
   turingTest:
-    "/images/ai-practice/practice-22-2fa0b7b3.svg",
+    "/images/ai-practice/tulin.png",
 };
 
 const getAICardCover = (item: AICardItem) =>
@@ -1033,6 +1031,7 @@ const AVAILABLE_AI_CARD_KEYS = new Set([
   "doodleRecognition",
   "emotionRecognition",
   "turingTest",
+  "poseRecognition",
   "gestureRecognition",
 ]);
 

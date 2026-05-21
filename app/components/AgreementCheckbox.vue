@@ -73,7 +73,7 @@ defineEmits<{
   transform: translate(-50%, -50%);
   width: 8px;
   height: 8px;
-  background: #ffa54d;
+  background: #0f67ff;
   border-radius: 50%;
 }
 </style>

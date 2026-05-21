@@ -297,7 +297,7 @@ defineExpose({
 }
 
 .country-search-input:focus {
-  border-color: #FF9900;
+  border-color: #0f67ff;
 }
 
 .country-search-input::placeholder {
@@ -323,12 +323,12 @@ defineExpose({
 }
 
 .country-option:hover {
-  background: #FFF8F0;
+  background: #f4f8ff;
 }
 
 .country-option.active {
-  background: linear-gradient(135deg, #FFF4E6 0%, #FFECDA 100%);
-  color: #FF9900;
+  background: linear-gradient(135deg, #edf4ff 0%, #dceaff 100%);
+  color: #0f67ff;
 }
 
 .country-flag {
@@ -346,7 +346,7 @@ defineExpose({
 }
 
 .country-option.active .country-code-text {
-  color: #FF9900;
+  color: #0f67ff;
 }
 
 .country-empty {

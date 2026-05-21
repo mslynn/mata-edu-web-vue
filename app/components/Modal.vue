@@ -24,7 +24,7 @@
               {{ t(cancelText) }}
             </button>
             <button 
-              class="modal-btn modal-btn-confirm hover:opacity-90 hover:bg-orange-400 transition-all" 
+              class="modal-btn modal-btn-confirm hover:opacity-90 transition-all" 
               @click="handleConfirm"
             >
               {{ t(confirmText) }}
@@ -175,13 +175,13 @@ margin-bottom: 80px;
 }
 
 .modal-btn-confirm {
-  background: #ffa54d;
+  background: #0f67ff;
   color: white;
-  border-color: #ffa54d;
+  border-color: #0f67ff;
 }
 
 .modal-btn-confirm:hover:not(:disabled) {
-  background: #ff9500;
+  background: #0d61dd;
 }
 
 .modal-btn-confirm:disabled {
@@ -229,7 +229,7 @@ margin-bottom: 80px;
   transform: translate(-50%, -50%);
   width: 8px;
   height: 8px;
-  background: #FFA54D;
+  background: #0f67ff;
   border-radius: 50%;
 }
 

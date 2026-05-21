@@ -22,7 +22,7 @@
             <path
               class="top-tab-shape"
               :d="getTabShapeConfig(index).path"
-              :fill="activeTab === tab.key ? '#FF9900' : '#fbfcfe'"
+              :fill="activeTab === tab.key ? '#005bc2' : '#fbfcfe'"
               :stroke="activeTab === tab.key ? 'transparent' : '#d6e0ea'"
               stroke-width="2"
               stroke-linejoin="round"
@@ -1276,7 +1276,7 @@ const SCHOOL_ALL_GRADE_OPTION = {
   label: "全部年级",
   value: SCHOOL_ALL_GRADE_VALUE,
 };
-const SCHOOL_AI_LITERACY_RADAR_LINE_COLOR = "#FF9900";
+const SCHOOL_AI_LITERACY_RADAR_LINE_COLOR = "#005bc2";
 const SCHOOL_GRADE_DISTRIBUTION_COLORS = [
   "#4E6EF2",
   "#31D5E0",
@@ -1519,7 +1519,6 @@ interface DashboardConfig {
 const tabs = computed<Array<{ key: DashboardTab; label: string }>>(() => [
   { key: "data", label: t("study.homePage.tabs.data") },
   { key: "report", label: t("study.homePage.tabs.report") },
-  { key: "aiReport", label: t("study.homePage.tabs.aiReport") },
 ]);
 
 const tabShapeConfigs: Record<TabShapeKey, { viewBox: string; path: string }> = {
@@ -5472,7 +5471,7 @@ const displayAILiteracyRadarOption = computed(() => ({
       data: [
         {
           value: displayAILiteracyRadarIndicators.value.map((item) => item.value),
-          areaStyle: { color: "rgba(255, 153, 0, 0.05)" },
+          areaStyle: { color: "rgba(0, 91, 194, 0.05)" },
           lineStyle: {
             color: SCHOOL_AI_LITERACY_RADAR_LINE_COLOR,
             width: 2.4,
@@ -6119,8 +6118,8 @@ onUnmounted(() => {
   padding: 0 16px;
   border: 0;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ffb347 0%, #ff9900 100%);
-  box-shadow: 0 12px 26px rgba(255, 153, 0, 0.28);
+  background: linear-gradient(135deg, #4b8eff 0%, #005bc2 100%);
+  box-shadow: 0 12px 26px rgba(0, 91, 194, 0.28);
   color: #ffffff;
   font-size: 13px;
   font-weight: 700;
@@ -6133,7 +6132,7 @@ onUnmounted(() => {
 
 .study-back-top-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 16px 30px rgba(255, 153, 0, 0.34);
+  box-shadow: 0 16px 30px rgba(0, 91, 194, 0.34);
 }
 
 .study-back-top-button:active {
@@ -6228,7 +6227,7 @@ onUnmounted(() => {
 }
 
 .top-tab.active .top-tab-bg {
-  filter: drop-shadow(0 10px 18px rgba(255, 153, 0, 0.2));
+  filter: drop-shadow(0 10px 18px rgba(0, 91, 194, 0.2));
 }
 
 .top-tab.active:hover {
@@ -6320,8 +6319,8 @@ onUnmounted(() => {
 }
 
 .class-target-trigger.open {
-  border-color: #ff9900;
-  box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.18);
+  border-color: #005bc2;
+  box-shadow: 0 0 0 3px rgba(0, 91, 194, 0.18);
 }
 
 .class-target-text {
@@ -6394,7 +6393,7 @@ onUnmounted(() => {
 }
 
 .class-target-group:hover {
-  background: #fffaf2;
+  background: #f4f8ff;
 }
 
 .class-target-group svg {
@@ -6404,12 +6403,12 @@ onUnmounted(() => {
 }
 
 .class-target-group.active {
-  background: #fff4e8;
-  color: #ff9900;
+  background: rgba(0, 91, 194, 0.12);
+  color: #005bc2;
 }
 
 .class-target-group.active svg {
-  color: #ff9900;
+  color: #005bc2;
 }
 
 .class-target-options {
@@ -6439,12 +6438,12 @@ onUnmounted(() => {
 }
 
 .class-target-option:hover {
-  background: #fffaf2;
+  background: #f4f8ff;
 }
 
 .class-target-option.active {
-  color: #ff9900;
-  background: rgba(255, 153, 0, 0.12);
+  color: #005bc2;
+  background: rgba(0, 91, 194, 0.12);
 }
 
 .class-target-option-parent {
@@ -6452,8 +6451,8 @@ onUnmounted(() => {
 }
 
 .class-target-option-parent.active {
-  color: #ff9900;
-  background: rgba(255, 153, 0, 0.12);
+  color: #005bc2;
+  background: rgba(0, 91, 194, 0.12);
 }
 
 .class-target-chevron {
@@ -6464,13 +6463,13 @@ onUnmounted(() => {
 }
 
 .class-target-option-parent.active .class-target-chevron {
-  color: #ff9900;
+  color: #005bc2;
 }
 
 .class-target-check {
   width: 16px;
   height: 16px;
-  color: #ff9900;
+  color: #005bc2;
   flex: 0 0 auto;
 }
 
@@ -8133,4 +8132,3 @@ onUnmounted(() => {
   }
 }
 </style>
-

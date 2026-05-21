@@ -752,6 +752,28 @@
             embedded
             @chat-session-ready="handleAiQaSessionReady"
           />
+          <AiStoryTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'aiStory' && !taskAiIframeLoading"
+          />
+          <AiSongTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'aiSong' && !taskAiIframeLoading"
+          />
+          <AiFaceTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'aiFace' && !taskAiIframeLoading"
+          />
+          <AiHandwrittenTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'aiHandwritten' && !taskAiIframeLoading"
+          />
+          <AiGraffitiTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'aiGraffiti' && !taskAiIframeLoading"
+          />
+          <AiMoodTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'aiMood' && !taskAiIframeLoading"
+          />
+          <AiTtsTaskWorkbench
+            v-else-if="currentTaskAiToolKey === 'aiTts' && !taskAiIframeLoading"
+            @ready-change="handleAiTtsReadyChange"
+          />
           <iframe
             v-else
             ref="taskAiIframeRef"
@@ -765,14 +787,24 @@
           />
         </div>
         <div
-          v-if="currentTaskAiToolKey === 'aiPainting' || currentTaskAiToolKey === 'smartQA'"
+          v-if="
+            currentTaskAiToolKey === 'aiPainting' ||
+            currentTaskAiToolKey === 'smartQA' ||
+            currentTaskAiToolKey === 'aiStory' ||
+            currentTaskAiToolKey === 'aiSong' ||
+            currentTaskAiToolKey === 'aiFace' ||
+            currentTaskAiToolKey === 'aiHandwritten' ||
+            currentTaskAiToolKey === 'aiGraffiti' ||
+            currentTaskAiToolKey === 'aiMood' ||
+            currentTaskAiToolKey === 'aiTts'
+          "
           class="iframe-modal-footer iframe-modal-footer--ai-painting"
         >
           <span class="iframe-modal-footer__hint">{{ taskAiSubmitHint }}</span>
           <button
             class="iframe-submit-btn"
-            :disabled="currentTaskAiToolKey === 'aiPainting' ? !canSubmitTaskAiPainting : !canSubmitTaskAiQa"
-            @click="currentTaskAiToolKey === 'aiPainting' ? submitAiPaintingTask() : submitAiQaTask()"
+            :disabled="isCurrentAiSubmitDisabled"
+            @click="handleSubmitCurrentAiTask"
           >
             {{ submittingTaskAi ? "提交中..." : "提交任务" }}
           </button>
@@ -984,13 +1016,31 @@ import { personalcenterApi } from "~/composables/api/personalcenter";
 import { student } from "~/composables/api/student";
 import { useIframeFileBridge } from "~/composables/useIframeFileBridge";
 import AiImageTaskWorkbench from "~/components/ai/AiImageTaskWorkbench.vue";
+import AiFaceTaskWorkbench from "~/components/ai/AiFaceTaskWorkbench.vue";
+import AiGraffitiTaskWorkbench from "~/components/ai/AiGraffitiTaskWorkbench.vue";
+import AiHandwrittenTaskWorkbench from "~/components/ai/AiHandwrittenTaskWorkbench.vue";
 import AiImageHistoryPage from "~/components/ai/AiImageHistoryPage.vue";
+import AiMoodTaskWorkbench from "~/components/ai/AiMoodTaskWorkbench.vue";
 import AiQaTaskWorkbench from "~/components/ai/AiQaTaskWorkbench.vue";
+import AiSongTaskWorkbench from "~/components/ai/AiSongTaskWorkbench.vue";
+import AiStoryTaskWorkbench from "~/components/ai/AiStoryTaskWorkbench.vue";
+import AiTtsTaskWorkbench from "~/components/ai/AiTtsTaskWorkbench.vue";
 import StudentTaskAnswerModal from "~/components/student/StudentTaskAnswerModal.vue";
 import StarRating from "~/components/ui/StarRating.vue";
 import { normalizeRatePercent, percentToStars, scoreToStars } from "~/utils/star-rating";
 
 definePageMeta({ layout: "default" });
+
+const STUDENT_TASK_MESSAGE_Z_INDEX = 2400;
+
+const showSuccessMessage = (message: string) =>
+  ElMessage({ message, type: "success", zIndex: STUDENT_TASK_MESSAGE_Z_INDEX });
+
+const showWarningMessage = (message: string) =>
+  ElMessage({ message, type: "warning", zIndex: STUDENT_TASK_MESSAGE_Z_INDEX });
+
+const showErrorMessage = (message: string) =>
+  ElMessage({ message, type: "error", zIndex: STUDENT_TASK_MESSAGE_Z_INDEX });
 
 const props = withDefaults(
   defineProps<{
@@ -1097,6 +1147,8 @@ const currentTaskAiFile = ref<File | null>(null);
 const currentTaskAiGeneratedPayload = ref<GeneratedAiPaintingPayload | null>(null);
 const currentTaskAiSelectedSessionId = ref("");
 const currentTaskAiChatSessionId = ref("");
+const currentTaskAiCanSubmit = ref(false);
+const currentTaskAiCompletedText = ref("");
 const taskAiIframeRef = ref<HTMLIFrameElement | null>(null);
 const submittingTaskAi = ref(false);
 const showTaskAiHistoryGallery = ref(false);
@@ -1158,7 +1210,55 @@ const taskAiSubmitHint = computed(() => {
     if (currentTaskAiChatSessionId.value) {
       return "已完成 AI 问答，确认无误后点击右侧提交任务";
     }
-    return "请先完成 AI 问答，再提交任务";
+    return "如无需继续问答，可直接点击右侧提交任务";
+  }
+  if (currentTaskAiToolKey.value === "aiStory") {
+    if (submittingTaskAi.value) {
+      return "正在提交 AI 讲故事任务...";
+    }
+    return "完成故事创作后，点击右侧提交任务";
+  }
+  if (currentTaskAiToolKey.value === "aiSong") {
+    if (submittingTaskAi.value) {
+      return "正在提交 AI 歌曲创作任务...";
+    }
+    return "完成歌曲创作后，点击右侧提交任务";
+  }
+  if (currentTaskAiToolKey.value === "aiFace") {
+    if (submittingTaskAi.value) {
+      return "正在提交人脸识别任务...";
+    }
+    return "完成人脸识别体验后，点击右侧提交任务";
+  }
+  if (currentTaskAiToolKey.value === "aiHandwritten") {
+    if (submittingTaskAi.value) {
+      return "正在提交手写数字识别任务...";
+    }
+    return "完成手写数字识别后，点击右侧提交任务";
+  }
+  if (currentTaskAiToolKey.value === "aiGraffiti") {
+    if (submittingTaskAi.value) {
+      return "正在提交涂鸦识别任务...";
+    }
+    return "完成涂鸦识别后，点击右侧提交任务";
+  }
+  if (currentTaskAiToolKey.value === "aiMood") {
+    if (submittingTaskAi.value) {
+      return "正在提交情绪识别任务...";
+    }
+    return "可直接提交任务，也可先体验情绪识别与反馈";
+  }
+  if (currentTaskAiToolKey.value === "aiTts") {
+    if (submittingTaskAi.value) {
+      return "正在提交语音合成任务...";
+    }
+    if (currentTaskAiCanSubmit.value) {
+      const textLength = currentTaskAiCompletedText.value.length;
+      return textLength > 0
+        ? `已完成 ${textLength} 字语音合成，可直接提交任务`
+        : "已完成语音合成，可直接提交任务";
+    }
+    return "可直接提交任务，也可先体验语音合成";
   }
   const imageCount = currentTaskAiGeneratedPayload.value?.imageUrls.length || 0;
   if (submittingTaskAi.value) {
@@ -1309,6 +1409,13 @@ const firstNonEmptyString = (...values: any[]) => {
 const TASK_AI_TOOL_KEY_MAP: Record<string, string> = {
   ai_draw: "aiPainting",
   ai_qa: "smartQA",
+  ai_story: "aiStory",
+  ai_song: "aiSong",
+  speech_synthesis: "aiTts",
+  emotion_rec_feedback: "aiMood",
+  face: "aiFace",
+  handwritten_digit_rec: "aiHandwritten",
+  doodle_rec: "aiGraffiti",
   image_cls: "imageClassModel",
   gesture_cls: "gestureClassModel",
   audio_cls: "voiceClassModel",
@@ -1331,6 +1438,13 @@ const normalizeStudentAiTaskOptType = (value: unknown) => {
   const typeMap: Record<string, string> = {
     ai_draw: "ai_draw",
     ai_qa: "ai_qa",
+    ai_story: "ai_story",
+    ai_song: "ai_song",
+    speech_synthesis: "speech_synthesis",
+    emotion_rec_feedback: "emotion_rec_feedback",
+    face: "face",
+    handwritten_digit_rec: "handwritten_digit_rec",
+    doodle_rec: "doodle_rec",
     image_cls: "image_cls",
     audio_cls: "audio_cls",
     pose_cls: "pose_cls",
@@ -1343,12 +1457,60 @@ const normalizeStudentAiTaskOptType = (value: unknown) => {
     gesture: "gesture_cls",
     aipainting: "ai_draw",
     smartqa: "ai_qa",
+    aistory: "ai_story",
+    story: "ai_story",
+    aisong: "ai_song",
+    song: "ai_song",
+    music: "ai_song",
+    emotion: "emotion_rec_feedback",
+    mood: "emotion_rec_feedback",
+    emotionrecognition: "emotion_rec_feedback",
+    tts: "speech_synthesis",
+    text_to_speech: "speech_synthesis",
+    speechsynthesis: "speech_synthesis",
+    facerecognition: "face",
+    handwrittendigit: "handwritten_digit_rec",
+    handwritten: "handwritten_digit_rec",
+    mnist: "handwritten_digit_rec",
+    doodle: "doodle_rec",
+    graffiti: "doodle_rec",
   };
 
   return typeMap[normalizedValue] || "";
 };
 
 const inferStudentAiTaskOptType = (task: any, startData?: any) => {
+  const nameSource = [
+    String(task?.taskName || ""),
+    String(task?.raw?.taskName || ""),
+    String(task?.raw?.resourceName || ""),
+    String(startData?.taskName || ""),
+    String(startData?.resourceName || ""),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (
+    nameSource.includes("情绪识别") ||
+    nameSource.includes("情感识别") ||
+    nameSource.includes("情绪识别与反馈") ||
+    nameSource.includes("emotion recognition") ||
+    nameSource.includes("emotion feedback") ||
+    nameSource.includes("mood")
+  ) {
+    return "emotion_rec_feedback";
+  }
+
+  if (
+    nameSource.includes("语音合成") ||
+    nameSource.includes("文本转语音") ||
+    nameSource.includes("speech synthesis") ||
+    nameSource.includes("text to speech") ||
+    /\btts\b/.test(nameSource)
+  ) {
+    return "speech_synthesis";
+  }
+
   const candidates = [
     task?.fileType,
     task?.optType,
@@ -1371,14 +1533,6 @@ const inferStudentAiTaskOptType = (task: any, startData?: any) => {
     }
   }
 
-  const nameSource = [
-    String(task?.taskName || ""),
-    String(task?.raw?.taskName || ""),
-    String(task?.raw?.resourceName || ""),
-  ]
-    .join(" ")
-    .toLowerCase();
-
   if (nameSource.includes("图像") || nameSource.includes("image")) return "image_cls";
   if (
     nameSource.includes("语音") ||
@@ -1395,6 +1549,43 @@ const inferStudentAiTaskOptType = (task: any, startData?: any) => {
     nameSource.includes("hand")
   ) {
     return "gesture_cls";
+  }
+  if (
+    nameSource.includes("讲故事") ||
+    nameSource.includes("故事") ||
+    nameSource.includes("story")
+  ) {
+    return "ai_story";
+  }
+  if (
+    nameSource.includes("歌曲") ||
+    nameSource.includes("音乐") ||
+    nameSource.includes("song") ||
+    nameSource.includes("music")
+  ) {
+    return "ai_song";
+  }
+  if (
+    nameSource.includes("人脸") ||
+    nameSource.includes("face")
+  ) {
+    return "face";
+  }
+  if (
+    nameSource.includes("手写数字") ||
+    nameSource.includes("手写") ||
+    nameSource.includes("数字识别") ||
+    nameSource.includes("mnist") ||
+    nameSource.includes("handwritten")
+  ) {
+    return "handwritten_digit_rec";
+  }
+  if (
+    nameSource.includes("涂鸦") ||
+    nameSource.includes("graffiti") ||
+    nameSource.includes("doodle")
+  ) {
+    return "doodle_rec";
   }
 
   return "";
@@ -1554,7 +1745,7 @@ const openHistoryOpusEditor = async (work: any) => {
   const opusId = String(work?.opusId || work?.id || "").trim();
   const opusOssId = firstNonEmptyString(work?.opusOssId, work?.ossId);
   if (!opusId || !opusOssId) {
-    ElMessage.warning("当前作品缺少可编辑文件");
+    showWarningMessage("当前作品缺少可编辑文件");
     return;
   }
 
@@ -1583,7 +1774,7 @@ const openHistoryOpusEditor = async (work: any) => {
     reopenHistoryOpusAfterToolClose.value = false;
     currentToolEditMode.value = false;
     console.error("打开历史作品编辑失败", error);
-    ElMessage.error(error instanceof Error ? error.message : "打开历史作品编辑失败");
+    showErrorMessage(error instanceof Error ? error.message : "打开历史作品编辑失败");
   }
 };
 
@@ -1592,7 +1783,7 @@ const submitHistoryOpus = async () => {
     (item) => String(item.opusId || item.id || "") === selectedHistoryOpusId.value
   );
   if (!opus || !selectedTaskId.value) {
-    ElMessage.warning("请选择要关联的作品");
+    showWarningMessage("请选择要关联的作品");
     return;
   }
 
@@ -1606,10 +1797,10 @@ const submitHistoryOpus = async () => {
 
     closeHistoryOpusModal();
     await refreshSelectedTaskDetail(selectedTaskId.value);
-    ElMessage.success("关联成功");
+    showSuccessMessage("关联成功");
   } catch (error) {
     console.error("关联历史作品失败", error);
-    ElMessage.error(error instanceof Error ? error.message : "关联历史作品失败");
+    showErrorMessage(error instanceof Error ? error.message : "关联历史作品失败");
   }
 };
 
@@ -2120,7 +2311,7 @@ const handleCameraRecordingAction = async () => {
   try {
     const ready = await ensureCameraPreviewReady();
     if (!ready) {
-      ElMessage.warning("摄像头预览尚未就绪");
+      showWarningMessage("摄像头预览尚未就绪");
       return;
     }
     startCameraRecording();
@@ -2147,13 +2338,13 @@ const captureCameraImage = async () => {
     const ready = await ensureCameraPreviewReady();
     cameraActionPending.value = false;
     if (!ready || !cameraVideoRef.value) {
-      ElMessage.warning("摄像头预览尚未就绪");
+      showWarningMessage("摄像头预览尚未就绪");
       return;
     }
   }
 
   if (!cameraVideoRef.value || !cameraPreviewReady.value) {
-    ElMessage.warning("摄像头预览尚未就绪");
+    showWarningMessage("摄像头预览尚未就绪");
     return;
   }
   const video = cameraVideoRef.value;
@@ -2173,7 +2364,7 @@ const captureCameraImage = async () => {
     6 - visibleRemoteImageUrls.value.length - localImageFiles.value.length
   );
   if (remainCount <= 0) {
-    ElMessage.warning("最多只能上传6张图片");
+    showWarningMessage("最多只能上传6张图片");
     closeCameraCapturePanel();
     return;
   }
@@ -2217,14 +2408,14 @@ const handleImageInputChange = (event: Event) => {
     6 - visibleRemoteImageUrls.value.length - localImageFiles.value.length
   );
   if (remainCount <= 0) {
-    ElMessage.warning("最多只能上传6张图片");
+    showWarningMessage("最多只能上传6张图片");
     input.value = "";
     return;
   }
 
   const appendFiles = files.slice(0, remainCount);
   if (appendFiles.length < files.length) {
-    ElMessage.warning("最多只能上传6张图片，超出的图片已忽略");
+    showWarningMessage("最多只能上传6张图片，超出的图片已忽略");
   }
 
   const startIndex = localImageFiles.value.length;
@@ -2240,12 +2431,12 @@ const handleImageInputChange = (event: Event) => {
 
 const submitSelectedVideo = async () => {
   if (!selectedTaskId.value) {
-    ElMessage.warning("当前任务缺少提交标识");
+    showWarningMessage("当前任务缺少提交标识");
     return;
   }
 
   if (!localVideoFile.value && !submittedVideoOssId.value) {
-    ElMessage.warning("请先选择视频");
+    showWarningMessage("请先选择视频");
     return;
   }
 
@@ -2266,10 +2457,10 @@ const submitSelectedVideo = async () => {
     });
 
     await refreshSelectedTaskDetail(selectedTaskId.value);
-    ElMessage.success("视频提交成功");
+    showSuccessMessage("视频提交成功");
   } catch (error) {
     console.error("提交视频失败", error);
-    ElMessage.error(error instanceof Error ? error.message : "提交视频失败");
+    showErrorMessage(error instanceof Error ? error.message : "提交视频失败");
   } finally {
     mediaSubmitting.value = false;
   }
@@ -2277,12 +2468,12 @@ const submitSelectedVideo = async () => {
 
 const submitSelectedImages = async () => {
   if (!selectedTaskId.value) {
-    ElMessage.warning("当前任务缺少提交标识");
+    showWarningMessage("当前任务缺少提交标识");
     return;
   }
 
   if (localImageFiles.value.length === 0 && submittedImageOssIds.value.length === 0) {
-    ElMessage.warning("请先选择图片");
+    showWarningMessage("请先选择图片");
     return;
   }
 
@@ -2312,10 +2503,10 @@ const submitSelectedImages = async () => {
     localImageUrls.value = [];
     localImageRotations.value = [];
     await refreshSelectedTaskDetail(selectedTaskId.value);
-    ElMessage.success("图片提交成功");
+    showSuccessMessage("图片提交成功");
   } catch (error) {
     console.error("提交图片失败", error);
-    ElMessage.error(error instanceof Error ? error.message : "提交图片失败");
+    showErrorMessage(error instanceof Error ? error.message : "提交图片失败");
   } finally {
     mediaSubmitting.value = false;
   }
@@ -2503,6 +2694,8 @@ const closeTaskAiIframeModal = () => {
   currentTaskAiGeneratedPayload.value = null;
   currentTaskAiSelectedSessionId.value = "";
   currentTaskAiChatSessionId.value = "";
+  currentTaskAiCanSubmit.value = false;
+  currentTaskAiCompletedText.value = "";
   submittingTaskAi.value = false;
 };
 
@@ -2533,6 +2726,11 @@ const handleAiPaintingGenerateStart = () => {
 
 const handleAiQaSessionReady = (payload: { sessionId: string }) => {
   currentTaskAiChatSessionId.value = String(payload.sessionId || "").trim();
+};
+
+const handleAiTtsReadyChange = (payload: { ready: boolean; text: string }) => {
+  currentTaskAiCanSubmit.value = Boolean(payload.ready);
+  currentTaskAiCompletedText.value = String(payload.text || "").trim();
 };
 
 const handleTaskAiHistorySelect = (item: {
@@ -2569,7 +2767,7 @@ const handleAiPaintingSessionLoaded = (payload: {
   if (payload.prompt) {
     currentTaskAiProjectName.value = String(payload.prompt).trim();
   }
-  ElMessage.success("已载入画廊作品，可直接提交任务");
+  showSuccessMessage("已载入画廊作品，可直接提交任务");
 };
 
 const buildAiPaintingImageProxyUrl = (url: string) => {
@@ -2644,20 +2842,20 @@ const handleAiPaintingGenerated = async (payload: {
     prompt: String(payload.prompt || "").trim(),
   };
   if (nextImageUrls.length > 0) {
-    ElMessage.success("图片生成完成，请点击提交任务");
+    showSuccessMessage("图片生成完成，请点击提交任务");
   }
 };
 
 const submitAiPaintingTask = async () => {
   if (!currentTaskAiTaskId.value) {
-    ElMessage.warning("当前任务缺少提交标识");
+    showWarningMessage("当前任务缺少提交标识");
     return;
   }
 
   const payload = currentTaskAiGeneratedPayload.value;
   const imageUrls = Array.isArray(payload?.imageUrls) ? payload.imageUrls : [];
   if (imageUrls.length === 0) {
-    ElMessage.warning("请先生成图片");
+    showWarningMessage("请先生成图片");
     return;
   }
 
@@ -2693,25 +2891,69 @@ const submitAiPaintingTask = async () => {
     if (currentChapterId.value) {
       await loadTaskList(currentChapterId.value);
     }
-    ElMessage.success("任务提交成功");
+    showSuccessMessage("任务提交成功");
     closeTaskAiIframeModal();
     emit("updated");
   } catch (error) {
     console.error("提交 AI 画图任务失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "提交 AI 画图任务失败");
+    showErrorMessage(error instanceof Error ? error.message : "提交 AI 画图任务失败");
   } finally {
     submittingTaskAi.value = false;
   }
 };
 
-const submitAiQaTask = async () => {
+const getCurrentAiSubmitTaskLabel = () => {
+  if (currentTaskAiToolKey.value === "smartQA") return "AI 问答任务";
+  if (currentTaskAiToolKey.value === "aiStory") return "AI 讲故事任务";
+  if (currentTaskAiToolKey.value === "aiSong") return "AI 歌曲创作任务";
+  if (currentTaskAiToolKey.value === "aiFace") return "人脸识别任务";
+  if (currentTaskAiToolKey.value === "aiHandwritten") return "手写数字识别任务";
+  if (currentTaskAiToolKey.value === "aiGraffiti") return "涂鸦识别任务";
+  if (currentTaskAiToolKey.value === "aiMood") return "情绪识别任务";
+  if (currentTaskAiToolKey.value === "aiTts") return "语音合成任务";
+  return "AI 任务";
+};
+
+const submitAiLightTask = async () => {
   if (!currentTaskAiTaskId.value) {
-    ElMessage.warning("当前任务缺少提交标识");
+    showWarningMessage("当前任务缺少提交标识");
     return;
   }
 
-  if (!currentTaskAiChatSessionId.value) {
-    ElMessage.warning("请先完成 AI 问答");
+  if (currentTaskAiToolKey.value === "aiTts" && !currentTaskAiCanSubmit.value) {
+    showWarningMessage("请先完成一次语音合成");
+    return;
+  }
+
+  if (submittingTaskAi.value) {
+    return;
+  }
+
+  const taskLabel = getCurrentAiSubmitTaskLabel();
+
+  submittingTaskAi.value = true;
+  try {
+    await studentSubmitTask({
+      taskId: currentTaskAiTaskId.value,
+    });
+
+    if (currentChapterId.value) {
+      await loadTaskList(currentChapterId.value);
+    }
+    showSuccessMessage("任务提交成功");
+    closeTaskAiIframeModal();
+    emit("updated");
+  } catch (error) {
+    console.error(`提交${taskLabel}失败:`, error);
+    showErrorMessage(error instanceof Error ? error.message : `提交${taskLabel}失败`);
+  } finally {
+    submittingTaskAi.value = false;
+  }
+};
+
+const submitAiTtsTask = async () => {
+  if (!currentTaskAiTaskId.value) {
+    showWarningMessage("当前任务缺少提交标识");
     return;
   }
 
@@ -2723,20 +2965,41 @@ const submitAiQaTask = async () => {
   try {
     await studentSubmitTask({
       taskId: currentTaskAiTaskId.value,
+      opusName:
+        currentTaskAiCompletedText.value.slice(0, 100) ||
+        currentTaskAiProjectName.value ||
+        selectedTask.value?.taskName,
     });
 
     if (currentChapterId.value) {
       await loadTaskList(currentChapterId.value);
     }
-    ElMessage.success("任务提交成功");
+    showSuccessMessage("任务提交成功");
     closeTaskAiIframeModal();
     emit("updated");
   } catch (error) {
-    console.error("提交 AI 问答任务失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "提交 AI 问答任务失败");
+    console.error("提交语音合成任务失败:", error);
+    showErrorMessage(error instanceof Error ? error.message : "提交语音合成任务失败");
   } finally {
     submittingTaskAi.value = false;
   }
+};
+
+const isCurrentAiSubmitDisabled = computed(() => {
+  if (submittingTaskAi.value) return true;
+  return false;
+});
+
+const handleSubmitCurrentAiTask = () => {
+  if (currentTaskAiToolKey.value === "aiPainting") {
+    void submitAiPaintingTask();
+    return;
+  }
+  if (currentTaskAiToolKey.value === "aiTts") {
+    void submitAiTtsTask();
+    return;
+  }
+  void submitAiLightTask();
 };
 
 const closeToolIframeModal = () => {
@@ -2798,6 +3061,8 @@ const openStudentAiTask = async (task: any, startData?: any) => {
   currentTaskAiGeneratedPayload.value = null;
   currentTaskAiSelectedSessionId.value = "";
   currentTaskAiChatSessionId.value = "";
+  currentTaskAiCanSubmit.value = false;
+  currentTaskAiCompletedText.value = "";
   if (toolKey === "aiPainting") {
     currentTaskAiUrl.value = "";
     currentTaskAiFile.value = null;
@@ -2806,6 +3071,55 @@ const openStudentAiTask = async (task: any, startData?: any) => {
     return;
   }
   if (toolKey === "smartQA") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "aiStory") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "aiSong") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "aiFace") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "aiHandwritten") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "aiGraffiti") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "aiMood") {
+    currentTaskAiUrl.value = "";
+    currentTaskAiFile.value = null;
+    taskAiIframeLoading.value = false;
+    showTaskAiIframeModal.value = true;
+    return;
+  }
+  if (toolKey === "aiTts") {
     currentTaskAiUrl.value = "";
     currentTaskAiFile.value = null;
     taskAiIframeLoading.value = false;
@@ -2868,7 +3182,7 @@ const handleTaskAiIframeMessage = async (event: MessageEvent) => {
   }
 
   if (!currentTaskAiTaskId.value) {
-    ElMessage.warning("当前任务缺少提交标识");
+    showWarningMessage("当前任务缺少提交标识");
     return;
   }
 
@@ -2932,12 +3246,12 @@ const handleTaskAiIframeMessage = async (event: MessageEvent) => {
     if (currentChapterId.value) {
       await loadTaskList(currentChapterId.value);
     }
-    ElMessage.success("任务提交成功");
+    showSuccessMessage("任务提交成功");
     closeTaskAiIframeModal();
     emit("updated");
   } catch (error) {
     console.error("提交 AI 实践任务失败:", error);
-    ElMessage.error(error instanceof Error ? error.message : "提交 AI 实践任务失败");
+    showErrorMessage(error instanceof Error ? error.message : "提交 AI 实践任务失败");
   } finally {
     submittingTaskAi.value = false;
   }
@@ -3017,10 +3331,10 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
 
     try {
       downloadStudentToolZipFile(zipFile);
-      ElMessage.success(`项目已保存：${zipFile.name}`);
+      showSuccessMessage(`项目已保存：${zipFile.name}`);
     } catch (error) {
       console.error("下载项目文件失败:", error);
-      ElMessage.error("下载项目文件失败");
+      showErrorMessage("下载项目文件失败");
     }
     return;
   }
@@ -3032,7 +3346,7 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
   const editingHistoryOpus = currentToolEditMode.value && currentHistoryOpus.value;
 
   if (!editingHistoryOpus && !currentToolTaskId.value) {
-    ElMessage.warning("当前任务缺少提交标识");
+    showWarningMessage("当前任务缺少提交标识");
     return;
   }
 
@@ -3081,7 +3395,7 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
   }
 
   if (editingHistoryOpus && !coverFile) {
-    ElMessage.warning("当前作品缺少封面文件，无法保存");
+    showWarningMessage("当前作品缺少封面文件，无法保存");
     return;
   }
 
@@ -3180,7 +3494,7 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
           coverOssId: String(coverUploadResult.ossId),
           opusType,
         };
-        ElMessage.success("作品保存成功");
+        showSuccessMessage("作品保存成功");
         closeToolIframeModal();
         return;
       }
@@ -3199,12 +3513,12 @@ const handleToolIframeMessage = async (event: MessageEvent) => {
       messageType,
     });
     await refreshSelectedTaskDetail(currentToolTaskId.value);
-    ElMessage.success("任务提交成功");
+    showSuccessMessage("任务提交成功");
     closeToolIframeModal();
     emit("updated");
   } catch (error) {
     console.error("提交编程任务失败", error);
-    ElMessage.error(error instanceof Error ? error.message : "提交编程任务失败");
+    showErrorMessage(error instanceof Error ? error.message : "提交编程任务失败");
   } finally {
     submittingToolTask.value = false;
   }
@@ -3500,7 +3814,7 @@ const handleEditAiTask = async () => {
     selectedTask.value.taskId
   );
   if (!taskId) {
-    ElMessage.warning("当前任务缺少 taskId");
+    showWarningMessage("当前任务缺少 taskId");
     return;
   }
 
@@ -3509,7 +3823,7 @@ const handleEditAiTask = async () => {
     await openStudentAiTask(selectedTask.value, selectedTask.value.raw);
   } catch (error) {
     console.error("重新提交 AI 实践任务失败", error);
-    ElMessage.error(
+    showErrorMessage(
       error instanceof Error ? error.message : "重新提交 AI 实践任务失败"
     );
   } finally {
@@ -3527,7 +3841,7 @@ const handleEditProgramTask = async () => {
     selectedTask.value.taskId
   );
   if (!taskId) {
-    ElMessage.warning("当前任务缺少 taskId");
+    showWarningMessage("当前任务缺少 taskId");
     return;
   }
 
@@ -3555,7 +3869,7 @@ const handleEditProgramTask = async () => {
     }
   } catch (error) {
     console.error("编辑任务失败", error);
-    ElMessage.error(error instanceof Error ? error.message : "编辑任务失败");
+    showErrorMessage(error instanceof Error ? error.message : "编辑任务失败");
   } finally {
     doingTask.value = false;
   }
@@ -3571,7 +3885,7 @@ const handleDoTask = async () => {
     selectedTask.value.taskId
   );
   if (!taskId) {
-    ElMessage.warning("当前任务缺少 taskId");
+    showWarningMessage("当前任务缺少 taskId");
     return;
   }
 
@@ -3588,7 +3902,7 @@ const handleDoTask = async () => {
       await handleEditAiTask();
       return;
     }
-    ElMessage.warning("任务已提交");
+    showWarningMessage("任务已提交");
     return;
   }
 
@@ -3624,7 +3938,7 @@ const handleDoTask = async () => {
       window.open(taskUrl, "_blank", "noopener,noreferrer");
       return;
     }
-    ElMessage.success("任务已开始");
+    showSuccessMessage("任务已开始");
   } catch (error: any) {
     console.error("开始任务失败", error);
   } finally {
@@ -3854,7 +4168,7 @@ watch(
   padding: 0 22px;
   border: none;
   border-radius: 999px;
-  background: linear-gradient(135deg, #ffae2b 0%, #ff9900 100%);
+  background: linear-gradient(135deg, #006be6 0%, #005bc2 100%);
   color: #ffffff;
   font-size: 14px;
   font-weight: 600;
@@ -3863,19 +4177,19 @@ watch(
     transform 0.2s ease,
     box-shadow 0.2s ease,
     opacity 0.2s ease;
-  box-shadow: 0 10px 24px rgba(255, 153, 0, 0.22);
+  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.22);
 }
 
 .iframe-submit-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 28px rgba(255, 153, 0, 0.28);
+  box-shadow: 0 14px 28px rgba(0, 91, 194, 0.28);
 }
 
 .iframe-submit-btn:disabled {
-  cursor: not-allowed;
-  opacity: 0.55;
+  cursor: pointer;
+  opacity: 1;
   transform: none;
-  box-shadow: none;
+  box-shadow: 0 10px 24px rgba(0, 91, 194, 0.22);
 }
 
 .tool-iframe {
@@ -5690,3 +6004,4 @@ watch(
   }
 }
 </style>
+
